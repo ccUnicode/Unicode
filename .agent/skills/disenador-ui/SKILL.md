@@ -20,21 +20,21 @@ Para que los componentes no parezcan genéricos de IA, DEBES aplicar las siguien
 ### 1. Paleta de Colores
 - **Fondo General del Sitio:** Fondo negro puro o gris extremo profundo (`bg-black` o `bg-[#050505]`).
 - **Fondos de Tarjetas/Secciones:** Gris oscuro sutil para dar profundidad (`bg-zinc-900` o `bg-[#111111]`).
-- **Color Principal de la Marca (Verde Unicode):** Usa un verde limón vibrante y neón. Puedes usar `green-500` estandarizado, o códigos hexadecimales precisos como `text-[#7FFF00]` o `bg-lime-400` / `bg-green-500`. 
+- **Color Principal de la Marca (Verde Unicode):** Usa el verde oficial `#75D32D`. En Tailwind v4 usa la variable `--color-unicode` (`text-unicode` o `bg-unicode`).
 - **Texto Primario:** Siempre `text-white` para títulos y gran visibilidad.
 - **Texto Secundario:** Grises legibles sobre fondo oscuro (`text-gray-300`, `text-zinc-400`).
 
 ### 2. Tipografía y Textos
 - Títulos llamativos y en negrita (`font-bold`, `font-extrabold`).
 - **Resaltado de Marca:** Es muy común en el diseño de Unicode que los títulos tengan una o dos palabras resaltadas en el color verde principal.
-  - *Ejemplo:* `<h1 class="text-white text-5xl font-bold">PRÓXIMOS <span class="text-green-500">EVENTOS</span></h1>`
+  - *Ejemplo:* `<h1 class="text-white text-5xl font-bold">PRÓXIMOS <span class="text-unicode">EVENTOS</span></h1>`
 
 ### 3. Anatomía de Componentes
 - **Tarjetas (Cards):** Deben ser consistentes. Siempre usa bordes muy redondeados (`rounded-2xl` o `rounded-3xl`), fondo de tarjeta y un padding interno holgado (`p-6` o `p-8`). A menudo tienen contornos muy sutiles (`border border-zinc-800`).
-- **Botón Primario (Relleno):** Forma de píldora, relleno color marca, texto oscuro.
-  - *Ejemplo de clase:* `bg-green-500 text-black font-semibold px-6 py-2 rounded-full hover:bg-green-400 transition-colors`
+- **Botón Primario (Relleno):** Forma de píldora, relleno color marca (`bg-unicode`), texto oscuro.
+  - *Ejemplo de clase:* `bg-unicode text-black font-bold px-6 py-2 rounded-full hover:bg-unicode-light transition-all shadow-unicode`
 - **Botón Secundario (Contorno):** Forma de píldora, sin fondo, borde y texto color marca.
-  - *Ejemplo de clase:* `border border-green-500 text-green-500 font-semibold px-6 py-2 rounded-full hover:bg-green-500 hover:text-black transition-colors`
+  - *Ejemplo de clase:* `border border-unicode/30 text-unicode font-bold px-6 py-2 rounded-full hover:border-unicode hover:shadow-unicode transition-all`
 - **Etiquetas/Tags:** Pequeñas insignias para clasificar cosas (ej. "Área", "Activo").
   - *Ejemplo de clase:* `bg-green-500/10 text-green-400 text-xs px-3 py-1 rounded-full`
 

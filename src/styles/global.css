@@ -1,1 +1,32 @@
 @import "tailwindcss";
+
+@theme {
+  --color-unicode: #75D32D;
+  --color-unicode-dark: #5cad22;
+  --color-unicode-light: #94e65a;
+
+  --animate-glow: glow 2s ease-in-out infinite alternate;
+
+  @keyframes glow {
+    from {
+      text-shadow: 0 0 10px rgba(117, 211, 45, 0.2);
+    }
+
+    to {
+      text-shadow: 0 0 20px rgba(117, 211, 45, 0.6), 0 0 30px rgba(117, 211, 45, 0.4);
+    }
+  }
+}
+
+/* Utilitarios personalizados para efectos premium */
+@utility shadow-unicode {
+  box-shadow: 0 0 15px rgba(117, 211, 45, 0.3);
+}
+
+@utility shadow-unicode-lg {
+  box-shadow: 0 0 30px rgba(117, 211, 45, 0.5);
+}
+
+@utility text-glow {
+  text-shadow: 0 0 10px rgba(117, 211, 45, 0.5);
+}
