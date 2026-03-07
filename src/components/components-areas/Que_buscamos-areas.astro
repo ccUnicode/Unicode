@@ -1,0 +1,25 @@
+---
+interface Props {
+    text: string;
+}
+
+const { text } = Astro.props;
+---
+
+<div
+    class="flex items-center gap-4 bg-[#111111] border border-zinc-800/50 rounded-full px-6 py-4 w-full max-w-2xl hover:border-zinc-700 transition-colors"
+>
+    <!-- Punto verde con brillo -->
+    <div class="relative flex items-center justify-center flex-shrink-0">
+        <div
+            class="absolute w-4 h-4 rounded-full bg-[#75D32D] blur-[4px] opacity-60"
+        >
+        </div>
+        <div class="relative w-2 h-2 rounded-full bg-[#75D32D]"></div>
+    </div>
+
+    <!-- Texto -->
+    <p class="text-zinc-300 text-sm md:text-base leading-snug">
+        {text}
+    </p>
+</div>

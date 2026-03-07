@@ -1,0 +1,34 @@
+---
+interface Props {
+    title: string;
+    description: string;
+    imageSrc: string;
+}
+
+const { title, description, imageSrc } = Astro.props;
+---
+
+<div
+    class="bg-[#151515] border border-zinc-800/50 rounded-[2rem] p-6 hover:border-zinc-700 transition-all flex flex-col items-center"
+>
+    <!-- Contenedor de la Imagen del Proyecto -->
+    <div
+        class="w-full aspect-square bg-[#75D32D]/10 rounded-3xl overflow-hidden mb-6 flex items-center justify-center"
+    >
+        <img
+            src={imageSrc}
+            alt={`Imagen del proyecto: ${title}`}
+            class="w-full h-full object-cover rounded-3xl"
+        />
+    </div>
+
+    <!-- Contenido -->
+    <div class="w-full text-left">
+        <h3 class="text-white font-bold text-xl md:text-2xl leading-tight mb-3">
+            {title}
+        </h3>
+        <p class="text-zinc-400 text-xs md:text-sm leading-relaxed">
+            {description}
+        </p>
+    </div>
+</div>
