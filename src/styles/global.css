@@ -16,6 +16,8 @@
       text-shadow: 0 0 20px rgba(117, 211, 45, 0.6), 0 0 30px rgba(117, 211, 45, 0.4);
     }
   }
+
+  --font-sans: "Poppins", sans-serif;
 }
 
 /* Utilitarios personalizados para efectos premium */
