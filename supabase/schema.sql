@@ -14,10 +14,10 @@ CREATE TABLE postulantes(
   carrera VARCHAR(150) NOT NULL,
   opcion1 VARCHAR(150) NOT NULL,
   motivo_postulacion TEXT NOT NULL,
-  opcion2 VARCHAR(150)
+  opcion2 VARCHAR(150),
 
   --Metadatos
   --Esto es para que se guarde la fecha y hora en la que se creó el registro
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 
 )
