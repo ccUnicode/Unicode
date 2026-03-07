@@ -1,0 +1,165 @@
+---
+/**
+ * FAQEventos.astro
+ * Sección de Preguntas Frecuentes con acordeón interactivo.
+ * Usa JavaScript vanilla para el efecto de expandir/contraer.
+ */
+
+interface FAQ {
+    pregunta: string;
+    respuesta: string;
+}
+
+const faqs: FAQ[] = [
+    {
+        pregunta: "¿Cómo me inscribo a un evento?",
+        respuesta:
+            "Para inscribirte, busca el evento que te interesa en la sección de Próximos Eventos y haz clic en el botón 'Inscríbete'. Serás redirigido a un formulario de Google donde podrás completar tu registro de forma gratuita.",
+    },
+    {
+        pregunta: "¿Los eventos son gratuitos?",
+        respuesta:
+            "¡Sí! Todos los eventos organizados por UNICODE son completamente gratuitos para todos los estudiantes de la UNI y público en general. Nuestro objetivo es democratizar el aprendizaje.",
+    },
+    {
+        pregunta: "¿Puedo asistir si no soy de la FIIS?",
+        respuesta:
+            "¡Por supuesto! Nuestros eventos están abiertos a estudiantes de todas las facultades de la UNI e incluso de otras universidades. ¡Te esperamos!",
+    },
+    {
+        pregunta: "¿Se entregan certificados?",
+        respuesta:
+            "Sí, en la mayoría de nuestros eventos entregamos certificados digitales de participación. Los requisitos pueden variar según el evento, así que revisa los detalles de cada uno.",
+    },
+    {
+        pregunta: "¿Dónde se realizan los eventos presenciales?",
+        respuesta:
+            "Los eventos presenciales se realizan generalmente en las instalaciones de la FIIS - UNI, incluyendo el auditorio, aulas y laboratorios de cómputo. La ubicación específica se indica en cada evento.",
+    },
+    {
+        pregunta: "¿Puedo proponer un tema para un evento?",
+        respuesta:
+            "¡Nos encantaría escucharte! Si tienes una idea para un evento, charla o taller, puedes contactarnos a través de nuestras redes sociales o hablar directamente con cualquier miembro de UNICODE.",
+    },
+];
+---
+
+<section id="faq-eventos" class="w-full py-20 md:py-28 bg-[#050505]">
+    <div class="max-w-4xl mx-auto px-6">
+        <!-- Título -->
+        <h2
+            class="text-4xl md:text-5xl font-extrabold text-center mb-4 uppercase tracking-tight"
+        >
+            PREGUNTAS <span class="text-unicode">FRECUENTES</span>
+        </h2>
+        <p
+            class="text-gray-400 text-center mb-14 text-base md:text-lg max-w-2xl mx-auto"
+        >
+            ¿Tienes dudas sobre nuestros eventos? Aquí encontrarás las
+            respuestas más comunes.
+        </p>
+
+        <!-- Acordeón -->
+        <div class="flex flex-col gap-3" id="faq-accordion">
+            {
+                faqs.map((faq, index) => (
+                    <div class="faq-item group rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:border-unicode/30 transition-all duration-300 overflow-hidden">
+                        <button
+                            class="faq-toggle w-full flex items-center justify-between gap-4 p-5 md:p-6 text-left cursor-pointer"
+                            data-faq-index={index}
+                            aria-expanded="false"
+                        >
+                            <span class="text-white font-semibold text-sm md:text-base leading-snug flex-1">
+                                {faq.pregunta}
+                            </span>
+                            <span class="faq-icon shrink-0 w-8 h-8 rounded-full border border-zinc-700 flex items-center justify-center transition-all duration-300 group-hover:border-unicode/50">
+                                <svg
+                                    class="w-4 h-4 text-unicode transition-transform duration-300"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                >
+                                    <path d="M12 5v14M5 12h14" />
+                                </svg>
+                            </span>
+                        </button>
+                        <div
+                            class="faq-content"
+                            style="max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;"
+                        >
+                            <div class="px-5 md:px-6 pb-5 md:pb-6">
+                                <div class="w-full h-px bg-gradient-to-r from-unicode/30 via-unicode/10 to-transparent mb-4" />
+                                <p class="text-gray-400 text-sm md:text-base leading-relaxed">
+                                    {faq.respuesta}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                ))
+            }
+        </div>
+    </div>
+</section>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const toggles = document.querySelectorAll(".faq-toggle");
+
+        toggles.forEach((toggle) => {
+            toggle.addEventListener("click", () => {
+                const item = toggle.closest(".faq-item") as HTMLElement;
+                const content = item.querySelector(
+                    ".faq-content",
+                ) as HTMLElement;
+                const icon = item.querySelector(".faq-icon svg") as SVGElement;
+                const isOpen = toggle.getAttribute("aria-expanded") === "true";
+
+                // Cerrar todos los demás
+                document.querySelectorAll(".faq-item").forEach((otherItem) => {
+                    if (otherItem !== item) {
+                        const otherContent = otherItem.querySelector(
+                            ".faq-content",
+                        ) as HTMLElement;
+                        const otherToggle = otherItem.querySelector(
+                            ".faq-toggle",
+                        ) as HTMLElement;
+                        const otherIcon = otherItem.querySelector(
+                            ".faq-icon svg",
+                        ) as SVGElement;
+                        if (
+                            otherToggle.getAttribute("aria-expanded") === "true"
+                        ) {
+                            otherContent.style.maxHeight = "0";
+                            otherContent.style.opacity = "0";
+                            otherToggle.setAttribute("aria-expanded", "false");
+                            otherIcon.style.transform = "rotate(0deg)";
+                            (otherItem as HTMLElement).classList.remove(
+                                "border-unicode/30",
+                                "bg-zinc-900/80",
+                            );
+                        }
+                    }
+                });
+
+                // Toggle actual
+                if (isOpen) {
+                    content.style.maxHeight = "0";
+                    content.style.opacity = "0";
+                    toggle.setAttribute("aria-expanded", "false");
+                    icon.style.transform = "rotate(0deg)";
+                    item.classList.remove(
+                        "border-unicode/30",
+                        "bg-zinc-900/80",
+                    );
+                } else {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                    content.style.opacity = "1";
+                    toggle.setAttribute("aria-expanded", "true");
+                    icon.style.transform = "rotate(45deg)";
+                    item.classList.add("border-unicode/30", "bg-zinc-900/80");
+                }
+            });
+        });
+    });
+</script>

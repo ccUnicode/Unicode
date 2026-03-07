@@ -1,0 +1,37 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import HeroEventos from "../components/components-events/HeroEventos.astro";
+import ProximosEventos from "../components/components-events/ProximosEventos.astro";
+import EventosRealizados from "../components/components-events/EventosRealizados.astro";
+import FAQEventos from "../components/components-events/FAQEventos.astro";
+---
+
+<Layout title="Eventos">
+    <Navbar />
+
+    <main class="w-full">
+        <HeroEventos />
+
+        <div
+            class="w-full h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent"
+        >
+        </div>
+
+        <ProximosEventos />
+
+        <div
+            class="w-full h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent"
+        >
+        </div>
+
+        <EventosRealizados />
+
+        <div
+            class="w-full h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent"
+        >
+        </div>
+
+        <FAQEventos />
+    </main>
+</Layout>
