@@ -1,0 +1,26 @@
+---
+interface Props {
+  title: string;
+  category?: string;
+  image?: string;
+}
+
+const { title, category = "PROYECTO", image } = Astro.props;
+---
+
+<div class="shrink-0 w-[300px] md:w-[450px] aspect-16/10 bg-zinc-900/80 rounded-3xl border-2 border-zinc-800 hover:border-unicode shadow-lg hover:shadow-unicode-sm relative overflow-hidden transition-all duration-500 group snap-center">
+  <div 
+    class={`absolute inset-0 bg-cover bg-center grayscale-50 opacity-40 group-hover:opacity-60 group-hover:grayscale-0 transition-all duration-700 group-hover:scale-110`}
+    style={image ? `background-image: url('${image}')` : "background-image: url('/placeholder-projects.jpg')"}
+  ></div>
+  <div class="absolute inset-0 bg-linear-to-t from-black via-black/40 to-transparent p-6 md:p-8 flex flex-col justify-end">
+    <div class="flex gap-2 mb-3 md:mb-4">
+      <span class="px-3 py-1 bg-unicode/20 border border-unicode/30 rounded-full text-[10px] text-unicode uppercase font-bold tracking-widest backdrop-blur-md">
+        {category}
+      </span>
+    </div>
+    <h3 class="text-xl md:text-3xl font-bold group-hover:text-unicode transition-colors">
+      {title}
+    </h3>
+  </div>
+</div>
