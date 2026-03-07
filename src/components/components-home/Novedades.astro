@@ -1,0 +1,55 @@
+---
+/**
+ * Novedades.astro
+ * Sección de noticias debajo del grid de estadísticas.
+ * Sigue el diseño proporcionado por el diseñador.
+ */
+import NovedadCard from "./NovedadCard.astro";
+
+const novedades = [
+  {
+    title: "Unicode presente en bienvenida de cachimbos 26-1",
+    description:
+      "Unicode formó parte de la fiesta que celebra el ingreso de los nuevos cachimbos UNI. Un evento lleno de risas, alegría y mucha diversión.",
+    image: "/bienvenida_cachimbos.png",
+  },
+  {
+    title: "Unicode presente en bienvenida de cachimbos 26-1",
+    description:
+      "Unicode formó parte de la fiesta que celebra el ingreso de los nuevos cachimbos UNI. Un evento lleno de risas, alegría y mucha diversión.",
+    image: "/bienvenida_cachimbos.png",
+  },
+  {
+    title: "Unicode presente en bienvenida de cachimbos 26-1",
+    description:
+      "Unicode formó parte de la fiesta que celebra el ingreso de los nuevos cachimbos UNI. Un evento lleno de risas, alegría y mucha diversión.",
+    image: "/bienvenida_cachimbos.png",
+  },
+];
+---
+
+<section id="novedades" class="w-full py-16 md:py-24 relative">
+  <div class="max-w-6xl mx-auto px-6">
+    <!-- Título principal -->
+    <div class="text-center mb-16">
+      <h2
+        class="text-4xl md:text-6xl font-extrabold text-unicode text-glow tracking-wider uppercase"
+      >
+        NOVEDADES
+      </h2>
+    </div>
+
+    <!-- Grid de tarjetas -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {
+        novedades.map((novedad) => (
+          <NovedadCard
+            title={novedad.title}
+            description={novedad.description}
+            image={novedad.image}
+          />
+        ))
+      }
+    </div>
+  </div>
+</section>

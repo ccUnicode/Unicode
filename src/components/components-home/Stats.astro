@@ -1,0 +1,145 @@
+---
+/**
+ * Stats.astro — Sección "CIFRAS QUE NOS DEFINEN"
+ * Muestra las métricas clave del centro cultural en un grid
+ * de tarjetas con iconos SVG y animaciones al entrar en viewport.
+ */
+
+interface StatItem {
+  icon: string;
+  value: string;
+  label: string;
+}
+
+const stats: StatItem[] = [
+  {
+    icon: "members",
+    value: "+150",
+    label: "Miembros Activos",
+  },
+  {
+    icon: "projects",
+    value: "4",
+    label: "Proyectos Completados",
+  },
+  {
+    icon: "events",
+    value: "12",
+    label: "Eventos Realizados",
+  },
+  {
+    icon: "years",
+    value: "3",
+    label: "Años de Trayectoria",
+  },
+];
+---
+
+<section id="stats" class="w-full py-20 md:py-28 relative">
+  <!-- Glow decorativo superior -->
+  <div
+    class="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 bg-unicode/5 rounded-full blur-[100px] pointer-events-none"
+  >
+  </div>
+
+  <div class="max-w-6xl mx-auto px-6 relative z-10">
+    <!-- Título -->
+    <div class="text-center mb-14">
+      <h2
+        class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight"
+      >
+        <span class="text-unicode text-glow">CIFRAS</span> QUE NOS DEFINEN
+      </h2>
+      <div class="w-20 h-1 bg-unicode rounded-full mx-auto mt-5 opacity-60">
+      </div>
+    </div>
+
+    <!-- Grid de tarjetas -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {
+        stats.map((stat) => (
+          <div class="group relative bg-zinc-900/60 border border-zinc-800 rounded-2xl p-8 text-center transition-all duration-500 hover:border-unicode/40 hover:bg-zinc-900/90 hover:-translate-y-1 hover:shadow-unicode">
+            {/* Glow en hover */}
+            <div class="absolute inset-0 rounded-2xl bg-unicode/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+            {/* Icono SVG */}
+            <div class="flex items-center justify-center mb-5">
+              <div class="w-14 h-14 rounded-xl bg-unicode/10 border border-unicode/20 flex items-center justify-center group-hover:bg-unicode/15 transition-colors duration-300">
+                {stat.icon === "members" && (
+                  <svg
+                    class="w-7 h-7 text-unicode"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
+                    />
+                  </svg>
+                )}
+                {stat.icon === "projects" && (
+                  <svg
+                    class="w-7 h-7 text-unicode"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"
+                    />
+                  </svg>
+                )}
+                {stat.icon === "events" && (
+                  <svg
+                    class="w-7 h-7 text-unicode"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z"
+                    />
+                  </svg>
+                )}
+                {stat.icon === "years" && (
+                  <svg
+                    class="w-7 h-7 text-unicode"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.016 6.016 0 01-4.27 1.772 6.016 6.016 0 01-4.27-1.772"
+                    />
+                  </svg>
+                )}
+              </div>
+            </div>
+
+            {/* Valor numérico */}
+            <p class="text-3xl md:text-4xl font-extrabold text-unicode mb-2 tracking-tight">
+              {stat.value}
+            </p>
+
+            {/* Etiqueta */}
+            <p class="text-sm md:text-base font-semibold text-gray-300 tracking-wide">
+              {stat.label}
+            </p>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
