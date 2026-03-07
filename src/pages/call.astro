@@ -1,0 +1,20 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import HeroCall from "../components/components-call/HeroCall.astro";
+import PorQueUnicode from "../components/components-call/PorQueUnicode.astro";
+---
+
+<Layout title="Convocatoria">
+  <Navbar />
+  <HeroCall />
+
+  <main class="w-full">
+    <div
+      class="w-full h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent"
+    >
+    </div>
+
+    <PorQueUnicode />
+  </main>
+</Layout>
