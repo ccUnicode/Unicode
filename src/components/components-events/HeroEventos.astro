@@ -1,0 +1,172 @@
+---
+/**
+ * HeroEventos.astro
+ * Sección Hero para la página de Eventos.
+ * Diseño: fondo oscuro con cortinas rojas difusas, mascota central y texto introductorio.
+ */
+---
+
+<section
+    id="hero-eventos"
+    class="relative w-full min-h-[90vh] flex items-center overflow-hidden"
+>
+    <!-- Fondo con gradiente oscuro y efecto de escenario -->
+    <div class="absolute inset-0 bg-black">
+        <!-- Efecto cortinas laterales rojas difusas -->
+        <div
+            class="absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-red-950/40 via-red-950/10 to-transparent"
+        >
+        </div>
+        <div
+            class="absolute inset-y-0 left-0 w-1/6 bg-gradient-to-r from-red-950/20 to-transparent"
+        >
+        </div>
+        <!-- Luz de escenario desde abajo -->
+        <div
+            class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[60%] h-1/2 bg-gradient-to-t from-amber-900/10 via-transparent to-transparent rounded-full blur-3xl"
+        >
+        </div>
+        <!-- Vignette general -->
+        <div
+            class="absolute inset-0 bg-radial-[circle_at_center] from-transparent via-transparent to-black/70"
+        >
+        </div>
+    </div>
+
+    <!-- Contenido -->
+    <div
+        class="relative z-10 max-w-7xl mx-auto px-6 w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-center pt-28 pb-16"
+    >
+        <!-- Columna Izquierda: Texto -->
+        <div class="flex flex-col gap-6 text-left">
+            <h1
+                class="text-5xl md:text-7xl font-extrabold text-unicode uppercase leading-tight tracking-tight animate-glow"
+            >
+                EVENTOS
+            </h1>
+            <p
+                class="text-gray-300 text-base md:text-lg leading-relaxed max-w-md"
+            >
+                ¡Bienvenido a la sección de eventos! Aquí podrás encontrar una
+                amplia gama de eventos programados por nosotros, ¡y de todo
+                tipo! Desde tech y vocación STEM hasta desarrollo de marca
+                personal y concursos matemáticos.
+            </p>
+            <p
+                class="text-gray-300 text-base md:text-lg leading-relaxed max-w-md"
+            >
+                ¿Qué esperas? ¡Inscríbete en uno y vive la experiencia!
+            </p>
+            <div>
+                <a
+                    href="#proximos-eventos"
+                    class="inline-block bg-unicode text-black font-bold px-8 py-3 rounded-full hover:bg-unicode-light transition-all duration-300 shadow-unicode hover:shadow-unicode-lg text-sm md:text-base"
+                >
+                    Conoce más
+                </a>
+            </div>
+        </div>
+
+        <!-- Columna Derecha: Mascota -->
+        <div class="flex justify-center md:justify-end items-end relative">
+            <!-- Glow detrás de la mascota -->
+            <div
+                class="absolute bottom-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-unicode/10 rounded-full blur-3xl"
+            >
+            </div>
+            <!-- Placeholder SVG de mascota Unicode -->
+            <div
+                class="relative w-64 h-80 md:w-80 md:h-96 flex items-end justify-center"
+            >
+                <svg
+                    viewBox="0 0 200 280"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-full h-full drop-shadow-2xl animate-float"
+                >
+                    <!-- Cuerpo -->
+                    <ellipse cx="100" cy="200" rx="55" ry="70" fill="#75D32D"
+                    ></ellipse>
+                    <!-- Cabeza -->
+                    <circle cx="100" cy="105" r="60" fill="#75D32D"></circle>
+                    <!-- Ojos blancos -->
+                    <ellipse cx="80" cy="100" rx="18" ry="20" fill="white"
+                    ></ellipse>
+                    <ellipse cx="120" cy="100" rx="18" ry="20" fill="white"
+                    ></ellipse>
+                    <!-- Pupilas -->
+                    <circle cx="84" cy="102" r="9" fill="#1a1a1a"></circle>
+                    <circle cx="124" cy="102" r="9" fill="#1a1a1a"></circle>
+                    <!-- Brillos de ojos -->
+                    <circle cx="88" cy="97" r="3" fill="white"></circle>
+                    <circle cx="128" cy="97" r="3" fill="white"></circle>
+                    <!-- Lentes -->
+                    <circle
+                        cx="80"
+                        cy="100"
+                        r="22"
+                        stroke="#333"
+                        stroke-width="3"
+                        fill="none"></circle>
+                    <circle
+                        cx="120"
+                        cy="100"
+                        r="22"
+                        stroke="#333"
+                        stroke-width="3"
+                        fill="none"></circle>
+                    <line
+                        x1="102"
+                        y1="100"
+                        x2="98"
+                        y2="100"
+                        stroke="#333"
+                        stroke-width="3"></line>
+                    <!-- Sonrisa -->
+                    <path
+                        d="M85 125 Q100 140 115 125"
+                        stroke="#1a1a1a"
+                        stroke-width="3"
+                        fill="none"
+                        stroke-linecap="round"></path>
+                    <!-- Brazo izquierdo -->
+                    <ellipse
+                        cx="48"
+                        cy="195"
+                        rx="12"
+                        ry="25"
+                        fill="#6abf26"
+                        transform="rotate(-15 48 195)"></ellipse>
+                    <!-- Brazo derecho -->
+                    <ellipse
+                        cx="152"
+                        cy="195"
+                        rx="12"
+                        ry="25"
+                        fill="#6abf26"
+                        transform="rotate(15 152 195)"></ellipse>
+                    <!-- Pies -->
+                    <ellipse cx="78" cy="265" rx="18" ry="10" fill="#5cad22"
+                    ></ellipse>
+                    <ellipse cx="122" cy="265" rx="18" ry="10" fill="#5cad22"
+                    ></ellipse>
+                </svg>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    @keyframes float {
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-12px);
+        }
+    }
+    .animate-float {
+        animation: float 3s ease-in-out infinite;
+    }
+</style>
