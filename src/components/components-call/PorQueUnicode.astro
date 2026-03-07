@@ -30,39 +30,34 @@ const beneficios: Beneficio[] = [
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
       <!-- Columna izquierda: Card de beneficios -->
       <div
-        class="bg-zinc-900/60 border border-zinc-800 rounded-3xl p-8 md:p-10"
+        class="bg-[#050505]/80 border border-unicode rounded-[32px] p-8 md:p-10 shadow-[0_0_30px_rgba(117,211,45,0.1)]"
       >
         <!-- Título -->
         <h2
-          class="text-2xl md:text-3xl font-extrabold text-white text-center mb-8"
+          class="text-2xl md:text-3xl font-extrabold text-unicode text-center mb-10 tracking-tight text-glow"
         >
-          ¿Por qué <span class="text-unicode text-glow">UNICODE</span>?
+          ¿Por qué UNICODE?
         </h2>
 
         <!-- Grid de beneficios 2x2 -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-8">
           {
             beneficios.map((beneficio) => (
-              <div class="flex items-start gap-3">
-                {/* Ícono de check/punto */}
-                <div class="w-8 h-8 rounded-lg bg-unicode/10 border border-unicode/20 flex items-center justify-center shrink-0 mt-0.5">
-                  <svg
-                    class="w-4 h-4 text-unicode"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"
-                    />
+              <div class="flex items-start gap-4">
+                {/* Ícono de Unicode estilo logotipo circular */}
+                <div class="shrink-0 mt-1">
+                  <svg viewBox="0 0 100 100" class="w-6 h-6 fill-unicode">
+                    <!-- Left parenthetical arc -->
+                    <path d="M 33 5 C 10 30 10 70 33 95 L 43 95 C 22 70 22 30 43 5 Z" />
+                    <!-- Middle 1 -->
+                    <path d="M 50 25 L 60 15 L 63 15 L 63 95 L 53 95 L 53 25 Z" />
+                    <!-- Right parenthetical arc -->
+                    <path d="M 77 5 C 100 30 100 70 77 95 L 67 95 C 88 70 88 30 67 5 Z" />
                   </svg>
                 </div>
 
                 {/* Texto */}
-                <p class="text-zinc-400 text-xs md:text-sm leading-relaxed">
+                <p class="text-zinc-300 text-xs md:text-[13px] leading-relaxed font-medium">
                   {beneficio.text}
                 </p>
               </div>
@@ -76,18 +71,27 @@ const beneficios: Beneficio[] = [
         <div class="relative">
           <!-- Glow detrás de la mascota -->
           <div
-            class="absolute inset-0 bg-unicode/10 rounded-full blur-[80px] scale-75 pointer-events-none"
+            class="absolute inset-0 bg-unicode/15 rounded-full blur-[90px] scale-75 pointer-events-none"
           >
           </div>
 
           <img
-            src="/mascota_unicode.png"
+            src="/Imagen-Convocatoria-Unicode-Landing.png"
             alt="Mascota UNICODE"
-            class="relative z-10 w-72 sm:w-80 md:w-96 h-auto object-contain drop-shadow-[0_0_30px_rgba(117,211,45,0.2)]"
+            class="relative z-10 w-72 sm:w-80 md:w-96 lg:w-[450px] h-auto object-contain drop-shadow-[0_0_30px_rgba(117,211,45,0.25)] animate-float"
             loading="lazy"
+            style="animation: float 6s ease-in-out infinite;"
           />
         </div>
       </div>
     </div>
   </div>
+
+  <style>
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-15px); }
+      100% { transform: translateY(0px); }
+    }
+  </style>
 </section>
