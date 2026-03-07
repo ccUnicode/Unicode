@@ -1,0 +1,340 @@
+---
+/**
+ * RegistroModal.astro
+ * Componente de ventana flotante (Modal) para el formulario de inscripción.
+ * Refleja exactamente las columnas de la tabla 'postulantes' en schema.sql.
+ */
+---
+
+<dialog
+  id="registroModal"
+  class="m-auto fixed inset-0 backdrop:bg-black/80 bg-zinc-950 border border-zinc-800 rounded-3xl p-0 w-[95%] max-w-2xl shadow-unicode-lg text-white open:animate-in open:fade-in open:zoom-in-95 backdrop:backdrop-blur-sm"
+>
+  <div
+    class="p-6 md:p-8 relative max-h-[90vh] overflow-y-auto custom-scrollbar"
+  >
+    <!-- Botón cerrar -->
+    <button
+      id="closeModalBtn"
+      class="absolute top-6 right-6 text-zinc-400 hover:text-white transition-colors p-1"
+      aria-label="Cerrar modal"
+    >
+      <svg
+        class="w-6 h-6"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+
+    <div class="text-center mb-8 pr-8 pl-8">
+      <h2 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+        Formulario de <span class="text-unicode text-glow">Inscripción</span>
+      </h2>
+      <p class="text-zinc-400 text-sm mt-2">
+        Únete a UNICODE y potencia tus habilidades tecnológicas y blandas.
+      </p>
+    </div>
+
+    <!-- Formulario -->
+    <form id="registroForm" class="space-y-5">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <!-- Nombres -->
+        <div class="flex flex-col gap-1.5">
+          <label for="nombres" class="text-sm font-semibold text-zinc-300"
+            >Nombres *</label
+          >
+          <input
+            type="text"
+            id="nombres"
+            name="nombres"
+            required
+            class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-xl px-4 py-2.5 text-white outline-none transition-all placeholder:text-zinc-600"
+            placeholder="Ej. Juan Marcos"
+          />
+        </div>
+        <!-- Apellidos -->
+        <div class="flex flex-col gap-1.5">
+          <label for="apellidos" class="text-sm font-semibold text-zinc-300"
+            >Apellidos *</label
+          >
+          <input
+            type="text"
+            id="apellidos"
+            name="apellidos"
+            required
+            class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-xl px-4 py-2.5 text-white outline-none transition-all placeholder:text-zinc-600"
+            placeholder="Ej. Pérez Gómez"
+          />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <!-- Correo -->
+        <div class="flex flex-col gap-1.5">
+          <label for="correo" class="text-sm font-semibold text-zinc-300"
+            >Correo Electrónico *</label
+          >
+          <input
+            type="email"
+            id="correo"
+            name="correo"
+            required
+            class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-xl px-4 py-2.5 text-white outline-none transition-all placeholder:text-zinc-600"
+            placeholder="Ej. juan@uni.edu.pe"
+          />
+        </div>
+        <!-- Teléfono -->
+        <div class="flex flex-col gap-1.5">
+          <label for="telefono" class="text-sm font-semibold text-zinc-300"
+            >Teléfono / Celular *</label
+          >
+          <input
+            type="tel"
+            id="telefono"
+            name="telefono"
+            required
+            class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-xl px-4 py-2.5 text-white outline-none transition-all placeholder:text-zinc-600"
+            placeholder="Ej. 999 999 999"
+          />
+        </div>
+      </div>
+
+      <!-- Carrera -->
+      <div class="flex flex-col gap-1.5">
+        <label for="carrera" class="text-sm font-semibold text-zinc-300"
+          >Carrera Universitaria *</label
+        >
+        <input
+          type="text"
+          id="carrera"
+          name="carrera"
+          required
+          class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-xl px-4 py-2.5 text-white outline-none transition-all placeholder:text-zinc-600"
+          placeholder="Ej. Ingeniería de Sistemas"
+        />
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <!-- Opcion 1 -->
+        <div class="flex flex-col gap-1.5">
+          <label for="opcion1" class="text-sm font-semibold text-zinc-300"
+            >Área de 1ra opción *</label
+          >
+          <select
+            id="opcion1"
+            name="opcion1"
+            required
+            class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-xl px-4 py-2.5 text-white outline-none transition-all appearance-none cursor-pointer"
+          >
+            <option value="" disabled selected>Selecciona un área</option>
+            <option value="GTH">Gestión de Talento Humano (GTH)</option>
+            <option value="ACD">Académica (ACD)</option>
+            <option value="RRPP">Relaciones Públicas (RRPP)</option>
+            <option value="DCC">Desarrollo de Centro Cultural (DCC)</option>
+            <option value="ID">Investigación y Desarrollo (ID)</option>
+          </select>
+        </div>
+        <!-- Opcion 2 -->
+        <div class="flex flex-col gap-1.5">
+          <label for="opcion2" class="text-sm font-semibold text-zinc-300"
+            >Área de 2da opción</label
+          >
+          <select
+            id="opcion2"
+            name="opcion2"
+            class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-xl px-4 py-2.5 text-white outline-none transition-all appearance-none cursor-pointer"
+          >
+            <option value="" selected>Ninguna</option>
+            <option value="GTH">Gestión de Talento Humano (GTH)</option>
+            <option value="ACD">Académica (ACD)</option>
+            <option value="RRPP">Relaciones Públicas (RRPP)</option>
+            <option value="DCC">Desarrollo de Centro Cultural (DCC)</option>
+            <option value="ID">Investigación y Desarrollo (ID)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Motivo Postulacion -->
+      <div class="flex flex-col gap-1.5">
+        <label
+          for="motivo_postulacion"
+          class="text-sm font-semibold text-zinc-300"
+          >¿Por qué deseas postular a UNICODE? *</label
+        >
+        <textarea
+          id="motivo_postulacion"
+          name="motivo_postulacion"
+          rows="3"
+          required
+          class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-xl px-4 py-2.5 text-white outline-none transition-all resize-none placeholder:text-zinc-600"
+          placeholder="Cuéntanos qué te motiva a unirte a nosotros..."
+        ></textarea>
+      </div>
+
+      <!-- Mensaje de estado -->
+      <div
+        id="formStatus"
+        class="hidden rounded-xl p-3 text-sm font-medium text-center"
+      >
+      </div>
+
+      <!-- Submit -->
+      <div class="pt-2">
+        <button
+          type="submit"
+          id="submitBtn"
+          class="w-full bg-unicode hover:bg-unicode-light text-black font-bold text-base py-3.5 rounded-xl transition-all shadow-unicode hover:shadow-unicode-lg flex justify-center items-center gap-2"
+        >
+          Enviar postulación
+          <svg
+            class="w-5 h-5 hidden"
+            id="loadingSpinner"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<style>
+  /* Personalización del select para que la flecha sea verde estilo UNICODE */
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2375D32D'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-position: right 1rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25em 1.25em;
+    padding-right: 2.5rem;
+  }
+
+  /* Scrollbar custom para el modal */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #09090b; /* zinc-950 */
+    border-radius: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #27272a; /* zinc-800 */
+    border-radius: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #3f3f46; /* zinc-700 */
+  }
+</style>
+
+<script>
+  // Cliente-side logic para el modal y envío del form simulado (o futuro supabase client)
+  document.addEventListener("DOMContentLoaded", () => {
+    const modal = document.getElementById("registroModal") as HTMLDialogElement;
+    const closeModalBtn = document.getElementById("closeModalBtn");
+
+    // Todos los botones que tengan href="#postular" abrirán este modal
+    const openBtns = document.querySelectorAll('a[href="#postular"]');
+
+    const openModal = () => {
+      modal.showModal();
+      document.body.style.overflow = "hidden"; // Evita el scroll del body
+    };
+
+    const closeModal = () => {
+      modal.close();
+      document.body.style.overflow = "auto";
+      // Ocultar mensajes de estado al cerrar
+      const statusDiv = document.getElementById("formStatus");
+      if (statusDiv) statusDiv.classList.add("hidden");
+    };
+
+    openBtns.forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        openModal();
+      });
+    });
+
+    closeModalBtn?.addEventListener("click", closeModal);
+
+    // Cerrar si hace clic fuera del contenido del modal
+    modal?.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+
+    const form = document.getElementById("registroForm") as HTMLFormElement;
+    const submitBtn = document.getElementById("submitBtn") as HTMLButtonElement;
+    const loadingSpinner = document.getElementById("loadingSpinner");
+    const statusDiv = document.getElementById("formStatus");
+
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      // Estado de carga visual
+      submitBtn.disabled = true;
+      submitBtn.classList.add("opacity-80", "cursor-not-allowed");
+      loadingSpinner?.classList.remove("hidden");
+      if (statusDiv) statusDiv.classList.add("hidden");
+
+      // Recoger datos (opcional, por si luego se conecta Supabase desde el cliente)
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+
+      // Simulación de envío de request (2 segundos)
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Simulación de éxito
+      if (statusDiv) {
+        statusDiv.classList.remove(
+          "hidden",
+          "bg-red-500/10",
+          "text-red-500",
+          "border-red-500/20",
+        );
+        statusDiv.classList.add(
+          "block",
+          "bg-unicode/10",
+          "border",
+          "border-unicode/20",
+          "text-unicode",
+        );
+        statusDiv.textContent =
+          "¡Inscripción recibida correctamente! Te contactaremos pronto.";
+      }
+
+      form.reset();
+
+      // Restaurar botón
+      submitBtn.disabled = false;
+      submitBtn.classList.remove("opacity-80", "cursor-not-allowed");
+      loadingSpinner?.classList.add("hidden");
+
+      // Cerrar el modal automáticamente después de 2.5 seg
+      setTimeout(() => {
+        closeModal();
+      }, 2500);
+    });
+  });
+</script>

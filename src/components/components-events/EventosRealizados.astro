@@ -1,0 +1,421 @@
+---
+/**
+ * EventosRealizados.astro
+ * Sección de galería de Eventos Realizados con tarjetas premium,
+ * estadísticas de impacto y hover effects interactivos.
+ */
+
+interface EventoRealizado {
+    titulo: string;
+    descripcion: string;
+    fecha: string;
+    asistentes: number;
+    categoria: string;
+    imagen: string;
+    ponente: string;
+    lugar: string;
+    highlights: string[];
+}
+
+const eventosRealizados: EventoRealizado[] = [
+    {
+        titulo: "Hackatón UNICODE 2025",
+        descripcion:
+            "48 horas de innovación donde equipos multidisciplinarios desarrollaron soluciones tecnológicas para problemas reales de la comunidad universitaria.",
+        fecha: "15 Oct 2025",
+        asistentes: 120,
+        categoria: "Hackathon",
+        imagen: "/evento_unicode_1.png",
+        ponente: "Equipo UNICODE",
+        lugar: "Auditorio FIIS",
+        highlights: ["1er puesto: EcoTrack App", "12 equipos participantes"],
+    },
+    {
+        titulo: "Workshop: Git & GitHub",
+        descripcion:
+            "Taller práctico de control de versiones donde los asistentes aprendieron desde los fundamentos hasta flujos de trabajo colaborativos avanzados.",
+        fecha: "28 Sep 2025",
+        asistentes: 85,
+        categoria: "Workshop",
+        imagen: "/evento_unicode_2.png",
+        ponente: "Carlos Mendoza",
+        lugar: "Lab. Cómputo FIIS",
+        highlights: ["Certificados digitales", "Ejercicios hands-on"],
+    },
+    {
+        titulo: "Charla: IA en la Industria",
+        descripcion:
+            "Un recorrido por las aplicaciones reales de la inteligencia artificial en sectores como salud, finanzas y manufactura, con casos de éxito peruanos.",
+        fecha: "10 Sep 2025",
+        asistentes: 200,
+        categoria: "Charla",
+        imagen: "/evento_unicode_1.png",
+        ponente: "Dra. Ana Torres",
+        lugar: "Auditorio FIIS",
+        highlights: ["Transmisión en vivo", "+500 views online"],
+    },
+    {
+        titulo: "Code Night: Algoritmos",
+        descripcion:
+            "Una noche dedicada a resolver desafíos algorítmicos en equipos, con problemas de distintos niveles de dificultad y premios para los ganadores.",
+        fecha: "20 Ago 2025",
+        asistentes: 65,
+        categoria: "Competencia",
+        imagen: "/evento_unicode_2.png",
+        ponente: "Club UNICODE",
+        lugar: "Lab. Cómputo FIIS",
+        highlights: ["3 niveles de dificultad", "Premios especiales"],
+    },
+    {
+        titulo: "Panel: Mujeres en Tech",
+        descripcion:
+            "Un panel con ingenieras líderes de empresas tech peruanas compartiendo sus experiencias, desafíos y consejos para nuevas generaciones.",
+        fecha: "05 Ago 2025",
+        asistentes: 150,
+        categoria: "Panel",
+        imagen: "/evento_unicode_1.png",
+        ponente: "4 Panelistas",
+        lugar: "Auditorio FIIS",
+        highlights: ["4 panelistas invitadas", "Q&A abierto"],
+    },
+    {
+        titulo: "Intro a React & Next.js",
+        descripcion:
+            "Workshop intensivo de frontend moderno: desde componentes React hasta aplicaciones full-stack con Next.js y despliegue en Vercel.",
+        fecha: "18 Jul 2025",
+        asistentes: 90,
+        categoria: "Workshop",
+        imagen: "/evento_unicode_2.png",
+        ponente: "Luis Ramírez",
+        lugar: "Lab. Cómputo FIIS",
+        highlights: ["Proyecto desplegado", "Recursos gratuitos"],
+    },
+];
+
+// Estadísticas globales
+const totalEventos = eventosRealizados.length;
+const totalAsistentes = eventosRealizados.reduce(
+    (sum, e) => sum + e.asistentes,
+    0,
+);
+const categorias = [...new Set(eventosRealizados.map((e) => e.categoria))];
+
+// Colores por categoría
+const categoriaBadge: Record<string, string> = {
+    Hackathon: "bg-purple-500/15 text-purple-400 border-purple-500/30",
+    Workshop: "bg-blue-500/15 text-blue-400 border-blue-500/30",
+    Charla: "bg-unicode/15 text-unicode border-unicode/30",
+    Competencia: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+    Panel: "bg-pink-500/15 text-pink-400 border-pink-500/30",
+};
+---
+
+<section
+    id="eventos-realizados"
+    class="w-full py-20 md:py-28 bg-[#050505] relative overflow-hidden"
+>
+    <!-- Efecto de fondo decorativo -->
+    <div
+        class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-unicode/3 rounded-full blur-[120px] pointer-events-none"
+    >
+    </div>
+
+    <div class="max-w-7xl mx-auto px-6 relative z-10">
+        <!-- Encabezado de sección -->
+        <div class="text-center mb-16">
+            <div
+                class="inline-flex items-center gap-2 bg-unicode/10 border border-unicode/20 rounded-full px-4 py-1.5 mb-6"
+            >
+                <span class="w-2 h-2 bg-unicode rounded-full animate-pulse"
+                ></span>
+                <span
+                    class="text-unicode text-xs font-semibold uppercase tracking-widest"
+                    >Historial</span
+                >
+            </div>
+            <h2
+                class="text-4xl md:text-6xl font-extrabold uppercase tracking-tight mb-4"
+            >
+                EVENTOS <span class="text-unicode">REALIZADOS</span>
+            </h2>
+            <p
+                class="text-gray-400 text-base md:text-lg max-w-2xl mx-auto leading-relaxed"
+            >
+                Revive los mejores momentos de nuestros eventos pasados. Cada
+                encuentro es una oportunidad de aprender, conectar y crecer
+                juntos.
+            </p>
+        </div>
+
+        <!-- Estadísticas de impacto -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
+            <div
+                class="stat-card group text-center bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 hover:border-unicode/30 transition-all duration-500"
+            >
+                <p
+                    class="text-3xl md:text-4xl font-extrabold text-unicode mb-1 stat-number"
+                    data-target={totalEventos}
+                >
+                    0
+                </p>
+                <p
+                    class="text-gray-400 text-xs md:text-sm uppercase tracking-wider font-medium"
+                >
+                    Eventos
+                </p>
+            </div>
+            <div
+                class="stat-card group text-center bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 hover:border-unicode/30 transition-all duration-500"
+            >
+                <p
+                    class="text-3xl md:text-4xl font-extrabold text-unicode mb-1 stat-number"
+                    data-target={totalAsistentes}
+                >
+                    0
+                </p>
+                <p
+                    class="text-gray-400 text-xs md:text-sm uppercase tracking-wider font-medium"
+                >
+                    Asistentes
+                </p>
+            </div>
+            <div
+                class="stat-card group text-center bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 hover:border-unicode/30 transition-all duration-500"
+            >
+                <p
+                    class="text-3xl md:text-4xl font-extrabold text-unicode mb-1 stat-number"
+                    data-target={categorias.length}
+                >
+                    0
+                </p>
+                <p
+                    class="text-gray-400 text-xs md:text-sm uppercase tracking-wider font-medium"
+                >
+                    Categorías
+                </p>
+            </div>
+            <div
+                class="stat-card group text-center bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 hover:border-unicode/30 transition-all duration-500"
+            >
+                <p class="text-3xl md:text-4xl font-extrabold text-white mb-1">
+                    100%
+                </p>
+                <p
+                    class="text-gray-400 text-xs md:text-sm uppercase tracking-wider font-medium"
+                >
+                    Gratuitos
+                </p>
+            </div>
+        </div>
+
+        <!-- Grid de eventos realizados -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {
+                eventosRealizados.map((evento, index) => (
+                    <article
+                        class="evento-card group relative rounded-3xl overflow-hidden border border-zinc-800/50 bg-zinc-900/30 hover:border-unicode/30 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_8px_40px_-12px_rgba(117,211,45,0.15)]"
+                        style={`animation-delay: ${index * 100}ms`}
+                    >
+                        {/* Imagen del evento con overlay */}
+                        <div class="relative h-48 overflow-hidden">
+                            <img
+                                src={evento.imagen}
+                                alt={evento.titulo}
+                                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                            />
+                            {/* Overlay gradiente */}
+                            <div class="absolute inset-0 bg-linear-to-t from-zinc-900 via-zinc-900/50 to-transparent" />
+
+                            {/* Badge de categoría */}
+                            <div class="absolute top-4 left-4">
+                                <span
+                                    class={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider border ${categoriaBadge[evento.categoria] || "bg-zinc-700/50 text-zinc-300 border-zinc-600/30"}`}
+                                >
+                                    {evento.categoria}
+                                </span>
+                            </div>
+
+                            {/* Badge de asistentes */}
+                            <div class="absolute top-4 right-4">
+                                <span class="inline-flex items-center gap-1.5 bg-black/60 backdrop-blur-sm px-3 py-1 rounded-full text-[11px] text-gray-300 border border-zinc-700/50">
+                                    <svg
+                                        class="w-3 h-3 text-unicode"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                    >
+                                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                                        <circle cx="9" cy="7" r="4" />
+                                        <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+                                    </svg>
+                                    {evento.asistentes}
+                                </span>
+                            </div>
+
+                            {/* Fecha flotante */}
+                            <div class="absolute bottom-4 right-4">
+                                <span class="inline-flex items-center gap-1.5 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs text-gray-300 border border-zinc-700/50">
+                                    <svg
+                                        class="w-3.5 h-3.5 text-unicode"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                    >
+                                        <rect
+                                            x="3"
+                                            y="4"
+                                            width="18"
+                                            height="18"
+                                            rx="2"
+                                            ry="2"
+                                        />
+                                        <line x1="16" y1="2" x2="16" y2="6" />
+                                        <line x1="8" y1="2" x2="8" y2="6" />
+                                        <line x1="3" y1="10" x2="21" y2="10" />
+                                    </svg>
+                                    {evento.fecha}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Contenido de la tarjeta */}
+                        <div class="p-5 md:p-6 flex flex-col gap-3">
+                            {/* Título del evento */}
+                            <h3 class="text-lg md:text-xl font-bold text-white leading-snug group-hover:text-unicode transition-colors duration-300">
+                                {evento.titulo}
+                            </h3>
+
+                            {/* Ponente y lugar */}
+                            <div class="flex items-center gap-3 text-xs text-gray-400">
+                                <span class="flex items-center gap-1.5">
+                                    <svg
+                                        class="w-3.5 h-3.5 text-unicode/70"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                    >
+                                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                                        <circle cx="12" cy="7" r="4" />
+                                    </svg>
+                                    {evento.ponente}
+                                </span>
+                                <span class="w-1 h-1 bg-zinc-600 rounded-full" />
+                                <span class="flex items-center gap-1.5">
+                                    <svg
+                                        class="w-3.5 h-3.5 text-unicode/70"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                    >
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                                        <circle cx="12" cy="10" r="3" />
+                                    </svg>
+                                    {evento.lugar}
+                                </span>
+                            </div>
+
+                            {/* Descripción */}
+                            <p class="text-gray-400 text-sm leading-relaxed line-clamp-3">
+                                {evento.descripcion}
+                            </p>
+
+                            {/* Highlights */}
+                            <div class="flex flex-wrap gap-2 mt-1">
+                                {evento.highlights.map((highlight) => (
+                                    <span class="inline-flex items-center gap-1 text-[11px] text-unicode/80 bg-unicode/5 border border-unicode/10 rounded-full px-2.5 py-0.5">
+                                        <svg
+                                            class="w-2.5 h-2.5"
+                                            fill="currentColor"
+                                            viewBox="0 0 20 20"
+                                        >
+                                            <path
+                                                fill-rule="evenodd"
+                                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                clip-rule="evenodd"
+                                            />
+                                        </svg>
+                                        {highlight}
+                                    </span>
+                                ))}
+                            </div>
+
+                            {/* Línea decorativa inferior */}
+                            <div class="w-full h-px bg-linear-to-r from-unicode/20 via-unicode/5 to-transparent mt-2 group-hover:from-unicode/40 group-hover:via-unicode/15 transition-all duration-500" />
+                        </div>
+                    </article>
+                ))
+            }
+        </div>
+    </div>
+</section>
+
+<style>
+    /* Animación de entrada para las tarjetas */
+    .evento-card {
+        opacity: 0;
+        transform: translateY(30px);
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Limitar líneas de descripción */
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+
+<script>
+    // Contador animado para las estadísticas
+    document.addEventListener("DOMContentLoaded", () => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        const statNumbers =
+                            entry.target.querySelectorAll(".stat-number");
+                        statNumbers.forEach((el) => {
+                            const target = parseInt(
+                                el.getAttribute("data-target") || "0",
+                            );
+                            if (target === 0) return;
+                            let current = 0;
+                            const increment = Math.ceil(target / 40);
+                            const duration = 1500;
+                            const stepTime = duration / (target / increment);
+
+                            const timer = setInterval(() => {
+                                current += increment;
+                                if (current >= target) {
+                                    current = target;
+                                    clearInterval(timer);
+                                }
+                                (el as HTMLElement).textContent =
+                                    current.toString();
+                            }, stepTime);
+                        });
+                        observer.unobserve(entry.target);
+                    }
+                });
+            },
+            { threshold: 0.3 },
+        );
+
+        const statsSection = document.querySelector("#eventos-realizados");
+        if (statsSection) {
+            observer.observe(statsSection);
+        }
+    });
+</script>
