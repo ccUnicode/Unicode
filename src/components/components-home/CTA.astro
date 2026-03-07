@@ -1,0 +1,111 @@
+---
+/**
+ * CTA.astro — Sección de llamada a la acción final
+ * Invita a los visitantes a unirse al centro cultural
+ * con un diseño impactante de fondo con glow.
+ */
+---
+
+<section id="cta" class="w-full py-20 md:py-28 relative overflow-hidden">
+  <!-- Glows de fondo -->
+  <div
+    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-unicode/8 rounded-full blur-[180px] pointer-events-none"
+  >
+  </div>
+  <div
+    class="absolute top-0 left-0 w-64 h-64 bg-unicode/5 rounded-full blur-[100px] pointer-events-none"
+  >
+  </div>
+  <div
+    class="absolute bottom-0 right-0 w-48 h-48 bg-unicode/5 rounded-full blur-[80px] pointer-events-none"
+  >
+  </div>
+
+  <div class="max-w-4xl mx-auto px-6 relative z-10">
+    <div
+      class="relative bg-zinc-900/80 border border-zinc-800 rounded-3xl p-10 md:p-16 text-center backdrop-blur-sm overflow-hidden"
+    >
+      <!-- Patrón de puntos decorativo -->
+      <div
+        class="absolute inset-0 opacity-[0.02]"
+        style="background-image: radial-gradient(#75D32D 1px, transparent 1px); background-size: 24px 24px;"
+      >
+      </div>
+
+      <!-- Contenido -->
+      <div class="relative z-10">
+        <div
+          class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-unicode/10 border border-unicode/20 text-unicode font-bold mb-8 text-xs tracking-widest uppercase"
+        >
+          <span
+            class="w-1.5 h-1.5 rounded-full bg-unicode shadow-[0_0_6px_rgba(117,211,45,0.8)] animate-pulse"
+          ></span>
+          Convocatoria abierta
+        </div>
+
+        <h2
+          class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-6 leading-[1.15]"
+        >
+          ¿Listo para ser parte de <br class="hidden sm:block" />
+          <span class="text-unicode text-glow animate-glow">UNICODE</span>?
+        </h2>
+
+        <p
+          class="text-zinc-400 text-base md:text-lg max-w-xl mx-auto mb-10 leading-relaxed"
+        >
+          Únete a nuestra comunidad y accede a eventos exclusivos, talleres,
+          proyectos de impacto y una red de estudiantes apasionados por la
+          tecnología.
+        </p>
+
+        <!-- Botones -->
+        <div
+          class="flex flex-col sm:flex-row items-center justify-center gap-4"
+        >
+          <a
+            href="/convocatoria"
+            class="w-full sm:w-auto px-10 py-4 bg-unicode hover:bg-unicode-light text-black font-bold rounded-full transition-all duration-300 text-lg shadow-unicode hover:shadow-unicode-lg transform hover:-translate-y-1 text-center"
+          >
+            Postula ahora
+          </a>
+          <a
+            href="/areas"
+            class="w-full sm:w-auto px-10 py-4 bg-zinc-950 border border-unicode/30 hover:border-unicode text-white hover:text-unicode font-bold rounded-full transition-all duration-300 text-lg backdrop-blur-sm text-center"
+          >
+            Conocer áreas
+          </a>
+        </div>
+
+        <!-- Social proof -->
+        <div class="mt-10 flex items-center justify-center gap-3">
+          <!-- Avatars stack -->
+          <div class="flex -space-x-2">
+            <div
+              class="w-8 h-8 rounded-full bg-unicode/20 border-2 border-[#050505] flex items-center justify-center"
+            >
+              <span class="text-unicode text-xs font-bold">J</span>
+            </div>
+            <div
+              class="w-8 h-8 rounded-full bg-unicode/15 border-2 border-[#050505] flex items-center justify-center"
+            >
+              <span class="text-unicode text-xs font-bold">M</span>
+            </div>
+            <div
+              class="w-8 h-8 rounded-full bg-unicode/10 border-2 border-[#050505] flex items-center justify-center"
+            >
+              <span class="text-unicode text-xs font-bold">A</span>
+            </div>
+            <div
+              class="w-8 h-8 rounded-full bg-zinc-800 border-2 border-[#050505] flex items-center justify-center"
+            >
+              <span class="text-zinc-400 text-xs font-bold">+</span>
+            </div>
+          </div>
+          <p class="text-zinc-500 text-sm">
+            <span class="text-white font-semibold">+150</span> miembros ya son parte
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

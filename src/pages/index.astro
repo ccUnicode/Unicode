@@ -2,19 +2,44 @@
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import Hero from "../components/Hero.astro";
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import Stats from "../components/components-home/Stats.astro";
+import About from "../components/components-home/About.astro";
+import Novedades from "../components/components-home/Novedades.astro";
+import CTA from "../components/components-home/CTA.astro";
 ---
 
 <Layout title="Inicio">
 	<Navbar />
 	<Hero />
 
-	<!-- Content Placeholder (Stats, Novedades, Nosotros will follow) -->
-	<main class="w-full max-w-7xl mx-auto px-6 py-12 text-center text-zinc-500">
-		<p>
-			Las siguientes secciones se implementarán aquí según el RF-03 al RF-08.
-		</p>
+	<main class="w-full">
+		<!-- Separador visual sutil -->
+		<div
+			class="w-full h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent"
+		>
+		</div>
+
+		<Stats />
+
+		<div
+			class="w-full h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent"
+		>
+		</div>
+
+		<Novedades />
+
+		<div
+			class="w-full h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent"
+		>
+		</div>
+
+		<About />
+
+		<div
+			class="w-full h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent"
+		>
+		</div>
+
+		<CTA />
 	</main>
 </Layout>
