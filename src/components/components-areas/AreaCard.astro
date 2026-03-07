@@ -22,7 +22,7 @@ const {
     class={`flex flex-col md:flex-row gap-6 md:gap-8 bg-[#151515] rounded-[2rem] p-5 md:p-6 items-center border border-zinc-800/50 hover:border-[#75D32D]/30 transition-all duration-300 ${reverse ? "md:flex-row-reverse" : ""}`}
 >
     <!-- Contenedor de Imagen -->
-    <div class="w-full md:w-[32%] xl:w-[28%] max-w-[320px] flex-shrink-0">
+    <div class="w-full md:w-[25%] xl:w-[22%] max-w-[280px] flex-shrink-0">
         <img
             src={imageSrc}
             alt={`Imagen del área de ${title}`}
@@ -32,22 +32,24 @@ const {
 
     <!-- Contenedor de Información -->
     <div
-        class={`w-full md:w-[68%] xl:w-[72%] flex flex-col justify-center py-2 ${reverse ? "md:items-end md:text-right text-left" : "md:items-start text-left"}`}
+        class={`w-full md:w-[75%] xl:w-[78%] flex flex-col justify-center py-2 ${reverse ? "md:items-end md:text-right text-left" : "md:items-start text-left"}`}
     >
-        <h3 class="text-3xl font-bold text-[#75D32D] mb-3">{title}</h3>
+        <h3 class="text-4xl md:text-5xl font-bold text-unicode text-glow mb-4">
+            {title}
+        </h3>
 
-        <p class="text-zinc-300 text-[15px] leading-relaxed mb-4 font-normal">
+        <p class="text-zinc-300 text-[16px] leading-relaxed mb-5 font-normal">
             {description}
         </p>
 
-        <div class="mb-5 text-[15px]">
-            <span class="text-[#75D32D] font-bold">{directorLabel}</span>
+        <div class="mb-6 text-[16px]">
+            <span class="text-unicode font-bold">{directorLabel}</span>
             <span class="text-zinc-300"> {directorNames}</span>
         </div>
 
         <a
             href={`/areas/${title.toLowerCase().replace(/\s+/g, "-")}`}
-            class="bg-[#75D32D] text-white font-bold px-7 py-2.5 rounded-full hover:bg-[#64FF41] hover:scale-105 transition-all w-fit text-[15px] shadow-[0_0_15px_rgba(117,211,45,0.2)]"
+            class="bg-unicode text-white font-bold px-8 py-3 rounded-full hover:bg-unicode-light transition-all w-fit text-[16px] shadow-unicode hover:shadow-unicode-lg"
         >
             Conoce más
         </a>
