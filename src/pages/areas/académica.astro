@@ -1,0 +1,63 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+import IndividualArea from "../../components/components-areas/Individual-areas.astro";
+
+// Datos de la página (Placeholder con base en DCC)
+const whatWeLookForData = [
+    "Estudiantes responsables y comprometidos (lo más importante).",
+    "Estudiantes responsables y comprometidos (lo más importante).",
+    "Estudiantes responsables y comprometidos (lo más importante).",
+    "Estudiantes responsables y comprometidos (lo más importante).",
+    "Estudiantes responsables y comprometidos (lo más importante).",
+];
+
+const weValueData = [
+    "Manejo experto de Canva",
+    "Conocimiento en herramientas de edición de imágenes como Illustrator, Photoshop",
+    "Conocimiento en herramientas de edición de video como filmora, capcut",
+];
+
+const whatYouWinData = [
+    "En caso hayas ingresado al área sin conocimientos previos, te irás con muchos saberes con respecto a diseño, branding y marketing.",
+    "En caso hayas ingresado al área sin conocimientos previos, te irás con muchos saberes con respecto a diseño, branding y marketing.",
+    "Muchos amigos y contacto real con profesionales gracias a los eventos realizados por la familia Unicode, para que amplíes tu red de contactos",
+    "En caso hayas ingresado al área sin conocimientos previos, te irás con muchos saberes con respecto a diseño, branding y marketing.",
+];
+
+const projectsData = [
+    {
+        title: "EduTech: Contenido educativo",
+        description:
+            "Unicode es un centro cultural que nació con la idea de dar a conocer más la carrera de ingeniería de software. En este proyecto, subimos contenido educativo relacionado a ello, reforzando la identidad y los orígenes del centro",
+        imageSrc: "/areasmoment.png",
+    },
+];
+
+const directorsData = [
+    {
+        name: "Franz Nuñez",
+        linkedin: "franz-nunez",
+        imageSrc: "/areasmoment.png",
+    },
+    {
+        name: "Gino Romero",
+        linkedin: "gino-romero",
+        imageSrc: "/areasmoment.png",
+    },
+];
+---
+
+<Layout title="Académica | Áreas UNICODE">
+    <Navbar />
+
+    <IndividualArea
+        title="Académica"
+        description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
+        whatWeLookFor={whatWeLookForData}
+        weValue={weValueData}
+        whatYouWin={whatYouWinData}
+        projects={projectsData}
+        directors={directorsData}
+    />
+</Layout>
