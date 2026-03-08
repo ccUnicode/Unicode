@@ -14,23 +14,23 @@ interface StatItem {
 const stats: StatItem[] = [
   {
     icon: "members",
-    value: "+150",
+    value: "+70",
     label: "Miembros Activos",
   },
   {
     icon: "projects",
-    value: "4",
+    value: "3",
     label: "Proyectos Completados",
   },
   {
     icon: "events",
-    value: "12",
+    value: "4",
     label: "Eventos Realizados",
   },
   {
     icon: "years",
-    value: "3",
-    label: "Años de Trayectoria",
+    value: "1",
+    label: "Año de Trayectoria",
   },
 ];
 ---
@@ -55,10 +55,10 @@ const stats: StatItem[] = [
     </div>
 
     <!-- Grid de tarjetas -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
       {
         stats.map((stat) => (
-          <div class="group relative bg-zinc-900/60 border border-zinc-800 rounded-2xl p-8 text-center transition-all duration-500 hover:border-unicode/40 hover:bg-zinc-900/90 hover:-translate-y-1 hover:shadow-unicode">
+          <div class="group relative bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 sm:p-8 text-center transition-all duration-500 hover:border-unicode/40 hover:bg-zinc-900/90 hover:-translate-y-1 hover:shadow-unicode">
             {/* Glow en hover */}
             <div class="absolute inset-0 rounded-2xl bg-unicode/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
