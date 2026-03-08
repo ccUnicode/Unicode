@@ -2,171 +2,224 @@
 /**
  * HeroEventos.astro
  * Sección Hero para la página de Eventos.
- * Diseño: fondo oscuro con cortinas rojas difusas, mascota central y texto introductorio.
+ * Diseño: "Neural Mesh Plexus" - Fondo de red neuronal con nodos conectados y malla hexagonal.
+ * Estética: Tech de alto impacto, minimalista en el centro y compleja en los bordes.
  */
 ---
 
 <section
     id="hero-eventos"
-    class="relative w-full min-h-[90vh] flex items-center overflow-hidden"
+    class="relative w-full min-h-svh flex items-center justify-center overflow-hidden bg-[#050505] font-sans"
 >
-    <!-- Fondo con gradiente oscuro y efecto de escenario -->
-    <div class="absolute inset-0 bg-black">
-        <!-- Efecto cortinas laterales rojas difusas -->
-        <div
-            class="absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-red-950/40 via-red-950/10 to-transparent"
-        >
-        </div>
-        <div
-            class="absolute inset-y-0 left-0 w-1/6 bg-gradient-to-r from-red-950/20 to-transparent"
-        >
-        </div>
-        <!-- Luz de escenario desde abajo -->
-        <div
-            class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[60%] h-1/2 bg-gradient-to-t from-amber-900/10 via-transparent to-transparent rounded-full blur-3xl"
-        >
-        </div>
-        <!-- Vignette general -->
-        <div
-            class="absolute inset-0 bg-radial-[circle_at_center] from-transparent via-transparent to-black/70"
-        >
-        </div>
+    <!-- 1. Capa de Fondo: Patrón Hexagonal -->
+    <div
+        class="absolute inset-0 z-0 opacity-20 pointer-events-none"
+        style="background-image: radial-gradient(circle at 2px 2px, rgba(117,211,45,0.1) 1px, transparent 0); background-size: 40px 40px;"
+    >
+    </div>
+    <div
+        class="absolute inset-0 z-0 opacity-10 pointer-events-none"
+        style="background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MiIgaGVpZ2h0PSI2MCI+PHBhdGggZD0iTTI2IDBMMDUyIDE1VjQ1TDI2IDYwTDAgNDVWMTVMMjYgMFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgxMTcsIDIxMSwgNDUsIDAuMikiIHN0cm9rZS13aWR0aD0iMSIvPjwvc3ZnPg=='); background-size: 52px 60px;"
+    >
     </div>
 
-    <!-- Contenido -->
+    <!-- 2. Capa de Animación: Plexus (Nodos y Conexiones) -->
+    <canvas id="hero-plexus" class="absolute inset-0 z-10 pointer-events-none"
+    ></canvas>
+
+    <!-- 3. Viñeta Radial para enfocar el centro -->
     <div
-        class="relative z-10 max-w-7xl mx-auto px-6 w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-center pt-28 pb-16"
+        class="absolute inset-0 z-20 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,rgba(5,5,5,0.4)_50%,#050505_100%)]"
     >
-        <!-- Columna Izquierda: Texto -->
-        <div class="flex flex-col gap-6 text-left">
-            <h1
-                class="text-5xl md:text-7xl font-extrabold text-unicode uppercase leading-tight tracking-tight animate-glow"
+    </div>
+
+    <!-- 4. Contenido Principal -->
+    <div
+        class="relative z-30 flex flex-col items-center text-center px-4 md:px-6 w-full max-w-5xl mx-auto"
+    >
+        <!-- Badge Superior -->
+        <div
+            class="reveal-item mb-8 flex items-center gap-2 px-5 py-1.5 rounded-full border border-unicode/30 bg-black/50 backdrop-blur-md shadow-[0_0_20px_rgba(117,211,45,0.1)]"
+            style="animation-delay: 100ms;"
+        >
+            <span class="text-unicode font-bold text-sm">$</span>
+            <span
+                class="text-[10px] md:text-xs font-bold tracking-[0.2em] text-white uppercase mt-0.5"
             >
-                EVENTOS
-            </h1>
-            <p
-                class="text-gray-300 text-base md:text-lg leading-relaxed max-w-md"
-            >
-                ¡Bienvenido a la sección de eventos! Aquí podrás encontrar una
-                amplia gama de eventos programados por nosotros, ¡y de todo
-                tipo! Desde tech y vocación STEM hasta desarrollo de marca
-                personal y concursos matemáticos.
-            </p>
-            <p
-                class="text-gray-300 text-base md:text-lg leading-relaxed max-w-md"
-            >
-                ¿Qué esperas? ¡Inscríbete en uno y vive la experiencia!
-            </p>
-            <div>
-                <a
-                    href="#proximos-eventos"
-                    class="inline-block bg-unicode text-black font-bold px-8 py-3 rounded-full hover:bg-unicode-light transition-all duration-300 shadow-unicode hover:shadow-unicode-lg text-sm md:text-base"
-                >
-                    Conoce más
-                </a>
-            </div>
+                Comunidad Unicode
+            </span>
         </div>
 
-        <!-- Columna Derecha: Mascota -->
-        <div class="flex justify-center md:justify-end items-end relative">
-            <!-- Glow detrás de la mascota -->
-            <div
-                class="absolute bottom-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-unicode/10 rounded-full blur-3xl"
+        <!-- Título Principal -->
+        <h1
+            class="reveal-item flex flex-col items-center gap-0 font-black tracking-tight leading-[0.9] mb-8 uppercase select-none"
+            style="animation-delay: 300ms;"
+        >
+            <span
+                class="text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-white"
             >
-            </div>
-            <!-- Placeholder SVG de mascota Unicode -->
-            <div
-                class="relative w-64 h-80 md:w-80 md:h-96 flex items-end justify-center"
+                Eventos
+            </span>
+            <span
+                class="text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-unicode drop-shadow-[0_0_30px_rgba(117,211,45,0.5)]"
             >
+                UNICODE
+            </span>
+        </h1>
+
+        <!-- Descripción -->
+        <p
+            class="reveal-item text-sm md:text-base lg:text-lg text-zinc-400 max-w-xl leading-relaxed font-medium mb-10 px-4"
+            style="animation-delay: 500ms;"
+        >
+            Aprende, conecta y construye el futuro tecnológico junto a nuestra
+            comunidad.
+        </p>
+
+        <!-- Botón Conoce más -->
+        <div class="reveal-item" style="animation-delay: 700ms;">
+            <a
+                href="#proximos-eventos"
+                class="inline-flex items-center justify-center gap-2 px-8 py-3 bg-unicode text-black font-extrabold uppercase text-sm tracking-wider rounded-full hover:bg-[#8ff241] transition-all duration-300 shadow-[0_0_25px_rgba(117,211,45,0.4)] hover:shadow-[0_0_35px_rgba(117,211,45,0.6)]"
+            >
+                Conoce más
                 <svg
-                    viewBox="0 0 200 280"
+                    class="w-4 h-4"
                     fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="w-full h-full drop-shadow-2xl animate-float"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="3"
                 >
-                    <!-- Cuerpo -->
-                    <ellipse cx="100" cy="200" rx="55" ry="70" fill="#75D32D"
-                    ></ellipse>
-                    <!-- Cabeza -->
-                    <circle cx="100" cy="105" r="60" fill="#75D32D"></circle>
-                    <!-- Ojos blancos -->
-                    <ellipse cx="80" cy="100" rx="18" ry="20" fill="white"
-                    ></ellipse>
-                    <ellipse cx="120" cy="100" rx="18" ry="20" fill="white"
-                    ></ellipse>
-                    <!-- Pupilas -->
-                    <circle cx="84" cy="102" r="9" fill="#1a1a1a"></circle>
-                    <circle cx="124" cy="102" r="9" fill="#1a1a1a"></circle>
-                    <!-- Brillos de ojos -->
-                    <circle cx="88" cy="97" r="3" fill="white"></circle>
-                    <circle cx="128" cy="97" r="3" fill="white"></circle>
-                    <!-- Lentes -->
-                    <circle
-                        cx="80"
-                        cy="100"
-                        r="22"
-                        stroke="#333"
-                        stroke-width="3"
-                        fill="none"></circle>
-                    <circle
-                        cx="120"
-                        cy="100"
-                        r="22"
-                        stroke="#333"
-                        stroke-width="3"
-                        fill="none"></circle>
-                    <line
-                        x1="102"
-                        y1="100"
-                        x2="98"
-                        y2="100"
-                        stroke="#333"
-                        stroke-width="3"></line>
-                    <!-- Sonrisa -->
                     <path
-                        d="M85 125 Q100 140 115 125"
-                        stroke="#1a1a1a"
-                        stroke-width="3"
-                        fill="none"
-                        stroke-linecap="round"></path>
-                    <!-- Brazo izquierdo -->
-                    <ellipse
-                        cx="48"
-                        cy="195"
-                        rx="12"
-                        ry="25"
-                        fill="#6abf26"
-                        transform="rotate(-15 48 195)"></ellipse>
-                    <!-- Brazo derecho -->
-                    <ellipse
-                        cx="152"
-                        cy="195"
-                        rx="12"
-                        ry="25"
-                        fill="#6abf26"
-                        transform="rotate(15 152 195)"></ellipse>
-                    <!-- Pies -->
-                    <ellipse cx="78" cy="265" rx="18" ry="10" fill="#5cad22"
-                    ></ellipse>
-                    <ellipse cx="122" cy="265" rx="18" ry="10" fill="#5cad22"
-                    ></ellipse>
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                 </svg>
-            </div>
+            </a>
         </div>
     </div>
 </section>
 
 <style>
-    @keyframes float {
-        0%,
-        100% {
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap");
+
+    #hero-eventos {
+        font-family: "Inter", sans-serif;
+    }
+
+    .reveal-item {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: reveal 0.8s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes reveal {
+        to {
+            opacity: 1;
             transform: translateY(0);
         }
-        50% {
-            transform: translateY(-12px);
-        }
-    }
-    .animate-float {
-        animation: float 3s ease-in-out infinite;
     }
 </style>
+
+<script>
+    /**
+     * Motor de Animación Plexus
+     */
+    document.addEventListener("DOMContentLoaded", () => {
+        const canvas = document.getElementById(
+            "hero-plexus",
+        ) as HTMLCanvasElement;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        let width: number, height: number;
+        let particles: Particle[] = [];
+        const connectionDist = 160;
+        const particleCount = Math.min(Math.floor(window.innerWidth / 12), 100);
+
+        class Particle {
+            x: number;
+            y: number;
+            vx: number;
+            vy: number;
+            size: number;
+
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.6;
+                this.vy = (Math.random() - 0.5) * 0.6;
+                this.size = Math.random() * 2 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+            }
+
+            draw() {
+                if (!ctx) return;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(117, 211, 45, 0.6)";
+                ctx.fill();
+            }
+        }
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            init();
+        }
+
+        function init() {
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function drawLines() {
+            if (!ctx) return;
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < connectionDist) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        // Cuanto más cerca, más opacidad
+                        const opacity = 1 - dist / connectionDist;
+                        ctx.strokeStyle = `rgba(117, 211, 45, ${opacity * 0.25})`;
+                        ctx.lineWidth = 0.8;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, width, height);
+
+            particles.forEach((p) => {
+                p.update();
+                p.draw();
+            });
+
+            drawLines();
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener("resize", resize);
+        resize();
+        animate();
+    });
+</script>
