@@ -12,11 +12,6 @@ interface FAQ {
 
 const faqs: FAQ[] = [
     {
-        pregunta: "¿Cómo me inscribo a un evento?",
-        respuesta:
-            "Para inscribirte, busca el evento que te interesa en la sección de Próximos Eventos y haz clic en el botón 'Inscríbete'. Serás redirigido a un formulario de Google donde podrás completar tu registro de forma gratuita.",
-    },
-    {
         pregunta: "¿Los eventos son gratuitos?",
         respuesta:
             "¡Sí! Todos los eventos organizados por UNICODE son completamente gratuitos para todos los estudiantes de la UNI y público en general. Nuestro objetivo es democratizar el aprendizaje.",
@@ -48,12 +43,13 @@ const faqs: FAQ[] = [
     <div class="max-w-4xl mx-auto px-6">
         <!-- Título -->
         <h2
-            class="text-4xl md:text-5xl font-extrabold text-center mb-4 uppercase tracking-tight"
+            class="scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out text-4xl md:text-5xl font-extrabold text-center mb-4 uppercase tracking-tight"
         >
             PREGUNTAS <span class="text-unicode">FRECUENTES</span>
         </h2>
         <p
-            class="text-gray-400 text-center mb-14 text-base md:text-lg max-w-2xl mx-auto"
+            class="scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out text-gray-400 text-center mb-14 text-base md:text-lg max-w-2xl mx-auto"
+            style="transition-delay: 150ms;"
         >
             ¿Tienes dudas sobre nuestros eventos? Aquí encontrarás las
             respuestas más comunes.
@@ -63,7 +59,10 @@ const faqs: FAQ[] = [
         <div class="flex flex-col gap-3" id="faq-accordion">
             {
                 faqs.map((faq, index) => (
-                    <div class="faq-item group rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:border-unicode/30 transition-all duration-300 overflow-hidden">
+                    <div
+                        class="faq-item scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out group rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:border-unicode/30 overflow-hidden"
+                        style={`transition-delay: ${(index + 2) * 100}ms;`}
+                    >
                         <button
                             class="faq-toggle w-full flex items-center justify-between gap-4 p-5 md:p-6 text-left cursor-pointer"
                             data-faq-index={index}
@@ -161,5 +160,28 @@ const faqs: FAQ[] = [
                 }
             });
         });
+
+        // --- Scroll Reveal Logic ---
+        const observerOptions = {
+            root: null,
+            rootMargin: "0px",
+            threshold: 0.1,
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.remove(
+                        "opacity-0",
+                        "translate-y-12",
+                    );
+                    entry.target.classList.add("opacity-100", "translate-y-0");
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        const revealElements = document.querySelectorAll(".scroll-reveal");
+        revealElements.forEach((el) => observer.observe(el));
     });
 </script>
