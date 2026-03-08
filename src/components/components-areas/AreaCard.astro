@@ -19,14 +19,16 @@ const {
 ---
 
 <div
-    class={`flex flex-col md:flex-row gap-6 md:gap-8 bg-[#151515] rounded-[2rem] p-5 md:p-6 items-center border border-zinc-800/50 hover:border-[#75D32D]/30 transition-all duration-300 ${reverse ? "md:flex-row-reverse" : ""}`}
+    class={`flex flex-col md:flex-row gap-6 md:gap-8 bg-[#151515] rounded-[2rem] p-5 md:p-6 items-center border border-zinc-800/50 hover:border-unicode/30 transition-all duration-300 group ${reverse ? "md:flex-row-reverse" : ""}`}
 >
     <!-- Contenedor de Imagen -->
-    <div class="w-full md:w-[25%] xl:w-[22%] max-w-[280px] flex-shrink-0">
+    <div
+        class="w-full md:w-[25%] xl:w-[22%] max-w-[280px] flex-shrink-0 rounded-3xl overflow-hidden border-2 border-transparent group-hover:border-unicode/40 transition-all duration-500 group-hover:shadow-unicode"
+    >
         <img
             src={imageSrc}
             alt={`Imagen del área de ${title}`}
-            class="w-full aspect-square object-cover rounded-3xl"
+            class="w-full aspect-square object-cover"
         />
     </div>
 

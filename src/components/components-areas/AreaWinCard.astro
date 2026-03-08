@@ -9,23 +9,13 @@ const { text } = Astro.props;
 <div class="flex items-start gap-4">
     <!-- Contenedor reservado para la imagen iconográfica (Logotipo verde de UNICODE) -->
     <div
-        class="w-8 h-8 flex-shrink-0 rounded-full bg-zinc-800/50 flex items-center justify-center overflow-hidden border border-[#75D32D]/30 pt-1"
+        class="w-8 h-8 flex-shrink-0 rounded-full bg-zinc-800/50 flex items-center justify-center overflow-hidden border border-[#75D32D]/30 p-0"
     >
-        <!-- Icon Placeholder -->
-        <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            class="text-[#75D32D]"
-        >
-            <path
-                d="M12 2L12 22M6 6L6 18M18 6L18 18"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"></path>
-        </svg>
+        <img
+            src="/logo-unicode.png"
+            alt="Unicode Logo"
+            class="w-full h-full object-contain"
+        />
     </div>
 
     <!-- Texto -->
