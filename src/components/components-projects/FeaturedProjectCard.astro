@@ -8,19 +8,28 @@ interface Props {
 const { title, category = "PROYECTO", image } = Astro.props;
 ---
 
-<div class="shrink-0 w-[300px] md:w-[450px] aspect-16/10 bg-zinc-900/80 rounded-3xl border-2 border-zinc-800 hover:border-unicode shadow-lg hover:shadow-unicode-sm relative overflow-hidden transition-all duration-500 group snap-center">
+<div class="shrink-0 w-[85vw] md:w-[70vw] lg:w-[60vw] aspect-video bg-zinc-900/80 rounded-[2.5rem] border-2 border-zinc-800 hover:border-unicode shadow-2xl hover:shadow-unicode-sm relative overflow-hidden transition-all duration-500 group snap-center">
   <div 
     class={`absolute inset-0 bg-cover bg-center grayscale-50 opacity-40 group-hover:opacity-60 group-hover:grayscale-0 transition-all duration-700 group-hover:scale-110`}
     style={image ? `background-image: url('${image}')` : "background-image: url('/placeholder-projects.jpg')"}
   ></div>
-  <div class="absolute inset-0 bg-linear-to-t from-black via-black/40 to-transparent p-6 md:p-8 flex flex-col justify-end">
+  <div class="absolute inset-0 bg-linear-to-t from-black via-black/20 to-transparent p-8 md:p-12 flex flex-col justify-end">
     <div class="flex gap-2 mb-3 md:mb-4">
       <span class="px-3 py-1 bg-unicode/20 border border-unicode/30 rounded-full text-[10px] text-unicode uppercase font-bold tracking-widest backdrop-blur-md">
         {category}
       </span>
     </div>
-    <h3 class="text-xl md:text-3xl font-bold group-hover:text-unicode transition-colors">
-      {title}
-    </h3>
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <h3 class="text-xl md:text-3xl font-bold group-hover:text-unicode transition-colors leading-tight">
+        {title}
+      </h3>
+      
+      <a 
+        href={`/projects/${title.toLowerCase().replace(/\s+/g, '-')}`} 
+        class="inline-flex items-center justify-center px-6 py-2.5 rounded-full border border-white/20 bg-white/5 backdrop-blur-md text-sm font-bold text-white hover:border-unicode hover:text-unicode hover:bg-unicode/10 transition-all duration-300 w-fit shrink-0"
+      >
+        Ver detalles
+      </a>
+    </div>
   </div>
 </div>

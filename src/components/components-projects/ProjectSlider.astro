@@ -22,7 +22,7 @@ const { projects } = Astro.props;
   <!-- Slider Container -->
   <div 
     id="project-slider"
-    class="flex gap-6 overflow-x-auto pb-8 snap-x snap-mandatory scroll-smooth scrollbar-hide px-4 md:px-[10vw]"
+    class="flex gap-12 overflow-x-auto pb-12 snap-x snap-mandatory scroll-smooth scrollbar-hide px-6 md:px-[15vw]"
   >
     {projects.map((project) => (
       <FeaturedProjectCard 
@@ -37,7 +37,7 @@ const { projects } = Astro.props;
   <div class="flex justify-center gap-2 mt-4">
     {projects.map((_, i) => (
       <div 
-        class="slider-dot w-2 h-2 rounded-full bg-zinc-800 transition-all duration-300"
+        class="slider-dot w-2 h-2 rounded-full bg-zinc-800 transition-all duration-300 cursor-pointer"
         data-index={i}
       ></div>
     ))}
@@ -58,31 +58,92 @@ const { projects } = Astro.props;
 </style>
 
 <script>
-  const slider = document.getElementById('project-slider');
-  const dots = document.querySelectorAll('.slider-dot');
+  function initSlider() {
+    const slider = document.getElementById('project-slider');
+    const dots = document.querySelectorAll('.slider-dot');
+    const cards = slider?.querySelectorAll('.project-card-featured'); // Assuming class for better selection
 
-  if (slider) {
-    slider.addEventListener('scroll', () => {
-      const scrollPos = slider.scrollLeft;
-      const cardWidth = slider.querySelector('div')?.clientWidth || 0;
-      const gap = 24; // gap-6
-      const index = Math.round(scrollPos / (cardWidth + gap));
-      
-      dots.forEach((dot, i) => {
-        if (i === index) {
-          dot.classList.add('bg-unicode', 'w-6');
-          dot.classList.remove('bg-zinc-800');
-        } else {
-          dot.classList.remove('bg-unicode', 'w-6');
-          dot.classList.add('bg-zinc-800');
+    if (slider && dots.length > 0) {
+      const updateDots = () => {
+        const sliderRect = slider.getBoundingClientRect();
+        const sliderCenter = sliderRect.left + (sliderRect.width / 2);
+        const cardElements = Array.from(slider.children);
+        
+        let minDistance = Infinity;
+        let activeIndex = 0;
+
+        cardElements.forEach((card, i) => {
+          const cardRect = card.getBoundingClientRect();
+          const cardCenter = cardRect.left + (cardRect.width / 2);
+          const distance = Math.abs(sliderCenter - cardCenter);
+
+          if (distance < minDistance) {
+            minDistance = distance;
+            activeIndex = i;
+          }
+        });
+        
+        dots.forEach((dot, i) => {
+          if (i === activeIndex) {
+            dot.classList.add('bg-unicode', 'w-6');
+            dot.classList.remove('bg-zinc-800');
+          } else {
+            dot.classList.remove('bg-unicode', 'w-6');
+            dot.classList.add('bg-zinc-800');
+          }
+        });
+      };
+
+      // Initial centering of the 3rd project (index 2)
+      const centerThirdProject = () => {
+        const cardElements = slider.children;
+        if (cardElements.length >= 3) {
+          const thirdProject = cardElements[2] as HTMLElement;
+          const sliderWidth = slider.offsetWidth;
+          const cardWidth = thirdProject.offsetWidth;
+          const cardOffset = thirdProject.offsetLeft;
+          
+          // Calculate the scroll position to put the 3rd card in the middle
+          const scrollTo = cardOffset - (sliderWidth / 2) + (cardWidth / 2);
+          
+          slider.scrollTo({
+            left: scrollTo,
+            behavior: 'instant' as ScrollBehavior
+          });
+          
+          updateDots();
         }
-      });
-    });
+      };
 
-    // Initialize first dot
-    if (dots[0]) {
-      dots[0].classList.add('bg-unicode', 'w-6');
-      dots[0].classList.remove('bg-zinc-800');
+      slider.addEventListener('scroll', updateDots);
+      
+      // Small timeout to ensure DOM is fully rendered before calculating offsets
+      setTimeout(centerThirdProject, 100);
+
+      // Also allow clicking dots to navigate
+      dots.forEach((dot, i) => {
+        dot.addEventListener('click', () => {
+          const cardElements = slider.children;
+          if (cardElements[i]) {
+            const card = cardElements[i] as HTMLElement;
+            const sliderWidth = slider.offsetWidth;
+            const cardWidth = card.offsetWidth;
+            const cardOffset = card.offsetLeft;
+            const scrollTo = cardOffset - (sliderWidth / 2) + (cardWidth / 2);
+            
+            slider.scrollTo({
+              left: scrollTo,
+              behavior: 'smooth'
+            });
+          }
+        });
+      });
     }
   }
+
+  // Initialize
+  initSlider();
+
+  // Re-run for Astro view transitions
+  document.addEventListener('astro:page-load', initSlider);
 </script>
