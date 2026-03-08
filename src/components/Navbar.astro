@@ -43,6 +43,74 @@
           >Convocatoria</a
         >
       </div>
+
+      <!-- BOTON MENU MOBILE -->
+      <div class="md:hidden flex items-center">
+        <button
+          id="mobile-menu-btn"
+          class="text-zinc-300 hover:text-white p-2 focus:outline-hidden"
+          aria-label="Abrir menú"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
+
+  <!-- MENU MOBILE DESPLEGABLE -->
+  <div
+    id="mobile-menu"
+    class="hidden md:hidden bg-[#050505]/95 border-t border-zinc-900 px-4 pt-2 pb-4 space-y-2 text-center shadow-lg"
+  >
+    <a
+      href="/areas"
+      class="block px-3 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-zinc-800/50 rounded-md"
+      >Áreas</a
+    >
+    <a
+      href="/eventos"
+      class="block px-3 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-zinc-800/50 rounded-md"
+      >Eventos</a
+    >
+    <a
+      href="/projects"
+      class="block px-3 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-zinc-800/50 rounded-md"
+      >Proyectos</a
+    >
+    <a
+      href="/call"
+      class="block px-3 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-zinc-800/50 rounded-md"
+      >Convocatoria</a
+    >
+  </div>
 </nav>
+
+<script>
+  function setupMobileMenu() {
+    const btn = document.getElementById("mobile-menu-btn");
+    const menu = document.getElementById("mobile-menu");
+
+    if (btn && menu) {
+      // Usamos onclick para no duplicar listeners si se ejecuta varias veces
+      btn.onclick = () => {
+        menu.classList.toggle("hidden");
+      };
+    }
+  }
+
+  // Inicializar en carga inicial
+  setupMobileMenu();
+  // Reinicializar si se usa ViewTransitions (Astro)
+  document.addEventListener("astro:after-swap", setupMobileMenu);
+</script>
