@@ -1,7 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import Navbar from "../../components/Navbar.astro";
-import IndividualArea from "../../components/components-areas/Individual-areas.astro";
+import AreaLayout from "../../components/components-areas/AreaLayout.astro";
 
 // Datos de la página (Placeholder con base en DCC)
 const whatWeLookForData = [
@@ -52,7 +52,7 @@ const directorsData = [
 <Layout title="GTH | Áreas UNICODE">
     <Navbar />
 
-    <IndividualArea
+    <AreaLayout
         title="GTH"
         description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
         whatWeLookFor={whatWeLookForData}

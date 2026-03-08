@@ -1,7 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
-import CardArea from "../components/components-areas/Cards-areas.astro";
+import AreaCard from "../components/components-areas/AreaCard.astro";
 ---
 
 <Layout title="Áreas | UNICODE">
@@ -9,17 +9,24 @@ import CardArea from "../components/components-areas/Cards-areas.astro";
 
     <main class="w-full max-w-7xl mx-auto px-6 py-24">
         <!-- Título representativo de la página -->
+        <div class="mb-20"></div>
+
+        <!-- tryng to agrandar el título de CONOCE NUESTRAS ÁREAS -->
+
         <h1
-            class="text-4xl md:text-6xl font-extrabold text-white mb-20 text-center uppercase"
+            class="text-6xl md:text-7xl font-extrabold text-white mb-20 text-center uppercase animate-lifting"
         >
-            <span class="text-[#75D32D]">CONOCE</span> NUESTRAS <span
-                class="text-[#75D32D]">ÁREAS</span
+            <span class="text-unicode text-glow">CONOCE</span> NUESTRAS <span
+                class="text-unicode text-glow">ÁREAS</span
             >
         </h1>
 
         <!-- Grid Placeholder para las cards de áreas -->
-        <div class="flex flex-col gap-12 text-left">
-            <CardArea
+        <div
+            class="flex flex-col gap-12 text-left animate-lifting"
+            style="animation-delay: 200ms;"
+        >
+            <AreaCard
                 title="GTH"
                 description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
                 directorLabel="Director:"
@@ -27,35 +34,35 @@ import CardArea from "../components/components-areas/Cards-areas.astro";
                 imageSrc="/areasmoment.png"
             />
 
-            <CardArea
+            <AreaCard
                 title="Relaciones Públicas"
-                description="Alianzas, convenios y prensa. Área encargada de gestionar la imagen externa de UNICODE y establecer vínculos estratégicos con otras organizaciones y medios."
+                description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
                 directorLabel="Directores:"
                 directorNames="Jeanpier Robles y Rafael Cardozo"
                 reverse={true}
                 imageSrc="/areasmoment.png"
             />
 
-            <CardArea
+            <AreaCard
                 title="Académica"
-                description="Talleres, asesorías y cátedras abiertas. Área especializada en fomentar el aprendizaje continuo y la excelencia académica dentro de la comunidad UNICODE."
+                description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
                 directorLabel="Directores:"
                 directorNames="Franz Nuñez y Gino Romero"
                 imageSrc="/areasmoment.png"
             />
 
-            <CardArea
+            <AreaCard
                 title="DCC"
-                description="La Dirección de Comunicación y Contenido (DCC) es el motor creativo de UNICODE. Buscamos estudiantes comprometidos y con ganas de sumar al equipo creando contenido y comunicando nuestras actividades para la comunidad."
+                description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
                 directorLabel="Directores:"
                 directorNames="Renato Gutierrez y Rubí Quispe "
                 reverse={true}
                 imageSrc="/areasmoment.png"
             />
 
-            <CardArea
+            <AreaCard
                 title="Investigación y desarrollo"
-                description="Investigación, Desarrollo y Tecnología. Área enfocada en la creación de soluciones tecnológicas innovadoras y la exploración de nuevas tendencias en el desarrollo de software."
+                description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
                 directorLabel="Directores:"
                 directorNames="Lenin Castro y Gabriel Chupa"
                 imageSrc="/areasmoment.png"
@@ -63,3 +70,21 @@ import CardArea from "../components/components-areas/Cards-areas.astro";
         </div>
     </main>
 </Layout>
+
+<style>
+    .animate-lifting {
+        opacity: 0;
+        animation: lifting 1s ease-out forwards;
+    }
+
+    @keyframes lifting {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
