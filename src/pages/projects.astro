@@ -16,6 +16,7 @@ const projects = [
     faculty: "DCC",
     category: "Destacado",
     image: "/bienvenida_cachimbos.png",
+    area: "desarrollo",
   },
   {
     id: 2,
@@ -26,6 +27,7 @@ const projects = [
     faculty: "DCC",
     category: "Destacado",
     image: "/bienvenida_cachimbos.png",
+    area: "desarrollo",
   },
   {
     id: 3,
@@ -36,6 +38,7 @@ const projects = [
     faculty: "DCC",
     category: "Destacado",
     image: "/bienvenida_cachimbos.png",
+    area: "diseño",
   },
   {
     id: 4,
@@ -46,6 +49,7 @@ const projects = [
     faculty: "DCC",
     category: "Destacado",
     image: "/bienvenida_cachimbos.png",
+    area: "ciberseguridad",
   },
   {
     id: 5,
@@ -56,6 +60,7 @@ const projects = [
     faculty: "DCC",
     category: "Destacado",
     image: "/bienvenida_cachimbos.png",
+    area: "data",
   },
   {
     id: 6,
@@ -65,6 +70,7 @@ const projects = [
     status: "Activo",
     faculty: "DCC",
     image: "/convocatoria_bg.png",
+    area: "desarrollo",
   },
   {
     id: 7,
@@ -74,6 +80,7 @@ const projects = [
     status: "Culminado",
     faculty: "DCC",
     image: "/convocatoria_bg.png",
+    area: "data",
   },
 ];
 
@@ -89,14 +96,10 @@ const featuredProjects = projects.filter((p) => p.category === "Destacado");
     <!-- Page Header -->
     <section class="max-w-7xl mx-auto px-6 text-center mb-16 animate-fade-in">
       <h1
-        class="text-5xl md:text-7xl font-bold text-unicode tracking-tighter mb-8 drop-shadow-[0_0_15px_rgba(117,211,45,0.3)]"
+        class="text-5xl md:text-7xl font-bold text-unicode tracking-tighter mb-6 drop-shadow-[0_0_15px_rgba(117,211,45,0.3)]"
       >
         PROYECTOS
       </h1>
-
-      <div class="flex justify-center">
-        <ProjectFilters />
-      </div>
 
       <p class="text-zinc-400 text-lg md:text-xl max-w-2xl mx-auto italic mt-4">
         Impulsando el desarrollo de sistemas tech para la formación educativa de
@@ -110,20 +113,24 @@ const featuredProjects = projects.filter((p) => p.category === "Destacado");
       class="w-full mb-32 animate-fade-in"
       style="animation-delay: 200ms;"
     >
-      <div class="max-w-7xl mx-auto px-6 mb-8">
-        <h2 class="text-2xl font-bold flex items-center gap-3">
+      <div class="max-w-7xl mx-auto px-6 mb-8 flex justify-center">
+        <h2 class="text-2xl font-bold flex items-center gap-3 text-center">
           <span class="w-8 h-[2px] bg-unicode"></span>
           PROYECTOS DESTACADOS
+          <span class="w-8 h-[2px] bg-unicode"></span>
         </h2>
       </div>
       <ProjectSlider projects={featuredProjects} />
     </section>
 
-    <!-- Main Project List -->
-    <section class="max-w-7xl mx-auto px-6">
-      <h2 class="text-4xl font-bold mb-12">
+    <section class="max-w-7xl mx-auto px-6 relative z-10">
+      <h2 class="text-4xl font-bold mb-8 text-center">
         Lista de <span class="text-unicode">proyectos</span>
       </h2>
+
+      <div class="flex justify-center mb-6">
+        <ProjectFilters />
+      </div>
 
       <div id="no-results" class="hidden text-center py-20 animate-fade-in">
         <p class="text-zinc-500 text-xl font-medium">
@@ -144,7 +151,10 @@ const featuredProjects = projects.filter((p) => p.category === "Destacado");
         >
           {
             projects.map((project) => (
-              <div class="project-item flex-none w-[88vw] md:w-auto h-full snap-center">
+              <div
+                class="project-item flex-none w-[88vw] md:w-auto h-full snap-center"
+                data-area={project.area}
+              >
                 <ProjectCard
                   title={project.title}
                   description={project.description}
@@ -235,20 +245,28 @@ const featuredProjects = projects.filter((p) => p.category === "Destacado");
       const searchInput = document.getElementById(
         "project-search",
       ) as HTMLInputElement;
+      const filterSelect = document.getElementById(
+        "project-area-filter",
+      ) as HTMLSelectElement;
       const projectItems = document.querySelectorAll(".project-item");
       const noResults = document.getElementById("no-results");
       const projectsGrid = document.getElementById("projects-grid");
       const clearSearchBtn = document.getElementById("clear-search");
       const featuredSection = document.getElementById("featured-section");
 
-      if (!searchInput || projectItems.length === 0) return;
+      if ((!searchInput && !filterSelect) || projectItems.length === 0) return;
 
       const filterProjects = () => {
-        const searchTerm = searchInput.value.toLowerCase().trim();
+        const searchTerm = searchInput
+          ? searchInput.value.toLowerCase().trim()
+          : "";
+        const selectedArea = filterSelect
+          ? filterSelect.value.toLowerCase()
+          : "";
         let visibleCount = 0;
 
-        // Toggle featured section: hide if searching, show if empty
-        if (searchTerm.length > 0) {
+        // Toggle featured section: hide if searching or filtering
+        if (searchTerm.length > 0 || selectedArea.length > 0) {
           featuredSection?.classList.add("hidden");
         } else {
           featuredSection?.classList.remove("hidden");
@@ -259,11 +277,14 @@ const featuredProjects = projects.filter((p) => p.category === "Destacado");
             item.querySelector("h3")?.textContent?.toLowerCase() || "";
           const description =
             item.querySelector("p")?.textContent?.toLowerCase() || "";
+          const itemArea = item.getAttribute("data-area")?.toLowerCase() || "";
 
-          const isVisible =
+          const isVisibleSearch =
             title.includes(searchTerm) || description.includes(searchTerm);
+          const isVisibleArea =
+            selectedArea === "" || itemArea === selectedArea;
 
-          if (isVisible) {
+          if (isVisibleSearch && isVisibleArea) {
             (item as HTMLElement).style.display = "block";
             visibleCount++;
           } else {
@@ -293,7 +314,13 @@ const featuredProjects = projects.filter((p) => p.category === "Destacado");
         }
       };
 
-      searchInput.addEventListener("input", filterProjects);
+      if (searchInput) {
+        searchInput.addEventListener("input", filterProjects);
+      }
+
+      if (filterSelect) {
+        filterSelect.addEventListener("change", filterProjects);
+      }
 
       clearSearchBtn?.addEventListener("click", () => {
         searchInput.value = "";
