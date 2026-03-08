@@ -44,16 +44,9 @@ const beneficios: Beneficio[] = [
           {
             beneficios.map((beneficio) => (
               <div class="flex items-start gap-4">
-                {/* Ícono de Unicode estilo logotipo circular */}
-                <div class="shrink-0 mt-1">
-                  <svg viewBox="0 0 100 100" class="w-6 h-6 fill-unicode">
-                    <!-- Left parenthetical arc -->
-                    <path d="M 33 5 C 10 30 10 70 33 95 L 43 95 C 22 70 22 30 43 5 Z" />
-                    <!-- Middle 1 -->
-                    <path d="M 50 25 L 60 15 L 63 15 L 63 95 L 53 95 L 53 25 Z" />
-                    <!-- Right parenthetical arc -->
-                    <path d="M 77 5 C 100 30 100 70 77 95 L 67 95 C 88 70 88 30 67 5 Z" />
-                  </svg>
+                {/* Punto verde */}
+                <div class="shrink-0 mt-1.5 md:mt-1">
+                  <div class="w-2.5 h-2.5 rounded-full bg-unicode mt-0.5" />
                 </div>
 
                 {/* Texto */}
@@ -89,9 +82,15 @@ const beneficios: Beneficio[] = [
 
   <style>
     @keyframes float {
-      0% { transform: translateY(0px); }
-      50% { transform: translateY(-15px); }
-      100% { transform: translateY(0px); }
+      0% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-15px);
+      }
+      100% {
+        transform: translateY(0px);
+      }
     }
   </style>
 </section>
