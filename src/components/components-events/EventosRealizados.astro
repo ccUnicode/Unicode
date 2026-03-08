@@ -1,8 +1,9 @@
 ---
 /**
  * EventosRealizados.astro
- * Sección de galería de Eventos Realizados con tarjetas premium,
- * estadísticas de impacto y hover effects interactivos.
+ * Sección de galería de Eventos Realizados con visualización responsiva:
+ * - Mobile/Tablet: Carrusel horizontal interactivo.
+ * - PC (Desktop): Grid tradicional de 3 columnas (diseño original).
  */
 
 interface EventoRealizado {
@@ -92,7 +93,6 @@ const eventosRealizados: EventoRealizado[] = [
     },
 ];
 
-// Estadísticas globales
 const totalEventos = eventosRealizados.length;
 const totalAsistentes = eventosRealizados.reduce(
     (sum, e) => sum + e.asistentes,
@@ -100,7 +100,6 @@ const totalAsistentes = eventosRealizados.reduce(
 );
 const categorias = [...new Set(eventosRealizados.map((e) => e.categoria))];
 
-// Colores por categoría
 const categoriaBadge: Record<string, string> = {
     Hackathon: "bg-purple-500/15 text-purple-400 border-purple-500/30",
     Workshop: "bg-blue-500/15 text-blue-400 border-blue-500/30",
@@ -114,14 +113,13 @@ const categoriaBadge: Record<string, string> = {
     id="eventos-realizados"
     class="w-full py-20 md:py-28 bg-[#050505] relative overflow-hidden"
 >
-    <!-- Efecto de fondo decorativo -->
     <div
         class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-unicode/3 rounded-full blur-[120px] pointer-events-none"
     >
     </div>
 
     <div class="max-w-7xl mx-auto px-6 relative z-10">
-        <!-- Encabezado de sección -->
+        <!-- Header -->
         <div
             class="scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out text-center mb-16"
         >
@@ -144,213 +142,243 @@ const categoriaBadge: Record<string, string> = {
                 class="text-gray-400 text-base md:text-lg max-w-2xl mx-auto leading-relaxed"
             >
                 Revive los mejores momentos de nuestros eventos pasados. Cada
-                encuentro es una oportunidad de aprender, conectar y crecer
-                juntos.
+                encuentro es una oportunidad de aprender y conectar.
             </p>
         </div>
 
-        <!-- Estadísticas de impacto -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-            <div
-                class="scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out stat-card group text-center bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 hover:border-unicode/30"
-                style="transition-delay: 100ms;"
+        <!-- Estadísticas -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20 px-2">
+            {
+                [
+                    { label: "Eventos", val: totalEventos, delay: 100 },
+                    { label: "Asistentes", val: totalAsistentes, delay: 200 },
+                    { label: "Categorías", val: categorias.length, delay: 300 },
+                    {
+                        label: "Gratuitos",
+                        val: "100%",
+                        delay: 400,
+                        noAnim: true,
+                    },
+                ].map((stat) => (
+                    <div
+                        class="scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out text-center bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 hover:border-unicode/30"
+                        style={`transition-delay: ${stat.delay}ms;`}
+                    >
+                        <p
+                            class={`text-3xl md:text-4xl font-extrabold ${stat.noAnim ? "text-white" : "text-unicode stat-number"} mb-1`}
+                            data-target={
+                                typeof stat.val === "number" ? stat.val : 0
+                            }
+                        >
+                            {stat.noAnim ? stat.val : "0"}
+                        </p>
+                        <p class="text-gray-400 text-xs md:text-sm uppercase tracking-wider font-medium">
+                            {stat.label}
+                        </p>
+                    </div>
+                ))
+            }
+        </div>
+
+        <!-- ==========================================
+             VISTA MÓVIL Y TABLET (CARRUSEL)
+             ========================================== -->
+        <div class="lg:hidden relative group/past-carousel">
+            <!-- Flechas -->
+            <button
+                id="prev-past-event"
+                class="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 flex items-center justify-center bg-black/60 border border-unicode/30 text-unicode rounded-full backdrop-blur-md opacity-0 group-hover/past-carousel:opacity-100 transition-opacity md:hidden"
+                aria-label="Anterior"
             >
-                <p
-                    class="text-3xl md:text-4xl font-extrabold text-unicode mb-1 stat-number"
-                    data-target={totalEventos}
+                <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
                 >
-                    0
-                </p>
-                <p
-                    class="text-gray-400 text-xs md:text-sm uppercase tracking-wider font-medium"
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </button>
+
+            <button
+                id="next-past-event"
+                class="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 flex items-center justify-center bg-black/60 border border-unicode/30 text-unicode rounded-full backdrop-blur-md opacity-0 group-hover/past-carousel:opacity-100 transition-opacity md:hidden"
+                aria-label="Siguiente"
+            >
+                <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
                 >
-                    Eventos
-                </p>
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M9 5l7 7-7 7"></path>
+                </svg>
+            </button>
+
+            <div
+                id="past-events-scroll"
+                class="flex md:grid md:grid-cols-2 gap-6 overflow-x-auto md:overflow-x-visible pb-10 md:pb-0 snap-x snap-mandatory scrollbar-hide scroll-smooth px-2"
+            >
+                {
+                    eventosRealizados.map((evento, index) => (
+                        <article class="scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out flex-none w-[85vw] md:w-auto relative rounded-3xl overflow-hidden border border-zinc-800/50 bg-zinc-900/30 snap-center">
+                            <div class="relative h-44 overflow-hidden">
+                                <img
+                                    src={evento.imagen}
+                                    alt={evento.titulo}
+                                    class="w-full h-full object-cover"
+                                />
+                                <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent" />
+                                <div class="absolute top-4 left-4">
+                                    <span
+                                        class={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase border ${categoriaBadge[evento.categoria]}`}
+                                    >
+                                        {evento.categoria}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <h3 class="text-lg font-bold text-white mb-2 line-clamp-1">
+                                    {evento.titulo}
+                                </h3>
+                                <div class="flex items-center gap-3 text-[10px] text-zinc-500 mb-3">
+                                    <span class="flex items-center gap-1">
+                                        <svg
+                                            class="w-3 h-3 text-unicode"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <>
+                                                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                                                <circle cx="12" cy="7" r="4" />
+                                            </>
+                                        </svg>
+                                        {evento.ponente}
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <svg
+                                            class="w-3 h-3 text-unicode"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <>
+                                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                                                <circle cx="12" cy="10" r="3" />
+                                            </>
+                                        </svg>
+                                        {evento.lugar}
+                                    </span>
+                                </div>
+                                <p class="text-zinc-400 text-xs leading-relaxed line-clamp-2">
+                                    {evento.descripcion}
+                                </p>
+                            </div>
+                        </article>
+                    ))
+                }
             </div>
+
             <div
-                class="scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out stat-card group text-center bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 hover:border-unicode/30"
-                style="transition-delay: 200ms;"
+                id="past-carousel-indicator"
+                class="flex md:hidden justify-center gap-3 mt-2"
             >
-                <p
-                    class="text-3xl md:text-4xl font-extrabold text-unicode mb-1 stat-number"
-                    data-target={totalAsistentes}
-                >
-                    0
-                </p>
-                <p
-                    class="text-gray-400 text-xs md:text-sm uppercase tracking-wider font-medium"
-                >
-                    Asistentes
-                </p>
-            </div>
-            <div
-                class="scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out stat-card group text-center bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 hover:border-unicode/30"
-                style="transition-delay: 300ms;"
-            >
-                <p
-                    class="text-3xl md:text-4xl font-extrabold text-unicode mb-1 stat-number"
-                    data-target={categorias.length}
-                >
-                    0
-                </p>
-                <p
-                    class="text-gray-400 text-xs md:text-sm uppercase tracking-wider font-medium"
-                >
-                    Categorías
-                </p>
-            </div>
-            <div
-                class="scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out stat-card group text-center bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 hover:border-unicode/30"
-                style="transition-delay: 400ms;"
-            >
-                <p class="text-3xl md:text-4xl font-extrabold text-white mb-1">
-                    100%
-                </p>
-                <p
-                    class="text-gray-400 text-xs md:text-sm uppercase tracking-wider font-medium"
-                >
-                    Gratuitos
-                </p>
+                {
+                    eventosRealizados.map((_, i) => (
+                        <button
+                            class={`w-1.5 h-1.5 rounded-full transition-all ${i === 0 ? "bg-unicode w-4" : "bg-zinc-800"}`}
+                            data-index={i}
+                        />
+                    ))
+                }
             </div>
         </div>
 
-        <!-- Grid de eventos realizados -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- ==========================================
+             VISTA PC (GRID ORIGINAL)
+             ========================================== -->
+        <div class="hidden lg:grid grid-cols-3 gap-6">
             {
                 eventosRealizados.map((evento, index) => (
                     <article
-                        class="scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out evento-card group relative rounded-3xl overflow-hidden border border-zinc-800/50 bg-zinc-900/30 hover:border-unicode/30 hover:-translate-y-1 hover:shadow-[0_8px_40px_-12px_rgba(117,211,45,0.15)]"
-                        style={`transition-delay: ${(index % 3) * 150}ms`}
+                        class="scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out relative rounded-3xl overflow-hidden border border-zinc-800/50 bg-zinc-900/30 hover:border-unicode/30 hover:-translate-y-2 transition-all duration-300 group"
+                        style={`transition-delay: ${(index % 3) * 100}ms`}
                     >
-                        {/* Imagen del evento con overlay */}
                         <div class="relative h-48 overflow-hidden">
                             <img
                                 src={evento.imagen}
                                 alt={evento.titulo}
-                                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                             />
-                            {/* Overlay gradiente */}
-                            <div class="absolute inset-0 bg-linear-to-t from-zinc-900 via-zinc-900/50 to-transparent" />
-
-                            {/* Badge de categoría */}
+                            <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent" />
                             <div class="absolute top-4 left-4">
                                 <span
-                                    class={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider border ${categoriaBadge[evento.categoria] || "bg-zinc-700/50 text-zinc-300 border-zinc-600/30"}`}
+                                    class={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider border ${categoriaBadge[evento.categoria]}`}
                                 >
                                     {evento.categoria}
                                 </span>
                             </div>
-
-                            {/* Badge de asistentes */}
-                            <div class="absolute top-4 right-4">
-                                <span class="inline-flex items-center gap-1.5 bg-black/60 backdrop-blur-sm px-3 py-1 rounded-full text-[11px] text-gray-300 border border-zinc-700/50">
-                                    <svg
-                                        class="w-3 h-3 text-unicode"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                    >
-                                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                                        <circle cx="9" cy="7" r="4" />
-                                        <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
-                                    </svg>
-                                    {evento.asistentes}
-                                </span>
-                            </div>
-
-                            {/* Fecha flotante */}
                             <div class="absolute bottom-4 right-4">
-                                <span class="inline-flex items-center gap-1.5 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs text-gray-300 border border-zinc-700/50">
-                                    <svg
-                                        class="w-3.5 h-3.5 text-unicode"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                    >
-                                        <rect
-                                            x="3"
-                                            y="4"
-                                            width="18"
-                                            height="18"
-                                            rx="2"
-                                            ry="2"
-                                        />
-                                        <line x1="16" y1="2" x2="16" y2="6" />
-                                        <line x1="8" y1="2" x2="8" y2="6" />
-                                        <line x1="3" y1="10" x2="21" y2="10" />
-                                    </svg>
+                                <span class="inline-flex items-center gap-1.5 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] text-gray-300 border border-zinc-700/50">
                                     {evento.fecha}
                                 </span>
                             </div>
                         </div>
-
-                        {/* Contenido de la tarjeta */}
-                        <div class="p-5 md:p-6 flex flex-col gap-3">
-                            {/* Título del evento */}
-                            <h3 class="text-lg md:text-xl font-bold text-white leading-snug group-hover:text-unicode transition-colors duration-300">
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold text-white mb-3 group-hover:text-unicode transition-colors">
                                 {evento.titulo}
                             </h3>
-
-                            {/* Ponente y lugar */}
-                            <div class="flex items-center gap-3 text-xs text-gray-400">
+                            <div class="flex items-center gap-4 text-xs text-zinc-500 mb-4">
                                 <span class="flex items-center gap-1.5">
                                     <svg
-                                        class="w-3.5 h-3.5 text-unicode/70"
+                                        class="w-4 h-4 text-unicode/70"
                                         fill="none"
                                         viewBox="0 0 24 24"
                                         stroke="currentColor"
                                         stroke-width="2"
                                     >
-                                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                                        <circle cx="12" cy="7" r="4" />
+                                        <>
+                                            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                                            <circle cx="12" cy="7" r="4" />
+                                        </>
                                     </svg>
                                     {evento.ponente}
                                 </span>
-                                <span class="w-1 h-1 bg-zinc-600 rounded-full" />
                                 <span class="flex items-center gap-1.5">
                                     <svg
-                                        class="w-3.5 h-3.5 text-unicode/70"
+                                        class="w-4 h-4 text-unicode/70"
                                         fill="none"
                                         viewBox="0 0 24 24"
                                         stroke="currentColor"
                                         stroke-width="2"
                                     >
-                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                                        <circle cx="12" cy="10" r="3" />
+                                        <>
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                                            <circle cx="12" cy="10" r="3" />
+                                        </>
                                     </svg>
                                     {evento.lugar}
                                 </span>
                             </div>
-
-                            {/* Descripción */}
-                            <p class="text-gray-400 text-sm leading-relaxed line-clamp-3">
+                            <p class="text-zinc-400 text-sm leading-relaxed line-clamp-3 mb-4">
                                 {evento.descripcion}
                             </p>
-
-                            {/* Highlights */}
-                            <div class="flex flex-wrap gap-2 mt-1">
-                                {evento.highlights.map((highlight) => (
-                                    <span class="inline-flex items-center gap-1 text-[11px] text-unicode/80 bg-unicode/5 border border-unicode/10 rounded-full px-2.5 py-0.5">
-                                        <svg
-                                            class="w-2.5 h-2.5"
-                                            fill="currentColor"
-                                            viewBox="0 0 20 20"
-                                        >
-                                            <path
-                                                fill-rule="evenodd"
-                                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                clip-rule="evenodd"
-                                            />
-                                        </svg>
-                                        {highlight}
+                            <div class="flex flex-wrap gap-2">
+                                {evento.highlights.map((h) => (
+                                    <span class="text-[10px] text-unicode/70 bg-unicode/5 border border-unicode/10 rounded-full px-2 py-0.5">
+                                        #{h.split(" ")[0]}
                                     </span>
                                 ))}
                             </div>
-
-                            {/* Línea decorativa inferior */}
-                            <div class="w-full h-px bg-linear-to-r from-unicode/20 via-unicode/5 to-transparent mt-2 group-hover:from-unicode/40 group-hover:via-unicode/15 transition-all duration-500" />
                         </div>
                     </article>
                 ))
@@ -360,77 +388,113 @@ const categoriaBadge: Record<string, string> = {
 </section>
 
 <style>
-    /* Limitar líneas de descripción */
-    .line-clamp-3 {
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
     }
 </style>
 
 <script>
-    // Contador animado para las estadísticas
     document.addEventListener("DOMContentLoaded", () => {
-        const observer = new IntersectionObserver(
+        // --- Estadísticas ---
+        const statsObs = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
-                        const statNumbers =
-                            entry.target.querySelectorAll(".stat-number");
-                        statNumbers.forEach((el) => {
-                            const target = parseInt(
-                                el.getAttribute("data-target") || "0",
-                            );
-                            if (target === 0) return;
-                            let current = 0;
-                            const increment = Math.ceil(target / 40);
-                            const duration = 1500;
-                            const stepTime = duration / (target / increment);
-
-                            const timer = setInterval(() => {
-                                current += increment;
-                                if (current >= target) {
-                                    current = target;
-                                    clearInterval(timer);
-                                }
-                                (el as HTMLElement).textContent =
-                                    current.toString();
-                            }, stepTime);
-                        });
-                        observer.unobserve(entry.target);
+                        entry.target
+                            .querySelectorAll(".stat-number")
+                            .forEach((el) => {
+                                const target = parseInt(
+                                    el.getAttribute("data-target") || "0",
+                                );
+                                if (target === 0) return;
+                                let curr = 0;
+                                const inc = Math.ceil(target / 50);
+                                const timer = setInterval(() => {
+                                    curr += inc;
+                                    if (curr >= target) {
+                                        curr = target;
+                                        clearInterval(timer);
+                                    }
+                                    el.textContent = curr.toLocaleString();
+                                }, 30);
+                            });
+                        statsObs.unobserve(entry.target);
                     }
                 });
             },
             { threshold: 0.3 },
         );
 
-        const statsSection = document.querySelector("#eventos-realizados");
-        if (statsSection) {
-            observer.observe(statsSection);
+        const section = document.querySelector("#eventos-realizados");
+        if (section) statsObs.observe(section);
+
+        // --- Carrusel Mobile ---
+        const container = document.getElementById("past-events-scroll");
+        const dots = document.querySelectorAll(
+            "#past-carousel-indicator button",
+        );
+        const prevBtn = document.getElementById("prev-past-event");
+        const nextBtn = document.getElementById("next-past-event");
+
+        if (container) {
+            const scrollStep = () => container.clientWidth;
+
+            if (prevBtn && nextBtn) {
+                prevBtn.addEventListener("click", () => {
+                    container.scrollLeft -= scrollStep();
+                });
+                nextBtn.addEventListener("click", () => {
+                    container.scrollLeft += scrollStep();
+                });
+            }
+
+            container.addEventListener("scroll", () => {
+                const idx = Math.round(
+                    container.scrollLeft / container.clientWidth,
+                );
+                dots.forEach((dot, i) => {
+                    if (i === idx) {
+                        dot.classList.add("bg-unicode", "w-4");
+                        dot.classList.remove("bg-zinc-800");
+                    } else {
+                        dot.classList.remove("bg-unicode", "w-4");
+                        dot.classList.add("bg-zinc-800");
+                    }
+                });
+            });
+            dots.forEach((dot) => {
+                dot.addEventListener("click", () => {
+                    const i = parseInt(dot.getAttribute("data-index") || "0");
+                    container.scrollLeft = i * container.clientWidth;
+                });
+            });
         }
 
-        // --- Scroll Reveal Logic ---
-        const scrollObserverOptions = {
-            root: null,
-            rootMargin: "0px",
-            threshold: 0.1,
-        };
+        // --- Scroll Reveal ---
+        const revealObs = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.remove(
+                            "opacity-0",
+                            "translate-y-12",
+                        );
+                        entry.target.classList.add(
+                            "opacity-100",
+                            "translate-y-0",
+                        );
+                    }
+                });
+            },
+            { threshold: 0.1 },
+        );
 
-        const scrollObserver = new IntersectionObserver((entries, observer) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.remove(
-                        "opacity-0",
-                        "translate-y-12",
-                    );
-                    entry.target.classList.add("opacity-100", "translate-y-0");
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, scrollObserverOptions);
-
-        const revealElements = document.querySelectorAll(".scroll-reveal");
-        revealElements.forEach((el) => scrollObserver.observe(el));
+        document
+            .querySelectorAll(".scroll-reveal")
+            .forEach((el) => revealObs.observe(el));
     });
 </script>
