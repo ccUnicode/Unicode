@@ -184,48 +184,9 @@ const categoriaBadge: Record<string, string> = {
              VISTA MÓVIL Y TABLET (CARRUSEL)
              ========================================== -->
         <div class="lg:hidden relative group/past-carousel">
-            <!-- Flechas -->
-            <button
-                id="prev-past-event"
-                class="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 flex items-center justify-center bg-black/60 border border-unicode/30 text-unicode rounded-full backdrop-blur-md opacity-0 group-hover/past-carousel:opacity-100 transition-opacity md:hidden"
-                aria-label="Anterior"
-            >
-                <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M15 19l-7-7 7-7"></path>
-                </svg>
-            </button>
-
-            <button
-                id="next-past-event"
-                class="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 flex items-center justify-center bg-black/60 border border-unicode/30 text-unicode rounded-full backdrop-blur-md opacity-0 group-hover/past-carousel:opacity-100 transition-opacity md:hidden"
-                aria-label="Siguiente"
-            >
-                <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M9 5l7 7-7 7"></path>
-                </svg>
-            </button>
-
             <div
                 id="past-events-scroll"
-                class="flex md:grid md:grid-cols-2 gap-6 overflow-x-auto md:overflow-x-visible pb-10 md:pb-0 snap-x snap-mandatory scrollbar-hide scroll-smooth px-2"
+                class="flex md:grid md:grid-cols-2 gap-6 overflow-x-auto md:overflow-x-visible pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide scroll-smooth px-2"
             >
                 {
                     eventosRealizados.map((evento, index) => (
@@ -288,18 +249,61 @@ const categoriaBadge: Record<string, string> = {
                 }
             </div>
 
-            <div
-                id="past-carousel-indicator"
-                class="flex md:hidden justify-center gap-3 mt-2"
-            >
-                {
-                    eventosRealizados.map((_, i) => (
-                        <button
-                            class={`w-1.5 h-1.5 rounded-full transition-all ${i === 0 ? "bg-unicode w-4" : "bg-zinc-800"}`}
-                            data-index={i}
-                        />
-                    ))
-                }
+            <div class="flex items-center justify-center gap-8 mt-6">
+                <!-- Flecha Izquierda -->
+                <button
+                    id="prev-past-event"
+                    class="w-11 h-11 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg"
+                    aria-label="Anterior"
+                >
+                    <svg
+                        class="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="3"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+
+                <!-- Indicadores -->
+                <div
+                    id="past-carousel-indicator"
+                    class="flex justify-center gap-3"
+                >
+                    {
+                        eventosRealizados.map((_, i) => (
+                            <button
+                                class={`w-1.5 h-1.5 rounded-full transition-all ${i === 0 ? "bg-unicode w-4" : "bg-zinc-800"}`}
+                                data-index={i}
+                            />
+                        ))
+                    }
+                </div>
+
+                <!-- Flecha Derecha -->
+                <button
+                    id="next-past-event"
+                    class="w-11 h-11 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg"
+                    aria-label="Siguiente"
+                >
+                    <svg
+                        class="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="3"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
             </div>
         </div>
 

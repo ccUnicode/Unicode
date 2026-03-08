@@ -74,29 +74,10 @@ const eventos: Evento[] = [
          VISTA MÓVIL Y TABLET (CARRUSEL)
          ========================================== -->
     <div class="lg:hidden relative group/carousel">
-      <button 
-        id="prev-event" 
-        class="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center bg-black/60 border border-unicode/30 text-unicode rounded-full backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-opacity disabled:opacity-20 md:hidden"
-        aria-label="Anterior"
-      >
-        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-
-      <button 
-        id="next-event" 
-        class="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center bg-black/60 border border-unicode/30 text-unicode rounded-full backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-opacity disabled:opacity-20 md:hidden"
-        aria-label="Siguiente"
-      >
-        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
-
+      <!-- Contenedor Responsive (Flex carrusel en móvil, Grid en tablet/desktop) -->
       <div 
         id="events-scroll-container"
-        class="flex md:grid md:grid-cols-2 gap-6 overflow-x-auto md:overflow-x-visible pb-8 md:pb-0 snap-x snap-mandatory scrollbar-hide scroll-smooth"
+        class="flex md:grid md:grid-cols-2 gap-6 overflow-x-auto md:overflow-x-visible pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide scroll-smooth"
       >
         {
           eventos.map((evento, index) => {
@@ -159,16 +140,42 @@ const eventos: Evento[] = [
         }
       </div>
 
-      <!-- Indicadores (Solo móvil) -->
-      <div id="carousel-indicator" class="flex md:hidden justify-center gap-3 mt-4">
-        {
-          eventos.map((_, i) => (
-            <button 
-              class={`w-2 h-2 rounded-full transition-all duration-300 ${i === 0 ? 'bg-unicode w-6' : 'bg-zinc-800'}`}
-              data-index={i}
-            />
-          ))
-        }
+      <!-- Controles del Carrusel (Flechas + Dots) - Solo Móvil -->
+      <div class="flex md:hidden items-center justify-center gap-8 mt-6">
+        <button 
+          id="prev-event" 
+          class="w-12 h-12 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg"
+          aria-label="Anterior"
+        >
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <div id="carousel-indicator" class="flex justify-center gap-3">
+          {
+            eventos.map((_, i) => {
+              const activeClass = i === 0 ? 'bg-unicode w-6' : 'bg-zinc-800';
+              return (
+                <button 
+                  class={`w-2 h-2 rounded-full transition-all duration-300 ${activeClass}`}
+                  aria-label={`Ir al evento ${i + 1}`}
+                  data-index={i}
+                />
+              );
+            })
+          }
+        </div>
+
+        <button 
+          id="next-event" 
+          class="w-12 h-12 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg"
+          aria-label="Siguiente"
+        >
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
     </div>
 
