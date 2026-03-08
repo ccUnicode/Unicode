@@ -32,11 +32,7 @@ const { projects } = Astro.props;
   >
     {
       projects.map((project) => (
-        <FeaturedProjectCard
-          title={project.title}
-          category={project.category}
-          image={project.image}
-        />
+        <FeaturedProjectCard project={project as any} />
       ))
     }
   </div>
