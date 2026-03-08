@@ -16,31 +16,78 @@ const { projects } = Astro.props;
 
 <div class="relative w-full overflow-hidden group">
   <!-- Navigation Buttons Hint -->
-  <div class="absolute left-0 top-0 bottom-0 w-24 bg-linear-to-r from-[#0a0a0a] to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-  <div class="absolute right-0 top-0 bottom-0 w-24 bg-linear-to-l from-[#0a0a0a] to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+  <div
+    class="absolute left-0 top-0 bottom-0 w-24 bg-linear-to-r from-[#0a0a0a] to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+  >
+  </div>
+  <div
+    class="absolute right-0 top-0 bottom-0 w-24 bg-linear-to-l from-[#0a0a0a] to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+  >
+  </div>
 
   <!-- Slider Container -->
-  <div 
+  <div
     id="project-slider"
     class="flex gap-12 overflow-x-auto pb-12 snap-x snap-mandatory scroll-smooth scrollbar-hide px-6 md:px-[15vw]"
   >
-    {projects.map((project) => (
-      <FeaturedProjectCard 
-        title={project.title} 
-        category={project.category} 
-        image={project.image} 
-      />
-    ))}
+    {
+      projects.map((project) => (
+        <FeaturedProjectCard
+          title={project.title}
+          category={project.category}
+          image={project.image}
+        />
+      ))
+    }
   </div>
 
-  <!-- Custom Scrollbar/Indicator -->
-  <div class="flex justify-center gap-2 mt-4">
-    {projects.map((_, i) => (
-      <div 
-        class="slider-dot w-2 h-2 rounded-full bg-zinc-800 transition-all duration-300 cursor-pointer"
-        data-index={i}
-      ></div>
-    ))}
+  <!-- Custom Scrollbar/Indicator and Controls -->
+  <div class="flex items-center justify-center gap-6 mt-8">
+    <button
+      id="prev-project"
+      class="w-12 h-12 flex md:hidden items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg hover:border-unicode/50"
+      aria-label="Anterior"
+    >
+      <svg
+        class="w-6 h-6"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="3"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"
+        ></path>
+      </svg>
+    </button>
+
+    <div class="flex justify-center gap-3">
+      {
+        projects.map((_, i) => (
+          <button
+            class="slider-dot w-2 h-2 rounded-full bg-zinc-800 transition-all duration-300 cursor-pointer"
+            data-index={i}
+            aria-label={`Ir al proyecto ${i + 1}`}
+          />
+        ))
+      }
+    </div>
+
+    <button
+      id="next-project"
+      class="w-12 h-12 flex md:hidden items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg hover:border-unicode/50"
+      aria-label="Siguiente"
+    >
+      <svg
+        class="w-6 h-6"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="3"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"
+        ></path>
+      </svg>
+    </button>
   </div>
 </div>
 
@@ -52,29 +99,29 @@ const { projects } = Astro.props;
 
   /* Hide scrollbar for IE, Edge and Firefox */
   .scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
   }
 </style>
 
 <script>
   function initSlider() {
-    const slider = document.getElementById('project-slider');
-    const dots = document.querySelectorAll('.slider-dot');
-    const cards = slider?.querySelectorAll('.project-card-featured'); // Assuming class for better selection
+    const slider = document.getElementById("project-slider");
+    const dots = document.querySelectorAll(".slider-dot");
+    const cards = slider?.querySelectorAll(".project-card-featured"); // Assuming class for better selection
 
     if (slider && dots.length > 0) {
       const updateDots = () => {
         const sliderRect = slider.getBoundingClientRect();
-        const sliderCenter = sliderRect.left + (sliderRect.width / 2);
+        const sliderCenter = sliderRect.left + sliderRect.width / 2;
         const cardElements = Array.from(slider.children);
-        
+
         let minDistance = Infinity;
         let activeIndex = 0;
 
         cardElements.forEach((card, i) => {
           const cardRect = card.getBoundingClientRect();
-          const cardCenter = cardRect.left + (cardRect.width / 2);
+          const cardCenter = cardRect.left + cardRect.width / 2;
           const distance = Math.abs(sliderCenter - cardCenter);
 
           if (distance < minDistance) {
@@ -82,14 +129,14 @@ const { projects } = Astro.props;
             activeIndex = i;
           }
         });
-        
+
         dots.forEach((dot, i) => {
           if (i === activeIndex) {
-            dot.classList.add('bg-unicode', 'w-6');
-            dot.classList.remove('bg-zinc-800');
+            dot.classList.add("bg-unicode", "w-6");
+            dot.classList.remove("bg-zinc-800");
           } else {
-            dot.classList.remove('bg-unicode', 'w-6');
-            dot.classList.add('bg-zinc-800');
+            dot.classList.remove("bg-unicode", "w-6");
+            dot.classList.add("bg-zinc-800");
           }
         });
       };
@@ -102,42 +149,68 @@ const { projects } = Astro.props;
           const sliderWidth = slider.offsetWidth;
           const cardWidth = thirdProject.offsetWidth;
           const cardOffset = thirdProject.offsetLeft;
-          
+
           // Calculate the scroll position to put the 3rd card in the middle
-          const scrollTo = cardOffset - (sliderWidth / 2) + (cardWidth / 2);
-          
+          const scrollTo = cardOffset - sliderWidth / 2 + cardWidth / 2;
+
           slider.scrollTo({
             left: scrollTo,
-            behavior: 'instant' as ScrollBehavior
+            behavior: "instant" as ScrollBehavior,
           });
-          
+
           updateDots();
         }
       };
 
-      slider.addEventListener('scroll', updateDots);
-      
+      slider.addEventListener("scroll", updateDots);
+
       // Small timeout to ensure DOM is fully rendered before calculating offsets
       setTimeout(centerThirdProject, 100);
 
       // Also allow clicking dots to navigate
       dots.forEach((dot, i) => {
-        dot.addEventListener('click', () => {
+        dot.addEventListener("click", () => {
           const cardElements = slider.children;
           if (cardElements[i]) {
             const card = cardElements[i] as HTMLElement;
             const sliderWidth = slider.offsetWidth;
             const cardWidth = card.offsetWidth;
             const cardOffset = card.offsetLeft;
-            const scrollTo = cardOffset - (sliderWidth / 2) + (cardWidth / 2);
-            
+            const scrollTo = cardOffset - sliderWidth / 2 + cardWidth / 2;
+
             slider.scrollTo({
               left: scrollTo,
-              behavior: 'smooth'
+              behavior: "smooth",
             });
           }
         });
       });
+
+      // Arrow navigation
+      const prevBtn = document.getElementById("prev-project");
+      const nextBtn = document.getElementById("next-project");
+
+      const getActiveIndex = () => {
+        let current = 0;
+        dots.forEach((dot, i) => {
+          if (dot.classList.contains("bg-unicode")) current = i;
+        });
+        return current;
+      };
+
+      if (prevBtn && nextBtn) {
+        prevBtn.addEventListener("click", () => {
+          const currentIndex = getActiveIndex();
+          const targetIndex = Math.max(0, currentIndex - 1);
+          if (dots[targetIndex]) (dots[targetIndex] as HTMLElement).click();
+        });
+
+        nextBtn.addEventListener("click", () => {
+          const currentIndex = getActiveIndex();
+          const targetIndex = Math.min(dots.length - 1, currentIndex + 1);
+          if (dots[targetIndex]) (dots[targetIndex] as HTMLElement).click();
+        });
+      }
     }
   }
 
@@ -145,5 +218,5 @@ const { projects } = Astro.props;
   initSlider();
 
   // Re-run for Astro view transitions
-  document.addEventListener('astro:page-load', initSlider);
+  document.addEventListener("astro:page-load", initSlider);
 </script>
