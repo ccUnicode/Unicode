@@ -1,11 +1,10 @@
 ---
 interface Props {
-  title: string;
-  category?: string;
-  image?: string;
+  project?: any;
 }
 
-const { title, category = "PROYECTO", image } = Astro.props;
+const { project = {} } = Astro.props;
+const { title = "Proyecto", category = "PROYECTO", image } = project;
 ---
 
 <div
@@ -35,12 +34,12 @@ const { title, category = "PROYECTO", image } = Astro.props;
         {title}
       </h3>
 
-      <a
-        href={`/projects/${title.toLowerCase().replace(/\s+/g, "-")}`}
-        class="inline-flex items-center justify-center px-6 py-2.5 rounded-full border border-white/20 bg-white/5 backdrop-blur-md text-sm font-bold text-white hover:border-unicode hover:text-unicode hover:bg-unicode/10 transition-all duration-300 w-fit shrink-0"
+      <button
+        class="js-open-project-modal cursor-pointer inline-flex items-center justify-center px-6 py-2.5 rounded-full border border-white/20 bg-white/5 backdrop-blur-md text-sm font-bold text-white hover:border-unicode hover:text-unicode hover:bg-unicode/10 transition-all duration-300 w-fit shrink-0"
+        data-project={JSON.stringify(project)}
       >
         Ver detalles
-      </a>
+      </button>
     </div>
   </div>
 </div>
