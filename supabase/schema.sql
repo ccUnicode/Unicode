@@ -13,6 +13,8 @@ CREATE TABLE postulantes(
   telefono VARCHAR(20) NOT NULL,
   carrera VARCHAR(150) NOT NULL,
   opcion1 VARCHAR(150) NOT NULL,
+  universidad VARCHAR(150) NOT NULL,
+  ciclo_universidad VARCHAR(20) NOT NULL,
   motivo_postulacion TEXT NOT NULL,
   opcion2 VARCHAR(150),
 

@@ -11,7 +11,7 @@
   class="m-auto fixed inset-0 backdrop:bg-black/80 bg-zinc-950 border border-zinc-800 rounded-3xl p-0 w-[95%] max-w-2xl shadow-unicode-lg text-white open:animate-in open:fade-in open:zoom-in-95 backdrop:backdrop-blur-sm"
 >
   <div
-    class="p-6 md:p-8 relative max-h-[90vh] overflow-y-auto custom-scrollbar"
+    class="p-4 md:p-8 relative max-h-[85vh] overflow-y-auto custom-scrollbar"
   >
     <!-- Botón cerrar -->
     <button
@@ -33,21 +33,23 @@
       </svg>
     </button>
 
-    <div class="text-center mb-8 pr-8 pl-8">
-      <h2 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+    <div class="text-center mb-6 md:mb-8 pr-6 pl-6 md:pr-8 md:pl-8">
+      <h2 class="text-xl md:text-3xl font-extrabold text-white tracking-tight">
         Formulario de <span class="text-unicode text-glow">Inscripción</span>
       </h2>
-      <p class="text-zinc-400 text-sm mt-2">
+      <p class="text-zinc-400 text-xs md:text-sm mt-1.5 md:mt-2">
         Únete a UNICODE y potencia tus habilidades tecnológicas y blandas.
       </p>
     </div>
 
     <!-- Formulario -->
-    <form id="registroForm" class="space-y-5">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+    <form id="registroForm" class="space-y-4 md:space-y-5">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
         <!-- Nombres -->
-        <div class="flex flex-col gap-1.5">
-          <label for="nombres" class="text-sm font-semibold text-zinc-300"
+        <div class="flex flex-col gap-1 md:gap-1.5">
+          <label
+            for="nombres"
+            class="text-xs md:text-sm font-semibold text-zinc-300"
             >Nombres *</label
           >
           <input
@@ -55,13 +57,15 @@
             id="nombres"
             name="nombres"
             required
-            class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-xl px-4 py-2.5 text-white outline-none transition-all placeholder:text-zinc-600"
+            class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg md:rounded-xl px-3 py-2 md:px-4 md:py-2.5 text-sm md:text-base text-white outline-none transition-all placeholder:text-zinc-600"
             placeholder="Ej. Juan Marcos"
           />
         </div>
         <!-- Apellidos -->
-        <div class="flex flex-col gap-1.5">
-          <label for="apellidos" class="text-sm font-semibold text-zinc-300"
+        <div class="flex flex-col gap-1 md:gap-1.5">
+          <label
+            for="apellidos"
+            class="text-xs md:text-sm font-semibold text-zinc-300"
             >Apellidos *</label
           >
           <input
@@ -69,30 +73,35 @@
             id="apellidos"
             name="apellidos"
             required
-            class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-xl px-4 py-2.5 text-white outline-none transition-all placeholder:text-zinc-600"
+            class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg md:rounded-xl px-3 py-2 md:px-4 md:py-2.5 text-sm md:text-base text-white outline-none transition-all placeholder:text-zinc-600"
             placeholder="Ej. Pérez Gómez"
           />
         </div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        <!-- Correo -->
-        <div class="flex flex-col gap-1.5">
-          <label for="correo" class="text-sm font-semibold text-zinc-300"
-            >Correo Electrónico *</label
-          >
-          <input
-            type="email"
-            id="correo"
-            name="correo"
-            required
-            class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-xl px-4 py-2.5 text-white outline-none transition-all placeholder:text-zinc-600"
-            placeholder="Ej. juan@uni.edu.pe"
-          />
-        </div>
+      <!-- Correo -->
+      <div class="flex flex-col gap-1 md:gap-1.5">
+        <label
+          for="correo"
+          class="text-xs md:text-sm font-semibold text-zinc-300"
+          >Correo Electrónico *</label
+        >
+        <input
+          type="email"
+          id="correo"
+          name="correo"
+          required
+          class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg md:rounded-xl px-3 py-2 md:px-4 md:py-2.5 text-sm md:text-base text-white outline-none transition-all placeholder:text-zinc-600"
+          placeholder="Ej. juan@uni.edu.pe"
+        />
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 md:gap-5">
         <!-- Teléfono -->
-        <div class="flex flex-col gap-1.5">
-          <label for="telefono" class="text-sm font-semibold text-zinc-300"
+        <div class="flex flex-col gap-1 md:gap-1.5">
+          <label
+            for="telefono"
+            class="text-xs md:text-sm font-semibold text-zinc-300"
             >Teléfono / Celular *</label
           >
           <input
@@ -100,15 +109,33 @@
             id="telefono"
             name="telefono"
             required
-            class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-xl px-4 py-2.5 text-white outline-none transition-all placeholder:text-zinc-600"
+            class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg md:rounded-xl px-3 py-2 md:px-4 md:py-2.5 text-sm md:text-base text-white outline-none transition-all placeholder:text-zinc-600"
             placeholder="Ej. 999 999 999"
+          />
+        </div>
+        <!-- Universidad -->
+        <div class="flex flex-col gap-1 md:gap-1.5">
+          <label
+            for="universidad"
+            class="text-xs md:text-sm font-semibold text-zinc-300"
+            >Universidad *</label
+          >
+          <input
+            type="text"
+            id="universidad"
+            name="universidad"
+            required
+            class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg md:rounded-xl px-3 py-2 md:px-4 md:py-2.5 text-sm md:text-base text-white outline-none transition-all placeholder:text-zinc-600"
+            placeholder="Ej. UNI"
           />
         </div>
       </div>
 
       <!-- Carrera -->
-      <div class="flex flex-col gap-1.5">
-        <label for="carrera" class="text-sm font-semibold text-zinc-300"
+      <div class="flex flex-col gap-1 md:gap-1.5">
+        <label
+          for="carrera"
+          class="text-xs md:text-sm font-semibold text-zinc-300"
           >Carrera Universitaria *</label
         >
         <input
@@ -116,22 +143,24 @@
           id="carrera"
           name="carrera"
           required
-          class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-xl px-4 py-2.5 text-white outline-none transition-all placeholder:text-zinc-600"
+          class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg md:rounded-xl px-3 py-2 md:px-4 md:py-2.5 text-sm md:text-base text-white outline-none transition-all placeholder:text-zinc-600"
           placeholder="Ej. Ingeniería de Sistemas"
         />
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+      <div class="grid grid-cols-2 gap-4 md:gap-5">
         <!-- Opcion 1 -->
-        <div class="flex flex-col gap-1.5">
-          <label for="opcion1" class="text-sm font-semibold text-zinc-300"
+        <div class="flex flex-col gap-1 md:gap-1.5">
+          <label
+            for="opcion1"
+            class="text-xs md:text-sm font-semibold text-zinc-300"
             >Área de 1ra opción *</label
           >
           <select
             id="opcion1"
             name="opcion1"
             required
-            class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-xl px-4 py-2.5 text-white outline-none transition-all appearance-none cursor-pointer"
+            class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg md:rounded-xl px-3 py-2 md:px-4 md:py-2.5 text-sm md:text-base text-white outline-none transition-all appearance-none cursor-pointer"
           >
             <option value="" disabled selected>Selecciona un área</option>
             <option value="GTH">Gestión de Talento Humano (GTH)</option>
@@ -142,14 +171,16 @@
           </select>
         </div>
         <!-- Opcion 2 -->
-        <div class="flex flex-col gap-1.5">
-          <label for="opcion2" class="text-sm font-semibold text-zinc-300"
+        <div class="flex flex-col gap-1 md:gap-1.5">
+          <label
+            for="opcion2"
+            class="text-xs md:text-sm font-semibold text-zinc-300"
             >Área de 2da opción</label
           >
           <select
             id="opcion2"
             name="opcion2"
-            class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-xl px-4 py-2.5 text-white outline-none transition-all appearance-none cursor-pointer"
+            class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg md:rounded-xl px-3 py-2 md:px-4 md:py-2.5 text-sm md:text-base text-white outline-none transition-all appearance-none cursor-pointer"
           >
             <option value="" selected>Ninguna</option>
             <option value="GTH">Gestión de Talento Humano (GTH)</option>
@@ -162,18 +193,18 @@
       </div>
 
       <!-- Motivo Postulacion -->
-      <div class="flex flex-col gap-1.5">
+      <div class="flex flex-col gap-1 md:gap-1.5">
         <label
           for="motivo_postulacion"
-          class="text-sm font-semibold text-zinc-300"
+          class="text-xs md:text-sm font-semibold text-zinc-300"
           >¿Por qué deseas postular a UNICODE? *</label
         >
         <textarea
           id="motivo_postulacion"
           name="motivo_postulacion"
-          rows="3"
+          rows="2"
           required
-          class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-xl px-4 py-2.5 text-white outline-none transition-all resize-none placeholder:text-zinc-600"
+          class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg md:rounded-xl px-3 py-2 md:px-4 md:py-2.5 text-sm md:text-base text-white outline-none transition-all resize-none placeholder:text-zinc-600"
           placeholder="Cuéntanos qué te motiva a unirte a nosotros..."
         ></textarea>
       </div>
@@ -243,6 +274,17 @@
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #3f3f46; /* zinc-700 */
+  }
+
+  /* Ocultar scrollbar completamente en móvil */
+  @media (max-width: 768px) {
+    .custom-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .custom-scrollbar {
+      -ms-overflow-style: none; /* IE y Edge */
+      scrollbar-width: none; /* Firefox */
+    }
   }
 </style>
 
