@@ -47,3 +47,19 @@ const { name, linkedin, imageSrc } = Astro.props;
         <span>{linkedin}</span>
     </a>
 </div>
+
+<!--    
+
+Como propuesta tendría eliminar el nombre linkedin para que se acceda a linkedin solo con el ícono, sin que 
+aparezca el nombre de linkedin (por algunos casos donde son largos)
+
+interface Props {
+    name: string;
+    linkedin: string;
+    imageSrc: string;
+}
+
+const { name, linkedin, imageSrc } = Astro.props;
+
+<span>{linkedin}</span> <-------CHAU
+-->
