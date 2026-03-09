@@ -3,46 +3,89 @@ import Layout from "../../layouts/Layout.astro";
 import Navbar from "../../components/Navbar.astro";
 import HeroAreaIndividual from "../../components/components-areas/HeroAreaIndividual.astro";
 
-// Datos de la página (¡Mira lo limpio que queda esto!)
 const whatWeLookForData = [
     "Estudiantes responsables y comprometidos (lo más importante).",
-    "Estudiantes responsables y comprometidos (lo más importante).",
-    "Estudiantes responsables y comprometidos (lo más importante).",
-    "Estudiantes responsables y comprometidos (lo más importante).",
-    "Estudiantes responsables y comprometidos (lo más importante).",
+    "Apoyo en cobertura de eventos: fotos, clips, highlights y resúmenes.",
+    "Tener interés en branding e identidad visual: afiches, plantillas, banners y piezas de difusión.",
+    "Ser innovador y creativo para proponer ideas, trabajar en equipo y liderar proyectos.",
 ];
 
 const weValueData = [
-    "Manejo experto de Canva",
-    "Conocimiento en herramientas de edición de imágenes como Illustrator, Photoshop",
-    "Conocimiento en herramientas de edición de video como filmora, capcut",
+    "Conocimiento y manejo experto de Canva",
+    "Conocimiento en herramientas de edición de imágenes como Illustrator y Photoshop",
+    "Conocimiento en herramientas de edición de video como Filmora y CapCut",
 ];
 
 const whatYouWinData = [
-    "En caso hayas ingresado al área sin conocimientos previos, te irás con muchos saberes con respecto a diseño, branding y marketing.",
-    "En caso hayas ingresado al área sin conocimientos previos, te irás con muchos saberes con respecto a diseño, branding y marketing.",
-    "Muchos amigos y contacto real con profesionales gracias a los eventos realizados por la familia Unicode, para que amplíes tu red de contactos",
+    "Experiencia real en creación de contenido y comunicación.",
+    "Aprendizaje práctico y trabajo colaborativo.",
+    "Participación en proyectos y eventos con impacto en la comunidad.",
     "En caso hayas ingresado al área sin conocimientos previos, te irás con muchos saberes con respecto a diseño, branding y marketing.",
 ];
 
 const projectsData = [
     {
-        title: "EduTech: Contenido educativo",
+        title: "EducaTech",
         description:
-            "Unicode es un centro cultural que nació con la idea de dar a conocer más la carrera de ingeniería de software. En este proyecto, subimos contenido educativo relacionado a ello, reforzando la identidad y los orígenes del centro",
+            "Ejecución de una estrategia de contenidos 'Edu-Tech' en redes sociales.",
         imageSrc: "/areasmoment.png",
+        status: "Activo",
     },
     {
-        title: "EduTech: Contenido educativo",
+        title: "Unicode on Air",
         description:
-            "Unicode es un centro cultural que nació con la idea de dar a conocer más la carrera de ingeniería de software. En este proyecto, subimos contenido educativo relacionado a ello, reforzando la identidad y los orígenes del centro",
+            "Producción de contenido audiovisual, basado en la interacción presencial en el campus.",
         imageSrc: "/areasmoment.png",
+        status: "Activo",
     },
     {
-        title: "EduTech: Contenido educativo",
+        title: "Backstage FIIS",
         description:
-            "Unicode es un centro cultural que nació con la idea de dar a conocer más la carrera de ingeniería de software. En este proyecto, subimos contenido educativo relacionado a ello, reforzando la identidad y los orígenes del centro",
+            "Serie de vlogs documentales que narran la 'experiencia del estudiante' en la facultad.",
         imageSrc: "/areasmoment.png",
+        status: "Activo",
+    },
+    {
+        title: "Unicode Quizzes",
+        description:
+            "Estrategia de gamificación digital utilizando principalmente redes sociales.",
+        imageSrc: "/areasmoment.png",
+        status: "Activo",
+    },
+    {
+        title: "Unicode Podcast",
+        description:
+            "Producción de contenido long-form para YouTube con clips para redes sociales.",
+        imageSrc: "/areasmoment.png",
+        status: "Activo",
+    },
+    {
+        title: "Editorial Unicode",
+        description:
+            "Producción enfocada en la transcripción y formateo de material académico a LaTeX.",
+        imageSrc: "/areasmoment.png",
+        status: "Activo",
+    },
+    {
+        title: "Revista Unicode",
+        description:
+            "Difusión de noticias tecnológicas y actualizaciones de la comunidad.",
+        imageSrc: "/areasmoment.png",
+        status: "Activo",
+    },
+    {
+        title: "Taller de LaTex",
+        description:
+            "Programa de formación para estandarizar el nivel de edición de documentos.",
+        imageSrc: "/areasmoment.png",
+        status: "Activo",
+    },
+    {
+        title: "Taller de EC y EA",
+        description:
+            "Taller estratégico enfocado en potenciar la marca personal de los miembros.",
+        imageSrc: "/areasmoment.png",
+        status: "Activo",
     },
 ];
 
@@ -50,12 +93,12 @@ const directorsData = [
     {
         name: "Renato Gutierrez",
         linkedin: "renato-gutierrez",
-        imageSrc: "/areasmoment.png",
+        imageSrc: "/AreasImages/Renato_Gutierrez.png",
     },
     {
         name: "Rubí Quispe",
-        linkedin: "rubi-quispe",
-        imageSrc: "/areasmoment.png",
+        linkedin: "rubi-allison-quispe-sierra-607151371",
+        imageSrc: "/AreasImages/Rubi_Quispe.png",
     },
 ];
 ---
@@ -63,10 +106,9 @@ const directorsData = [
 <Layout title="DCC | Áreas UNICODE">
     <Navbar />
 
-    <!-- Simplemente le pasamos los arrays como propiedades (props) -->
     <HeroAreaIndividual
         title="DCC"
-        description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
+        description="El área de DCC es el motor creativo y comunicacional de nuestra organización. Nuestra misión es traducir el conocimiento técnico y los proyectos de la comunidad en un mensaje claro, atractivo y de alto impacto. Somos los encargados de construir y cuidar la identidad de UNICODE, asegurando que nuestra visión llegue a más personas."
         whatWeLookFor={whatWeLookForData}
         weValue={weValueData}
         whatYouWin={whatYouWinData}

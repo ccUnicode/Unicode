@@ -9,6 +9,7 @@ interface Project {
     title: string;
     description: string;
     imageSrc: string;
+    status?: string;
 }
 
 interface Director {
@@ -38,7 +39,7 @@ const {
 } = Astro.props;
 ---
 
-<main class="w-full min-h-screen relative pt-32 pb-24 px-6 md:px-12 bg-[#050505] overflow-hidden">
+<main class="w-full min-h-screen relative pt-32 pb-24 bg-[#050505] overflow-hidden">
     <!-- Imagen de fondo decorativa (Mascota) -->
     <div class="absolute top-30 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[750px] pointer-events-none z-0 opacity-35">
         <img 
@@ -52,7 +53,7 @@ const {
 <!-- Arriba está la img, no confundir -->
 
 
-    <div class="max-w-7xl mx-auto relative z-10 flex flex-col items-start w-full">
+    <div class="max-w-7xl mx-auto px-6 relative z-10 flex flex-col items-start w-full">
         <!-- Título y Descripción base de todas las páginas de áreas -->
         <h1 class="text-5xl md:text-7xl font-bold text-white mb-8 mt-20 tracking-tight animate-lifting">
             Área de <span class="text-unicode text-glow">{title}</span>
@@ -67,7 +68,7 @@ const {
             {projects.length > 0 && (
                 <a 
                     href="#nuestros-proyectos" 
-                    class="bg-unicode text-white font-bold px-8 py-3 rounded-full hover:bg-unicode-light transition-all shadow-unicode hover:shadow-unicode-lg text-sm md:text-base"
+                    class="bg-unicode text-black font-bold px-8 py-3 rounded-full hover:bg-unicode-light transition-all shadow-unicode hover:shadow-unicode-lg text-sm md:text-base"
                 >
                     Proyectos
                 </a>
@@ -128,7 +129,7 @@ const {
                 <h2 class="text-3xl md:text-4xl font-bold text-white mb-16 text-center">Nuestros <span class="text-unicode text-glow">proyectos</span></h2>
                 
                 <div class="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {projects.map(p => <AreaProjectCard title={p.title} description={p.description} imageSrc={p.imageSrc} />)}
+                    {projects.map(p => <AreaProjectCard title={p.title} description={p.description} imageSrc={p.imageSrc} status={p.status} />)}
                 </div>
             </div>
         )}

@@ -2,34 +2,113 @@
 interface Props {
     title: string;
     description: string;
-    imageSrc: string;
+    status?: string;
+    imageSrc?: string;
 }
 
-const { title, description, imageSrc } = Astro.props;
+const { title, description, status, imageSrc } = Astro.props;
 ---
 
-<div
-    class="bg-[#151515] border border-zinc-800/50 rounded-[2rem] p-6 hover:border-zinc-700 transition-all flex flex-col items-center"
+<article
+    class="project-card bg-zinc-900/30 border-2 border-zinc-800/50 rounded-4xl p-6 hover:bg-zinc-800/40 transition-all group hover:border-unicode hover:shadow-unicode-sm duration-500 flex flex-col h-full"
 >
-    <!-- Contenedor de la Imagen del Proyecto -->
+    <div
+        class="aspect-square bg-zinc-800 rounded-2xl mb-6 overflow-hidden relative"
+    >
+        <!-- Project Image -->
+        {
+            imageSrc ? (
+                <img
+                    src={imageSrc}
+                    alt={title}
+                    class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 grayscale-[0.5] group-hover:grayscale-0"
+                />
+            ) : (
+                <div class="absolute inset-0 flex items-center justify-center opacity-20 transition-transform group-hover:scale-110 duration-500">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="60"
+                        height="60"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="text-unicode"
+                    >
+                        <>
+                            <rect
+                                width="18"
+                                height="18"
+                                x="3"
+                                y="3"
+                                rx="2"
+                                ry="2"
+                            />
+                            <circle cx="9" cy="9" r="2" />
+                            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                        </>
+                    </svg>
+                </div>
+            )
+        }
+        <!-- Status Badge -->
+        <div class="absolute top-4 right-4">
+            <div
+                class={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-zinc-950/80 backdrop-blur-sm ${status === "Activo" ? "text-unicode" : "text-rose-500"}`}
+            >
+                <span
+                    class={`w-2 h-2 rounded-full ${status === "Activo" ? "bg-unicode shadow-[0_0_8px_#75D32D]" : "bg-rose-500 animate-pulse"}`}
+                ></span>
+                {status}
+            </div>
+        </div>
+    </div>
+
+    <h3
+        class="text-xl font-bold mb-3 group-hover:text-unicode transition-colors tracking-tight"
+    >
+        {title}
+    </h3>
+
+    <p class="text-zinc-500 text-sm mb-6 line-clamp-3">
+        {description}
+    </p>
 
     <div
-        class="w-full aspect-square bg-[#75D32D]/10 rounded-3xl overflow-hidden mb-6 flex items-center justify-center"
+        class="flex items-center justify-between mt-auto pt-4 border-t border-zinc-800/50"
     >
-        <img
-            src={imageSrc}
-            alt={`Imagen del proyecto: ${title}`}
-            class="w-full h-full object-cover rounded-3xl"
-        />
-    </div>
+        <div
+            class="flex items-center gap-2 text-zinc-500 text-xs font-semibold invisible"
+        >
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="text-unicode"
+                ><path
+                    d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"
+                ></path><path
+                    d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"
+                ></path><path
+                    d="M9 12H4s.5-1 1-4c2 0 3 .5 3 .5s2-1 2-1V3c1 0 3 .5 3 .5s2-1 2-1v5c.5 0 2 1 2 1s1 1 1 3"
+                ></path></svg
+            >
+            DCC
+        </div>
 
-    <!-- Contenido -->
-    <div class="w-full text-left">
-        <h3 class="text-white font-bold text-xl md:text-2xl leading-tight mb-3">
-            {title}
-        </h3>
-        <p class="text-zinc-400 text-xs md:text-sm leading-relaxed">
-            {description}
-        </p>
+        <a
+            href={`/projects/${title.toLowerCase().replace(/\s+/g, "-")}`}
+            class="text-xs font-bold py-2 px-6 rounded-full border border-zinc-700 hover:border-unicode hover:text-unicode transition-all"
+        >
+            Ver detalles
+        </a>
     </div>
-</div>
+</article>
