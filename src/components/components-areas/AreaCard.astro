@@ -19,37 +19,43 @@ const {
 ---
 
 <div
-    class={`flex flex-col md:flex-row gap-6 md:gap-8 bg-[#151515] rounded-[2rem] p-5 md:p-6 items-center border border-zinc-800/50 hover:border-[#75D32D]/30 transition-all duration-300 ${reverse ? "md:flex-row-reverse" : ""}`}
+    class={`flex flex-row gap-4 sm:gap-6 md:gap-8 bg-[#151515] rounded-2xl md:rounded-[2rem] p-4 sm:p-5 md:p-6 items-center border border-zinc-800/50 hover:border-unicode/30 transition-all duration-300 group ${reverse ? "md:flex-row-reverse" : ""}`}
 >
     <!-- Contenedor de Imagen -->
-    <div class="w-full md:w-[25%] xl:w-[22%] max-w-[280px] flex-shrink-0">
+    <div
+        class="w-[35%] sm:w-[40%] md:w-[25%] xl:w-[22%] max-w-[140px] md:max-w-[280px] flex-shrink-0 rounded-2xl md:rounded-3xl overflow-hidden border border-transparent md:border-2 group-hover:border-unicode/40 transition-all duration-500 group-hover:shadow-unicode"
+    >
         <img
             src={imageSrc}
             alt={`Imagen del área de ${title}`}
-            class="w-full aspect-square object-cover rounded-3xl"
+            class="w-full aspect-square object-cover"
         />
     </div>
 
     <!-- Contenedor de Información -->
     <div
-        class={`w-full md:w-[75%] xl:w-[78%] flex flex-col justify-center py-2 ${reverse ? "md:items-end md:text-right text-left" : "md:items-start text-left"}`}
+        class={`w-[65%] sm:w-[60%] md:w-[75%] xl:w-[78%] flex flex-col justify-center py-1 md:py-2 ${reverse ? "md:items-end text-left md:text-right" : "items-start text-left"}`}
     >
-        <h3 class="text-4xl md:text-5xl font-bold text-unicode text-glow mb-4">
+        <h3
+            class="text-2xl sm:text-3xl md:text-5xl font-bold text-unicode text-glow mb-1 md:mb-4"
+        >
             {title}
         </h3>
 
-        <p class="text-zinc-300 text-[16px] leading-relaxed mb-5 font-normal">
+        <p
+            class="text-zinc-300 text-[13px] sm:text-sm md:text-base leading-snug md:leading-relaxed mb-3 md:mb-5 font-normal line-clamp-4 md:line-clamp-none"
+        >
             {description}
         </p>
 
-        <div class="mb-6 text-[16px]">
+        <div class="mb-3 md:mb-6 text-[12px] sm:text-sm md:text-base">
             <span class="text-unicode font-bold">{directorLabel}</span>
             <span class="text-zinc-300"> {directorNames}</span>
         </div>
 
         <a
             href={`/areas/${title.toLowerCase().replace(/\s+/g, "-")}`}
-            class="bg-unicode text-white font-bold px-8 py-3 rounded-full hover:bg-unicode-light transition-all w-fit text-[16px] shadow-unicode hover:shadow-unicode-lg"
+            class="bg-unicode text-black font-bold px-4 py-2 md:px-8 md:py-3 rounded-full hover:bg-unicode-light transition-all w-fit text-[12px] sm:text-sm md:text-base shadow-unicode hover:shadow-unicode-lg"
         >
             Conoce más
         </a>

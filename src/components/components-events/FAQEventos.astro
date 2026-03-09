@@ -79,7 +79,11 @@ const faqs: FAQ[] = [
                                     stroke="currentColor"
                                     stroke-width="2.5"
                                 >
-                                    <path d="M12 5v14M5 12h14" />
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="M19 9l-7 7-7-7"
+                                    />
                                 </svg>
                             </span>
                         </button>
@@ -155,7 +159,7 @@ const faqs: FAQ[] = [
                     content.style.maxHeight = content.scrollHeight + "px";
                     content.style.opacity = "1";
                     toggle.setAttribute("aria-expanded", "true");
-                    icon.style.transform = "rotate(45deg)";
+                    icon.style.transform = "rotate(180deg)";
                     item.classList.add("border-unicode/30", "bg-zinc-900/80");
                 }
             });

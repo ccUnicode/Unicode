@@ -43,6 +43,72 @@
           >Convocatoria</a
         >
       </div>
+
+      <!-- BOTON MENU MOBILE -->
+      <div class="md:hidden flex items-center">
+        <button
+          id="mobile-menu-btn"
+          class="group relative w-10 h-10 text-zinc-300 hover:text-white focus:outline-hidden flex flex-col justify-center items-center gap-[6px]"
+          aria-label="Abrir menú"
+        >
+          <span
+            class="block w-6 h-[2px] bg-current rounded-full transition-all duration-300 origin-center group-[.is-active]:translate-y-[8px] group-[.is-active]:rotate-45"
+          ></span>
+          <span
+            class="block w-6 h-[2px] bg-current rounded-full transition-all duration-300 origin-center group-[.is-active]:opacity-0 group-[.is-active]:scale-0"
+          ></span>
+          <span
+            class="block w-6 h-[2px] bg-current rounded-full transition-all duration-300 origin-center group-[.is-active]:-translate-y-[8px] group-[.is-active]:-rotate-45"
+          ></span>
+        </button>
+      </div>
     </div>
   </div>
+
+  <!-- MENU MOBILE DESPLEGABLE -->
+  <div
+    id="mobile-menu"
+    class="hidden md:hidden bg-[#050505]/95 border-t border-zinc-900 px-4 pt-2 pb-4 space-y-2 text-center shadow-lg"
+  >
+    <a
+      href="/areas"
+      class="block px-3 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-zinc-800/50 rounded-md"
+      >Áreas</a
+    >
+    <a
+      href="/eventos"
+      class="block px-3 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-zinc-800/50 rounded-md"
+      >Eventos</a
+    >
+    <a
+      href="/projects"
+      class="block px-3 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-zinc-800/50 rounded-md"
+      >Proyectos</a
+    >
+    <a
+      href="/call"
+      class="block px-3 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-zinc-800/50 rounded-md"
+      >Convocatoria</a
+    >
+  </div>
 </nav>
+
+<script>
+  function setupMobileMenu() {
+    const btn = document.getElementById("mobile-menu-btn");
+    const menu = document.getElementById("mobile-menu");
+
+    if (btn && menu) {
+      // Usamos onclick para no duplicar listeners si se ejecuta varias veces
+      btn.onclick = () => {
+        menu.classList.toggle("hidden");
+        btn.classList.toggle("is-active");
+      };
+    }
+  }
+
+  // Inicializar en carga inicial
+  setupMobileMenu();
+  // Reinicializar si se usa ViewTransitions (Astro)
+  document.addEventListener("astro:after-swap", setupMobileMenu);
+</script>

@@ -1,4 +1,4 @@
-# 🟢 Unicode - Landing Page
+# Unicode - Landing Page
 
 ![Astro](https://img.shields.io/badge/Astro-0C0F19?style=for-the-badge&logo=astro&logoColor=white) 
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white) 
@@ -8,23 +8,23 @@ Bienvenido al repositorio oficial de la **Landing Page de Unicode**. Este proyec
 
 ---
 
-## 🗺️ Estructura de la Web y Contenidos
+## Estructura de la Web y Contenidos
 
 De acuerdo a los requerimientos oficiales del centro cultural, esta plataforma cuenta con las siguientes vistas principales y secciones:
 
-- 🏠 **Inicio (Home):** Hero Section, Novedades, Métricas de trayectoria (proyectos, eventos, miembros), sección "Nosotros" (Misión y Visión), logos de alianzas y enlaces a las redes sociales del centro.
-- 🏢 **Áreas:** Listado de todas las áreas del centro cultural y páginas de detalle (información, directores activos y sus respectivos proyectos).
-- 🚀 **Proyectos:** Directorio categorizado (Activos y Pasados) con sus páginas propias incluyendo objetivos, integrantes responsables y galería visual.
-- 📅 **Eventos:** Sistema de eventos con póster/portada, calendario de próximos eventos, eventos previamente realizados y detalles de horarios y ubicaciones.
-- 👥 **Convocatoria:** Portal de postulación directo con información actualizada sobre accesos, fechas límite (estado activo/cerrado) y botón de registro veloz.
+- **Inicio (Home):** Hero Section, Novedades, Métricas de trayectoria (proyectos, eventos, miembros), sección "Nosotros" (Misión y Visión), logos de alianzas y enlaces a las redes sociales del centro.
+- **Áreas:** Listado de todas las áreas del centro cultural y páginas de detalle (información, directores activos y sus respectivos proyectos).
+- **Proyectos:** Directorio categorizado (Activos y Pasados) con sus páginas propias incluyendo objetivos, integrantes responsables y galería visual.
+- **Eventos:** Sistema de eventos con póster/portada, calendario de próximos eventos, eventos previamente realizados y detalles de horarios y ubicaciones.
+- **Convocatoria:** Portal de postulación directo con información actualizada sobre accesos, fechas límite (estado activo/cerrado) y botón de registro veloz.
 
-## ⚡ Tecnologías Principales
+## Tecnologías Principales
 
 - **[Astro](https://astro.build/)**: Framework web enfocado en la velocidad y el rendimiento (LCP optimizado).
 - **[Tailwind CSS (v4)](https://tailwindcss.com/)**: Framework CSS utilitario para un diseño responsivo y a medida siguiendo nuestro sistema de diseño.
 - **[Supabase](https://supabase.com/)**: Backend as a Service (BaaS) de código abierto y base de datos PostgreSQL.
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 Una visión general de la arquitectura básica:
 
@@ -43,7 +43,7 @@ Una visión general de la arquitectura básica:
 └── README.md         # Documentación del proyecto
 ```
 
-## 🚀 Instalación y Configuración
+## Instalación y Configuración
 
 Sigue estos pasos para ejecutar el proyecto en tu entorno local:
 
@@ -79,7 +79,7 @@ npm run dev
 
 El sitio estará disponible de forma local en `http://localhost:4321/`.
 
-## 🧞 Comandos Útiles
+##Comandos Útiles
 
 | Comando                   | Descripción                                                    |
 | :------------------------ | :------------------------------------------------------------- |
@@ -88,12 +88,12 @@ El sitio estará disponible de forma local en `http://localhost:4321/`.
 | `npm run preview`         | Previsualiza el sitio de producción localmente antes de subirlo|
 | `npm run astro -- --help` | Muestra la ayuda de la CLI de Astro                            |
 
-## 🎨 Guía de Estilos y Buenas Prácticas
+## Guía de Estilos y Buenas Prácticas
 
 - **Diseño UI/UX:** El proyecto utiliza estrictamente la guía de marca oficial de UNICODE, priorizando un tema oscuro atractivo con detalles en verde neón.
 - **Tipado Fuerte:** Se utilizan tipos estrictos en TypeScript y esquemas estructurados para interactuar con la base de datos Supabase, previniendo errores.
 - **Rendimiento UI:** Implementación de arquitectura de islas de Astro, gestión de imágenes eficiente, y reducción del tiempo de carga (LCP < 2.5s).
 
-## 📄 Créditos
+## Créditos
 
 Desarrollado para **Unicode**. Todos los derechos reservados.

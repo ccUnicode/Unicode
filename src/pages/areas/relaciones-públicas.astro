@@ -1,9 +1,8 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import Navbar from "../../components/Navbar.astro";
-import AreaLayout from "../../components/components-areas/AreaLayout.astro";
+import HeroAreaIndividual from "../../components/components-areas/HeroAreaIndividual.astro";
 
-// Datos de la página (Placeholder con base en DCC)
 const whatWeLookForData = [
     "Estudiantes responsables y comprometidos (lo más importante).",
     "Estudiantes responsables y comprometidos (lo más importante).",
@@ -31,6 +30,7 @@ const projectsData = [
         description:
             "Unicode es un centro cultural que nació con la idea de dar a conocer más la carrera de ingeniería de software. En este proyecto, subimos contenido educativo relacionado a ello, reforzando la identidad y los orígenes del centro",
         imageSrc: "/areasmoment.png",
+        status: "Activo",
     },
 ];
 
@@ -42,7 +42,7 @@ const directorsData = [
     },
     {
         name: "Rafael Cardozo",
-        linkedin: "rafael-cardozo",
+        linkedin: "rafael-olivos",
         imageSrc: "/areasmoment.png",
     },
 ];
@@ -51,7 +51,7 @@ const directorsData = [
 <Layout title="Relaciones Públicas | Áreas UNICODE">
     <Navbar />
 
-    <AreaLayout
+    <HeroAreaIndividual
         title="RRPP"
         description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
         whatWeLookFor={whatWeLookForData}

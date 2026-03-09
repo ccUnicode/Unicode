@@ -5,14 +5,16 @@
 <section
   class="min-h-[calc(100vh-80px)] pt-20 pb-12 md:pt-24 flex items-center relative overflow-hidden"
 >
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
+  <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-8 w-full relative z-10">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
       <!-- Left Column: Content -->
       <div
-        class="flex flex-col text-left justify-center order-2 lg:order-1 mt-8 lg:mt-0"
+        class="flex flex-col text-center lg:text-left justify-center mt-8 lg:mt-0 px-2 sm:px-0"
       >
         <!-- Logo Text inline with SVG -->
-        <div class="flex flex-wrap items-center gap-3 md:gap-4 mb-4 md:mb-6">
+        <div
+          class="flex flex-wrap items-center justify-center lg:justify-start gap-3 md:gap-4 mb-4 md:mb-6"
+        >
           <img
             src="/logo-unicode.png"
             alt="Unicode Logo"
@@ -34,7 +36,7 @@
         </h1>
 
         <p
-          class="text-zinc-300 text-sm sm:text-base md:text-lg lg:text-xl max-w-2xl mb-8 leading-relaxed font-normal"
+          class="text-zinc-300 text-sm sm:text-base md:text-lg lg:text-xl max-w-2xl mx-auto lg:mx-0 mb-8 leading-relaxed font-normal"
         >
           Velando por el bienestar estudiantil, la información, educación y
           conocimiento de nuestra comunidad universitaria.
@@ -42,17 +44,17 @@
 
         <!-- CTAs -->
         <div
-          class="flex flex-col sm:flex-row items-center sm:items-start justify-start gap-4 sm:gap-5"
+          class="flex flex-row items-center justify-center lg:justify-start gap-3 sm:gap-5 w-full max-w-md mx-auto lg:mx-0 sm:max-w-none"
         >
           <a
-            href="/areas"
-            class="w-full sm:w-auto px-6 py-3 bg-unicode hover:bg-unicode-light text-[#050505] font-semibold rounded-2xl transition-all duration-300 text-base shadow-unicode hover:shadow-unicode-lg text-center truncate"
+            href="#nosotros"
+            class="flex-1 sm:flex-none px-2 sm:px-8 py-3 bg-unicode hover:bg-unicode-light text-[#050505] font-semibold rounded-2xl transition-all duration-300 text-sm sm:text-base shadow-unicode hover:shadow-unicode-lg text-center truncate"
           >
             Conócenos
           </a>
           <a
-            href="/convocatoria"
-            class="w-full sm:w-auto px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white font-semibold rounded-2xl transition-all duration-300 text-base text-center truncate"
+            href="#novedades"
+            class="flex-1 sm:flex-none px-2 sm:px-8 py-3 bg-zinc-900 hover:bg-zinc-800 text-white font-semibold rounded-2xl transition-all duration-300 text-sm sm:text-base text-center truncate"
           >
             Novedades
           </a>
@@ -61,7 +63,7 @@
 
       <!-- Right Column: Image -->
       <div
-        class="relative w-full h-[320px] sm:h-[420px] lg:h-[550px] flex justify-center items-center order-1 lg:order-2"
+        class="relative w-full h-[320px] sm:h-[420px] lg:h-[550px] flex justify-center items-center"
       >
         <img
           src="/Mascota-Unicode-Landing-Hero.png"

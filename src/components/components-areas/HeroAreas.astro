@@ -1,0 +1,246 @@
+---
+import AreaCard from "./AreaCard.astro";
+---
+
+<section
+    id="hero-areas-container"
+    class="relative w-full min-h-screen overflow-hidden bg-[#050505] -mt-24 pt-32 md:pt-32"
+>
+    <!-- 1. Capa de Fondo: Patrón Hexagonal -->
+    <div
+        class="absolute inset-0 z-0 opacity-20 pointer-events-none"
+        style="background-image: radial-gradient(circle at 2px 2px, rgba(117,211,45,0.1) 1px, transparent 0); background-size: 40px 40px;"
+    >
+    </div>
+    <div
+        class="absolute inset-0 z-0 opacity-10 pointer-events-none"
+        style="background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MiIgaGVpZ2h0PSI2MCI+PHBhdGggZD0iTTI2IDBMMDUyIDE1VjQ1TDI2IDYwTDAgNDVWMTVMMjYgMFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgxMTcsIDIxMSwgNDUsIDAuMikiIHN0cm9rZS13aWR0aD0iMSIvPjwvc3ZnPg=='); background-size: 52px 60px;"
+    >
+    </div>
+
+    <!-- 2. Capa de Animación-->
+    <canvas id="areas-plexus" class="absolute inset-0 z-10 pointer-events-none"
+    ></canvas>
+
+    <!-- 3. Viñeta Radial -->
+    <div
+        class="absolute inset-0 z-20 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,rgba(5,5,5,0.4)_50%,#050505_100%)]"
+    >
+    </div>
+
+    <!-- Separación, arriba es el diseño plexus (fondo dinámico) -->
+
+    <!-- Contenido Principal -->
+    <div class="relative z-30 w-full max-w-7xl mx-auto px-6 py-10 md:py-20">
+        <div class="mb-10 md:mb-20"></div>
+
+        <h1
+            class="text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-10 md:mb-20 text-center uppercase animate-lifting"
+        >
+            <span class="text-unicode text-glow">CONOCE</span> NUESTRAS <span
+                class="text-unicode text-glow">ÁREAS</span
+            >
+        </h1>
+
+        <!-- Grid de las cards de áreas -->
+        <div
+            class="flex flex-col gap-8 md:gap-12 text-left animate-lifting"
+            style="animation-delay: 200ms;"
+        >
+            <AreaCard
+                title="GTH"
+                description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
+                directorLabel="Director:"
+                directorNames="Andhlé Campos"
+                imageSrc="/areasmoment.png"
+            />
+
+            <AreaCard
+                title="Relaciones Públicas"
+                description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
+                directorLabel="Directores:"
+                directorNames="Jeanpier Robles y Rafael Olivos"
+                reverse={true}
+                imageSrc="/areasmoment.png"
+            />
+
+            <AreaCard
+                title="Académica"
+                description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
+                directorLabel="Directores:"
+                directorNames="Franz Nuñez y Gino Romero"
+                imageSrc="/areasmoment.png"
+            />
+
+            <AreaCard
+                title="DCC"
+                description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
+                directorLabel="Directores:"
+                directorNames="Renato Gutierrez y Rubí Quispe "
+                reverse={true}
+                imageSrc="/areasmoment.png"
+            />
+
+            <AreaCard
+                title="Investigación y desarrollo"
+                description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
+                directorLabel="Directores:"
+                directorNames="Lenin Castro y Gabriel Chupa"
+                imageSrc="/areasmoment.png"
+            />
+        </div>
+    </div>
+</section>
+
+<!-- Levantamiento del título y las cards -->
+<style>
+    .animate-lifting {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: reveal 0.8s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes reveal {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<!-- Fondo dinámico -->
+<script>
+    function initAreasPlexus() {
+        const canvas = document.getElementById(
+            "areas-plexus",
+        ) as HTMLCanvasElement;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        let width: number, height: number;
+        let particles: Particle[] = [];
+        const connectionDist = 180;
+        const particleCount = Math.min(Math.floor(window.innerWidth / 10), 120);
+
+        class Particle {
+            x: number;
+            y: number;
+            vx: number;
+            vy: number;
+            size: number;
+
+            constructor() {
+                const margin = 0.2; // 20% margin
+                if (Math.random() > 0.5) {
+                    this.x =
+                        Math.random() < 0.5
+                            ? Math.random() * (width * margin)
+                            : width - Math.random() * (width * margin);
+                    this.y = Math.random() * height;
+                } else {
+                    this.x = Math.random() * width;
+                    this.y =
+                        Math.random() < 0.5
+                            ? Math.random() * (height * margin)
+                            : height - Math.random() * (height * margin);
+                }
+                this.vx = (Math.random() - 0.5) * 0.8;
+                this.vy = (Math.random() - 0.5) * 0.8;
+                this.size = Math.random() * 2 + 1;
+            }
+
+            update() {
+                const centerX = width / 2;
+                const centerY = height / 2;
+                const dx = this.x - centerX;
+                const dy = this.y - centerY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const repulsionRadius = Math.min(width, height) * 0.5;
+
+                if (dist < repulsionRadius) {
+                    const force = (1 - dist / repulsionRadius) * 0.04;
+                    this.vx += (dx / dist) * force;
+                    this.vy += (dy / dist) * force;
+                }
+
+                this.vx *= 0.99;
+                this.vy *= 0.99;
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+            }
+
+            draw() {
+                if (!ctx) return;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(117, 211, 45, 0.6)";
+                ctx.fill();
+            }
+        }
+
+        function resize() {
+            const container = document.getElementById("hero-areas-container");
+            width = canvas.width = container
+                ? container.clientWidth
+                : window.innerWidth;
+            height = canvas.height = container
+                ? container.clientHeight
+                : window.innerHeight;
+            init();
+        }
+
+        function init() {
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function drawLines() {
+            if (!ctx) return;
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < connectionDist) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        const opacity = 1 - dist / connectionDist;
+                        ctx.strokeStyle = `rgba(117, 211, 45, ${opacity * 0.25})`;
+                        ctx.lineWidth = 0.8;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, width, height);
+
+            particles.forEach((p) => {
+                p.update();
+                p.draw();
+            });
+
+            drawLines();
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener("resize", resize);
+        resize();
+        animate();
+    }
+    initAreasPlexus();
+    document.addEventListener("astro:page-load", initAreasPlexus);
+</script>
+
+<!-- más de la mitad de la pantalla es diseño plexus, no espantarse -->

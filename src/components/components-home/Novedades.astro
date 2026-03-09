@@ -12,18 +12,42 @@ const novedades = [
     description:
       "Unicode formó parte de la fiesta que celebra el ingreso de los nuevos cachimbos UNI. Un evento lleno de risas, alegría y mucha diversión.",
     image: "/bienvenida_cachimbos.png",
+    href: "https://www.linkedin.com/company/unicode-fiis-uni/",
+  },
+  {
+    title: "Taller Avanzado de Robótica e IA",
+    description:
+      "Acompáñanos en este taller donde aprenderás a integrar modelos pre-entrenados con Arduino y Raspberry Pi para proyectos del mundo real.",
+    image: "/evento_unicode_1.png",
+    href: "https://www.linkedin.com/company/unicode-fiis-uni/",
   },
   {
     title: "Unicode presente en bienvenida de cachimbos 26-1",
     description:
       "Unicode formó parte de la fiesta que celebra el ingreso de los nuevos cachimbos UNI. Un evento lleno de risas, alegría y mucha diversión.",
     image: "/bienvenida_cachimbos.png",
+    href: "https://www.linkedin.com/company/unicode-fiis-uni/",
+  },
+  {
+    title: "Conoce nuestra nueva Junta Directiva 2026",
+    description:
+      "Con mucho orgullo anunciamos a los nuevos líderes que llevarán a UNICODE al siguiente nivel durante este periodo académico.",
+    image: "/home-img2.png",
+    href: "https://www.linkedin.com/company/unicode-fiis-uni/",
   },
   {
     title: "Unicode presente en bienvenida de cachimbos 26-1",
     description:
       "Unicode formó parte de la fiesta que celebra el ingreso de los nuevos cachimbos UNI. Un evento lleno de risas, alegría y mucha diversión.",
     image: "/bienvenida_cachimbos.png",
+    href: "https://www.linkedin.com/company/unicode-fiis-uni/",
+  },
+  {
+    title: "Alianzas Estratégicas y Networking",
+    description:
+      "Recientemente firmamos convenios con grandes referentes tecnológicos que abrirán puertas para prácticas preprofesionales a nuestros miembros.",
+    image: "/evento_unicode_2.png",
+    href: "https://www.linkedin.com/company/unicode-fiis-uni/",
   },
 ];
 ---
@@ -39,17 +63,147 @@ const novedades = [
       </h2>
     </div>
 
-    <!-- Grid de tarjetas -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {
-        novedades.map((novedad) => (
-          <NovedadCard
-            title={novedad.title}
-            description={novedad.description}
-            image={novedad.image}
-          />
-        ))
-      }
+    <!-- Carrusel de tarjetas -->
+    <div class="relative group/news-carousel w-full">
+      <div
+        id="novedades-grid"
+        class="flex gap-6 lg:gap-8 overflow-x-hidden pb-4 md:pb-0 scroll-smooth snap-x snap-mandatory"
+      >
+        {
+          novedades.map((novedad) => (
+            <div class="novedad-item flex-none w-[88vw] md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1.33rem)] snap-center">
+              <NovedadCard
+                title={novedad.title}
+                description={novedad.description}
+                image={novedad.image}
+              />
+            </div>
+          ))
+        }
+      </div>
+
+      <!-- Arrow Controls & Indicator (All views) -->
+      <div class="flex items-center justify-center gap-6 mt-10">
+        <button
+          id="prev-news"
+          class="w-12 h-12 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg hover:border-unicode/50"
+          aria-label="Anterior"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="3"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+
+        <div
+          id="novedades-carousel-indicator"
+          class="flex justify-center flex-wrap gap-2 max-w-[200px]"
+        >
+          {
+            novedades.map((_, i) => (
+              <button
+                class={`w-2 h-2 rounded-full transition-all duration-300 ${i === 0 ? "bg-unicode w-6" : "bg-zinc-800"}`}
+                aria-label={`Ir a novedad ${i + 1}`}
+                data-index={i}
+              />
+            ))
+          }
+        </div>
+
+        <button
+          id="next-news"
+          class="w-12 h-12 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg hover:border-unicode/50"
+          aria-label="Siguiente"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="3"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9 5l7 7-7 7"></path>
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 </section>
+
+<style>
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>
+
+<script>
+  function initNewsCarousel() {
+    const container = document.getElementById("novedades-grid");
+    const indicator = document.getElementById("novedades-carousel-indicator");
+
+    if (!container || !indicator) return;
+
+    const dots = indicator.querySelectorAll("button");
+    const prevBtn = document.getElementById("prev-news");
+    const nextBtn = document.getElementById("next-news");
+
+    // Scroll by width of one item + gap
+    const getScrollStep = () => {
+      const firstItem = container.querySelector(".novedad-item") as HTMLElement;
+      if (!firstItem) return container.clientWidth;
+      const gap = parseInt(window.getComputedStyle(container).gap) || 0;
+      return firstItem.offsetWidth + gap;
+    };
+
+    if (prevBtn && nextBtn) {
+      prevBtn.addEventListener("click", () => {
+        container.scrollLeft -= getScrollStep();
+      });
+      nextBtn.addEventListener("click", () => {
+        container.scrollLeft += getScrollStep();
+      });
+    }
+
+    container.addEventListener("scroll", () => {
+      // Calculate active index based on scroll position
+      const scrollIndex = Math.round(container.scrollLeft / getScrollStep());
+      dots.forEach((dot, i) => {
+        if (i === scrollIndex) {
+          dot.classList.add("bg-unicode", "w-6");
+          dot.classList.remove("bg-zinc-800");
+        } else {
+          dot.classList.remove("bg-unicode", "w-6");
+          dot.classList.add("bg-zinc-800");
+        }
+      });
+    });
+
+    dots.forEach((dot) => {
+      dot.addEventListener("click", () => {
+        const index = parseInt(dot.getAttribute("data-index") || "0");
+        container.scrollLeft = index * getScrollStep();
+      });
+    });
+  }
+
+  // Run on initial load
+  initNewsCarousel();
+
+  // Run on Astro View Transitions
+  document.addEventListener("astro:page-load", initNewsCarousel);
+</script>

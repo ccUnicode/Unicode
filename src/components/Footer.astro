@@ -8,11 +8,11 @@ const currentYear = new Date().getFullYear();
 
 <footer class="w-full bg-[#050505] border-t border-zinc-900/50 pt-16 pb-12">
   <div class="max-w-6xl mx-auto px-6">
-    <div
-      class="flex flex-col md:flex-row justify-between items-end md:items-center gap-8"
-    >
+    <div class="flex flex-col md:flex-row justify-between items-center gap-8">
       <!-- Lado Izquierdo: Copyright y Logo -->
-      <div class="flex flex-col gap-4">
+      <div
+        class="flex flex-col items-center md:items-start gap-4 text-center md:text-left"
+      >
         <p
           class="text-zinc-500 text-[10px] md:text-xs uppercase tracking-[0.2em] font-medium"
         >
@@ -22,18 +22,13 @@ const currentYear = new Date().getFullYear();
         <!-- Logo Circular -->
         <a
           href="/"
-          class="w-10 h-10 rounded-full border border-zinc-800 flex items-center justify-center group hover:border-unicode/40 transition-all duration-300"
+          class="w-12 h-12 rounded-full border border-zinc-800 flex items-center justify-center group hover:border-unicode/40 transition-all duration-300 bg-[#050505]"
         >
-          <svg
-            class="w-5 h-5 text-zinc-400 group-hover:text-unicode transition-colors duration-300"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
-            ></path>
-          </svg>
+          <img
+            src="/logo-unicode-blanco.png"
+            alt="Unicode Logo"
+            class="w-7 h-7 object-contain opacity-70 group-hover:opacity-100 transition-opacity duration-300"
+          />
         </a>
       </div>
 
