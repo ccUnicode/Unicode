@@ -48,7 +48,7 @@ import AreaCard from "./AreaCard.astro";
             style="animation-delay: 200ms;"
         >
             <AreaCard
-                title="GTH"
+                title="Gestión del Talento Humano"
                 description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
                 directorLabel="Director:"
                 directorNames="Andhlé Campos"
@@ -73,8 +73,8 @@ import AreaCard from "./AreaCard.astro";
             />
 
             <AreaCard
-                title="DCC"
-                description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
+                title="Dirección de Comunicación y Contenido"
+                description="El área de Dirección de Comunicación y Contenido es el motor creativo y comunicacional de nuestra organización. Nuestra misión es traducir el conocimiento técnico y los proyectos de la comunidad en un mensaje claro, atractivo y de alto impacto. Somos los encargados de construir y cuidar la identidad de UNICODE, asegurando que nuestra visión llegue a más personas."
                 directorLabel="Directores:"
                 directorNames="Renato Gutierrez y Rubí Quispe "
                 reverse={true}
@@ -82,7 +82,7 @@ import AreaCard from "./AreaCard.astro";
             />
 
             <AreaCard
-                title="Investigación y desarrollo"
+                title="Investigación y Desarrollo"
                 description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
                 directorLabel="Directores:"
                 directorNames="Lenin Castro y Gabriel Chupa"
@@ -178,7 +178,7 @@ import AreaCard from "./AreaCard.astro";
                 if (!ctx) return;
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = "rgba(117, 211, 45, 0.6)";
+                ctx.fillStyle = "rgba(117, 211, 45, 0.8)";
                 ctx.fill();
             }
         }
@@ -214,7 +214,7 @@ import AreaCard from "./AreaCard.astro";
                         ctx.moveTo(particles[i].x, particles[i].y);
                         ctx.lineTo(particles[j].x, particles[j].y);
                         const opacity = 1 - dist / connectionDist;
-                        ctx.strokeStyle = `rgba(117, 211, 45, ${opacity * 0.25})`;
+                        ctx.strokeStyle = `rgba(117, 211, 45, ${opacity * 0.45})`;
                         ctx.lineWidth = 0.8;
                         ctx.stroke();
                     }

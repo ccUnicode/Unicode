@@ -1,0 +1,196 @@
+---
+import AreaProjectCard from "./AreaProjectCard.astro";
+
+interface Project {
+    title: string;
+    description: string;
+    imageSrc?: string;
+    status?: string;
+}
+
+interface Props {
+    projects: Project[];
+}
+
+const { projects } = Astro.props;
+---
+
+<div class="relative w-full overflow-hidden group py-10">
+    <!-- Slider Container -->
+    <div
+        id="area-project-slider"
+        class="flex gap-6 md:gap-8 overflow-x-auto pb-12 snap-x snap-mandatory scroll-smooth scrollbar-hide w-full"
+    >
+        {
+            projects.map((project) => (
+                <div class="flex-shrink-0 w-[300px] sm:w-[340px] md:w-[380px] snap-center">
+                    <AreaProjectCard
+                        title={project.title}
+                        description={project.description}
+                        imageSrc={project.imageSrc}
+                        status={project.status}
+                    />
+                </div>
+            ))
+        }
+    </div>
+
+    <!-- Navigation Bar (Arrows + Dots) -->
+    <div class="flex items-center justify-center gap-6 mt-4">
+        <!-- Prev Button -->
+        <button
+            id="prev-area-project"
+            class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg hover:border-unicode/50"
+            aria-label="Anterior"
+        >
+            <svg
+                class="w-5 h-5 md:w-6 md:h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="3"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M15 19l-7-7 7-7"></path>
+            </svg>
+        </button>
+
+        <!-- Dots Indicator -->
+        <div class="flex justify-center gap-3">
+            {
+                projects.map((_, i) => (
+                    <button
+                        class="area-slider-dot w-2 h-2 rounded-full bg-zinc-800 transition-all duration-300 cursor-pointer"
+                        data-index={i}
+                        aria-label={`Ir al proyecto ${i + 1}`}
+                    />
+                ))
+            }
+        </div>
+
+        <!-- Next Button -->
+        <button
+            id="next-area-project"
+            class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg hover:border-unicode/50"
+            aria-label="Siguiente"
+        >
+            <svg
+                class="w-5 h-5 md:w-6 md:h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="3"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9 5l7 7-7 7"></path>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<style>
+    /* Hide scrollbar */
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+</style>
+
+<script>
+    function initAreaSlider() {
+        const slider = document.getElementById("area-project-slider");
+        const dots = document.querySelectorAll(".area-slider-dot");
+        const prevBtn = document.getElementById("prev-area-project");
+        const nextBtn = document.getElementById("next-area-project");
+
+        if (!slider || dots.length === 0) return;
+
+        const updateDots = () => {
+            const sliderRect = slider.getBoundingClientRect();
+            const sliderCenter = sliderRect.left + sliderRect.width / 2;
+            const cardElements = Array.from(slider.children);
+
+            let minDistance = Infinity;
+            let activeIndex = 0;
+
+            cardElements.forEach((card, i) => {
+                const cardRect = card.getBoundingClientRect();
+                const cardCenter = cardRect.left + cardRect.width / 2;
+                const distance = Math.abs(sliderCenter - cardCenter);
+
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    activeIndex = i;
+                }
+            });
+
+            dots.forEach((dot, i) => {
+                if (i === activeIndex) {
+                    dot.classList.add("bg-unicode", "w-6");
+                    dot.classList.remove("bg-zinc-800");
+                } else {
+                    dot.classList.remove("bg-unicode", "w-6");
+                    dot.classList.add("bg-zinc-800");
+                }
+            });
+        };
+
+        const scrollToCard = (index: number) => {
+            const cardElements = slider.children;
+            if (cardElements[index]) {
+                const card = cardElements[index] as HTMLElement;
+                const sliderWidth = slider.offsetWidth;
+                const cardWidth = card.offsetWidth;
+                const cardOffset = card.offsetLeft;
+                const scrollTo = cardOffset - sliderWidth / 2 + cardWidth / 2;
+
+                slider.scrollTo({
+                    left: scrollTo,
+                    behavior: "smooth",
+                });
+            }
+        };
+
+        const getActiveIndex = () => {
+            let current = 0;
+            dots.forEach((dot, i) => {
+                if (dot.classList.contains("bg-unicode")) current = i;
+            });
+            return current;
+        };
+
+        // Event Listeners
+        slider.addEventListener("scroll", updateDots);
+
+        dots.forEach((dot, i) => {
+            dot.addEventListener("click", () => scrollToCard(i));
+        });
+
+        if (prevBtn && nextBtn) {
+            prevBtn.addEventListener("click", () => {
+                const currentIndex = getActiveIndex();
+                scrollToCard(Math.max(0, currentIndex - 1));
+            });
+
+            nextBtn.addEventListener("click", () => {
+                const currentIndex = getActiveIndex();
+                scrollToCard(Math.min(dots.length - 1, currentIndex + 1));
+            });
+        }
+
+        // Initial update
+        setTimeout(updateDots, 100);
+    }
+
+    // Initialize on load
+    initAreaSlider();
+    // Re-run for Astro view transitions
+    document.addEventListener("astro:page-load", initAreaSlider);
+</script>
