@@ -16,6 +16,7 @@ interface EventoRealizado {
     ponente: string;
     lugar: string;
     highlights: string[];
+    link?: string;
 }
 
 const eventosRealizados: EventoRealizado[] = [
@@ -280,9 +281,20 @@ const categoriaBadge: Record<string, string> = {
                                         {evento.lugar}
                                     </span>
                                 </div>
-                                <p class="text-zinc-400 text-xs leading-relaxed line-clamp-2">
+                                <p class="text-zinc-400 text-xs leading-relaxed line-clamp-2 mb-4">
                                     {evento.descripcion}
                                 </p>
+                                <a
+                                    href={
+                                        evento.link ||
+                                        "https://www.linkedin.com/company/unicode-usm/"
+                                    }
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="block text-center w-full py-2.5 bg-unicode/10 hover:bg-unicode text-unicode hover:text-black font-bold text-xs uppercase tracking-widest rounded-xl border border-unicode/30 transition-all duration-300"
+                                >
+                                    Ver más
+                                </a>
                             </div>
                         </article>
                     ))
@@ -413,15 +425,26 @@ const categoriaBadge: Record<string, string> = {
                                     {evento.lugar}
                                 </span>
                             </div>
-                            <p class="text-zinc-400 text-sm leading-relaxed line-clamp-3 mb-4">
+                            <p class="text-zinc-400 text-sm leading-relaxed line-clamp-3 mb-4 flex-1">
                                 {evento.descripcion}
                             </p>
-                            <div class="flex flex-wrap gap-2">
+                            <div class="flex flex-wrap items-center gap-2 mt-auto">
                                 {evento.highlights.map((h) => (
                                     <span class="text-[10px] text-unicode/70 bg-unicode/5 border border-unicode/10 rounded-full px-2 py-0.5">
                                         #{h.split(" ")[0]}
                                     </span>
                                 ))}
+                                <a
+                                    href={
+                                        evento.link ||
+                                        "https://www.linkedin.com/company/unicode-usm/"
+                                    }
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="inline-block ml-auto py-1.5 px-4 bg-unicode/10 hover:bg-unicode text-unicode hover:text-black font-bold text-[10px] uppercase tracking-widest rounded-full border border-unicode/30 transition-all duration-300"
+                                >
+                                    Ver más
+                                </a>
                             </div>
                         </div>
                     </article>
