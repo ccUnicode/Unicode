@@ -8,14 +8,19 @@
 interface Area {
   icon: string;
   label: string;
+  href: string;
 }
 
 const areas: Area[] = [
-  { icon: "gth", label: "GTH" },
-  { icon: "acd", label: "ACD" },
-  { icon: "rrpp", label: "RRPP" },
-  { icon: "dcc", label: "DCC" },
-  { icon: "id", label: "ID" },
+  { icon: "gth", label: "GTH", href: "/areas/gestión-del-talento-humano" },
+  { icon: "acd", label: "ACD", href: "/areas/académica" },
+  { icon: "rrpp", label: "RRPP", href: "/areas/relaciones-públicas" },
+  {
+    icon: "dcc",
+    label: "DCC",
+    href: "/areas/dirección-de-comunicación-y-contenido",
+  },
+  { icon: "id", label: "ID", href: "/areas/investigación-y-desarrollo" },
 ];
 ---
 
@@ -65,8 +70,11 @@ const areas: Area[] = [
     <div class="flex items-center justify-center gap-6 sm:gap-10 mb-10">
       {
         areas.map((area) => (
-          <div class="flex flex-col items-center gap-2">
-            <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center backdrop-blur-sm hover:border-unicode/40 hover:bg-unicode/10 transition-all duration-300">
+          <a
+            href={area.href}
+            class="flex flex-col items-center gap-2 group cursor-pointer"
+          >
+            <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center backdrop-blur-sm group-hover:border-unicode/40 group-hover:bg-unicode/10 transition-all duration-300">
               {area.icon === "gth" && (
                 <svg
                   class="w-6 h-6 md:w-7 md:h-7 text-unicode"
@@ -143,10 +151,10 @@ const areas: Area[] = [
                 </svg>
               )}
             </div>
-            <span class="text-white font-bold text-xs md:text-sm tracking-wider">
+            <span class="text-white font-bold text-xs md:text-sm tracking-wider group-hover:text-unicode transition-colors duration-300">
               {area.label}
             </span>
-          </div>
+          </a>
         ))
       }
     </div>
