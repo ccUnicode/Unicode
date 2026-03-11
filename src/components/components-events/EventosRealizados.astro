@@ -21,6 +21,58 @@ interface EventoRealizado {
 
 const eventosRealizados: EventoRealizado[] = [
     {
+        titulo: "Software Week 2025",
+        descripcion:
+            "Una semana intensiva dedicada al desarrollo de software, con talleres prácticos, charlas magistrales y networking con líderes de la industria tecnológica.",
+        fecha: "03 Mar 2025",
+        asistentes: 250,
+        categoria: "Workshop",
+        imagen: "/evento_unicode_1.png",
+        ponente: "Expertos Tech",
+        lugar: "Auditorio FIIS",
+        highlights: ["Workshops Hands-on", "Networking Pro"],
+        link: "https://www.linkedin.com/feed/update/urn:li:activity:7372626080282615808",
+    },
+    {
+        titulo: "Frontiers AI Summit",
+        descripcion:
+            "Cumbre presencial sobre las últimas fronteras de la inteligencia artificial, explorando modelos generativos, ética en IA y su impacto en el futuro global.",
+        fecha: "15 Feb 2025",
+        asistentes: 300,
+        categoria: "Charla",
+        imagen: "/evento_unicode_2.png",
+        ponente: "Speakers Internacionales",
+        lugar: "Centro de Convenciones",
+        highlights: ["IA Generativa", "Ética Tech"],
+        link: "https://www.linkedin.com/feed/update/urn:li:activity:7407272428764155904",
+    },
+    {
+        titulo: 'José Carreón: "Steve Jobs"',
+        descripcion:
+            "José Carreón compartió lecciones invaluables de liderazgo e innovación tras años de trabajar directamente al lado del cofundador de Apple.",
+        fecha: "20 Dic 2024",
+        asistentes: 180,
+        categoria: "Charla",
+        imagen: "/evento_unicode_1.png",
+        ponente: "José Carreón",
+        lugar: "Auditorio FIIS",
+        highlights: ["Liderazgo Apple", "Lecciones Invaluables"],
+        link: "https://www.instagram.com/p/DRP7pOgEacL/?img_index=1",
+    },
+    {
+        titulo: "UNI BEE Integration",
+        descripcion:
+            "Evento masivo de integración para fortalecer la comunidad de UNICODE, conectando estudiantes de diversas facultades en un ambiente de innovación.",
+        fecha: "12 Nov 2024",
+        asistentes: 150,
+        categoria: "Integración",
+        imagen: "/evento_unicode_2.png",
+        ponente: "Comunidad UNICODE",
+        lugar: "Campus UNI",
+        highlights: ["Team Building", "Cultura Unicode"],
+        link: "https://www.instagram.com/p/DRx3IQGjZ9G/",
+    },
+    {
         titulo: "Hackatón UNICODE 2025",
         descripcion:
             "48 horas de innovación donde equipos multidisciplinarios desarrollaron soluciones tecnológicas para problemas reales de la comunidad universitaria.",
@@ -158,6 +210,8 @@ const categoriaBadge: Record<string, string> = {
     Competencia:
         "bg-amber-900/40 text-amber-200 border-amber-500/50 backdrop-blur-md",
     Panel: "bg-pink-900/40 text-pink-200 border-pink-500/50 backdrop-blur-md",
+    Integración:
+        "bg-amber-600/40 text-amber-100 border-amber-400/50 backdrop-blur-md",
 };
 
 // Fragmentar eventos en grupos de 6 para la vista de Tablet y PC
