@@ -1,0 +1,610 @@
+---
+/**
+ * admin.astro
+ * Panel de administración para ver postulantes de convocatoria.
+ * - Login con contraseña protegido por rate limiting server-side.
+ * - Dashboard con filtros por área, tipo de opción y ordenamiento.
+ * - Exportar a Excel (CSV).
+ */
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Admin">
+  <!-- ===== PANTALLA DE LOGIN ===== -->
+  <div
+    id="login-screen"
+    class="min-h-screen flex items-center justify-center px-4"
+  >
+    <div
+      class="w-full max-w-sm bg-zinc-900/80 border border-zinc-800 rounded-2xl p-8"
+    >
+      <h2 class="text-white text-xl font-bold text-center mb-6">Acceso</h2>
+
+      <form id="login-form" class="space-y-4">
+        <div>
+          <input
+            type="password"
+            id="admin-password"
+            name="password"
+            placeholder="Contraseña"
+            required
+            autocomplete="current-password"
+            class="w-full bg-zinc-950 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-600"
+          />
+        </div>
+
+        <!-- Error message -->
+        <div
+          id="login-error"
+          class="hidden text-red-400 text-xs text-center font-medium py-2 bg-red-500/10 rounded-lg border border-red-500/20"
+        >
+        </div>
+
+        <button
+          type="submit"
+          id="login-btn"
+          class="w-full bg-unicode hover:bg-unicode-light text-black font-bold text-sm py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+        >
+          <span id="login-btn-text">Ingresar</span>
+          <svg
+            id="login-spinner"
+            class="w-4 h-4 animate-spin hidden"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== DASHBOARD ===== -->
+  <div id="dashboard-screen" class="hidden min-h-screen">
+    <!-- Top bar -->
+    <header
+      class="sticky top-0 z-50 bg-[#050505]/95 backdrop-blur-md border-b border-zinc-800/50"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14 sm:h-16"
+      >
+        <div class="flex items-center gap-2 sm:gap-3">
+          <img
+            src="/logo-unicode-blanco.png"
+            alt="Unicode"
+            class="w-7 h-7 sm:w-8 sm:h-8 opacity-80"
+          />
+          <h1 class="text-white font-bold text-sm sm:text-lg">
+            Admin Dashboard
+          </h1>
+        </div>
+        <button
+          id="logout-btn"
+          class="text-red-400 hover:text-red-300 text-xs sm:text-sm font-medium transition-colors"
+        >
+          Cerrar Sesión
+        </button>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
+      <!-- Tabs de áreas -->
+      <div class="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6">
+        <button
+          class="area-tab active-tab px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200"
+          data-area="GTH"
+        >
+          Área de GTH
+        </button>
+        <button
+          class="area-tab px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200"
+          data-area="ACD"
+        >
+          Área Académica
+        </button>
+        <button
+          class="area-tab px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200"
+          data-area="ID"
+        >
+          Área de ID
+        </button>
+        <button
+          class="area-tab px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200"
+          data-area="RRPP"
+        >
+          Área RRPP
+        </button>
+        <button
+          class="area-tab px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200"
+          data-area="DCC"
+        >
+          Área DCC
+        </button>
+      </div>
+
+      <!-- Info bar + Controls -->
+      <div
+        class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6"
+      >
+        <p id="results-info" class="text-zinc-400 text-xs sm:text-sm">
+          Mostrando <span id="count" class="text-unicode font-bold">0</span> postulantes
+          para <strong id="area-label" class="text-white">Área de GTH</strong>
+        </p>
+
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+          <!-- Export Excel -->
+          <button
+            id="export-btn"
+            class="flex items-center gap-1.5 bg-unicode hover:bg-unicode-light text-black font-bold text-xs px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all"
+          >
+            <svg
+              class="w-3.5 h-3.5 sm:w-4 sm:h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              ></path>
+            </svg>
+            Exportar Excel
+          </button>
+
+          <!-- Filtro opción -->
+          <select
+            id="filter-opcion"
+            class="bg-zinc-900 border border-zinc-700 text-zinc-300 text-xs rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 outline-none focus:border-unicode cursor-pointer appearance-none admin-select"
+          >
+            <option value="todas">Todas las opciones</option>
+            <option value="1ra">Solo 1ra opción</option>
+            <option value="2da">Solo 2da opción</option>
+          </select>
+
+          <!-- Ordenamiento -->
+          <select
+            id="filter-orden"
+            class="bg-zinc-900 border border-zinc-700 text-zinc-300 text-xs rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 outline-none focus:border-unicode cursor-pointer appearance-none admin-select"
+          >
+            <option value="reciente">Más recientes</option>
+            <option value="1ra-2da">Prioridad (1ra → 2da)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div
+        id="loading-indicator"
+        class="flex items-center justify-center py-20"
+      >
+        <div class="flex flex-col items-center gap-3">
+          <svg
+            class="w-8 h-8 animate-spin text-unicode"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          <p class="text-zinc-500 text-sm">Cargando postulantes...</p>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div id="empty-state" class="hidden text-center py-20">
+        <p class="text-zinc-500 text-base">
+          No hay postulantes para esta área.
+        </p>
+      </div>
+
+      <!-- Error state -->
+      <div id="error-state" class="hidden text-center py-20">
+        <p class="text-red-400 text-base" id="error-message">
+          Error al cargar los datos.
+        </p>
+        <button
+          id="retry-btn"
+          class="mt-4 text-unicode text-sm underline hover:text-unicode-light"
+        >
+          Reintentar
+        </button>
+      </div>
+
+      <!-- Postulantes list -->
+      <div id="postulantes-list" class="hidden space-y-3 sm:space-y-4"></div>
+    </main>
+  </div>
+</Layout>
+
+<style>
+  /* Active tab */
+  .area-tab {
+    background: transparent;
+    color: #a1a1aa; /* zinc-400 */
+    border: 1px solid #27272a; /* zinc-800 */
+  }
+  .area-tab:hover {
+    border-color: #75d32d40;
+    color: #d4d4d8;
+  }
+  .area-tab.active-tab {
+    background: #75d32d;
+    color: #000;
+    border-color: #75d32d;
+  }
+
+  /* Select custom arrow */
+  .admin-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2375D32D'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1em 1em;
+    padding-right: 2rem;
+  }
+
+  /* Card animations */
+  .postulante-card {
+    animation: fadeInUp 0.3s ease-out forwards;
+    opacity: 0;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* No footer on admin */
+  :global(footer) {
+    display: none !important;
+  }
+</style>
+
+<script>
+  // ===== STATE =====
+  let sessionToken = "";
+  let currentArea = "GTH";
+  let currentOpcion = "todas";
+  let currentOrden = "reciente";
+  let postulantesCache: any[] = [];
+
+  const areaNames: Record<string, string> = {
+    GTH: "Área de GTH",
+    ACD: "Área Académica",
+    ID: "Área de ID",
+    RRPP: "Área RRPP",
+    DCC: "Área DCC",
+  };
+
+  // ===== LOGIN =====
+  const loginScreen = document.getElementById("login-screen")!;
+  const dashboardScreen = document.getElementById("dashboard-screen")!;
+  const loginForm = document.getElementById("login-form") as HTMLFormElement;
+  const loginBtn = document.getElementById("login-btn") as HTMLButtonElement;
+  const loginBtnText = document.getElementById("login-btn-text")!;
+  const loginSpinner = document.getElementById("login-spinner")!;
+  const loginError = document.getElementById("login-error")!;
+  const passwordInput = document.getElementById(
+    "admin-password",
+  ) as HTMLInputElement;
+
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const password = passwordInput.value.trim();
+    if (!password) return;
+
+    // UI loading state
+    loginBtn.disabled = true;
+    loginBtnText.textContent = "Verificando...";
+    loginSpinner.classList.remove("hidden");
+    loginError.classList.add("hidden");
+
+    try {
+      const res = await fetch("/api/admin-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        loginError.textContent = data.error || "Error al iniciar sesión.";
+        if (data.attemptsRemaining) {
+          loginError.textContent += ` (${data.attemptsRemaining} intentos restantes)`;
+        }
+        loginError.classList.remove("hidden");
+        passwordInput.value = "";
+        passwordInput.focus();
+        return;
+      }
+
+      // Success
+      sessionToken = data.token;
+      sessionStorage.setItem("admin_token", sessionToken);
+      loginScreen.classList.add("hidden");
+      dashboardScreen.classList.remove("hidden");
+      loadPostulantes();
+    } catch (err) {
+      loginError.textContent = "Error de conexión. Intenta de nuevo.";
+      loginError.classList.remove("hidden");
+    } finally {
+      loginBtn.disabled = false;
+      loginBtnText.textContent = "Ingresar";
+      loginSpinner.classList.add("hidden");
+    }
+  });
+
+  // ===== CHECK EXISTING SESSION =====
+  const savedToken = sessionStorage.getItem("admin_token");
+  if (savedToken) {
+    sessionToken = savedToken;
+    loginScreen.classList.add("hidden");
+    dashboardScreen.classList.remove("hidden");
+    loadPostulantes();
+  }
+
+  // ===== LOGOUT =====
+  document.getElementById("logout-btn")?.addEventListener("click", async () => {
+    try {
+      await fetch("/api/admin-logout", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${sessionToken}` },
+      });
+    } catch {
+      /* ignore */
+    }
+
+    sessionToken = "";
+    sessionStorage.removeItem("admin_token");
+    dashboardScreen.classList.add("hidden");
+    loginScreen.classList.remove("hidden");
+    passwordInput.value = "";
+    passwordInput.focus();
+  });
+
+  // ===== AREA TABS =====
+  document.querySelectorAll(".area-tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      document
+        .querySelectorAll(".area-tab")
+        .forEach((t) => t.classList.remove("active-tab"));
+      tab.classList.add("active-tab");
+      currentArea = (tab as HTMLElement).dataset.area || "GTH";
+      document.getElementById("area-label")!.textContent =
+        areaNames[currentArea] || currentArea;
+      loadPostulantes();
+    });
+  });
+
+  // ===== FILTERS =====
+  document.getElementById("filter-opcion")?.addEventListener("change", (e) => {
+    currentOpcion = (e.target as HTMLSelectElement).value;
+    loadPostulantes();
+  });
+
+  document.getElementById("filter-orden")?.addEventListener("change", (e) => {
+    currentOrden = (e.target as HTMLSelectElement).value;
+    loadPostulantes();
+  });
+
+  // ===== LOAD DATA =====
+  async function loadPostulantes() {
+    const loadingEl = document.getElementById("loading-indicator")!;
+    const emptyEl = document.getElementById("empty-state")!;
+    const errorEl = document.getElementById("error-state")!;
+    const listEl = document.getElementById("postulantes-list")!;
+
+    loadingEl.classList.remove("hidden");
+    emptyEl.classList.add("hidden");
+    errorEl.classList.add("hidden");
+    listEl.classList.add("hidden");
+
+    try {
+      const params = new URLSearchParams({
+        area: currentArea,
+        opcion: currentOpcion,
+        orden: currentOrden,
+      });
+
+      const res = await fetch(`/api/admin-postulantes?${params}`, {
+        headers: { Authorization: `Bearer ${sessionToken}` },
+      });
+
+      if (res.status === 401) {
+        // Session expired
+        sessionToken = "";
+        sessionStorage.removeItem("admin_token");
+        dashboardScreen.classList.add("hidden");
+        loginScreen.classList.remove("hidden");
+        loginError.textContent = "Sesión expirada. Ingresa de nuevo.";
+        loginError.classList.remove("hidden");
+        return;
+      }
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.error || "Error desconocido");
+      }
+
+      postulantesCache = result.data || [];
+      document.getElementById("count")!.textContent = String(result.total || 0);
+
+      loadingEl.classList.add("hidden");
+
+      if (postulantesCache.length === 0) {
+        emptyEl.classList.remove("hidden");
+        return;
+      }
+
+      renderPostulantes(postulantesCache);
+      listEl.classList.remove("hidden");
+    } catch (err: any) {
+      loadingEl.classList.add("hidden");
+      errorEl.classList.remove("hidden");
+      document.getElementById("error-message")!.textContent =
+        err.message || "Error al cargar los datos.";
+    }
+  }
+
+  // ===== RENDER =====
+  function renderPostulantes(postulantes: any[]) {
+    const listEl = document.getElementById("postulantes-list")!;
+    listEl.innerHTML = "";
+
+    postulantes.forEach((p, index) => {
+      const is1ra = p.opcion1 === currentArea;
+      const opcionBadge = is1ra
+        ? '<span class="bg-unicode/20 text-unicode text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-md border border-unicode/30">1RA OPCIÓN</span>'
+        : '<span class="bg-amber-500/20 text-amber-400 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-md border border-amber-500/30">2DA OPCIÓN</span>';
+
+      const opcion2Display = p.opcion2
+        ? `<span class="text-zinc-500 text-[10px] sm:text-xs ml-2">(2da: ${p.opcion2})</span>`
+        : "";
+
+      const fecha = new Date(p.created_at).toLocaleDateString("es-PE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+
+      const card = document.createElement("article");
+      card.className =
+        "postulante-card bg-zinc-900/40 border border-zinc-800/50 rounded-2xl p-4 sm:p-6 hover:border-unicode/20 transition-all duration-300";
+      card.style.animationDelay = `${index * 50}ms`;
+
+      card.innerHTML = `
+        <div class="flex flex-col lg:flex-row lg:items-start gap-4 lg:gap-8">
+          <!-- Left: Personal info -->
+          <div class="flex-1 min-w-0">
+            <div class="flex flex-wrap items-center gap-2 mb-2">
+              <h3 class="text-white font-bold text-base sm:text-lg">${p.nombres} ${p.apellidos}</h3>
+              <span class="text-zinc-600 text-[10px] sm:text-xs">#${String(index + 1).padStart(3, "0")}</span>
+              ${opcionBadge}
+              ${opcion2Display}
+            </div>
+
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-zinc-500 text-[10px] sm:text-xs mb-3">
+              <span class="font-medium text-zinc-300">${p.universidad || "N/A"}</span>
+              <span class="text-zinc-700">•</span>
+              <span>${p.carrera || "N/A"}</span>
+              <span class="text-zinc-700">•</span>
+              <span>${p.ciclo_universidad || "N/A"}° Ciclo</span>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-xs sm:text-sm text-zinc-400">
+              <span class="flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-unicode/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                ${p.telefono || "N/A"}
+              </span>
+              <span class="flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-unicode/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                ${p.correo || "N/A"}
+              </span>
+            </div>
+          </div>
+
+          <!-- Right: Motivo -->
+          <div class="lg:w-[45%] shrink-0">
+            <div class="mb-3">
+              <p class="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-1">Motivo:</p>
+              <p class="text-zinc-300 text-xs sm:text-sm leading-relaxed line-clamp-3">${p.motivo_postulacion || "Sin motivo registrado."}</p>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-zinc-600 text-[10px] sm:text-xs">${fecha}</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      listEl.appendChild(card);
+    });
+  }
+
+  // ===== RETRY =====
+  document.getElementById("retry-btn")?.addEventListener("click", () => {
+    loadPostulantes();
+  });
+
+  // ===== EXPORT CSV =====
+  document.getElementById("export-btn")?.addEventListener("click", () => {
+    if (postulantesCache.length === 0) {
+      alert("No hay datos para exportar.");
+      return;
+    }
+
+    const headers = [
+      "Nombres",
+      "Apellidos",
+      "Correo",
+      "Teléfono",
+      "Universidad",
+      "Carrera",
+      "Ciclo",
+      "Opción 1",
+      "Opción 2",
+      "Motivo",
+      "Fecha",
+    ];
+    const rows = postulantesCache.map((p) => [
+      p.nombres,
+      p.apellidos,
+      p.correo,
+      p.telefono,
+      p.universidad,
+      p.carrera,
+      p.ciclo_universidad,
+      p.opcion1,
+      p.opcion2 || "",
+      `"${(p.motivo_postulacion || "").replace(/"/g, '""')}"`,
+      new Date(p.created_at).toLocaleDateString("es-PE"),
+    ]);
+
+    // BOM for Excel UTF-8
+    const BOM = "\uFEFF";
+    const csvContent =
+      BOM + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `postulantes_${currentArea}_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  });
+</script>
