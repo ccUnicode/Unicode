@@ -474,14 +474,14 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
         <div class="hidden md:block relative group/past-carousel-desktop">
             <div
                 id="past-events-scroll-desktop"
-                class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-smooth pb-4 px-2"
+                class="flex gap-12 overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-smooth pb-4 px-2"
             >
                 {
                     chunks6.map((chunk, chunkIndex) => (
-                        <div class="flex-none w-full grid grid-cols-2 lg:grid-cols-3 gap-6 snap-center">
+                        <div class="flex-none basis-full min-w-full shrink-0 grid grid-cols-2 lg:grid-cols-3 gap-8 snap-center content-start px-4">
                             {chunk.map((evento, index) => (
                                 <article
-                                    class="event-item scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out relative rounded-3xl overflow-hidden border border-zinc-800/50 bg-zinc-900/30 hover:border-unicode/30 hover:-translate-y-2 group"
+                                    class="event-item scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out relative rounded-3xl overflow-hidden border border-zinc-800/50 bg-zinc-900/30 hover:border-unicode/30 hover:-translate-y-2 group flex flex-col"
                                     style={`transition-delay: ${(index % 3) * 100}ms`}
                                 >
                                     <div class="relative h-48 overflow-hidden">
@@ -504,7 +504,7 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                                             </span>
                                         </div>
                                     </div>
-                                    <div class="p-6">
+                                    <div class="p-6 flex flex-col flex-1">
                                         <h3 class="text-xl font-bold text-white mb-3 group-hover:text-unicode transition-colors">
                                             {evento.titulo}
                                         </h3>
