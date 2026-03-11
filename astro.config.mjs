@@ -12,7 +12,7 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
     server: {
-      allowedHosts: ['figural-missy-wartier.ngrok-free.dev'],
+      allowedHosts: ['.ngrok-free.dev', '.ngrok-free.app'],
       hmr: {
         clientPort: 443
       }
