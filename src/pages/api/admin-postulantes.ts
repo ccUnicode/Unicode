@@ -1,0 +1,86 @@
+/**
+ * API Endpoint: GET /api/admin-postulantes
+ * Returns postulantes data from Supabase.
+ * Requires a valid session token in the Authorization header.
+ */
+
+export const prerender = false;
+
+import { sessionStore } from '../../lib/sessionStore';
+import { supabase } from '../../lib/supabase';
+
+export async function GET({ request }: { request: Request }) {
+  // Validate session token
+  const authHeader = request.headers.get('Authorization') || '';
+  const token = authHeader.replace('Bearer ', '');
+
+  if (!token || !sessionStore.isValid(token)) {
+    return new Response(
+      JSON.stringify({ error: 'No autorizado. Inicia sesión nuevamente.' }),
+      { status: 401, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // Parse query params for filtering
+  const url = new URL(request.url);
+  const area = url.searchParams.get('area') || '';
+  const opcion = url.searchParams.get('opcion') || 'todas'; // 'todas', '1ra', '2da'
+  const orden = url.searchParams.get('orden') || 'reciente'; // 'reciente', '1ra-2da'
+
+  try {
+    let query = supabase
+      .from('postulantes')
+      .select('*');
+
+    // Filter by area (check both opcion1 and opcion2)
+    if (area) {
+      if (opcion === '1ra') {
+        query = query.eq('opcion1', area);
+      } else if (opcion === '2da') {
+        query = query.eq('opcion2', area);
+      } else {
+        // 'todas' — show anyone who has this area as opcion1 OR opcion2
+        query = query.or(`opcion1.eq.${area},opcion2.eq.${area}`);
+      }
+    }
+
+    // Order
+    if (orden === '1ra-2da') {
+      // First those with opcion1 matching the area, then opcion2
+      query = query.order('created_at', { ascending: false });
+    } else {
+      query = query.order('created_at', { ascending: false });
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      return new Response(
+        JSON.stringify({ error: 'Error al obtener datos: ' + error.message }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // If filtering by area with '1ra-2da' priority, sort manually
+    let sortedData = data || [];
+    if (area && orden === '1ra-2da') {
+      sortedData = sortedData.sort((a: any, b: any) => {
+        const aIs1ra = a.opcion1 === area;
+        const bIs1ra = b.opcion1 === area;
+        if (aIs1ra && !bIs1ra) return -1;
+        if (!aIs1ra && bIs1ra) return 1;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+    }
+
+    return new Response(
+      JSON.stringify({ data: sortedData, total: sortedData.length }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  } catch (err: any) {
+    return new Response(
+      JSON.stringify({ error: 'Error del servidor: ' + err.message }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+}
