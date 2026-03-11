@@ -92,6 +92,54 @@ const eventosRealizados: EventoRealizado[] = [
         lugar: "Lab. Cómputo FIIS",
         highlights: ["Proyecto desplegado", "Recursos gratuitos"],
     },
+    {
+        titulo: "Taller: Docker & Kubernetes",
+        descripcion:
+            "Aprendimos a contenerizar aplicaciones y orquestar servicios usando las herramientas líderes del mercado en infraestructura moderna.",
+        fecha: "30 Jun 2025",
+        asistentes: 75,
+        categoria: "Workshop",
+        imagen: "/evento_unicode_1.png",
+        ponente: "Ing. Marco Ruiz",
+        lugar: "Lab. Cómputo FIIS",
+        highlights: ["Nivel Intermedio", "Práctica en AWS"],
+    },
+    {
+        titulo: "Conferencia: Ciberseguridad",
+        descripcion:
+            "Un análisis profundo sobre las amenazas actuales y cómo proteger infraestructuras críticas en la era de la transformación digital.",
+        fecha: "12 Jun 2025",
+        asistentes: 180,
+        categoria: "Charla",
+        imagen: "/evento_unicode_2.png",
+        ponente: "Dra. Sofía Valery",
+        lugar: "Auditorio FIIS",
+        highlights: ["Networking", "Demo en vivo"],
+    },
+    {
+        titulo: "Bootcamp: Python & Data Science",
+        descripcion:
+            "Un programa intensivo donde exploramos el análisis de datos, visualización y modelado predictivo utilizando las librerías más potentes del ecosistema Python.",
+        fecha: "25 May 2025",
+        asistentes: 110,
+        categoria: "Workshop",
+        imagen: "/evento_unicode_1.png",
+        ponente: "Ing. Roberto Salas",
+        lugar: "Lab. Cómputo FIIS",
+        highlights: ["Certificación Académica", "Proyectos de ML"],
+    },
+    {
+        titulo: "Tech Talk: Cloud Architecture",
+        descripcion:
+            "Exploramos las mejores prácticas para diseñar arquitecturas escalables y resilientes en la nube, comparando AWS, Azure y Google Cloud.",
+        fecha: "10 May 2025",
+        asistentes: 140,
+        categoria: "Charla",
+        imagen: "/evento_unicode_2.png",
+        ponente: "Ing. Elena Gomez",
+        lugar: "Auditorio FIIS",
+        highlights: ["Demo Arquitectura", "Q&A"],
+    },
 ];
 
 const totalEventos = eventosRealizados.length;
@@ -111,6 +159,12 @@ const categoriaBadge: Record<string, string> = {
         "bg-amber-900/40 text-amber-200 border-amber-500/50 backdrop-blur-md",
     Panel: "bg-pink-900/40 text-pink-200 border-pink-500/50 backdrop-blur-md",
 };
+
+// Fragmentar eventos en grupos de 6 para la vista de Tablet y PC
+const chunks6 = [];
+for (let i = 0; i < eventosRealizados.length; i += 6) {
+    chunks6.push(eventosRealizados.slice(i, i + 6));
+}
 ---
 
 <section
@@ -222,16 +276,16 @@ const categoriaBadge: Record<string, string> = {
         </div>
 
         <!-- ==========================================
-             VISTA MÓVIL Y TABLET (CARRUSEL)
+             VISTA MÓVIL (1 CARD POR PÁGINA)
              ========================================== -->
-        <div class="lg:hidden relative group/past-carousel">
+        <div class="md:hidden relative group/past-carousel-mobile">
             <div
-                id="past-events-scroll"
-                class="flex md:grid md:grid-cols-2 gap-6 overflow-x-auto md:overflow-x-visible pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide scroll-smooth px-2"
+                id="past-events-scroll-mobile"
+                class="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide scroll-smooth px-2"
             >
                 {
                     eventosRealizados.map((evento, index) => (
-                        <article class="event-item scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out flex-none w-[85vw] md:w-auto relative rounded-3xl overflow-hidden border border-zinc-800/50 bg-zinc-900/30 snap-center">
+                        <article class="event-item scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out flex-none w-[85vw] relative rounded-3xl overflow-hidden border border-zinc-800/50 bg-zinc-900/30 snap-center">
                             <div class="relative h-44 overflow-hidden">
                                 <img
                                     src={evento.imagen}
@@ -304,12 +358,12 @@ const categoriaBadge: Record<string, string> = {
             <div class="flex items-center justify-center gap-8 mt-6">
                 <!-- Flecha Izquierda -->
                 <button
-                    id="prev-past-event"
-                    class="w-11 h-11 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg"
+                    id="prev-past-event-mobile"
+                    class="w-12 h-12 flex items-center justify-center bg-zinc-900/50 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg"
                     aria-label="Anterior"
                 >
                     <svg
-                        class="w-5 h-5"
+                        class="w-6 h-6"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -324,14 +378,15 @@ const categoriaBadge: Record<string, string> = {
 
                 <!-- Indicadores -->
                 <div
-                    id="past-carousel-indicator"
-                    class="flex justify-center gap-3"
+                    id="past-carousel-indicator-mobile"
+                    class="flex justify-center items-center gap-2"
                 >
                     {
                         eventosRealizados.map((_, i) => (
                             <button
-                                class={`w-1.5 h-1.5 rounded-full transition-all ${i === 0 ? "bg-unicode w-4" : "bg-zinc-800"}`}
+                                class={`h-2 rounded-full transition-all duration-300 ${i === 0 ? "bg-unicode w-6" : "bg-zinc-800 w-2"}`}
                                 data-index={i}
+                                aria-label={`Ir al evento ${i + 1}`}
                             />
                         ))
                     }
@@ -339,12 +394,12 @@ const categoriaBadge: Record<string, string> = {
 
                 <!-- Flecha Derecha -->
                 <button
-                    id="next-past-event"
-                    class="w-11 h-11 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg"
+                    id="next-past-event-mobile"
+                    class="w-12 h-12 flex items-center justify-center bg-zinc-900/50 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg"
                     aria-label="Siguiente"
                 >
                     <svg
-                        class="w-5 h-5"
+                        class="w-6 h-6"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -360,250 +415,339 @@ const categoriaBadge: Record<string, string> = {
         </div>
 
         <!-- ==========================================
-             VISTA PC (GRID ORIGINAL)
+             VISTA TABLET Y PC (6 CARDS POR PÁGINA)
              ========================================== -->
-        <div class="hidden lg:grid grid-cols-3 gap-6">
-            {
-                eventosRealizados.map((evento, index) => (
-                    <article
-                        class="event-item scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out relative rounded-3xl overflow-hidden border border-zinc-800/50 bg-zinc-900/30 hover:border-unicode/30 hover:-translate-y-2 group"
-                        style={`transition-delay: ${(index % 3) * 100}ms`}
+        <div class="hidden md:block relative group/past-carousel-desktop">
+            <div
+                id="past-events-scroll-desktop"
+                class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-smooth pb-4 px-2"
+            >
+                {
+                    chunks6.map((chunk, chunkIndex) => (
+                        <div class="flex-none w-full grid grid-cols-2 lg:grid-cols-3 gap-6 snap-center">
+                            {chunk.map((evento, index) => (
+                                <article
+                                    class="event-item scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out relative rounded-3xl overflow-hidden border border-zinc-800/50 bg-zinc-900/30 hover:border-unicode/30 hover:-translate-y-2 group"
+                                    style={`transition-delay: ${(index % 3) * 100}ms`}
+                                >
+                                    <div class="relative h-48 overflow-hidden">
+                                        <img
+                                            src={evento.imagen}
+                                            alt={evento.titulo}
+                                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                        />
+                                        <div class="absolute inset-0 bg-linear-to-t from-zinc-900 via-zinc-900/40 to-transparent" />
+                                        <div class="absolute top-4 left-4">
+                                            <span
+                                                class={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider border ${categoriaBadge[evento.categoria]}`}
+                                            >
+                                                {evento.categoria}
+                                            </span>
+                                        </div>
+                                        <div class="absolute bottom-4 right-4">
+                                            <span class="inline-flex items-center gap-1.5 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] text-gray-300 border border-zinc-700/50">
+                                                {evento.fecha}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="p-6">
+                                        <h3 class="text-xl font-bold text-white mb-3 group-hover:text-unicode transition-colors">
+                                            {evento.titulo}
+                                        </h3>
+                                        <div class="flex items-center gap-4 text-xs text-zinc-500 mb-4">
+                                            <span class="flex items-center gap-1.5">
+                                                <svg
+                                                    class="w-4 h-4 text-unicode/70"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                    stroke-width="2"
+                                                >
+                                                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                                                    <circle
+                                                        cx="12"
+                                                        cy="7"
+                                                        r="4"
+                                                    />
+                                                </svg>
+                                                {evento.ponente}
+                                            </span>
+                                            <span class="flex items-center gap-1.5">
+                                                <svg
+                                                    class="w-4 h-4 text-unicode/70"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                    stroke-width="2"
+                                                >
+                                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                                                    <circle
+                                                        cx="12"
+                                                        cy="10"
+                                                        r="3"
+                                                    />
+                                                </svg>
+                                                {evento.lugar}
+                                            </span>
+                                        </div>
+                                        <p class="text-zinc-400 text-sm leading-relaxed line-clamp-3 mb-4 flex-1">
+                                            {evento.descripcion}
+                                        </p>
+                                        <div class="flex flex-wrap items-center gap-2 mt-auto">
+                                            {evento.highlights.map((h) => (
+                                                <span class="text-[10px] text-unicode/70 bg-unicode/5 border border-unicode/10 rounded-full px-2 py-0.5">
+                                                    #{h.split(" ")[0]}
+                                                </span>
+                                            ))}
+                                            <a
+                                                href={
+                                                    evento.link ||
+                                                    "https://www.linkedin.com/company/unicode-usm/"
+                                                }
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                class="inline-block ml-auto py-1.5 px-4 bg-unicode/10 hover:bg-unicode text-unicode hover:text-black font-bold text-[10px] uppercase tracking-widest rounded-xl border border-unicode/30 transition-all duration-300"
+                                            >
+                                                Ver más
+                                            </a>
+                                        </div>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    ))
+                }
+            </div>
+
+            <div class="flex items-center justify-center gap-8 mt-10">
+                <button
+                    id="prev-past-event-desktop"
+                    class="w-12 h-12 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full hover:border-unicode transition-all shadow-lg group/btn"
+                >
+                    <svg
+                        class="w-6 h-6 group-hover/btn:-translate-x-1 transition-transform"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="2.5"
                     >
-                        <div class="relative h-48 overflow-hidden">
-                            <img
-                                src={evento.imagen}
-                                alt={evento.titulo}
-                                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+
+                <div
+                    id="past-carousel-indicator-desktop"
+                    class="flex justify-center items-center gap-3"
+                >
+                    {
+                        chunks6.map((_, i) => (
+                            <button
+                                class={`h-2 rounded-full transition-all duration-300 ${i === 0 ? "bg-unicode w-10" : "bg-zinc-800 w-3"}`}
+                                data-index={i}
+                                aria-label={`Ir a la página ${i + 1}`}
                             />
-                            <div class="absolute inset-0 bg-linear-to-t from-zinc-900 via-zinc-900/40 to-transparent" />
-                            <div class="absolute top-4 left-4">
-                                <span
-                                    class={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider border ${categoriaBadge[evento.categoria]}`}
-                                >
-                                    {evento.categoria}
-                                </span>
-                            </div>
-                            <div class="absolute bottom-4 right-4">
-                                <span class="inline-flex items-center gap-1.5 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] text-gray-300 border border-zinc-700/50">
-                                    {evento.fecha}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="p-6">
-                            <h3 class="text-xl font-bold text-white mb-3 group-hover:text-unicode transition-colors">
-                                {evento.titulo}
-                            </h3>
-                            <div class="flex items-center gap-4 text-xs text-zinc-500 mb-4">
-                                <span class="flex items-center gap-1.5">
-                                    <svg
-                                        class="w-4 h-4 text-unicode/70"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                    >
-                                        <>
-                                            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                                            <circle cx="12" cy="7" r="4" />
-                                        </>
-                                    </svg>
-                                    {evento.ponente}
-                                </span>
-                                <span class="flex items-center gap-1.5">
-                                    <svg
-                                        class="w-4 h-4 text-unicode/70"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                    >
-                                        <>
-                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                                            <circle cx="12" cy="10" r="3" />
-                                        </>
-                                    </svg>
-                                    {evento.lugar}
-                                </span>
-                            </div>
-                            <p class="text-zinc-400 text-sm leading-relaxed line-clamp-3 mb-4 flex-1">
-                                {evento.descripcion}
-                            </p>
-                            <div class="flex flex-wrap items-center gap-2 mt-auto">
-                                {evento.highlights.map((h) => (
-                                    <span class="text-[10px] text-unicode/70 bg-unicode/5 border border-unicode/10 rounded-full px-2 py-0.5">
-                                        #{h.split(" ")[0]}
-                                    </span>
-                                ))}
-                                <a
-                                    href={
-                                        evento.link ||
-                                        "https://www.linkedin.com/company/unicode-usm/"
-                                    }
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="inline-block ml-auto py-1.5 px-4 bg-unicode/10 hover:bg-unicode text-unicode hover:text-black font-bold text-[10px] uppercase tracking-widest rounded-full border border-unicode/30 transition-all duration-300"
-                                >
-                                    Ver más
-                                </a>
-                            </div>
-                        </div>
-                    </article>
-                ))
-            }
+                        ))
+                    }
+                </div>
+
+                <button
+                    id="next-past-event-desktop"
+                    class="w-12 h-12 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full hover:border-unicode transition-all shadow-lg group/btn"
+                >
+                    <svg
+                        class="w-6 h-6 group-hover/btn:translate-x-1 transition-transform"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+            </div>
         </div>
     </div>
-</section>
 
-<style>
-    .scrollbar-hide::-webkit-scrollbar {
-        display: none;
-    }
-    .scrollbar-hide {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-</style>
+    <style>
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
 
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        // --- Estadísticas ---
-        const statsObs = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        entry.target
-                            .querySelectorAll(".stat-number")
-                            .forEach((el) => {
-                                const target = parseInt(
-                                    el.getAttribute("data-target") || "0",
-                                );
-                                if (target === 0) return;
-                                let curr = 0;
-                                const inc = Math.ceil(target / 50);
-                                const timer = setInterval(() => {
-                                    curr += inc;
-                                    if (curr >= target) {
-                                        curr = target;
-                                        clearInterval(timer);
-                                    }
-                                    el.textContent = curr.toLocaleString();
-                                }, 30);
-                            });
-                        statsObs.unobserve(entry.target);
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // --- Estadísticas ---
+            const statsObs = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting) {
+                            entry.target
+                                .querySelectorAll(".stat-number")
+                                .forEach((el) => {
+                                    const target = parseInt(
+                                        el.getAttribute("data-target") || "0",
+                                    );
+                                    if (target === 0) return;
+                                    let curr = 0;
+                                    const inc = Math.ceil(target / 50);
+                                    const timer = setInterval(() => {
+                                        curr += inc;
+                                        if (curr >= target) {
+                                            curr = target;
+                                            clearInterval(timer);
+                                        }
+                                        el.textContent = curr.toLocaleString();
+                                    }, 30);
+                                });
+                            statsObs.unobserve(entry.target);
+                        }
+                    });
+                },
+                { threshold: 0.3 },
+            );
+
+            const section = document.querySelector("#eventos-realizados");
+            if (section) statsObs.observe(section);
+
+            // --- Carruseles (Mobile y Desktop/Tablet) ---
+            const carousels = [
+                {
+                    id: "past-events-scroll-mobile",
+                    dotsId: "past-carousel-indicator-mobile",
+                    prevId: "prev-past-event-mobile",
+                    nextId: "next-past-event-mobile",
+                },
+                {
+                    id: "past-events-scroll-desktop",
+                    dotsId: "past-carousel-indicator-desktop",
+                    prevId: "prev-past-event-desktop",
+                    nextId: "next-past-event-desktop",
+                },
+            ];
+
+            carousels.forEach((cfg) => {
+                const container = document.getElementById(cfg.id);
+                const dots = document.querySelectorAll(`#${cfg.dotsId} button`);
+                const prevBtn = document.getElementById(cfg.prevId);
+                const nextBtn = document.getElementById(cfg.nextId);
+
+                if (container) {
+                    const scrollStep = () => container.clientWidth;
+
+                    if (prevBtn && nextBtn) {
+                        prevBtn.addEventListener("click", () => {
+                            container.scrollLeft -= scrollStep();
+                        });
+                        nextBtn.addEventListener("click", () => {
+                            container.scrollLeft += scrollStep();
+                        });
                     }
-                });
-            },
-            { threshold: 0.3 },
-        );
 
-        const section = document.querySelector("#eventos-realizados");
-        if (section) statsObs.observe(section);
+                    container.addEventListener("scroll", () => {
+                        const idx = Math.round(
+                            container.scrollLeft / container.clientWidth,
+                        );
+                        dots.forEach((dot, i) => {
+                            const isMobile = cfg.id.includes("mobile");
+                            if (i === idx) {
+                                dot.classList.add("bg-unicode");
+                                dot.classList.remove("bg-zinc-800");
+                                dot.classList.add(isMobile ? "w-6" : "w-10");
+                                dot.classList.remove(isMobile ? "w-2" : "w-3");
+                            } else {
+                                dot.classList.remove("bg-unicode");
+                                dot.classList.add("bg-zinc-800");
+                                dot.classList.remove(isMobile ? "w-6" : "w-10");
+                                dot.classList.add(isMobile ? "w-2" : "w-3");
+                            }
+                        });
+                    });
 
-        // --- Carrusel Mobile ---
-        const container = document.getElementById("past-events-scroll");
-        const dots = document.querySelectorAll(
-            "#past-carousel-indicator button",
-        );
-        const prevBtn = document.getElementById("prev-past-event");
-        const nextBtn = document.getElementById("next-past-event");
+                    dots.forEach((dot) => {
+                        dot.addEventListener("click", () => {
+                            const i = parseInt(
+                                dot.getAttribute("data-index") || "0",
+                            );
+                            container.scrollLeft = i * container.clientWidth;
+                        });
+                    });
+                }
+            });
 
-        if (container) {
-            const scrollStep = () => container.clientWidth;
+            // --- Scroll Reveal ---
+            const revealObs = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.remove(
+                                "opacity-0",
+                                "translate-y-12",
+                            );
+                            entry.target.classList.add(
+                                "opacity-100",
+                                "translate-y-0",
+                            );
+                        }
+                    });
+                },
+                { threshold: 0.1 },
+            );
 
-            if (prevBtn && nextBtn) {
-                prevBtn.addEventListener("click", () => {
-                    container.scrollLeft -= scrollStep();
-                });
-                nextBtn.addEventListener("click", () => {
-                    container.scrollLeft += scrollStep();
+            document
+                .querySelectorAll(".scroll-reveal")
+                .forEach((el) => revealObs.observe(el));
+
+            // --- Búsqueda de Eventos ---
+            const searchInput = document.getElementById(
+                "event-search",
+            ) as HTMLInputElement;
+            const noResults = document.getElementById("no-events-results");
+            const eventItems = document.querySelectorAll(".event-item");
+
+            if (searchInput && eventItems.length > 0) {
+                searchInput.addEventListener("input", () => {
+                    const searchTerm = searchInput.value.toLowerCase().trim();
+                    let visibleCount = 0;
+
+                    eventItems.forEach((item) => {
+                        const elem = item as HTMLElement;
+                        // Búsqueda aproximada en todo el texto del article
+                        const fullText = elem.textContent?.toLowerCase() || "";
+
+                        if (fullText.includes(searchTerm)) {
+                            elem.style.display = "";
+                            visibleCount++;
+                        } else {
+                            elem.style.display = "none";
+                        }
+                    });
+
+                    if (visibleCount === 0) {
+                        noResults?.classList.remove("hidden");
+                    } else {
+                        noResults?.classList.add("hidden");
+                    }
+
+                    // Ocultar flechas e indicadores en móvil cuando se busca
+                    const indicatorContainer = document.getElementById(
+                        "past-carousel-indicator",
+                    )?.parentElement;
+                    if (indicatorContainer) {
+                        indicatorContainer.style.display =
+                            searchTerm.length > 0 ? "none" : "";
+                    }
                 });
             }
-
-            container.addEventListener("scroll", () => {
-                const idx = Math.round(
-                    container.scrollLeft / container.clientWidth,
-                );
-                dots.forEach((dot, i) => {
-                    if (i === idx) {
-                        dot.classList.add("bg-unicode", "w-4");
-                        dot.classList.remove("bg-zinc-800");
-                    } else {
-                        dot.classList.remove("bg-unicode", "w-4");
-                        dot.classList.add("bg-zinc-800");
-                    }
-                });
-            });
-            dots.forEach((dot) => {
-                dot.addEventListener("click", () => {
-                    const i = parseInt(dot.getAttribute("data-index") || "0");
-                    container.scrollLeft = i * container.clientWidth;
-                });
-            });
-        }
-
-        // --- Scroll Reveal ---
-        const revealObs = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.remove(
-                            "opacity-0",
-                            "translate-y-12",
-                        );
-                        entry.target.classList.add(
-                            "opacity-100",
-                            "translate-y-0",
-                        );
-                    }
-                });
-            },
-            { threshold: 0.1 },
-        );
-
-        document
-            .querySelectorAll(".scroll-reveal")
-            .forEach((el) => revealObs.observe(el));
-
-        // --- Búsqueda de Eventos ---
-        const searchInput = document.getElementById(
-            "event-search",
-        ) as HTMLInputElement;
-        const noResults = document.getElementById("no-events-results");
-        const eventItems = document.querySelectorAll(".event-item");
-
-        if (searchInput && eventItems.length > 0) {
-            searchInput.addEventListener("input", () => {
-                const searchTerm = searchInput.value.toLowerCase().trim();
-                let visibleCount = 0;
-
-                eventItems.forEach((item) => {
-                    const elem = item as HTMLElement;
-                    // Búsqueda aproximada en todo el texto del article
-                    const fullText = elem.textContent?.toLowerCase() || "";
-
-                    if (fullText.includes(searchTerm)) {
-                        elem.style.display = "";
-                        visibleCount++;
-                    } else {
-                        elem.style.display = "none";
-                    }
-                });
-
-                if (visibleCount === 0) {
-                    noResults?.classList.remove("hidden");
-                } else {
-                    noResults?.classList.add("hidden");
-                }
-
-                // Ocultar flechas e indicadores en móvil cuando se busca
-                const indicatorContainer = document.getElementById(
-                    "past-carousel-indicator",
-                )?.parentElement;
-                if (indicatorContainer) {
-                    indicatorContainer.style.display =
-                        searchTerm.length > 0 ? "none" : "";
-                }
-            });
-        }
-    });
-</script>
+        });
+    </script>
+</section>
