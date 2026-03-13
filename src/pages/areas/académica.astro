@@ -4,33 +4,49 @@ import Navbar from "../../components/Navbar.astro";
 import HeroAreaIndividual from "../../components/components-areas/HeroAreaIndividual.astro";
 
 const whatWeLookForData = [
-    "Estudiantes responsables y comprometidos (lo más importante).",
-    "Estudiantes responsables y comprometidos (lo más importante).",
-    "Estudiantes responsables y comprometidos (lo más importante).",
-    "Estudiantes responsables y comprometidos (lo más importante).",
-    "Estudiantes responsables y comprometidos (lo más importante).",
+    "Estudiantes con ganas de compartir conocimientos, experiencias y estrategias de estudio.",
+    "Personas interesadas en participar en la creación de material académico como resoluciones de exámenes, clases grabadas, guías y otros recursos de apoyo.",
+    "Estudiantes con disposición para apoyar en asesorías académicas y actividades formativas.",
+    "Personas motivadas en colaborar en talleres, cursos, ponencias y actividades extracurriculares.",
+    "Estudiantes interesados en aprender y participar en la gestión de eventos y actividades académicas, desde la planificación, ideación y organización, hasta el control y ejecución de las mismas.",
 ];
 
 const weValueData = [
-    "Manejo experto de Canva",
-    "Conocimiento en herramientas de edición de imágenes como Illustrator, Photoshop",
-    "Conocimiento en herramientas de edición de video como filmora, capcut",
+    "Actitud colaborativa y vocación de apoyo.",
+    "Responsabilidad y compromiso con las actividades asumidas.",
+    "Capacidad para explicar desde la experiencia estudiantil.",
+    "Interés por mejorar el acceso a material académico para otros estudiantes.",
+    "Disposición para trabajar en equipo y aprender continuamente.",
 ];
 
 const whatYouWinData = [
-    "En caso hayas ingresado al área sin conocimientos previos, te irás con muchos saberes con respecto a diseño, branding y marketing.",
-    "En caso hayas ingresado al área sin conocimientos previos, te irás con muchos saberes con respecto a diseño, branding y marketing.",
-    "Muchos amigos y contacto real con profesionales gracias a los eventos realizados por la familia Unicode, para que amplíes tu red de contactos",
-    "En caso hayas ingresado al área sin conocimientos previos, te irás con muchos saberes con respecto a diseño, branding y marketing.",
+    "Un espacio para aportar, aprender y crecer académicamente.",
+    "Experiencia en creación de contenido académico y trabajo colaborativo.",
+    "Oportunidad de impactar positivamente en la formación de otros estudiantes.",
+    "Participación activa en un área que busca mejorar la experiencia académica universitaria.",
 ];
 
 const projectsData = [
     {
-        title: "EduTech: Contenido educativo",
-        description:
-            "Unicode es un centro cultural que nació con la idea de dar a conocer más la carrera de ingeniería de software. En este proyecto, subimos contenido educativo relacionado a ello, reforzando la identidad y los orígenes del centro",
-        imageSrc: "/areasmoment.png",
+        title: "Proyecto",
+        description: "info.",
+        image: "/areasmoment.png",
         status: "Activo",
+        faculty: "ACD",
+    },
+    {
+        title: "Proyecto",
+        description: "info.",
+        image: "/areasmoment.png",
+        status: "Activo",
+        faculty: "ACD",
+    },
+    {
+        title: "Proyecto",
+        description: "info.",
+        image: "/areasmoment.png",
+        status: "Culminado",
+        faculty: "ACD",
     },
 ];
 
@@ -38,12 +54,12 @@ const directorsData = [
     {
         name: "Franz Nuñez",
         linkedin: "franz-nunez",
-        imageSrc: "/areasmoment.png",
+        imageSrc: "/AreasImages/Franz_Nuñez.png",
     },
     {
         name: "Gino Romero",
         linkedin: "gino-romero",
-        imageSrc: "/areasmoment.png",
+        imageSrc: "/AreasImages/Gino_Romero.png",
     },
 ];
 ---
@@ -53,7 +69,8 @@ const directorsData = [
 
     <HeroAreaIndividual
         title="Académica"
-        description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
+        description="El Área Académica planifica y ejecuta iniciativas orientadas al fortalecimiento de la formación universitaria. Su labor se centra en brindar apoyo académico curricular y extracurricular, promoviendo espacios de acompañamiento, orientación y refuerzo que contribuyan a 
+        mejorar el rendimiento estudiantil y disminuir las dificultades presentes en los cursos. Asimismo, impulsa actividades de formación complementaria que permiten desarrollar competencias técnicas y habilidades profesionales, enfocadas en mejorar el desempeño académico de los estudiantes. También promueve la creación y difusión de recursos educativos que amplían el acceso al conocimiento y fomentan el aprendizaje continuo, consolidando así una cultura de excelencia, compromiso y crecimiento académico permanente."
         whatWeLookFor={whatWeLookForData}
         weValue={weValueData}
         whatYouWin={whatYouWinData}

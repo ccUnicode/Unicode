@@ -1,11 +1,11 @@
 ---
-import AreaProjectCard from "./AreaProjectCard.astro";
+import ProjectCard from "../components-projects/ProjectCard.astro";
 
 interface Project {
     title: string;
     description: string;
-    imageSrc?: string;
-    status?: string;
+    image?: string;
+    faculty?: string;
 }
 
 interface Props {
@@ -24,12 +24,7 @@ const { projects } = Astro.props;
         {
             projects.map((project) => (
                 <div class="flex-shrink-0 w-[300px] sm:w-[340px] md:w-[380px] snap-center">
-                    <AreaProjectCard
-                        title={project.title}
-                        description={project.description}
-                        imageSrc={project.imageSrc}
-                        status={project.status}
-                    />
+                    <ProjectCard project={project} />
                 </div>
             ))
         }

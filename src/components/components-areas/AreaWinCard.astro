@@ -7,15 +7,16 @@ const { text } = Astro.props;
 ---
 
 <div class="flex items-start gap-4">
-    <!-- Contenedor reservado para la imagen iconográfica (Logotipo verde de UNICODE) -->
-    <div
-        class="w-8 h-8 flex-shrink-0 rounded-full bg-zinc-800/50 flex items-center justify-center overflow-hidden border border-[#75D32D]/30 p-0"
-    >
-        <img
-            src="/logo-unicode.png"
-            alt="Unicode Logo"
-            class="w-full h-full object-contain"
-        />
+    <!-- Punto verde que usaré, en vez del logo -->
+    <div class="relative flex items-center justify-center flex-shrink-0 mt-2">
+        <div
+            class="absolute w-4 h-4 rounded-full bg-[#75D32D] blur-[6px] opacity-80"
+        >
+        </div>
+        <div
+            class="relative w-2 h-2 rounded-full bg-[#75D32D] shadow-[0_0_10px_#75D32D]"
+        >
+        </div>
     </div>
 
     <!-- Texto -->
