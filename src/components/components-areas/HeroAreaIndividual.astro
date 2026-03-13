@@ -2,15 +2,16 @@
 import AreaRequirement from "./AreaRequirement.astro";
 import AreaValor from "./AreaValor.astro";
 import AreaWinCard from "./AreaWinCard.astro";
-import AreaProjectCard from "./AreaProjectCard.astro";
 import AreaDirectorProfile from "./AreaDirectorProfile.astro";
 import AreaProjectSlider from "./AreaProjectSlider.astro";
+import ProjectModal from "../components-projects/ProjectModal.astro";
 
 interface Project {
     title: string;
     description: string;
-    imageSrc: string;
+    image?: string;
     status?: string;
+    faculty?: string;
 }
 
 interface Director {
@@ -44,7 +45,7 @@ const {
     <!-- Imagen de fondo decorativa (Mascota) -->
     <div class="absolute top-20 md:top-30 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[400px] md:h-[750px] pointer-events-none z-0 opacity-25 md:opacity-35">
         <img 
-            src="/areaspage.png" 
+            src="/Mascota-Unicode-Fondo-Individual.png" 
             alt="" 
             class="w-full h-full object-contain object-top md:object-center"
         />
@@ -57,10 +58,10 @@ const {
     <div class="max-w-7xl mx-auto px-6 relative z-10 flex flex-col items-start w-full">
         <!-- Título y Descripción base de todas las páginas de áreas -->
         <h1 class="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-6 md:mb-8 mt-10 md:mt-20 tracking-tight animate-lifting">
-            Área de <span class="text-unicode text-glow">{title}</span>
+            Área {title === "Académica" ? "" : "de "} <span class="text-unicode text-glow">{title}</span>
         </h1>
 
-        <p class="text-base md:text-[20px] max-w-3xl leading-relaxed mb-8 md:mb-10 animate-lifting" style="animation-delay: 100ms;">
+        <p class="text-[14px] md:text-[18px] max-w-5xl leading-relaxed mb-8 md:mb-10 animate-lifting" style="animation-delay: 100ms;">
             {description}
         </p>
 
@@ -76,10 +77,10 @@ const {
             )}
             {directors.length > 0 && (
                 <a 
-                    href="#nuestros-directores" 
-                    class="bg-zinc-900 text-white font-bold px-6 py-2.5 md:px-8 md:py-3 rounded-full border border-zinc-800 hover:border-zinc-700 transition-all text-xs md:text-base"
+                    href="/call" 
+                    class="bg-zinc-900 text-white font-bold px-6 py-2.5 md:px-8 md:py-3 rounded-full border border-zinc-800 hover:border-unicode hover:text-unicode hover:shadow-[0_0_15px_rgba(117,211,45,0.3)] transition-all text-xs md:text-base group"
                 >
-                    Directores
+                    Postular
                 </a>
             )}
         </div>
@@ -144,6 +145,7 @@ const {
             </div>
         )}
     </div>
+    <ProjectModal />
 </main>
 
 

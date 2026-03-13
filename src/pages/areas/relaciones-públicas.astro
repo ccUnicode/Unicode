@@ -4,33 +4,47 @@ import Navbar from "../../components/Navbar.astro";
 import HeroAreaIndividual from "../../components/components-areas/HeroAreaIndividual.astro";
 
 const whatWeLookForData = [
-    "Estudiantes responsables y comprometidos (lo más importante).",
-    "Estudiantes responsables y comprometidos (lo más importante).",
-    "Estudiantes responsables y comprometidos (lo más importante).",
-    "Estudiantes responsables y comprometidos (lo más importante).",
-    "Estudiantes responsables y comprometidos (lo más importante).",
+    "Estudiantes comprometidos a avanzar con las tareas designadas para la correcta ejecución de los eventos de Unicode.",
+    "Personas con interés en aprender sobre relaciones públicas, alianzas estratégicas y networking.",
+    "Estudiantes proactivos y con ganas de llevar adelante los proyectos.",
+    "Personas resilientes y persistentes ante las adversidades.",
+    "Buena comunicación escrita y verbal para la coordinación con empresas y ponentes.",
 ];
 
 const weValueData = [
-    "Manejo experto de Canva",
-    "Conocimiento en herramientas de edición de imágenes como Illustrator, Photoshop",
-    "Conocimiento en herramientas de edición de video como filmora, capcut",
+    "Facilidad de palabra y desenvolvimiento.",
+    "Interés en el ecosistema tecnológico y startups.",
+    "Capacidad de organización y seguimiento de acuerdos.",
 ];
 
 const whatYouWinData = [
-    "En caso hayas ingresado al área sin conocimientos previos, te irás con muchos saberes con respecto a diseño, branding y marketing.",
-    "En caso hayas ingresado al área sin conocimientos previos, te irás con muchos saberes con respecto a diseño, branding y marketing.",
-    "Muchos amigos y contacto real con profesionales gracias a los eventos realizados por la familia Unicode, para que amplíes tu red de contactos",
-    "En caso hayas ingresado al área sin conocimientos previos, te irás con muchos saberes con respecto a diseño, branding y marketing.",
+    "Desarrollo de una red de contactos profesional (Networking).",
+    "Experiencia real negociando con empresas y gestionando alianzas.",
+    "Mejora considerable de tus habilidades blandas y comunicación efectiva.",
+    "Acceso directo a eventos y oportunidades exclusivas.",
 ];
 
 const projectsData = [
     {
-        title: "EduTech: Contenido educativo",
-        description:
-            "Unicode es un centro cultural que nació con la idea de dar a conocer más la carrera de ingeniería de software. En este proyecto, subimos contenido educativo relacionado a ello, reforzando la identidad y los orígenes del centro",
-        imageSrc: "/areasmoment.png",
+        title: "Proyecto",
+        description: "info.",
+        image: "/areasmoment.png",
         status: "Activo",
+        faculty: "RRPP",
+    },
+    {
+        title: "Proyecto",
+        description: "info.",
+        image: "/areasmoment.png",
+        status: "Activo",
+        faculty: "RRPP",
+    },
+    {
+        title: "Proyecto",
+        description: "info.",
+        image: "/areasmoment.png",
+        status: "Culminado",
+        faculty: "RRPP",
     },
 ];
 
@@ -38,12 +52,12 @@ const directorsData = [
     {
         name: "Jeanpier Robles",
         linkedin: "jeanpier-robles",
-        imageSrc: "/areasmoment.png",
+        imageSrc: "/AreasImages/Jeanpier_Robles.png",
     },
     {
-        name: "Rafael Cardozo",
-        linkedin: "rafael-olivos",
-        imageSrc: "/areasmoment.png",
+        name: "Rafael Olivos",
+        linkedin: "adriano-rafael-olivos-gallardo-29b076311",
+        imageSrc: "/AreasImages/Rafael_Olivos.png",
     },
 ];
 ---
@@ -52,8 +66,8 @@ const directorsData = [
     <Navbar />
 
     <HeroAreaIndividual
-        title="RRPP"
-        description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
+        title="Relaciones Públicas"
+        description="Relaciones Públicas construye puentes. Gestionamos alianzas estratégicas, contactamos empresas y conectamos a la comunidad con oportunidades reales de crecimiento profesional."
         whatWeLookFor={whatWeLookForData}
         weValue={weValueData}
         whatYouWin={whatYouWinData}

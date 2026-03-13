@@ -49,7 +49,7 @@ import AreaCard from "./AreaCard.astro";
         >
             <AreaCard
                 title="Gestión del Talento Humano"
-                description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
+                description="Desc corta"
                 directorLabel="Director:"
                 directorNames="Andhlé Campos"
                 imageSrc="/areasmoment.png"
@@ -57,7 +57,7 @@ import AreaCard from "./AreaCard.astro";
 
             <AreaCard
                 title="Relaciones Públicas"
-                description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
+                description="Desc corta"
                 directorLabel="Directores:"
                 directorNames="Jeanpier Robles y Rafael Olivos"
                 reverse={true}
@@ -66,7 +66,7 @@ import AreaCard from "./AreaCard.astro";
 
             <AreaCard
                 title="Académica"
-                description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
+                description="Impulsamos iniciativas que fortalecen la calidad educativa mediante apoyo académico, formación complementaria y desarrollo de recursos."
                 directorLabel="Directores:"
                 directorNames="Franz Nuñez y Gino Romero"
                 imageSrc="/areasmoment.png"
@@ -74,7 +74,7 @@ import AreaCard from "./AreaCard.astro";
 
             <AreaCard
                 title="Dirección de Comunicación y Contenido"
-                description="El área de Dirección de Comunicación y Contenido es el motor creativo y comunicacional de nuestra organización. Nuestra misión es traducir el conocimiento técnico y los proyectos de la comunidad en un mensaje claro, atractivo y de alto impacto. Somos los encargados de construir y cuidar la identidad de UNICODE, asegurando que nuestra visión llegue a más personas."
+                description="Desc corta"
                 directorLabel="Directores:"
                 directorNames="Renato Gutierrez y Rubí Quispe "
                 reverse={true}
@@ -83,7 +83,7 @@ import AreaCard from "./AreaCard.astro";
 
             <AreaCard
                 title="Investigación y Desarrollo"
-                description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
+                description="Desc corta"
                 directorLabel="Directores:"
                 directorNames="Lenin Castro y Gabriel Chupa"
                 imageSrc="/areasmoment.png"
@@ -151,22 +151,6 @@ import AreaCard from "./AreaCard.astro";
             }
 
             update() {
-                const centerX = width / 2;
-                const centerY = height / 2;
-                const dx = this.x - centerX;
-                const dy = this.y - centerY;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                const repulsionRadius = Math.min(width, height) * 0.5;
-
-                if (dist < repulsionRadius) {
-                    const force = (1 - dist / repulsionRadius) * 0.04;
-                    this.vx += (dx / dist) * force;
-                    this.vy += (dy / dist) * force;
-                }
-
-                this.vx *= 0.99;
-                this.vy *= 0.99;
-
                 this.x += this.vx;
                 this.y += this.vy;
 

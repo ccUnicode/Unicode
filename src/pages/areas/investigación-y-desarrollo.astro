@@ -4,33 +4,46 @@ import Navbar from "../../components/Navbar.astro";
 import HeroAreaIndividual from "../../components/components-areas/HeroAreaIndividual.astro";
 
 const whatWeLookForData = [
-    "Estudiantes responsables y comprometidos (lo más importante).",
-    "Estudiantes responsables y comprometidos (lo más importante).",
-    "Estudiantes responsables y comprometidos (lo más importante).",
-    "Estudiantes responsables y comprometidos (lo más importante).",
-    "Estudiantes responsables y comprometidos (lo más importante).",
+    "Estudiantes apasionados por la tecnología, la programación y la innovación.",
+    "Mentes curiosas con ganas de investigar y aprender nuevas herramientas de desarrollo.",
+    "Capacidad para resolver problemas lógicos y proponer soluciones creativas.",
+    "Compromiso para trabajar en proyectos colaborativos.",
 ];
 
 const weValueData = [
-    "Manejo experto de Canva",
-    "Conocimiento en herramientas de edición de imágenes como Illustrator, Photoshop",
-    "Conocimiento en herramientas de edición de video como filmora, capcut",
+    "Conocimientos básicos de control de versiones (Git/GitHub).",
+    "Interés en áreas como Desarrollo Web, Móvil, Ciencia de Datos o Inteligencia Artificial.",
+    "Nociones de algoritmos y estructura de datos.",
 ];
 
 const whatYouWinData = [
-    "En caso hayas ingresado al área sin conocimientos previos, te irás con muchos saberes con respecto a diseño, branding y marketing.",
-    "En caso hayas ingresado al área sin conocimientos previos, te irás con muchos saberes con respecto a diseño, branding y marketing.",
-    "Muchos amigos y contacto real con profesionales gracias a los eventos realizados por la familia Unicode, para que amplíes tu red de contactos",
-    "En caso hayas ingresado al área sin conocimientos previos, te irás con muchos saberes con respecto a diseño, branding y marketing.",
+    "Participación en proyectos reales de software y hardware.",
+    "Espacio para experimentar con nuevas tecnologías sin miedo a equivocarse.",
+    "Mentoría técnica de miembros experimentados.",
+    "Networking con personas afines al desarrollo.",
 ];
 
 const projectsData = [
     {
-        title: "EduTech: Contenido educativo",
-        description:
-            "Unicode es un centro cultural que nació con la idea de dar a conocer más la carrera de ingeniería de software. En este proyecto, subimos contenido educativo relacionado a ello, reforzando la identidad y los orígenes del centro",
-        imageSrc: "/areasmoment.png",
+        title: "Proyecto",
+        description: "info.",
+        image: "/areasmoment.png",
         status: "Activo",
+        faculty: "ID",
+    },
+    {
+        title: "Proyecto",
+        description: "info.",
+        image: "/areasmoment.png",
+        status: "Activo",
+        faculty: "ID",
+    },
+    {
+        title: "Proyecto",
+        description: "info.",
+        image: "/areasmoment.png",
+        status: "Culminado",
+        faculty: "ID",
     },
 ];
 
@@ -38,22 +51,22 @@ const directorsData = [
     {
         name: "Lenin Castro",
         linkedin: "lenin-castro",
-        imageSrc: "/areasmoment.png",
+        imageSrc: "/AreasImages/Lenin_Castro.png",
     },
     {
         name: "Gabriel Chupa",
         linkedin: "gabriel-chupa",
-        imageSrc: "/areasmoment.png",
+        imageSrc: "/AreasImages/Gabriel_Chupa.png",
     },
 ];
 ---
 
-<Layout title="Investigación y desarrollo | Áreas UNICODE">
+<Layout title="Investigación y Desarrollo | Áreas UNICODE">
     <Navbar />
 
     <HeroAreaIndividual
-        title="Investigación y desarrollo"
-        description="Área especializada en trabajar con personas, apoyar la integración de la comunidad UNICODE y contribuir a la organización de actividades que fortalezcan el ambiente institucional y la participación estudiantil. En GTH se prioriza la actitud, el compromiso y las ganas de aportar por encima de la experiencia previa."
+        title="Investigación y Desarrollo"
+        description="En el área de Investigación y Desarrollo transformamos ideas en código y soluciones reales. Somos el equipo encargado de desarrollar la tecnología de Unicode, impulsando proyectos y soluciones técnicas que fomentan la innovación y convierten conceptos en resultados concretos."
         whatWeLookFor={whatWeLookForData}
         weValue={weValueData}
         whatYouWin={whatYouWinData}
