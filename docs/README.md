@@ -1,0 +1,12 @@
+# Documentación del Proyecto Unicode
+
+Bienvenidos a la documentación técnica y de usuario del sistema web del Centro Cultural **Unicode**.
+
+## Índice de Documentación
+
+1. [Requerimientos del Sistema](./requerimientos.md)
+2. [Arquitectura y Stack Tecnológico](./arquitectura.md)
+3. [Estructura del Proyecto](./estructura.md)
+4. [Panel de Administración (Admin)](./admin.md)
+
+Toda la documentación relacionada a decisiones técnicas, reglas de negocio y arquitectura funcional se ha centralizado en esta carpeta (`docs`), utilizando exclusivamente archivos de extensión `.md`.
