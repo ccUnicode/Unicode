@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  scroll-behavior: smooth;
+}
+
 @theme {
   --color-unicode: #75D32D;
   --color-unicode-dark: #5cad22;
@@ -17,7 +21,8 @@
     }
   }
 
-  --font-sans: "Poppins", sans-serif;
+  --font-sans: "Poppins",
+  sans-serif;
 }
 
 /* Utilitarios personalizados para efectos premium */
@@ -49,6 +54,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
