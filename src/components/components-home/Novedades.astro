@@ -64,14 +64,15 @@ const novedades = [
     </div>
 
     <!-- Carrusel de tarjetas -->
-    <div class="relative group/news-carousel w-full">
+    <div class="relative group/news-carousel w-full overflow-hidden">
+      <!-- "track" envuelve las tarjetas y servirá para moverlas con translate -->
       <div
-        id="novedades-grid"
-        class="flex gap-6 lg:gap-8 overflow-x-hidden pb-4 md:pb-0 scroll-smooth snap-x snap-mandatory"
+        id="novedades-track"
+        class="flex gap-6 lg:gap-8 pb-4 md:pb-0 transition-transform duration-700 ease-in-out cursor-grab active:cursor-grabbing w-full"
       >
         {
           novedades.map((novedad) => (
-            <div class="novedad-item flex-none w-[88vw] md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1.33rem)] snap-center">
+            <div class="novedad-item flex-none w-[88vw] md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1.33rem)] transition-all duration-700 ease-out transform scale-95 opacity-50">
               <NovedadCard
                 title={novedad.title}
                 description={novedad.description}
@@ -152,39 +153,54 @@ const novedades = [
   }
 </style>
 
-<script>
+<script is:inline>
   function initNewsCarousel() {
-    const container = document.getElementById("novedades-grid");
+    const track = document.getElementById("novedades-track");
     const indicator = document.getElementById("novedades-carousel-indicator");
 
-    if (!container || !indicator) return;
+    if (!track || !indicator) return;
 
     const dots = indicator.querySelectorAll("button");
+    const cards = track.querySelectorAll(".novedad-item");
     const prevBtn = document.getElementById("prev-news");
     const nextBtn = document.getElementById("next-news");
 
+    let currentIndex = 0;
+    let isDragging = false;
+    let startPos = 0;
+    let currentTranslate = 0;
+    let prevTranslate = 0;
+
+    const getVisibleCardsCount = () => {
+      if (window.innerWidth >= 1024) return 3; // lg
+      if (window.innerWidth >= 768) return 2; // md
+      return 1; // default mobile
+    };
+
+    const getMaxIndex = () => {
+      return Math.max(0, cards.length - getVisibleCardsCount());
+    };
+
     // Scroll by width of one item + gap
     const getScrollStep = () => {
-      const firstItem = container.querySelector(".novedad-item") as HTMLElement;
-      if (!firstItem) return container.clientWidth;
-      const gap = parseInt(window.getComputedStyle(container).gap) || 0;
+      const firstItem = track.querySelector(".novedad-item");
+      if (!firstItem) return track.clientWidth;
+      const gap = parseInt(window.getComputedStyle(track).gap) || 0;
       return firstItem.offsetWidth + gap;
     };
 
-    if (prevBtn && nextBtn) {
-      prevBtn.addEventListener("click", () => {
-        container.scrollLeft -= getScrollStep();
-      });
-      nextBtn.addEventListener("click", () => {
-        container.scrollLeft += getScrollStep();
-      });
-    }
+    const updateUIState = (index) => {
+      const maxIndex = getMaxIndex();
 
-    container.addEventListener("scroll", () => {
-      // Calculate active index based on scroll position
-      const scrollIndex = Math.round(container.scrollLeft / getScrollStep());
       dots.forEach((dot, i) => {
-        if (i === scrollIndex) {
+        // Ocultar dinámicamente puntos sin tarjetas a las cuales redirigir
+        if (i > maxIndex) {
+          dot.classList.add("hidden");
+        } else {
+          dot.classList.remove("hidden");
+        }
+
+        if (i === index) {
           dot.classList.add("bg-unicode", "w-6");
           dot.classList.remove("bg-zinc-800");
         } else {
@@ -192,14 +208,135 @@ const novedades = [
           dot.classList.add("bg-zinc-800");
         }
       });
-    });
+
+      cards.forEach((card, i) => {
+        const visibleCount = getVisibleCardsCount();
+        if (i >= index && i < index + visibleCount) {
+          // Agrandamos solo las visibles en pantalla actual
+          card.classList.add("scale-100", "opacity-100");
+          card.classList.remove("scale-95", "opacity-50");
+        } else {
+          card.classList.remove("scale-100", "opacity-100");
+          card.classList.add("scale-95", "opacity-50");
+        }
+      });
+
+      // Efecto visual de deshabilitar botones al llegar a límites
+      if (prevBtn) {
+        prevBtn.style.opacity = index <= 0 ? "0.3" : "1";
+        prevBtn.style.pointerEvents = index <= 0 ? "none" : "auto";
+      }
+      if (nextBtn) {
+        nextBtn.style.opacity = index >= maxIndex ? "0.3" : "1";
+        nextBtn.style.pointerEvents = index >= maxIndex ? "none" : "auto";
+      }
+    };
+
+    const setPositionByIndex = () => {
+      const step = getScrollStep();
+      const maxIndex = getMaxIndex();
+
+      // Limitar índices para no ver agujeros negros
+      if (currentIndex > maxIndex) currentIndex = maxIndex;
+      if (currentIndex < 0) currentIndex = 0;
+
+      currentTranslate = currentIndex * -step;
+      prevTranslate = currentTranslate;
+      track.style.transform = `translateX(${currentTranslate}px)`;
+      updateUIState(currentIndex);
+    };
+
+    if (prevBtn && nextBtn) {
+      prevBtn.addEventListener("click", () => {
+        if (currentIndex > 0) {
+          currentIndex -= 1;
+          setPositionByIndex();
+        }
+      });
+      nextBtn.addEventListener("click", () => {
+        if (currentIndex < getMaxIndex()) {
+          currentIndex += 1;
+          setPositionByIndex();
+        }
+      });
+    }
 
     dots.forEach((dot) => {
       dot.addEventListener("click", () => {
-        const index = parseInt(dot.getAttribute("data-index") || "0");
-        container.scrollLeft = index * getScrollStep();
+        currentIndex = parseInt(dot.getAttribute("data-index") || "0");
+        setPositionByIndex();
       });
     });
+
+    // Touch Support para Móviles
+    track.addEventListener("touchstart", touchStart);
+    track.addEventListener("touchend", touchEnd);
+    track.addEventListener("touchmove", touchMove);
+    track.addEventListener("mousedown", touchStart);
+    track.addEventListener("mouseup", touchEnd);
+    track.addEventListener("mouseleave", () => {
+      if (isDragging) touchEnd();
+    });
+    track.addEventListener("mousemove", touchMove);
+
+    function touchStart(event) {
+      isDragging = true;
+      startPos = getPositionX(event);
+      if (track)
+        track.classList.remove(
+          "transition-transform",
+          "duration-700",
+          "ease-in-out",
+        );
+    }
+
+    function touchMove(event) {
+      if (isDragging && track) {
+        const currentPosition = getPositionX(event);
+        const diff = currentPosition - startPos;
+        track.style.transform = `translateX(${prevTranslate + diff}px)`;
+      }
+    }
+
+    function touchEnd() {
+      if (!track) return;
+      isDragging = false;
+      const movedBy = currentTranslate - prevTranslate;
+      track.classList.add(
+        "transition-transform",
+        "duration-700",
+        "ease-in-out",
+      );
+
+      const transformMatrix = window
+        .getComputedStyle(track)
+        .getPropertyValue("transform");
+      let currentX = prevTranslate;
+      if (transformMatrix !== "none") {
+        currentX = parseFloat(transformMatrix.split(",")[4]) || 0;
+      }
+
+      const diff = currentX - prevTranslate;
+
+      if (diff < -100 && currentIndex < getMaxIndex()) currentIndex += 1;
+      if (diff > 100 && currentIndex > 0) currentIndex -= 1;
+
+      setPositionByIndex();
+    }
+
+    function getPositionX(event) {
+      return event.type.includes("mouse")
+        ? event.pageX
+        : event.touches[0].clientX;
+    }
+
+    // Resize event logic
+    window.addEventListener("resize", () => {
+      setPositionByIndex();
+    });
+
+    // Inicializar
+    updateUIState(0);
   }
 
   // Run on initial load

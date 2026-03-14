@@ -48,13 +48,13 @@
         >
           <a
             href="#nosotros"
-            class="flex-1 sm:flex-none px-2 sm:px-8 py-3 bg-unicode hover:bg-unicode-light text-[#050505] font-semibold rounded-2xl transition-all duration-300 text-sm sm:text-base shadow-unicode hover:shadow-unicode-lg text-center truncate"
+            class="hero-scroll-link flex-1 sm:flex-none px-2 sm:px-8 py-3 bg-unicode hover:bg-unicode-light text-[#050505] font-semibold rounded-2xl transition-all duration-300 text-sm sm:text-base shadow-unicode hover:shadow-unicode-lg text-center truncate"
           >
             Conócenos
           </a>
           <a
             href="#novedades"
-            class="flex-1 sm:flex-none px-2 sm:px-8 py-3 bg-zinc-900 hover:bg-zinc-800 text-white font-semibold rounded-2xl transition-all duration-300 text-sm sm:text-base text-center truncate"
+            class="hero-scroll-link flex-1 sm:flex-none px-2 sm:px-8 py-3 bg-zinc-900 hover:bg-zinc-800 text-white font-semibold rounded-2xl transition-all duration-300 text-sm sm:text-base text-center truncate"
           >
             Novedades
           </a>
@@ -80,6 +80,62 @@
       </div>
     </div>
   </div>
+
+  <script is:inline>
+    document.addEventListener("DOMContentLoaded", () => {
+      const links = document.querySelectorAll(".hero-scroll-link");
+
+      links.forEach((link) => {
+        link.addEventListener("click", function (e) {
+          e.preventDefault();
+          const href = this.getAttribute("href");
+          if (!href || !href.startsWith("#")) return;
+
+          const targetId = href.substring(1);
+          const targetElement = document.getElementById(targetId);
+
+          if (targetElement) {
+            let offsetHeight = 80;
+            if (targetId === "nosotros") {
+              // Restauramos el offset a 80 para que el título "NOSOTROS" sea visible
+              offsetHeight = 80;
+            } else if (targetId === "novedades") {
+              offsetHeight = 80;
+            }
+
+            const targetPosition =
+              targetElement.getBoundingClientRect().top +
+              window.scrollY -
+              offsetHeight;
+
+            const startPosition = window.scrollY;
+            const distance = targetPosition - startPosition;
+            const duration = 800;
+            let start = null;
+
+            window.requestAnimationFrame(function step(timestamp) {
+              if (!start) start = timestamp;
+              const progress = timestamp - start;
+
+              const easeInOutCubic =
+                progress / duration < 0.5
+                  ? 4 * Math.pow(progress / duration, 3)
+                  : 1 - Math.pow((-2 * progress) / duration + 2, 3) / 2;
+
+              const currentPosition = startPosition + distance * easeInOutCubic;
+              window.scrollTo(0, currentPosition);
+
+              if (progress < duration) {
+                window.requestAnimationFrame(step);
+              } else {
+                window.scrollTo(0, targetPosition);
+              }
+            });
+          }
+        });
+      });
+    });
+  </script>
 
   <style>
     @keyframes float {
