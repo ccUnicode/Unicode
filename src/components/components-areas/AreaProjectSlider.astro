@@ -31,7 +31,7 @@ const { projects } = Astro.props;
     </div>
 
     <!-- Navigation Bar (Arrows + Dots) -->
-    <div class="flex items-center justify-center gap-6 mt-4">
+    <div class={`items-center justify-center gap-6 mt-4 ${projects.length <= 1 ? "hidden md:flex" : "flex"} ${projects.length <= 3 ? "md:hidden" : "md:flex"}`}>
         <!-- Prev Button -->
         <button
             id="prev-area-project"
