@@ -1,0 +1,541 @@
+2026-03-11T16:59:11.791Z astro:cli --verbose flag enabled! Enabling: DEBUG="astro:*,vite:*"
+2026-03-11T16:59:11.791Z astro:cli Tip: Set the DEBUG env variable directly for more control. Example: "DEBUG=astro:*,vite:* astro build".
+2026-03-11T16:59:12.352Z astro:telemetry [notify] last notified on 1771984517295
+2026-03-11T16:59:12.958Z astro:Failed to load config with Node Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@astrojs/node' imported from C:\Users\USER\Documents\Unicode\astro.config.mjs
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:768:81)
+    at moduleResolve (node:internal/modules/esm/resolve:859:18)
+    at defaultResolve (node:internal/modules/esm/resolve:991:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:713:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:730:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:759:52)
+    at #resolve (node:internal/modules/esm/loader:695:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:615:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:160:33)
+2026-03-11T16:59:12.961Z vite:env loading env files: [
+  'C:/Users/USER/Documents/Unicode/.env',
+  'C:/Users/USER/Documents/Unicode/.env.local',
+  'C:/Users/USER/Documents/Unicode/.env.development',
+  'C:/Users/USER/Documents/Unicode/.env.development.local'
+]
+2026-03-11T16:59:12.961Z vite:env env files loaded in 0.64ms
+2026-03-11T16:59:12.962Z vite:env using resolved env: {}
+2026-03-11T16:59:12.972Z vite:config using resolved config: {
+  configFile: undefined,
+  server: {
+    port: 5173,
+    strictPort: false,
+    host: undefined,
+    allowedHosts: [],
+    https: undefined,
+    open: false,
+    proxy: undefined,
+    cors: {
+      origin: /^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/
+    },
+    headers: {},
+    warmup: { clientFiles: [], ssrFiles: [] },
+    middlewareMode: true,
+    fs: {
+      strict: true,
+      deny: [ '.env', '.env.*', '*.{crt,pem}', '**/.git/**' ],
+      allow: [ 'C:/Users/USER/Documents/Unicode' ]
+    },
+    preTransformRequests: true,
+    perEnvironmentStartEndDuringDev: false,
+    sourcemapIgnoreList: [Function: isInNodeModules$1],
+    hmr: false,
+    watch: null,
+    ws: false
+  },
+  optimizeDeps: {
+    include: [],
+    exclude: [],
+    needsInterop: [],
+    extensions: [],
+    disabled: undefined,
+    holdUntilCrawlEnd: true,
+    force: false,
+    noDiscovery: true,
+    esbuildOptions: { preserveSymlinks: false }
+  },
+  clearScreen: false,
+  appType: 'custom',
+  ssr: {
+    target: 'node',
+    optimizeDeps: {
+      esbuildOptions: { preserveSymlinks: false },
+      include: [],
+      exclude: [],
+      needsInterop: [],
+      extensions: [],
+      holdUntilCrawlEnd: true,
+      force: false,
+      noDiscovery: true
+    },
+    external: true,
+    noExternal: [],
+    resolve: {
+      conditions: [ 'module', 'node', 'development|production' ],
+      externalConditions: [ 'node' ]
+    }
+  },
+  plugins: [
+    'vite:optimized-deps',
+    'vite:watch-package-data',
+    'vite:pre-alias',
+    'alias',
+    'vite:modulepreload-polyfill',
+    'vite:resolve',
+    'vite:html-inline-proxy',
+    'vite:css',
+    'vite:esbuild',
+    'vite:json',
+    'vite:wasm-helper',
+    'vite:worker',
+    'vite:asset',
+    'vite:wasm-fallback',
+    'vite:define',
+    'vite:css-post',
+    'vite:worker-import-meta-url',
+    'vite:asset-import-meta-url',
+    'vite:dynamic-import-vars',
+    'vite:import-glob',
+    'vite:client-inject',
+    'vite:css-analysis',
+    'vite:import-analysis'
+  ],
+  environments: {
+    client: {
+      define: undefined,
+      resolve: {
+        externalConditions: [ 'node' ],
+        extensions: [
+          '.mjs',  '.js',
+          '.mts',  '.ts',
+          '.jsx',  '.tsx',
+          '.json'
+        ],
+        dedupe: [],
+        noExternal: [],
+        external: [],
+        preserveSymlinks: false,
+        alias: [
+          {
+            find: /^\/?@vite\/env/,
+            replacement: '/@fs/C:/Users/USER/Documents/Unicode/node_modules/vite/dist/client/env.mjs'
+          },
+          {
+            find: /^\/?@vite\/client/,
+            replacement: '/@fs/C:/Users/USER/Documents/Unicode/node_modules/vite/dist/client/client.mjs'
+          }
+        ],
+        mainFields: [ 'browser', 'module', 'jsnext:main', 'jsnext' ],
+        conditions: [ 'module', 'browser', 'development|production' ],
+        builtins: []
+      },
+      keepProcessEnv: false,
+      consumer: 'client',
+      optimizeDeps: {
+        include: [],
+        exclude: [],
+        needsInterop: [],
+        extensions: [],
+        disabled: undefined,
+        holdUntilCrawlEnd: true,
+        force: false,
+        noDiscovery: true,
+        esbuildOptions: { preserveSymlinks: false }
+      },
+      dev: {
+        warmup: [],
+        sourcemap: { js: true },
+        sourcemapIgnoreList: [Function: isInNodeModules$1],
+        preTransformRequests: true,
+        createEnvironment: [Function: defaultCreateClientDevEnvironment],
+        recoverable: true,
+        moduleRunnerTransform: false
+      },
+      build: {
+        target: [ 'es2020', 'edge88', 'firefox78', 'chrome87', 'safari14' ],
+        polyfillModulePreload: true,
+        modulePreload: { polyfill: true },
+        outDir: 'dist',
+        assetsDir: 'assets',
+        assetsInlineLimit: 4096,
+        sourcemap: false,
+        terserOptions: {},
+        rollupOptions: {},
+        commonjsOptions: { include: [ /node_modules/ ], extensions: [ '.js', '.cjs' ] },
+        dynamicImportVarsOptions: { warnOnError: true, exclude: [ /node_modules/ ] },
+        write: true,
+        emptyOutDir: null,
+        copyPublicDir: true,
+        manifest: false,
+        lib: false,
+        ssrManifest: false,
+        ssrEmitAssets: false,
+        reportCompressedSize: true,
+        chunkSizeWarningLimit: 500,
+        watch: null,
+        cssCodeSplit: true,
+        minify: 'esbuild',
+        ssr: false,
+        emitAssets: true,
+        createEnvironment: [Function: createEnvironment],
+        cssTarget: [ 'es2020', 'edge88', 'firefox78', 'chrome87', 'safari14' ],
+        cssMinify: true
+      }
+    },
+    ssr: {
+      define: undefined,
+      resolve: {
+        externalConditions: [ 'node' ],
+        extensions: [
+          '.mjs',  '.js',
+          '.mts',  '.ts',
+          '.jsx',  '.tsx',
+          '.json'
+        ],
+        dedupe: [],
+        noExternal: [],
+        external: true,
+        preserveSymlinks: false,
+        alias: [
+          {
+            find: /^\/?@vite\/env/,
+            replacement: '/@fs/C:/Users/USER/Documents/Unicode/node_modules/vite/dist/client/env.mjs'
+          },
+          {
+            find: /^\/?@vite\/client/,
+            replacement: '/@fs/C:/Users/USER/Documents/Unicode/node_modules/vite/dist/client/client.mjs'
+          }
+        ],
+        mainFields: [ 'module', 'jsnext:main', 'jsnext' ],
+        conditions: [ 'module', 'node', 'development|production' ],
+        builtins: [
+          '_http_agent',         '_http_client',        '_http_common',
+          '_http_incoming',      '_http_outgoing',      '_http_server',
+          '_stream_duplex',      '_stream_passthrough', '_stream_readable',
+          '_stream_transform',   '_stream_wrap',        '_stream_writable',
+          '_tls_common',         '_tls_wrap',           'assert',
+          'assert/strict',       'async_hooks',         'buffer',
+          'child_process',       'cluster',             'console',
+          'constants',           'crypto',              'dgram',
+          'diagnostics_channel', 'dns',                 'dns/promises',
+          'domain',              'events',              'fs',
+          'fs/promises',         'http',                'http2',
+          'https',               'inspector',           'inspector/promises',
+          'module',              'net',                 'os',
+          'path',                'path/posix',          'path/win32',
+          'perf_hooks',          'process',             'punycode',
+          'querystring',         'readline',            'readline/promises',
+          'repl',                'stream',              'stream/consumers',
+          'stream/promises',     'stream/web',          'string_decoder',
+          'sys',                 'timers',              'timers/promises',
+          'tls',                 'trace_events',        'tty',
+          'url',                 'util',                'util/types',
+          'v8',                  'vm',                  'wasi',
+          'worker_threads',      'zlib',                /^node:/,
+          /^npm:/,               /^bun:/
+        ]
+      },
+      keepProcessEnv: true,
+      consumer: 'server',
+      optimizeDeps: {
+        include: [],
+        exclude: [],
+        needsInterop: [],
+        extensions: [],
+        disabled: undefined,
+        holdUntilCrawlEnd: true,
+        force: false,
+        noDiscovery: true,
+        esbuildOptions: { preserveSymlinks: false }
+      },
+      dev: {
+        warmup: [],
+        sourcemap: { js: true },
+        sourcemapIgnoreList: [Function: isInNodeModules$1],
+        preTransformRequests: false,
+        createEnvironment: [Function: defaultCreateDevEnvironment],
+        recoverable: false,
+        moduleRunnerTransform: true
+      },
+      build: {
+        target: [ 'es2020', 'edge88', 'firefox78', 'chrome87', 'safari14' ],
+        polyfillModulePreload: true,
+        modulePreload: { polyfill: true },
+        outDir: 'dist',
+        assetsDir: 'assets',
+        assetsInlineLimit: 4096,
+        sourcemap: false,
+        terserOptions: {},
+        rollupOptions: {},
+        commonjsOptions: { include: [ /node_modules/ ], extensions: [ '.js', '.cjs' ] },
+        dynamicImportVarsOptions: { warnOnError: true, exclude: [ /node_modules/ ] },
+        write: true,
+        emptyOutDir: null,
+        copyPublicDir: true,
+        manifest: false,
+        lib: false,
+        ssrManifest: false,
+        ssrEmitAssets: false,
+        reportCompressedSize: true,
+        chunkSizeWarningLimit: 500,
+        watch: null,
+        cssCodeSplit: true,
+        minify: false,
+        ssr: true,
+        emitAssets: false,
+        createEnvironment: [Function: createEnvironment],
+        cssTarget: [ 'es2020', 'edge88', 'firefox78', 'chrome87', 'safari14' ],
+        cssMinify: 'esbuild'
+      }
+    }
+  },
+  resolve: {
+    externalConditions: [ 'node' ],
+    extensions: [
+      '.mjs',  '.js',
+      '.mts',  '.ts',
+      '.jsx',  '.tsx',
+      '.json'
+    ],
+    dedupe: [],
+    noExternal: [],
+    external: [],
+    preserveSymlinks: false,
+    alias: [
+      {
+        find: /^\/?@vite\/env/,
+        replacement: '/@fs/C:/Users/USER/Documents/Unicode/node_modules/vite/dist/client/env.mjs'
+      },
+      {
+        find: /^\/?@vite\/client/,
+        replacement: '/@fs/C:/Users/USER/Documents/Unicode/node_modules/vite/dist/client/client.mjs'
+      }
+    ],
+    mainFields: [ 'browser', 'module', 'jsnext:main', 'jsnext' ],
+    conditions: [ 'module', 'browser', 'development|production' ],
+    builtins: []
+  },
+  configFileDependencies: [],
+  inlineConfig: {
+    configFile: false,
+    server: { middlewareMode: true, hmr: false, watch: null, ws: false },
+    optimizeDeps: { noDiscovery: true },
+    clearScreen: false,
+    appType: 'custom',
+    ssr: { external: true },
+    plugins: [ false ],
+    environments: {
+      client: {
+        define: undefined,
+        resolve: undefined,
+        dev: {},
+        build: undefined,
+        optimizeDeps: { noDiscovery: true }
+      },
+      ssr: {
+        define: undefined,
+        resolve: {
+          mainFields: undefined,
+          conditions: undefined,
+          external: true
+        },
+        dev: { createEnvironment: undefined, warmup: undefined },
+        build: { createEnvironment: undefined },
+        optimizeDeps: {}
+      }
+    },
+    resolve: { conditions: undefined, mainFields: undefined }
+  },
+  root: 'C:/Users/USER/Documents/Unicode',
+  base: '/',
+  decodedBase: '/',
+  rawBase: '/',
+  publicDir: 'C:/Users/USER/Documents/Unicode/public',
+  cacheDir: 'C:/Users/USER/Documents/Unicode/node_modules/.vite',
+  command: 'serve',
+  mode: 'development',
+  isWorker: false,
+  mainConfig: null,
+  bundleChain: [],
+  isProduction: false,
+  css: {
+    transformer: 'postcss',
+    preprocessorMaxWorkers: 0,
+    devSourcemap: false
+  },
+  json: { namedExports: true, stringify: 'auto' },
+  esbuild: { jsxDev: true },
+  builder: undefined,
+  preview: {
+    port: 4173,
+    strictPort: false,
+    host: undefined,
+    allowedHosts: [],
+    https: undefined,
+    open: false,
+    proxy: undefined,
+    cors: {
+      origin: /^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/
+    },
+    headers: {}
+  },
+  envDir: 'C:/Users/USER/Documents/Unicode',
+  env: { BASE_URL: '/', MODE: 'development', DEV: true, PROD: false },
+  assetsInclude: [Function: assetsInclude],
+  logger: {
+    hasWarned: false,
+    info: [Function: info],
+    warn: [Function: warn],
+    warnOnce: [Function: warnOnce],
+    error: [Function: error],
+    clearScreen: [Function: clearScreen],
+    hasErrorLogged: [Function: hasErrorLogged]
+  },
+  packageCache: Map(1) {
+    'fnpd_C:/Users/USER/Documents/Unicode' => {
+      dir: 'C:/Users/USER/Documents/Unicode',
+      data: {
+        name: 'landing-page-unicode',
+        type: 'module',
+        version: '0.0.1',
+        scripts: {
+          dev: 'astro dev',
+          build: 'astro build',
+          preview: 'astro preview',
+          astro: 'astro'
+        },
+        dependencies: {
+          '@astrojs/node': '^9.5.5',
+          '@supabase/supabase-js': '^2.98.0',
+          '@tailwindcss/vite': '^4.2.1',
+          astro: '^5.17.1',
+          tailwindcss: '^4.2.1'
+        }
+      },
+      hasSideEffects: [Function: hasSideEffects],
+      setResolvedCache: [Function: setResolvedCache],
+      getResolvedCache: [Function: getResolvedCache]
+    },
+    set: [Function (anonymous)]
+  },
+  worker: { format: 'iife', plugins: '() => plugins', rollupOptions: {} },
+  experimental: { importGlobRestoreExtension: false, hmrPartialAccept: false },
+  future: undefined,
+  dev: {
+    warmup: [],
+    sourcemap: { js: true },
+    sourcemapIgnoreList: [Function: isInNodeModules$1],
+    preTransformRequests: false,
+    createEnvironment: [Function: defaultCreateDevEnvironment],
+    recoverable: false,
+    moduleRunnerTransform: false
+  },
+  build: {
+    target: [ 'es2020', 'edge88', 'firefox78', 'chrome87', 'safari14' ],
+    polyfillModulePreload: true,
+    modulePreload: { polyfill: true },
+    outDir: 'dist',
+    assetsDir: 'assets',
+    assetsInlineLimit: 4096,
+    sourcemap: false,
+    terserOptions: {},
+    rollupOptions: {},
+    commonjsOptions: { include: [ /node_modules/ ], extensions: [ '.js', '.cjs' ] },
+    dynamicImportVarsOptions: { warnOnError: true, exclude: [ /node_modules/ ] },
+    write: true,
+    emptyOutDir: null,
+    copyPublicDir: true,
+    manifest: false,
+    lib: false,
+    ssrManifest: false,
+    ssrEmitAssets: false,
+    reportCompressedSize: true,
+    chunkSizeWarningLimit: 500,
+    watch: null,
+    cssCodeSplit: true,
+    minify: 'esbuild',
+    ssr: false,
+    emitAssets: false,
+    createEnvironment: [Function: createEnvironment],
+    cssTarget: [ 'es2020', 'edge88', 'firefox78', 'chrome87', 'safari14' ],
+    cssMinify: true
+  },
+  webSocketToken: 'ltYEWDZaRvBs',
+  getSortedPlugins: [Function: getSortedPlugins],
+  getSortedPluginHooks: [Function: getSortedPluginHooks],
+  createResolver: [Function: createResolver],
+  fsDenyGlob: [Function: arrayMatcher],
+  safeModulePaths: Set(0) {},
+  additionalAllowedHosts: [],
+  Symbol(vite:resolved-config): true
+}
+2026-03-11T16:59:13.015Z vite:resolve 10.49ms C:\Users\USER\Documents\Unicode\astro.config.mjs -> C:/Users/USER/Documents/Unicode/astro.config.mjs
+2026-03-11T16:59:13.020Z vite:load 2.32ms [fs] C:\Users\USER\Documents\Unicode\astro.config.mjs
+2026-03-11T16:59:13.030Z vite:resolve 0.90ms @astrojs/node -> null
+2026-03-11T16:59:13.031Z vite:import-analysis 7.60ms [1 imports rewritten] astro.config.mjs
+2026-03-11T16:59:13.031Z vite:transform 10.65ms [skipped] C:\Users\USER\Documents\Unicode\astro.config.mjs
+11:59:13 [vite] (ssr) Error when evaluating SSR module C:\Users\USER\Documents\Unicode\astro.config.mjs: Cannot find module '@astrojs/node' imported from 'C:/Users/USER/Documents/Unicode/astro.config.mjs'
+      at fetchModule (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:46842:19)
+      at RunnableDevEnvironment.fetchModule (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:47933:12)
+      at fetchModule (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:47887:21)
+      at handleInvoke (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:39002:28)
+      at EventEmitter.listenerForInvokeHandler (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:39075:25)
+      at EventEmitter.emit (node:events:508:20)
+      at Object.send (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:25190:40)
+      at Object.invoke (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/module-runner.js:621:34)
+      at Object.invoke (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/module-runner.js:682:34)
+      at SSRCompatModuleRunner.getModuleInformation (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/module-runner.js:1205:94)
+[astro] Unable to load your Astro config
+
+2026-03-11T16:59:13.222Z astro:telemetry {
+  context: {
+    isGit: true,
+    anonymousProjectId: '5a4918daf058842e84ff9433dbaf2c17c60120b277fe742c28ec4eb4c175b80e',
+    packageManager: 'npm',
+    packageManagerVersion: '11.9.0',
+    anonymousId: '9cd1f9ba34873661aa857e0eece5451fd395c1a34848b5b7b0b0b4232bb615bc',
+    anonymousSessionId: '34ec50ab16ba4132072bf4d218943915d5bc7308d63db1924c86ac44a2c74421'
+  },
+  meta: {
+    nodeVersion: '25.6.1',
+    viteVersion: '6.4.1',
+    astroVersion: '5.18.0',
+    systemPlatform: 'win32',
+    systemRelease: '10.0.26200',
+    systemArchitecture: 'x64',
+    cpuCount: 8,
+    cpuModel: 'Intel(R) Core(TM) i5-8300H CPU @ 2.30GHz',
+    cpuSpeed: 2304,
+    memoryInMb: 32649,
+    isDocker: false,
+    isTTY: undefined,
+    isWSL: false,
+    isCI: false,
+    ciName: null
+  }
+}
+2026-03-11T16:59:13.222Z astro:telemetry [
+  {
+    "eventName": "ASTRO_CLI_ERROR",
+    "payload": {
+      "name": "Error",
+      "cliCommand": "dev",
+      "isFatal": true,
+      "anonymousMessageHint": "Cannot find module"
+    }
+  }
+]
+Cannot find module '@astrojs/node' imported from 'C:/Users/USER/Documents/Unicode/astro.config.mjs'
+  Location:
+    C:\Users\USER\Documents\Unicode\node_modules\vite\dist\node\chunks\dep-D4NMHUTW.js:46842:19
+  Stack trace:
+    at fetchModule (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:46842:19)
+    at fetchModule (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:47887:21)
+    at EventEmitter.listenerForInvokeHandler (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:39075:25)
+    at Object.send (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:25190:40)
+    at Object.invoke (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/module-runner.js:682:34)
