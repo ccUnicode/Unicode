@@ -24,29 +24,9 @@ const whatYouWinData = [
     "Acceso directo a eventos y oportunidades exclusivas.",
 ];
 
-const projectsData = [
-    {
-        title: "Proyecto",
-        description: "info.",
-        image: "/areasmoment.png",
-        status: "Activo",
-        faculty: "RRPP",
-    },
-    {
-        title: "Proyecto",
-        description: "info.",
-        image: "/areasmoment.png",
-        status: "Activo",
-        faculty: "RRPP",
-    },
-    {
-        title: "Proyecto",
-        description: "info.",
-        image: "/areasmoment.png",
-        status: "Culminado",
-        faculty: "RRPP",
-    },
-];
+import { projects } from "../../data/projects";
+
+const projectsData = projects.filter(p => p.area === "rrpp");
 
 const directorsData = [
     {

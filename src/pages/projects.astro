@@ -39,6 +39,47 @@ import { projects, featuredProjects } from "../data/projects";
       </div>
 
       <ProjectGrid projects={projects} />
+
+      <!-- Pagination Controls -->
+      <div id="pagination-controls" class="flex items-center justify-center gap-6 mt-12" style="display: none;">
+        <button
+          id="prev-page"
+          class="w-12 h-12 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg hover:border-unicode/50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-label="Anterior"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="3"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"
+            ></path>
+          </svg>
+        </button>
+
+        <div id="page-numbers" class="flex justify-center gap-3">
+           <!-- Page dots will be injected here by JS -->
+        </div>
+
+        <button
+          id="next-page"
+          class="w-12 h-12 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg hover:border-unicode/50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-label="Siguiente"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="3"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"
+            ></path>
+          </svg>
+        </button>
+      </div>
     </section>
   </main>
 
@@ -59,17 +100,77 @@ import { projects, featuredProjects } from "../data/projects";
       const projectsGrid = document.getElementById("projects-grid");
       const clearSearchBtn = document.getElementById("clear-search");
       const featuredSection = document.getElementById("featured-section");
+      const paginationControls = document.getElementById("pagination-controls");
+      const pageNumbersContainer = document.getElementById("page-numbers");
+      const prevPageBtn = document.getElementById("prev-page") as HTMLButtonElement;
+      const nextPageBtn = document.getElementById("next-page") as HTMLButtonElement;
+
+      let currentPage = 1;
+      const itemsPerPage = 6;
+      let matchedItems: HTMLElement[] = [];
 
       if ((!searchInput && !filterSelect) || projectItems.length === 0) return;
 
-      const filterProjects = () => {
+      const updatePaginationUI = () => {
+        if (!paginationControls || !pageNumbersContainer) return;
+        
+        const totalPages = Math.ceil(matchedItems.length / itemsPerPage);
+        
+        if (totalPages <= 1) {
+          paginationControls.style.display = "none";
+          return;
+        }
+
+        paginationControls.style.display = "flex";
+        pageNumbersContainer.innerHTML = "";
+
+        for (let i = 1; i <= totalPages; i++) {
+          const pageBtn = document.createElement("button");
+          pageBtn.ariaLabel = `Ir a la página ${i}`;
+          pageBtn.className = `w-2 h-2 rounded-full transition-all duration-300 cursor-pointer ${
+            i === currentPage 
+              ? "bg-unicode w-6" 
+              : "bg-zinc-800 hover:bg-zinc-700"
+          }`;
+          pageBtn.addEventListener("click", () => {
+            currentPage = i;
+            renderCurrentPage();
+            window.scrollTo({ top: projectsGrid?.offsetTop ? projectsGrid.offsetTop - 100 : 0, behavior: "smooth" });
+          });
+          pageNumbersContainer.appendChild(pageBtn);
+        }
+
+        if (prevPageBtn) prevPageBtn.disabled = currentPage === 1;
+        if (nextPageBtn) nextPageBtn.disabled = currentPage === totalPages;
+      };
+
+      const renderCurrentPage = () => {
+        // Hide all items first
+        projectItems.forEach(item => {
+          (item as HTMLElement).style.display = "none";
+        });
+
+        // Show items for current page
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        
+        matchedItems.slice(startIndex, endIndex).forEach(item => {
+           item.style.display = "block";
+        });
+
+        updatePaginationUI();
+      };
+
+      const filterProjects = (resetPage = true) => {
         const searchTerm = searchInput
           ? searchInput.value.toLowerCase().trim()
           : "";
         const selectedArea = filterSelect
           ? filterSelect.value.toLowerCase()
           : "";
-        let visibleCount = 0;
+
+        if (resetPage) currentPage = 1;
+        matchedItems = [];
 
         // Toggle featured section: hide if searching or filtering
         if (searchTerm.length > 0 || selectedArea.length > 0) {
@@ -91,51 +192,61 @@ import { projects, featuredProjects } from "../data/projects";
             selectedArea === "" || itemArea === selectedArea;
 
           if (isVisibleSearch && isVisibleArea) {
-            (item as HTMLElement).style.display = "block";
-            visibleCount++;
-          } else {
-            (item as HTMLElement).style.display = "none";
+             matchedItems.push(item as HTMLElement);
           }
         });
 
-        // Re-calculate main carousel index if visible items change
-        const mainCarouselIndicator = document.getElementById(
-          "main-carousel-indicator",
-        );
-        if (mainCarouselIndicator) {
-          if (searchTerm.length > 0) {
-            mainCarouselIndicator.parentElement!.style.display = "none";
-          } else {
-            mainCarouselIndicator.parentElement!.style.display = "";
-          }
-        }
-
         // Toggle no results message
-        if (visibleCount === 0) {
+        if (matchedItems.length === 0) {
           noResults?.classList.remove("hidden");
           projectsGrid?.classList.add("opacity-0");
+          if (paginationControls) paginationControls.style.display = "none";
         } else {
           noResults?.classList.add("hidden");
           projectsGrid?.classList.remove("opacity-0");
+          renderCurrentPage();
         }
       };
 
       if (searchInput) {
-        searchInput.addEventListener("input", filterProjects);
+        searchInput.addEventListener("input", () => filterProjects(true));
       }
 
       if (filterSelect) {
-        filterSelect.addEventListener("change", filterProjects);
+        filterSelect.addEventListener("change", () => filterProjects(true));
       }
 
       clearSearchBtn?.addEventListener("click", () => {
         searchInput.value = "";
-        filterProjects();
+        if (filterSelect) filterSelect.value = "";
+        filterProjects(true);
         searchInput.focus();
       });
+
+      if (prevPageBtn) {
+        prevPageBtn.addEventListener("click", () => {
+          if (currentPage > 1) {
+            currentPage--;
+            renderCurrentPage();
+            window.scrollTo({ top: projectsGrid?.offsetTop ? projectsGrid.offsetTop - 100 : 0, behavior: "smooth" });
+          }
+        });
+      }
+
+      if (nextPageBtn) {
+        nextPageBtn.addEventListener("click", () => {
+          const totalPages = Math.ceil(matchedItems.length / itemsPerPage);
+          if (currentPage < totalPages) {
+            currentPage++;
+            renderCurrentPage();
+            window.scrollTo({ top: projectsGrid?.offsetTop ? projectsGrid.offsetTop - 100 : 0, behavior: "smooth" });
+          }
+        });
+      }
+
+      // Initial call to apply pagination
+      filterProjects(true);
     }
-
-
 
     // Run on initial load
     initSearch();
