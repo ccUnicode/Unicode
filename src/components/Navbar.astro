@@ -1,5 +1,13 @@
 ---
 // Navbar Component
+const pathname = Astro.url.pathname;
+
+// Helper function to check if a link is active
+const isActive = (path: string) => {
+  if (path === "/") return pathname === "/";
+  // Check if current page is the exact path or a subpage (for /areas/...)
+  return pathname.startsWith(path);
+};
 ---
 
 <nav
@@ -24,22 +32,22 @@
       <div class="hidden md:flex space-x-8">
         <a
           href="/areas"
-          class="text-gray-300 hover:text-unicode transition-colors font-medium text-sm lg:text-base"
+          class={`transition-colors font-medium text-sm lg:text-base ${isActive("/areas") ? "text-unicode" : "text-gray-300 hover:text-unicode"}`}
           >Áreas</a
         >
         <a
           href="/eventos"
-          class="text-gray-300 hover:text-unicode transition-colors font-medium text-sm lg:text-base"
+          class={`transition-colors font-medium text-sm lg:text-base ${isActive("/eventos") ? "text-unicode" : "text-gray-300 hover:text-unicode"}`}
           >Eventos</a
         >
         <a
           href="/projects"
-          class="text-gray-300 hover:text-unicode transition-colors font-medium text-sm lg:text-base"
+          class={`transition-colors font-medium text-sm lg:text-base ${isActive("/projects") ? "text-unicode" : "text-gray-300 hover:text-unicode"}`}
           >Proyectos</a
         >
         <a
           href="/call"
-          class="text-gray-300 hover:text-unicode transition-colors font-medium text-sm lg:text-base"
+          class={`transition-colors font-medium text-sm lg:text-base ${isActive("/call") ? "text-unicode" : "text-gray-300 hover:text-unicode"}`}
           >Convocatoria</a
         >
       </div>
@@ -72,22 +80,22 @@
   >
     <a
       href="/areas"
-      class="block px-3 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-zinc-800/50 rounded-md"
+      class={`block px-3 py-3 text-base font-medium transition-colors hover:bg-zinc-800/50 rounded-md ${isActive("/areas") ? "text-unicode" : "text-gray-300 hover:text-white"}`}
       >Áreas</a
     >
     <a
       href="/eventos"
-      class="block px-3 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-zinc-800/50 rounded-md"
+      class={`block px-3 py-3 text-base font-medium transition-colors hover:bg-zinc-800/50 rounded-md ${isActive("/eventos") ? "text-unicode" : "text-gray-300 hover:text-white"}`}
       >Eventos</a
     >
     <a
       href="/projects"
-      class="block px-3 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-zinc-800/50 rounded-md"
+      class={`block px-3 py-3 text-base font-medium transition-colors hover:bg-zinc-800/50 rounded-md ${isActive("/projects") ? "text-unicode" : "text-gray-300 hover:text-white"}`}
       >Proyectos</a
     >
     <a
       href="/call"
-      class="block px-3 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-zinc-800/50 rounded-md"
+      class={`block px-3 py-3 text-base font-medium transition-colors hover:bg-zinc-800/50 rounded-md ${isActive("/call") ? "text-unicode" : "text-gray-300 hover:text-white"}`}
       >Convocatoria</a
     >
   </div>
