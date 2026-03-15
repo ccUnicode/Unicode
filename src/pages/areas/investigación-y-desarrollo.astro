@@ -23,29 +23,9 @@ const whatYouWinData = [
     "Networking con personas afines al desarrollo.",
 ];
 
-const projectsData = [
-    {
-        title: "Proyecto",
-        description: "info.",
-        image: "/areasmoment.png",
-        status: "Activo",
-        faculty: "ID",
-    },
-    {
-        title: "Proyecto",
-        description: "info.",
-        image: "/areasmoment.png",
-        status: "Activo",
-        faculty: "ID",
-    },
-    {
-        title: "Proyecto",
-        description: "info.",
-        image: "/areasmoment.png",
-        status: "Culminado",
-        faculty: "ID",
-    },
-];
+import { projects } from "../../data/projects";
+
+const projectsData = projects.filter(p => p.area === "id");
 
 const directorsData = [
     {

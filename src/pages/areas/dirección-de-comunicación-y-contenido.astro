@@ -23,80 +23,9 @@ const whatYouWinData = [
     "En caso hayas ingresado al área sin conocimientos previos, te irás con muchos saberes con respecto a diseño, branding y marketing.",
 ];
 
-const projectsData = [
-    {
-        title: "EducaTech",
-        description:
-            "Ejecución de una estrategia de contenidos 'Edu-Tech' en redes sociales.",
-        image: "/areasmoment.png",
-        status: "Activo",
-        faculty: "DCC",
-    },
-    {
-        title: "Unicode on Air",
-        description:
-            "Producción de contenido audiovisual, basado en la interacción presencial en el campus.",
-        image: "/areasmoment.png",
-        status: "Activo",
-        faculty: "DCC",
-    },
-    {
-        title: "Backstage FIIS",
-        description:
-            "Serie de vlogs documentales que narran la 'experiencia del estudiante' en la facultad.",
-        image: "/areasmoment.png",
-        status: "Activo",
-        faculty: "DCC",
-    },
-    {
-        title: "Unicode Quizzes",
-        description:
-            "Estrategia de gamificación digital utilizando principalmente redes sociales.",
-        image: "/areasmoment.png",
-        status: "Activo",
-        faculty: "DCC",
-    },
-    {
-        title: "Unicode Podcast",
-        description:
-            "Producción de contenido long-form para YouTube con clips para redes sociales.",
-        image: "/areasmoment.png",
-        status: "Activo",
-        faculty: "DCC",
-    },
-    {
-        title: "Editorial Unicode",
-        description:
-            "Producción enfocada en la transcripción y formateo de material académico a LaTeX.",
-        image: "/areasmoment.png",
-        status: "Activo",
-        faculty: "DCC",
-    },
-    {
-        title: "Revista Unicode",
-        description:
-            "Difusión de noticias tecnológicas y actualizaciones de la comunidad.",
-        image: "/areasmoment.png",
-        status: "Activo",
-        faculty: "DCC",
-    },
-    {
-        title: "Taller de LaTex",
-        description:
-            "Programa de formación para estandarizar el nivel de edición de documentos.",
-        image: "/areasmoment.png",
-        status: "Activo",
-        faculty: "DCC",
-    },
-    {
-        title: "Taller de EC y EA",
-        description:
-            "Taller estratégico enfocado en potenciar la marca personal de los miembros.",
-        image: "/areasmoment.png",
-        status: "Activo",
-        faculty: "DCC",
-    },
-];
+import { projects } from "../../data/projects";
+
+const projectsData = projects.filter(p => p.area === "dcc");
 
 const directorsData = [
     {

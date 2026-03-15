@@ -239,6 +239,19 @@ export const projects: Project[] = [
     link: "https://unicode.vercel.app",
     area: "gth",
   },
+  {
+    id: 16,
+    title: "TrikaWeb",
+    description: "Plataforma web oficial de UNICODE, centralizando información, eventos y proyectos.",
+    longDescription: "TrikaWeb es el núcleo de desarrollo digital de UNICODE, enfocado en diseñar, desarrollar y mantener la plataforma web de la organización. Utiliza tecnologías modernas para brindar una experiencia de usuario fluida y estética, representando la identidad de UNICODE en el entorno digital.",
+    status: "Activo",
+    faculty: "I+D",
+    image: "/home-img2.png",
+    screenshots: ["/home-img2.png"],
+    team: teamMock,
+    link: "https://unicode.vercel.app",
+    area: "id",
+  },
 ];
 
 export const featuredProjects = projects.filter((p) => p.category === "Destacado");

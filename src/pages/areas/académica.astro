@@ -26,29 +26,9 @@ const whatYouWinData = [
     "Participación activa en un área que busca mejorar la experiencia académica universitaria.",
 ];
 
-const projectsData = [
-    {
-        title: "Proyecto",
-        description: "info.",
-        image: "/areasmoment.png",
-        status: "Activo",
-        faculty: "ACD",
-    },
-    {
-        title: "Proyecto",
-        description: "info.",
-        image: "/areasmoment.png",
-        status: "Activo",
-        faculty: "ACD",
-    },
-    {
-        title: "Proyecto",
-        description: "info.",
-        image: "/areasmoment.png",
-        status: "Culminado",
-        faculty: "ACD",
-    },
-];
+import { projects } from "../../data/projects";
+
+const projectsData = projects.filter(p => p.area === "académica");
 
 const directorsData = [
     {

@@ -27,35 +27,20 @@ const whatYouWinData = [
     "Formación práctica en organización, coordinación y liderazgo.",
 ];
 
-const projectsData = [
-    {
-        title: "Proyecto",
-        description: "info.",
-        image: "/areasmoment.png",
-        status: "Activo",
-        faculty: "GTH",
-    },
-    {
-        title: "Proyecto",
-        description: "info.",
-        image: "/areasmoment.png",
-        status: "Activo",
-        faculty: "GTH",
-    },
-    {
-        title: "Proyecto",
-        description: "info.",
-        image: "/areasmoment.png",
-        status: "Culminado",
-        faculty: "GTH",
-    },
-];
+import { projects } from "../../data/projects";
+
+const projectsData = projects.filter(p => p.area === "gth");
 
 const directorsData = [
     {
         name: "Andhlé Campos",
         linkedin: "andhle-campos",
         imageSrc: "/AreasImages/Andhlé_CamposR.png",
+    },
+    {
+        name: "Diego Larico",
+        linkedin: "diego-larico",
+        imageSrc: "/AreasImages/Diego_Larico.png",
     },
 ];
 ---
