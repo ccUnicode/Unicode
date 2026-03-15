@@ -16,7 +16,7 @@
     <!-- Botón cerrar -->
     <button
       id="closeModalBtn"
-      class="absolute top-6 right-6 text-zinc-400 hover:text-white transition-colors p-1"
+      class="absolute top-6 right-6 text-zinc-400 hover:text-white transition-colors p-1 cursor-pointer"
       aria-label="Cerrar modal"
     >
       <svg
@@ -131,21 +131,51 @@
         </div>
       </div>
 
-      <!-- Carrera -->
-      <div class="flex flex-col gap-1 md:gap-1.5">
-        <label
-          for="carrera"
-          class="text-xs md:text-sm font-semibold text-zinc-300"
-          >Carrera Universitaria *</label
-        >
-        <input
-          type="text"
-          id="carrera"
-          name="carrera"
-          required
-          class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg md:rounded-xl px-3 py-2 md:px-4 md:py-2.5 text-sm md:text-base text-white outline-none transition-all placeholder:text-zinc-600"
-          placeholder="Ej. Ingeniería de Sistemas"
-        />
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
+        <!-- Carrera -->
+        <div class="flex flex-col gap-1 md:gap-1.5">
+          <label
+            for="carrera"
+            class="text-xs md:text-sm font-semibold text-zinc-300"
+            >Carrera Universitaria *</label
+          >
+          <input
+            type="text"
+            id="carrera"
+            name="carrera"
+            required
+            class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg md:rounded-xl px-3 py-2 md:px-4 md:py-2.5 text-sm md:text-base text-white outline-none transition-all placeholder:text-zinc-600"
+            placeholder="Ej. Ingeniería de Sistemas"
+          />
+        </div>
+
+        <!-- Ciclo -->
+        <div class="flex flex-col gap-1 md:gap-1.5">
+          <label
+            for="ciclo_universidad"
+            class="text-xs md:text-sm font-semibold text-zinc-300"
+            >Ciclo actual *</label
+          >
+          <select
+            id="ciclo_universidad"
+            name="ciclo_universidad"
+            required
+            class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg md:rounded-xl px-3 py-2 md:px-4 md:py-2.5 text-sm md:text-base text-white outline-none transition-all appearance-none cursor-pointer"
+          >
+            <option value="" disabled selected>Selecciona tu ciclo</option>
+            <option value="1">1er Ciclo</option>
+            <option value="2">2do Ciclo</option>
+            <option value="3">3er Ciclo</option>
+            <option value="4">4to Ciclo</option>
+            <option value="5">5to Ciclo</option>
+            <option value="6">6to Ciclo</option>
+            <option value="7">7mo Ciclo</option>
+            <option value="8">8vo Ciclo</option>
+            <option value="9">9no Ciclo</option>
+            <option value="10">10mo Ciclo</option>
+            <option value="0">Egresado</option>
+          </select>
+        </div>
       </div>
 
       <div class="grid grid-cols-2 gap-4 md:gap-5">
@@ -221,7 +251,7 @@
         <button
           type="submit"
           id="submitBtn"
-          class="w-full bg-unicode hover:bg-unicode-light text-black font-bold text-base py-3.5 rounded-xl transition-all shadow-unicode hover:shadow-unicode-lg flex justify-center items-center gap-2"
+          class="w-full bg-unicode hover:bg-unicode-light text-black font-bold text-base py-3.5 rounded-xl transition-all shadow-unicode hover:shadow-unicode-lg flex justify-center items-center gap-2 cursor-pointer"
         >
           Enviar postulación
           <svg
@@ -319,13 +349,6 @@
 
     closeModalBtn?.addEventListener("click", closeModal);
 
-    // Cerrar si hace clic fuera del contenido del modal
-    modal?.addEventListener("click", (e) => {
-      if (e.target === modal) {
-        closeModal();
-      }
-    });
-
     const form = document.getElementById("registroForm") as HTMLFormElement;
     const submitBtn = document.getElementById("submitBtn") as HTMLButtonElement;
     const loadingSpinner = document.getElementById("loadingSpinner");
@@ -340,43 +363,72 @@
       loadingSpinner?.classList.remove("hidden");
       if (statusDiv) statusDiv.classList.add("hidden");
 
-      // Recoger datos (opcional, por si luego se conecta Supabase desde el cliente)
-      const formData = new FormData(form);
-      const data = Object.fromEntries(formData.entries());
+      try {
+        // Recoger datos
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
 
-      // Simulación de envío de request (2 segundos)
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+        // Enviar de verdad al API
+        const res = await fetch("/api/postular", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
 
-      // Simulación de éxito
-      if (statusDiv) {
-        statusDiv.classList.remove(
-          "hidden",
-          "bg-red-500/10",
-          "text-red-500",
-          "border-red-500/20",
-        );
-        statusDiv.classList.add(
-          "block",
-          "bg-unicode/10",
-          "border",
-          "border-unicode/20",
-          "text-unicode",
-        );
-        statusDiv.textContent =
-          "¡Inscripción recibida correctamente! Te contactaremos pronto.";
+        if (!res.ok) {
+          throw new Error("Error en el servidor al enviar los datos.");
+        }
+
+        // Simular éxito visualmente
+        if (statusDiv) {
+          statusDiv.classList.remove(
+            "hidden",
+            "bg-red-500/10",
+            "text-red-500",
+            "border-red-500/20",
+          );
+          statusDiv.classList.add(
+            "block",
+            "bg-unicode/10",
+            "border",
+            "border-unicode/20",
+            "text-unicode",
+          );
+          statusDiv.textContent =
+            "¡Inscripción recibida correctamente! Te contactaremos pronto.";
+        }
+
+        form.reset();
+
+        // Cerrar el modal automáticamente después de x seg
+        setTimeout(() => {
+          closeModal();
+        }, 2500);
+      } catch (error) {
+        console.error(error);
+        if (statusDiv) {
+          statusDiv.classList.remove(
+            "hidden",
+            "bg-unicode/10",
+            "border-unicode/20",
+            "text-unicode",
+          );
+          statusDiv.classList.add(
+            "block",
+            "bg-red-500/10",
+            "text-red-500",
+            "border",
+            "border-red-500/20",
+          );
+          statusDiv.textContent =
+            "Ocurrió un error al enviar tu postulación. Por favor intenta otra vez.";
+        }
+      } finally {
+        // Restaurar botón
+        submitBtn.disabled = false;
+        submitBtn.classList.remove("opacity-80", "cursor-not-allowed");
+        loadingSpinner?.classList.add("hidden");
       }
-
-      form.reset();
-
-      // Restaurar botón
-      submitBtn.disabled = false;
-      submitBtn.classList.remove("opacity-80", "cursor-not-allowed");
-      loadingSpinner?.classList.add("hidden");
-
-      // Cerrar el modal automáticamente después de 2.5 seg
-      setTimeout(() => {
-        closeModal();
-      }, 2500);
     });
   });
 </script>
