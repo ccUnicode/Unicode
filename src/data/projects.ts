@@ -67,10 +67,11 @@ export const projects: Project[] = [
       "Concurso de integrales que reunió a estudiantes de todas las facultades interesados en este tema, mientras participaban por un premio monetario. Más allá del resultado, fue valioso ver el nivel de competitividad sana, constancia y sobre todo disciplina de todos los participantes.",
     status: "Culminado",
     faculty: "Académica",
+    category: "Destacado",
     image: "/bienvenida_cachimbos.png",
     screenshots: ["/bienvenida_cachimbos.png"],
     team: teamMock,
-    link: "https://unicode.vercel.app",
+    link: "https://www.youtube.com/watch?v=vP-7lS4rO9s&t=1808s",
     area: "académica",
   },
   {
