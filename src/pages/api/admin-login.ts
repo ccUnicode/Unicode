@@ -86,8 +86,16 @@ export async function POST({ request }: { request: Request }) {
     );
   }
 
-  // Get admin password from environment variable
-  const adminPassword = import.meta.env.ADMIN_PASSWORD || 'unicode_admin_2026';
+  // Get admin password from environment variable ONLY (never hardcoded)
+  const adminPassword = import.meta.env.ADMIN_PASSWORD;
+
+  if (!adminPassword) {
+    console.error('CRITICAL: ADMIN_PASSWORD environment variable is not configured.');
+    return new Response(
+      JSON.stringify({ error: 'Error de configuración del servidor.' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
 
   // Validate password (constant-time)
   const isValid = safeCompare(password, adminPassword);
