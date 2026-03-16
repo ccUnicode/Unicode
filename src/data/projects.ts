@@ -143,21 +143,9 @@ export const projects: Project[] = [
     link: "https://unicode.vercel.app",
     area: "dcc",
   },
+
   {
     id: 9,
-    title: "Taller de LaTex",
-    description: "Programa de formación para estandarizar el nivel de edición de documentos.",
-    longDescription: "Capacitaciones prácticas dirigidas a estudiantes para el dominio de LaTeX, permitiéndoles crear documentos académicos y técnicos con acabado profesional.",
-    status: "Activo",
-    faculty: "DCC",
-    image: "/areasmoment.webp",
-    screenshots: ["/areasmoment.webp"],
-    team: teamMock,
-    link: "https://unicode.vercel.app",
-    area: "dcc",
-  },
-  {
-    id: 10,
     title: "Taller de EC y EA",
     description: "Taller estratégico enfocado en potenciar la marca personal de los miembros.",
     longDescription: "Estrategias de Entrenamiento en Comunicación y Entrenamiento en Audiovisuales diseñadas para fortalecer la presencia digital y marca personal de los integrantes de la comunidad.",
@@ -170,7 +158,7 @@ export const projects: Project[] = [
     area: "dcc",
   },
   {
-    id: 11,
+    id: 10,
     title: "TrikaWeb",
     description: "¿Planchas y reseñas? Todo en un solo lugar. La experiencia de generaciones, organizada para que estudies mejor y evites la trika.",
     longDescription: "TrikaWeb es la plataforma diseñada para optimizar el rendimiento académico en la UNI. Centraliza años de experiencia estudiantil en un repositorio organizado de 'planchas' (exámenes resueltos) y reseñas de profesores. Su objetivo es democratizar la información académica, ofreciendo guías estratégicas que facilitan la preparación para las evaluaciones más exigentes.",
