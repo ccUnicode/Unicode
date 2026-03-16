@@ -1,7 +1,7 @@
 ---
 interface Props {
     name: string;
-    linkedin: string;
+    linkedin?: string;
     imageSrc: string;
 }
 
@@ -25,41 +25,28 @@ const { name, linkedin, imageSrc } = Astro.props;
         {name}
     </h3>
 
-    <!-- LinkedIn -->
-    <a
-        href={`https://linkedin.com/in/${linkedin}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="flex items-center gap-2 text-zinc-400 hover:text-[#75D32D] transition-colors text-sm"
-    >
-        <!-- Icono LinkedIn SVG -->
-        <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            xmlns="http://www.w3.org/2000/svg"
+    <!-- LinkedIn: solo ícono, sin texto -->
+    {linkedin && (
+        <a
+            href={linkedin}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center gap-1.5 text-zinc-400 hover:text-[#0A66C2] transition-colors text-xs mt-0.5"
+            aria-label={`LinkedIn de ${name}`}
         >
-            <path
-                d="M20.447 20.452H16.89V14.881C16.89 13.551 16.866 11.838 15.04 11.838C13.19 11.838 12.906 13.284 12.906 14.787V20.452H9.351V9H12.768V10.564H12.816C13.292 9.662 14.456 8.708 16.204 8.708C19.827 8.708 20.447 11.092 20.447 14.168V20.452ZM5.337 7.433C4.195 7.433 3.268 6.505 3.268 5.363C3.268 4.22 4.195 3.293 5.337 3.293C6.478 3.293 7.406 4.22 7.406 5.363C7.406 6.505 6.478 7.433 5.337 7.433ZM7.118 20.452H3.555V9H7.118V20.452ZM22.225 0H1.771C0.792 0 0 0.774 0 1.729V22.271C0 23.227 0.792 24 1.771 24H22.222C23.2 24 24 23.227 24 22.271V1.729C24 0.774 23.2 0 22.225 0Z"
-                fill="#0077B5"></path>
-        </svg>
-        <span>{linkedin}</span>
-    </a>
+            <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                xmlns="http://www.w3.org/2000/svg"
+            >
+                <path
+                    d="M20.447 20.452H16.89V14.881C16.89 13.551 16.866 11.838 15.04 11.838C13.19 11.838 12.906 13.284 12.906 14.787V20.452H9.351V9H12.768V10.564H12.816C13.292 9.662 14.456 8.708 16.204 8.708C19.827 8.708 20.447 11.092 20.447 14.168V20.452ZM5.337 7.433C4.195 7.433 3.268 6.505 3.268 5.363C3.268 4.22 4.195 3.293 5.337 3.293C6.478 3.293 7.406 4.22 7.406 5.363C7.406 6.505 6.478 7.433 5.337 7.433ZM7.118 20.452H3.555V9H7.118V20.452ZM22.225 0H1.771C0.792 0 0 0.774 0 1.729V22.271C0 23.227 0.792 24 1.771 24H22.222C23.2 24 24 23.227 24 22.271V1.729C24 0.774 23.2 0 22.225 0Z"
+                    fill="#0A66C2"
+                ></path>
+            </svg>
+            <span class="text-xs text-zinc-400 hover:text-[#0A66C2]">LinkedIn</span>
+        </a>
+    )}
 </div>
-
-<!--    
-
-Como propuesta tendría eliminar el nombre linkedin para que se acceda a linkedin solo con el ícono, sin que 
-aparezca el nombre de linkedin (por algunos casos donde son largos)
-
-interface Props {
-    name: string;
-    linkedin: string;
-    imageSrc: string;
-}
-
-const { name, linkedin, imageSrc } = Astro.props;
-
-<span>{linkedin}</span> <-------CHAU
--->
