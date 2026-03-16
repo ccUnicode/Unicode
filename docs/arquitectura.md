@@ -8,7 +8,13 @@ El proyecto fue construido bajo las siguientes tecnologías y herramientas para 
 2. **Tailwind CSS**: Utilizado para la construcción de interfaces responsivas y diseño rápido basado en utilidades, manteniendo una guía de marca (Dark theme, Verde Neón).
 3. **TypeScript**: Implementado en el proyecto para garantizar un tipado estricto, autocompletado y prevención de errores en tiempo de desarrollo.
 4. **Supabase / PostgreSQL**: Base de datos para la gestión del panel administrativo referente a las convocatorias.
-5. **Git y GitHub**: Para el control de versiones y el trabajo en equipo de forma ordenada.
+5. **Sharp**: Procesamiento y optimización de imágenes (WebP).
+6. **Git y GitHub**: Para el control de versiones y el trabajo en equipo de forma ordenada.
+
+## Rendimiento y SEO
+- **WebP**: Todas las imágenes optimizadas al formato WebP (~90% reducción peso).
+- **Lazy Loading**: Implementado en imágenes below-the-fold para mejorar LCP.
+- **OG Tags**: Configuración de meta-tags Open Graph en `Layout.astro`.
 
 ## Estructura de Diseño (UI/UX)
 - **Tema Visual**: Principalmente oscuro (*Dark theme*) con acentos de color verde neón representando la identidad de UNICODE.
