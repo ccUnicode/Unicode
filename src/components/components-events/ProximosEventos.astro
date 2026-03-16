@@ -6,34 +6,7 @@
  * - PC (Desktop): Lista vertical de tarjetas expandidas (formato original).
  */
 
-interface Evento {
-  id: string;
-  ponente: string;
-  tema: string;
-  descripcion: string;
-  fecha: string;
-  hora: string;
-  lugar: string;
-  imagenPonente: string;
-  imagenFondo: string;
-  inscripcionUrl: string;
-}
-
-const eventos: Evento[] = [
-  {
-    id: "evt-2026-0",
-    ponente: "TECH ELEVATE",
-    tema: '"Data, IA, Cloud y Liderazgo Tech"',
-    descripcion:
-        "Una jornada intensiva donde exploraremos las tendencias más disruptivas en Análisis de Datos, Inteligencia Artificial y Cloud Computing, junto con las habilidades de liderazgo necesarias para triunfar en el ecosistema tecnológico actual.",
-    fecha: "18 Abr",
-    hora: "4:00 PM",
-    lugar: "Auditorio FIIS",
-    imagenPonente: "/Mascota-Unicode-Fondo-Individual.png",
-    imagenFondo: "/convocatoria_bg.png",
-    inscripcionUrl: "#",
-  },
-];
+import { proximosEventos as eventos } from "../../data/events";
 ---
 
 <section id="proximos-eventos" class="w-full py-20 md:py-28 bg-[#050505] overflow-hidden">
