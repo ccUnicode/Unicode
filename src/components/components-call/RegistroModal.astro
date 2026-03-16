@@ -3,9 +3,12 @@
  * RegistroModal.astro
  * Componente de ventana flotante (Modal) para el formulario de inscripción.
  * Refleja exactamente las columnas de la tabla 'postulantes' en schema.sql.
+ * Solo se renderiza si la convocatoria está abierta.
  */
+import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
 ---
 
+{CONVOCATORIA_ABIERTA && (
 <dialog
   id="registroModal"
   class="m-auto fixed inset-0 backdrop:bg-black/80 bg-zinc-950 border border-zinc-800 rounded-3xl p-0 w-[95%] max-w-2xl shadow-unicode-lg text-white open:animate-in open:fade-in open:zoom-in-95 backdrop:backdrop-blur-sm"
@@ -279,6 +282,7 @@
     </form>
   </div>
 </dialog>
+)}
 
 <style>
   /* Personalización del select para que la flecha sea verde estilo UNICODE */
@@ -371,7 +375,10 @@
         // Enviar de verdad al API
         const res = await fetch("/api/postular", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest"
+          },
           body: JSON.stringify(data),
         });
 
