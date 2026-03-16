@@ -38,7 +38,7 @@
     >
       <option value="">Todas las Áreas</option>
       <option value="dcc">DCC</option>
-      <option value="académica">Académica</option>
+      <option value="acd">ACD</option>
       <option value="gth">GTH</option>
       <option value="rrpp">RRPP</option>
       <option value="id">ID</option>
@@ -62,3 +62,30 @@
     </div>
   </div>
 </div>
+
+<style>
+  select {
+    cursor: pointer;
+  }
+  
+  /* Estilos para las opciones del select */
+  option {
+    background-color: #0a0a0a; /* Negro profundo de Unicode */
+    color: #d1d5db; /* Gris claro para lectura */
+    padding: 12px;
+    cursor: pointer;
+  }
+
+  option:hover, 
+  option:focus, 
+  option:checked {
+    background-color: #111111 !important;
+    color: #75D32D !important; /* Verde Unicode */
+  }
+
+  /* Para navegadores basados en Chromium */
+  select:focus option:checked {
+    background: #111111 linear-gradient(0deg, #111111 0%, #111111 100%);
+    color: #75D32D;
+  }
+</style>
