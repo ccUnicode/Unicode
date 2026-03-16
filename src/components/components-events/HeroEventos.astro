@@ -2,7 +2,7 @@
 /**
  * HeroEventos.astro
  * Sección Hero para la página de Eventos.
- * Diseño: "Neural Mesh Plexus" - Fondo de red neuronal con nodos conectados y malla hexagonal.
+ * Diseño: "Neural Mesh Plexus" - Fondo de red neuronal con nodos conectados en los bordes y malla hexagonal.
  * Estética: Tech de alto impacto, minimalista en el centro y compleja en los bordes.
  */
 ---
@@ -13,23 +13,18 @@
 >
     <!-- 1. Capa de Fondo: Patrón Hexagonal -->
     <div
-        class="absolute inset-0 z-0 opacity-20 pointer-events-none"
-        style="background-image: radial-gradient(circle at 2px 2px, rgba(117,211,45,0.1) 1px, transparent 0); background-size: 40px 40px;"
-    >
-    </div>
-    <div
-        class="absolute inset-0 z-0 opacity-10 pointer-events-none"
-        style="background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MiIgaGVpZ2h0PSI2MCI+PHBhdGggZD0iTTI2IDBMMDUyIDE1VjQ1TDI2IDYwTDAgNDVWMTVMMjYgMFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgxMTcsIDIxMSwgNDUsIDAuMikiIHN0cm9rZS13aWR0aD0iMSIvPjwvc3ZnPg=='); background-size: 52px 60px;"
+        class="absolute inset-0 z-0 pointer-events-none"
+        style="background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MiIgaGVpZ2h0PSI2MCI+PHBhdGggZD0iTTI2IDBMMDUyIDE1VjQ1TDI2IDYwTDAgNDVWMTVMMjYgMFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsIDI1NSwgMjU1LCAwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9zdmc+'); background-size: 52px 60px;"
     >
     </div>
 
-    <!-- 2. Capa de Animación: Plexus (Nodos y Conexiones) -->
+    <!-- 2. Capa de Animación: Plexus (Nodos y Conexiones en los laterales) -->
     <canvas id="hero-plexus" class="absolute inset-0 z-10 pointer-events-none"
     ></canvas>
 
-    <!-- 3. Viñeta Radial para enfocar el centro -->
+    <!-- 3. Viñeta Radial para oscurecer el centro/bordes e integrar visualmente -->
     <div
-        class="absolute inset-0 z-20 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,rgba(5,5,5,0.4)_50%,#050505_100%)]"
+        class="absolute inset-0 z-20 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(5,5,5,0.7)_80%,#050505_100%)]"
     >
     </div>
 
@@ -40,15 +35,15 @@
         <!-- Título Principal -->
         <h1
             class="reveal-item flex flex-col items-center gap-0 font-black tracking-tight leading-[0.9] mb-8 uppercase select-none"
-            style="animation-delay: 300ms;"
+            style="animation-delay: 200ms;"
         >
             <span
-                class="text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-white"
+                class="text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-white drop-shadow-md"
             >
-                Eventos
+                EVENTOS
             </span>
             <span
-                class="text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-unicode drop-shadow-[0_0_30px_rgba(117,211,45,0.5)]"
+                class="text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-unicode drop-shadow-[0_0_35px_rgba(117,211,45,0.4)]"
             >
                 UNICODE
             </span>
@@ -56,20 +51,20 @@
 
         <!-- Descripción -->
         <p
-            class="reveal-item text-sm md:text-base lg:text-lg text-zinc-400 max-w-xl leading-relaxed font-medium mb-10 px-4"
-            style="animation-delay: 500ms;"
+            class="reveal-item text-sm md:text-base lg:text-lg text-zinc-300 max-w-xl leading-relaxed font-medium mb-10 px-4"
+            style="animation-delay: 400ms;"
         >
             Aprende, conecta y construye el futuro tecnológico junto a nuestra
             comunidad.
         </p>
 
         <!-- Botón Conoce más -->
-        <div class="reveal-item" style="animation-delay: 700ms;">
+        <div class="reveal-item" style="animation-delay: 600ms;">
             <a
                 href="#proximos-eventos"
                 class="inline-flex items-center justify-center gap-2 px-8 py-3 bg-unicode text-black font-extrabold uppercase text-sm tracking-wider rounded-full hover:bg-[#8ff241] transition-all duration-300 shadow-[0_0_25px_rgba(117,211,45,0.4)] hover:shadow-[0_0_35px_rgba(117,211,45,0.6)]"
             >
-                Conoce más
+                CONOCE MÁS
                 <svg
                     class="w-4 h-4"
                     fill="none"
@@ -110,7 +105,7 @@
 
 <script>
     /**
-     * Motor de Animación Plexus
+     * Motor de Animación Plexus - Enfocado en los bordes laterales
      */
     document.addEventListener("DOMContentLoaded", () => {
         const canvas = document.getElementById(
@@ -122,8 +117,8 @@
 
         let width: number, height: number;
         let particles: Particle[] = [];
-        const connectionDist = 160;
-        const particleCount = Math.min(Math.floor(window.innerWidth / 12), 100);
+        const connectionDist = 200;
+        const particleCount = 250; // Aumento de densidad para abarcar más espacio
 
         class Particle {
             x: number;
@@ -131,29 +126,71 @@
             vx: number;
             vy: number;
             size: number;
+            isLeft: boolean;
 
-            constructor() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.vx = (Math.random() - 0.5) * 0.6;
-                this.vy = (Math.random() - 0.5) * 0.6;
-                this.size = Math.random() * 2 + 1;
+            constructor(w: number, h: number, forceLeft?: boolean) {
+                this.isLeft =
+                    forceLeft !== undefined ? forceLeft : Math.random() > 0.5;
+
+                // y cubre toda la altura
+                this.y = Math.random() * h + (Math.random() > 0.5 ? -20 : 20);
+
+                // Efecto "V" hacia adentro: más densidad y penetración en las 4 esquinas,
+                // respetando el centro negro en forma de óvalo.
+                const normalizedY = (this.y - h / 2) / (h / 2); // de -1 (top) a 1 (bottom)
+                // Usamos un exponente (ej. 1.8) para darle la curvatura de la elipse negra central
+                const centerDist = 1 - Math.pow(Math.abs(normalizedY), 1.8);
+
+                // Ancho máximo que pueden alcanzar desde el borde:
+                // En las esquinas (centerDist ~ 0): w * 0.62 (62% de la pantalla)
+                // En el centro (centerDist ~ 1): w * 0.18 (18% desde el borde)
+                const maxOffset = w * 0.62 - centerDist * (w * 0.44);
+
+                // Distribuimos para que haya más partículas cerca de los extremos laterales
+                const edgeOffset = Math.pow(Math.random(), 1.2) * maxOffset;
+
+                this.x = this.isLeft ? edgeOffset - 40 : w - edgeOffset + 40;
+
+                this.vx = (Math.random() - 0.5) * 0.7;
+                this.vy = (Math.random() - 0.5) * 0.7;
+                this.size = Math.random() * 2 + 0.5;
             }
 
-            update() {
+            update(w: number, h: number) {
                 this.x += this.vx;
                 this.y += this.vy;
 
-                if (this.x < 0 || this.x > width) this.vx *= -1;
-                if (this.y < 0 || this.y > height) this.vy *= -1;
+                // Calculamos de nuevo el límite dinámico en el centro para rebotar si intentan cruzar la zona negra
+                const normalizedY = (this.y - h / 2) / (h / 2);
+                const centerDist = 1 - Math.pow(Math.abs(normalizedY), 1.8);
+                const maxOffset = w * 0.62 - centerDist * (w * 0.44);
+
+                if (this.isLeft) {
+                    if (this.x < -100) this.vx *= -1;
+                    if (this.x > maxOffset) this.vx *= -1; // Rebote iterativo en el límite
+                } else {
+                    if (this.x > w + 100) this.vx *= -1;
+                    if (this.x < w - maxOffset) this.vx *= -1; // Rebote iterativo en el límite
+                }
+
+                if (this.y < -100 || this.y > h + 100) this.vy *= -1;
+
+                // Estabilizar velocidad para que mantengan la calma
+                const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                if (speed > 1.0) {
+                    this.vx = (this.vx / speed) * 1.0;
+                    this.vy = (this.vy / speed) * 1.0;
+                } else if (speed < 0.2) {
+                    this.vx *= 1.05;
+                    this.vy *= 1.05;
+                }
             }
 
-            draw() {
-                if (!ctx) return;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = "rgba(117, 211, 45, 0.6)";
-                ctx.fill();
+            draw(context: CanvasRenderingContext2D) {
+                context.beginPath();
+                context.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                context.fillStyle = "rgba(117, 211, 45, 0.6)";
+                context.fill();
             }
         }
 
@@ -166,7 +203,7 @@
         function init() {
             particles = [];
             for (let i = 0; i < particleCount; i++) {
-                particles.push(new Particle());
+                particles.push(new Particle(width, height, i % 2 === 0));
             }
         }
 
@@ -174,6 +211,9 @@
             if (!ctx) return;
             for (let i = 0; i < particles.length; i++) {
                 for (let j = i + 1; j < particles.length; j++) {
+                    // Evitar conectar izquierda con derecha
+                    if (particles[i].isLeft !== particles[j].isLeft) continue;
+
                     const dx = particles[i].x - particles[j].x;
                     const dy = particles[i].y - particles[j].y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
@@ -182,10 +222,10 @@
                         ctx.beginPath();
                         ctx.moveTo(particles[i].x, particles[i].y);
                         ctx.lineTo(particles[j].x, particles[j].y);
-                        // Cuanto más cerca, más opacidad
-                        const opacity = 1 - dist / connectionDist;
-                        ctx.strokeStyle = `rgba(117, 211, 45, ${opacity * 0.25})`;
-                        ctx.lineWidth = 0.8;
+                        // Opacidad decreciente según la distancia
+                        const opacity = (1 - dist / connectionDist) * 0.35;
+                        ctx.strokeStyle = `rgba(117, 211, 45, ${opacity})`;
+                        ctx.lineWidth = 1.2;
                         ctx.stroke();
                     }
                 }
@@ -197,8 +237,8 @@
             ctx.clearRect(0, 0, width, height);
 
             particles.forEach((p) => {
-                p.update();
-                p.draw();
+                p.update(width, height);
+                p.draw(ctx);
             });
 
             drawLines();
