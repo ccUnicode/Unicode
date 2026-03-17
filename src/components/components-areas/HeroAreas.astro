@@ -51,8 +51,17 @@ import AreaCard from "./AreaCard.astro";
                 title="Gestión del Talento Humano"
                 description="Somos el área encargada de promover el crecimiento profesional, el bienestar y el desarrollo integral de cada uno de los miembros dentro de la familia UNICODE."
                 directors={[
-                    { name: "Diego Larico", image: "/areas/AreasImages/Diego_Larico.webp", linkedin: "https://www.linkedin.com/in/diego-larico-cruz/" },
-                    { name: "Andhlé Campos", image: "/areas/AreasImages/Andhlé_Campos.webp" },
+                    {
+                        name: "Diego Larico",
+                        image: "/areas/AreasImages/Diego_Larico.webp",
+                        linkedin:
+                            "https://www.linkedin.com/in/diego-larico-cruz/",
+                    },
+                    {
+                        name: "Andhlé Campos",
+                        image: "/areas/AreasImages/Andhlé_Campos.webp",
+                        linkedin: "https://www.linkedin.com/in/andhle-campos/",
+                    },
                 ]}
                 imageSrc="/areas/AreasThumbnails/gth-thumbnail.webp"
             />
@@ -61,8 +70,18 @@ import AreaCard from "./AreaCard.astro";
                 title="Relaciones Públicas"
                 description="Gestionamos alianzas estratégicas con empresas y organizaciones para generar oportunidades, beneficios y becas que impulsen el crecimiento profesional de nuestra comunidad"
                 directors={[
-                    { name: "Jeanpier Robles", image: "/areas/AreasImages/Jeanpier_Robles.webp", linkedin: "https://www.linkedin.com/in/jeanpier-robles/" },
-                    { name: "Rafael Olivos", image: "/areas/AreasImages/Rafael_Olivos.webp", linkedin: "https://www.linkedin.com/in/rafael-olivos-g/" },
+                    {
+                        name: "Jeanpier Robles",
+                        image: "/areas/AreasImages/Jeanpier_Robles.webp",
+                        linkedin:
+                            "https://www.linkedin.com/in/jeanpier-robles/",
+                    },
+                    {
+                        name: "Rafael Olivos",
+                        image: "/areas/AreasImages/Rafael_Olivos.webp",
+                        linkedin:
+                            "https://www.linkedin.com/in/rafael-olivos-g/",
+                    },
                 ]}
                 reverse={true}
                 imageSrc="/areas/AreasThumbnails/rrpp-thumbnail.webp"
@@ -72,8 +91,18 @@ import AreaCard from "./AreaCard.astro";
                 title="Académica"
                 description="Impulsamos iniciativas que fortalecen la calidad educativa mediante apoyo académico, formación complementaria y desarrollo de recursos."
                 directors={[
-                    { name: "Franz Nuñez", image: "/areas/AreasImages/Franz_Nuñez.webp", linkedin: "https://www.linkedin.com/in/franz-pool-nu%C3%B1ez-villazana/" },
-                    { name: "Gino Romero", image: "/areas/AreasImages/Gino_Romero.webp", linkedin: "https://www.linkedin.com/in/gino-romero-osorio-8438a2274/" },
+                    {
+                        name: "Franz Nuñez",
+                        image: "/areas/AreasImages/Franz_Nuñez.webp",
+                        linkedin:
+                            "https://www.linkedin.com/in/franz-pool-nu%C3%B1ez-villazana/",
+                    },
+                    {
+                        name: "Gino Romero",
+                        image: "/areas/AreasImages/Gino_Romero.webp",
+                        linkedin:
+                            "https://www.linkedin.com/in/gino-romero-osorio-8438a2274/",
+                    },
                 ]}
                 imageSrc="/areas/AreasThumbnails/académica-thumbnail.webp"
             />
@@ -82,8 +111,18 @@ import AreaCard from "./AreaCard.astro";
                 title="Dirección de Comunicación y Contenido"
                 description="Somos el motor creativo de UNICODE, encargados de traducir el conocimiento técnico de la comunidad en mensajes atractivos y de alto impacto."
                 directors={[
-                    { name: "Renato Gutierrez", image: "/areas/AreasImages/Renato_Gutierrez.webp", linkedin: "https://www.linkedin.com/in/renato-gutierrez/" },
-                    { name: "Rubí Quispe", image: "/areas/AreasImages/Rubi_Quispe.webp", linkedin: "https://www.linkedin.com/in/rubi-quispe-sierra/" },
+                    {
+                        name: "Renato Gutierrez",
+                        image: "/areas/AreasImages/Renato_Gutierrez.webp",
+                        linkedin:
+                            "https://www.linkedin.com/in/renato-gutierrez/",
+                    },
+                    {
+                        name: "Rubí Quispe",
+                        image: "/areas/AreasImages/Rubi_Quispe.webp",
+                        linkedin:
+                            "https://www.linkedin.com/in/rubi-quispe-sierra/",
+                    },
                 ]}
                 reverse={true}
                 imageSrc="/areas/AreasThumbnails/dcc-thumbnail.webp"
@@ -93,8 +132,17 @@ import AreaCard from "./AreaCard.astro";
                 title="Investigación y Desarrollo"
                 description="Transformamos ideas en soluciones reales, desarrollando la tecnología web y herramientas técnicas que impulsan la innovación en UNICODE."
                 directors={[
-                    { name: "Lenin Castro", image: "/areas/AreasImages/Lenin_Castro.webp", linkedin: "https://www.linkedin.com/in/lenincastro/" },
-                    { name: "Gabriel Chupa", image: "/areas/AreasImages/Gabriel_Chupa.webp", linkedin: "https://www.linkedin.com/in/gabriel-chupa-ballesteros/" },
+                    {
+                        name: "Lenin Castro",
+                        image: "/areas/AreasImages/Lenin_Castro.webp",
+                        linkedin: "https://www.linkedin.com/in/lenincastro/",
+                    },
+                    {
+                        name: "Gabriel Chupa",
+                        image: "/areas/AreasImages/Gabriel_Chupa.webp",
+                        linkedin:
+                            "https://www.linkedin.com/in/gabriel-chupa-ballesteros/",
+                    },
                 ]}
                 imageSrc="/areas/AreasThumbnails/id-thumbnail.webp"
             />
@@ -130,8 +178,8 @@ import AreaCard from "./AreaCard.astro";
 
         let width: number, height: number;
         let particles: Particle[] = [];
-        const connectionDist = 180;
-        const particleCount = Math.min(Math.floor(window.innerWidth / 10), 120);
+        const connectionDist = 200;
+        const particleCount = Math.min(Math.floor(window.innerWidth / 5), 250);
 
         class Particle {
             x: number;
@@ -207,9 +255,9 @@ import AreaCard from "./AreaCard.astro";
                         ctx.beginPath();
                         ctx.moveTo(particles[i].x, particles[i].y);
                         ctx.lineTo(particles[j].x, particles[j].y);
-                        const opacity = 1 - dist / connectionDist;
-                        ctx.strokeStyle = `rgba(117, 211, 45, ${opacity * 0.45})`;
-                        ctx.lineWidth = 0.8;
+                        const opacity = (1 - dist / connectionDist) * 0.35;
+                        ctx.strokeStyle = `rgba(117, 211, 45, ${opacity})`;
+                        ctx.lineWidth = 1.2;
                         ctx.stroke();
                     }
                 }
