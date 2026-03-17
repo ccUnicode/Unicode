@@ -19,7 +19,7 @@ const { projects } = Astro.props;
     <!-- Slider Container -->
     <div
         id="area-project-slider"
-        class="flex gap-6 md:gap-8 overflow-x-auto pb-12 snap-x snap-mandatory scroll-smooth scrollbar-hide w-full"
+        class={`flex gap-6 md:gap-8 overflow-x-auto pb-12 snap-x snap-mandatory scroll-smooth scrollbar-hide w-full ${projects.length === 1 ? "justify-center md:justify-start" : ""}`}
     >
         {
             projects.map((project) => (
