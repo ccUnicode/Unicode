@@ -140,7 +140,7 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
             >
                 {
                     eventosRealizados.map((evento, index) => (
-                        <article class="event-item scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out flex-none w-[85vw] relative rounded-3xl overflow-hidden border border-zinc-800/50 bg-zinc-900/30 snap-center">
+                        <article class="event-item flex-none w-[85vw] relative rounded-3xl overflow-hidden border border-zinc-800/50 bg-zinc-900/30 snap-center">
                             <div class="relative h-44 overflow-hidden">
                                 <img
                                     src={evento.imagen}
@@ -281,15 +281,12 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                     chunks6.map((chunk, chunkIndex) => (
                         <div class="flex-none basis-full min-w-full shrink-0 grid grid-cols-2 lg:grid-cols-3 gap-8 snap-center content-start px-4">
                             {chunk.map((evento, index) => (
-                                <article
-                                    class="event-item scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out relative rounded-3xl overflow-hidden border border-zinc-800/50 bg-zinc-900/30 hover:border-unicode/30 group flex flex-col"
-                                    style={`transition-delay: ${(index % 3) * 100}ms`}
-                                >
+                                <article class="event-item relative rounded-3xl overflow-hidden border border-zinc-800/50 bg-zinc-900/30 hover:border-unicode/30 transition-all duration-300 group flex flex-col">
                                     <div class="relative h-48 overflow-hidden">
                                         <img
                                             src={evento.imagen}
                                             alt={evento.titulo}
-                                            class="w-full h-full object-cover transition-transform duration-700"
+                                            class="w-full h-full object-cover"
                                         />
                                         <div class="absolute inset-0 bg-linear-to-t from-zinc-900 via-zinc-900/40 to-transparent" />
                                         <div class="absolute top-4 left-4">
