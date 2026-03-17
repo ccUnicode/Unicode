@@ -178,7 +178,7 @@ const {
             const targetPosition = target.getBoundingClientRect().top + window.scrollY - offsetHeight;
             const startPosition = window.scrollY;
             const distance = targetPosition - startPosition;
-            const duration = 1000;
+            const duration = 300;
             let start = null;
 
             window.requestAnimationFrame(function step(timestamp) {
