@@ -2,15 +2,18 @@
 import { defineConfig } from 'astro/config';
 
 import tailwindcss from '@tailwindcss/vite';
-import node from '@astrojs/node';
+import vercel from '@astrojs/vercel';
 
 // https://astro.build/config
 export default defineConfig({
-  output: 'static',
+  output: 'server',
   devToolbar: {
     enabled: false
   },
-  adapter: node({ mode: 'standalone' }),
+  adapter: vercel({
+    webAnalytics: { enabled: true }
+  }),
+
   server: {
     host: true,
     port: 4321,

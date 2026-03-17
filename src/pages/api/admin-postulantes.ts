@@ -7,7 +7,7 @@
 export const prerender = false;
 
 import { sessionStore } from '../../lib/sessionStore';
-import { dbLocal } from '../../lib/dbStore';
+import { supabaseAdmin } from '../../lib/supabase';
 
 export async function GET({ request }: { request: Request }) {
   // Validate session token
@@ -28,12 +28,15 @@ export async function GET({ request }: { request: Request }) {
   const orden = url.searchParams.get('orden') || 'reciente'; // 'reciente', '1ra-2da'
 
   try {
-    // LLAMAMOS AL ALMACÉN FALSO EN RAM EN LUGAR DE SUPABASE
-    const { data, error } = await dbLocal.select();
+    // LLAMAMOS A SUPABASE REAL USANDO EL CLIENTE ADMIN
+    const { data, error } = await supabaseAdmin
+      .from('postulantes')
+      .select('*');
 
     if (error) {
+      console.error('Error Supabase:', error);
       return new Response(
-        JSON.stringify({ error: 'Error al obtener datos simulados.' }),
+        JSON.stringify({ error: 'Error al obtener datos de Supabase.' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
