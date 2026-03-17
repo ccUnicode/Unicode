@@ -25,11 +25,3 @@ npm run build
 # Previsualizar resultado
 npm run preview
 ```
-
-## 4. Recomendación de Hosting
-Se recomienda **Vercel** por su integración nativa con Astro y excelente soporte para Edge Functions (usadas en el login administrativo).
-
-1. Conecta el repo de GitHub en Vercel.
-2. Configura el FrameWork as **Astro**.
-3. Añade las Variables de Entorno.
-4. ¡Despliega! Cada "Push" a la rama principal actualizará el sitio automáticamente.

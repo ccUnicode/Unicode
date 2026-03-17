@@ -5,51 +5,7 @@
  * Sigue el diseño proporcionado por el diseñador.
  */
 import NovedadCard from "./NovedadCard.astro";
-
-const novedades = [
-  {
-    title: "Unicode presente en bienvenida de cachimbos 26-1",
-    description:
-      "Unicode formó parte de la fiesta que celebra el ingreso de los nuevos cachimbos UNI. Un evento lleno de risas, alegría y mucha diversión.",
-    image: "/bienvenida_cachimbos.webp",
-    href: "https://www.linkedin.com/company/unicode-fiis-uni/",
-  },
-  {
-    title: "Taller Avanzado de Robótica e IA",
-    description:
-      "Acompáñanos en este taller donde aprenderás a integrar modelos pre-entrenados con Arduino y Raspberry Pi para proyectos del mundo real.",
-    image: "/evento_unicode_1.webp",
-    href: "https://www.linkedin.com/company/unicode-fiis-uni/",
-  },
-  {
-    title: "Unicode presente en bienvenida de cachimbos 26-1",
-    description:
-      "Unicode formó parte de la fiesta que celebra el ingreso de los nuevos cachimbos UNI. Un evento lleno de risas, alegría y mucha diversión.",
-    image: "/bienvenida_cachimbos.webp",
-    href: "https://www.linkedin.com/company/unicode-fiis-uni/",
-  },
-  {
-    title: "Conoce nuestra nueva Junta Directiva 2026",
-    description:
-      "Con mucho orgullo anunciamos a los nuevos líderes que llevarán a UNICODE al siguiente nivel durante este periodo académico.",
-    image: "/home-img2.webp",
-    href: "https://www.linkedin.com/company/unicode-fiis-uni/",
-  },
-  {
-    title: "Unicode presente en bienvenida de cachimbos 26-1",
-    description:
-      "Unicode formó parte de la fiesta que celebra el ingreso de los nuevos cachimbos UNI. Un evento lleno de risas, alegría y mucha diversión.",
-    image: "/bienvenida_cachimbos.webp",
-    href: "https://www.linkedin.com/company/unicode-fiis-uni/",
-  },
-  {
-    title: "Alianzas Estratégicas y Networking",
-    description:
-      "Recientemente firmamos convenios con grandes referentes tecnológicos que abrirán puertas para prácticas preprofesionales a nuestros miembros.",
-    image: "/evento_unicode_2.webp",
-    href: "https://www.linkedin.com/company/unicode-fiis-uni/",
-  },
-];
+import { novedades } from "../../data/news";
 ---
 
 <section id="novedades" class="w-full py-16 md:py-24 relative">
