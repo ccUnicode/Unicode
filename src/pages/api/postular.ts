@@ -12,7 +12,7 @@
 
 export const prerender = false;
 
-import { dbLocal } from '../../lib/dbStore';
+import { supabaseAdmin } from '../../lib/supabase';
 
 // --- Rate Limiter ---
 const postulacionAttempts = new Map<string, { count: number; firstAttempt: number }>();
@@ -194,11 +194,14 @@ export async function POST({ request }: { request: Request }) {
     motivo_postulacion: sanitize(motivo_postulacion),
   };
 
-  // 10. Insertar en la base de datos
+  // 10. Insertar en la base de datos Supabase
   try {
-    const result = await dbLocal.insert(dataSanitizada);
+    const { error: dbError } = await supabaseAdmin
+      .from('postulantes')
+      .insert([dataSanitizada]);
 
-    if (result.error) {
+    if (dbError) {
+      console.error('Error Supabase:', dbError);
       throw new Error('Error al guardar la postulación.');
     }
 
