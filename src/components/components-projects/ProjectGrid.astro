@@ -12,7 +12,7 @@ const { projects } = Astro.props;
   <!-- Container -->
   <div
     id="projects-grid"
-    class="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 overflow-x-hidden md:overflow-visible pb-4 md:pb-0 scroll-smooth"
+    class="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-visible pb-4 md:pb-0 scroll-smooth snap-x snap-mandatory scrollbar-hide"
   >
     {
       projects.map((project) => (
@@ -30,7 +30,7 @@ const { projects } = Astro.props;
   <div class="flex md:hidden items-center justify-center gap-6 mt-8">
     <button
       id="prev-main"
-      class="w-12 h-12 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg hover:border-unicode/50 cursor-pointer"
+      class="w-12 h-12 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 active:border-unicode active:shadow-unicode transition-all shadow-lg hover:border-unicode/50 cursor-pointer"
       aria-label="Anterior"
     >
       <svg
@@ -48,20 +48,12 @@ const { projects } = Astro.props;
     </button>
 
     <div id="main-carousel-indicator" class="flex justify-center gap-3">
-      {
-        projects.map((_, i) => (
-          <button
-            class={`w-2 h-2 rounded-full transition-all duration-300 ${i === 0 ? "bg-unicode w-6" : "bg-zinc-800"}`}
-            aria-label={`Ir al proyecto ${i + 1}`}
-            data-index={i}
-          />
-        ))
-      }
+      <!-- Dots will be injected by JS based on visible filtered items -->
     </div>
 
     <button
       id="next-main"
-      class="w-12 h-12 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg hover:border-unicode/50 cursor-pointer"
+      class="w-12 h-12 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 active:border-unicode active:shadow-unicode transition-all shadow-lg hover:border-unicode/50 cursor-pointer"
       aria-label="Siguiente"
     >
       <svg
@@ -87,27 +79,107 @@ const { projects } = Astro.props;
 
     if (!container || !indicator) return;
 
-    const dots = indicator.querySelectorAll("button");
     const prevBtn = document.getElementById("prev-main");
     const nextBtn = document.getElementById("next-main");
 
-    const scrollStep = () => container.clientWidth;
+    const getActiveIndex = () => {
+      const items = Array.from(container.querySelectorAll(".project-item")).filter(
+        (item) => (item as HTMLElement).style.display !== "none"
+      );
+      if (items.length === 0) return 0;
+      
+      const containerRect = container.getBoundingClientRect();
+      const containerCenter = containerRect.left + containerRect.width / 2;
+      
+      let minDistance = Infinity;
+      let activeIndex = 0;
+      
+      items.forEach((item, i) => {
+        const rect = item.getBoundingClientRect();
+        const itemCenter = rect.left + rect.width / 2;
+        const distance = Math.abs(containerCenter - itemCenter);
+        if (distance < minDistance) {
+          minDistance = distance;
+          activeIndex = i;
+        }
+      });
+      return activeIndex;
+    };
+
+    const updateIndicator = () => {
+      const visibleItems = Array.from(container.querySelectorAll(".project-item")).filter(
+        (item) => (item as HTMLElement).style.display !== "none"
+      );
+      
+      if (visibleItems.length <= 1) {
+        indicator.innerHTML = "";
+        if (prevBtn) prevBtn.style.display = "none";
+        if (nextBtn) nextBtn.style.display = "none";
+        return;
+      }
+
+      if (prevBtn) prevBtn.style.display = "flex";
+      if (nextBtn) nextBtn.style.display = "flex";
+
+      const activeIndex = getActiveIndex();
+      
+      indicator.innerHTML = "";
+      visibleItems.forEach((_, i) => {
+        const dot = document.createElement("button");
+        dot.className = `w-2 h-2 rounded-full transition-all duration-300 cursor-pointer ${
+          i === activeIndex ? "bg-unicode w-6" : "bg-zinc-800"
+        }`;
+        dot.ariaLabel = `Ir al proyecto ${i + 1}`;
+        dot.addEventListener("click", () => {
+          const targetItem = visibleItems[i] as HTMLElement;
+          const containerRect = container.getBoundingClientRect();
+          const targetRect = targetItem.getBoundingClientRect();
+          const targetScroll = container.scrollLeft + (targetRect.left - containerRect.left) - (containerRect.width/2 - targetRect.width/2);
+          
+          container.scrollTo({
+            left: targetScroll,
+            behavior: "smooth"
+          });
+        });
+        indicator.appendChild(dot);
+      });
+    };
 
     if (prevBtn && nextBtn) {
-      prevBtn.addEventListener("click", () => {
-        container.scrollLeft -= scrollStep();
-      });
-      nextBtn.addEventListener("click", () => {
-        container.scrollLeft += scrollStep();
-      });
+      prevBtn.onclick = () => {
+        const currentIndex = getActiveIndex();
+        const visibleItems = Array.from(container.querySelectorAll(".project-item")).filter(
+            (item) => (item as HTMLElement).style.display !== "none"
+        );
+        const targetIndex = Math.max(0, currentIndex - 1);
+        const targetItem = visibleItems[targetIndex] as HTMLElement;
+        const containerRect = container.getBoundingClientRect();
+        const targetRect = targetItem.getBoundingClientRect();
+        const targetScroll = container.scrollLeft + (targetRect.left - containerRect.left) - (containerRect.width/2 - targetRect.width/2);
+        
+        container.scrollTo({ left: targetScroll, behavior: "smooth" });
+      };
+      
+      nextBtn.onclick = () => {
+        const currentIndex = getActiveIndex();
+        const visibleItems = Array.from(container.querySelectorAll(".project-item")).filter(
+            (item) => (item as HTMLElement).style.display !== "none"
+        );
+        const targetIndex = Math.min(visibleItems.length - 1, currentIndex + 1);
+        const targetItem = visibleItems[targetIndex] as HTMLElement;
+        const containerRect = container.getBoundingClientRect();
+        const targetRect = targetItem.getBoundingClientRect();
+        const targetScroll = container.scrollLeft + (targetRect.left - containerRect.left) - (containerRect.width/2 - targetRect.width/2);
+        
+        container.scrollTo({ left: targetScroll, behavior: "smooth" });
+      };
     }
 
-    container.addEventListener("scroll", () => {
-      const scrollIndex = Math.round(
-        container.scrollLeft / container.clientWidth,
-      );
+    container.onscroll = () => {
+      const dots = indicator.querySelectorAll("button");
+      const activeIndex = getActiveIndex();
       dots.forEach((dot, i) => {
-        if (i === scrollIndex) {
+        if (i === activeIndex) {
           dot.classList.add("bg-unicode", "w-6");
           dot.classList.remove("bg-zinc-800");
         } else {
@@ -115,13 +187,18 @@ const { projects } = Astro.props;
           dot.classList.add("bg-zinc-800");
         }
       });
-    });
+    };
 
-    dots.forEach((dot) => {
-      dot.addEventListener("click", () => {
-        const index = parseInt(dot.getAttribute("data-index") || "0");
-        container.scrollLeft = index * container.clientWidth;
-      });
+    // Initial and mutation observer to update when filters change
+    updateIndicator();
+    
+    // Listen for changes in style (filtering)
+    const observer = new MutationObserver(() => {
+        updateIndicator();
+    });
+    
+    container.querySelectorAll(".project-item").forEach(item => {
+        observer.observe(item, { attributes: true, attributeFilter: ['style'] });
     });
   }
 
@@ -129,3 +206,16 @@ const { projects } = Astro.props;
   initMainCarousel();
   document.addEventListener("astro:page-load", initMainCarousel);
 </script>
+
+<style>
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+</style>
