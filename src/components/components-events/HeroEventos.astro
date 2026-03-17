@@ -28,22 +28,41 @@
     >
     </div>
 
+    <!-- 3.5 Capa de Efectos CRT / Scanlines (Solo Mobile) -->
+    <div
+        class="absolute inset-0 z-25 pointer-events-none opacity-[0.03] md:hidden"
+        style="background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); background-size: 100% 2px, 3px 100%;"
+    >
+    </div>
+
     <!-- 4. Contenido Principal -->
     <div
         class="relative z-30 flex flex-col items-center text-center px-4 md:px-6 w-full max-w-5xl mx-auto"
     >
+        <!-- Brillo central dinámico para mobile -->
+        <div
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 w-full aspect-square max-w-[400px] bg-unicode/20 blur-[120px] rounded-full animate-pulse md:hidden"
+        >
+        </div>
+        <div
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 w-[80%] aspect-square bg-unicode/10 blur-[80px] rounded-full delay-700 animate-pulse md:hidden"
+        >
+        </div>
+
         <!-- Título Principal -->
         <h1
-            class="reveal-item flex flex-col items-center gap-0 font-black tracking-tight leading-[0.9] mb-8 uppercase select-none"
+            class="reveal-item hero-title flex flex-col items-center gap-0 font-black tracking-tight leading-[0.9] mb-8 uppercase select-none"
             style="animation-delay: 200ms;"
         >
             <span
-                class="text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-white drop-shadow-md"
+                class="text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-white drop-shadow-md relative"
+                data-text="EVENTOS"
             >
                 EVENTOS
             </span>
             <span
-                class="text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-unicode drop-shadow-[0_0_35px_rgba(117,211,45,0.4)]"
+                class="text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-unicode drop-shadow-[0_0_35px_rgba(117,211,45,0.4)] relative"
+                data-text="UNICODE"
             >
                 UNICODE
             </span>
@@ -101,6 +120,82 @@
             transform: translateY(0);
         }
     }
+
+    /* Efecto Glitch para Mobile */
+    @media (max-width: 768px) {
+        .hero-title span::before,
+        .hero-title span::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.8;
+        }
+
+        .hero-title span::before {
+            color: #ff00ff;
+            z-index: -1;
+            animation: glitch-anim 3s infinite linear alternate-reverse;
+        }
+
+        .hero-title span::after {
+            color: #00ffff;
+            z-index: -2;
+            animation: glitch-anim2 2s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim {
+            0% {
+                clip: rect(20px, 9999px, 40px, 0);
+                transform: translate(-2px, -2px);
+            }
+            20% {
+                clip: rect(60px, 9999px, 80px, 0);
+                transform: translate(2px, 2px);
+            }
+            40% {
+                clip: rect(10px, 9999px, 30px, 0);
+                transform: translate(-2px, 2px);
+            }
+            60% {
+                clip: rect(50px, 9999px, 70px, 0);
+                transform: translate(2px, -2px);
+            }
+            80% {
+                clip: rect(30px, 9999px, 50px, 0);
+                transform: translate(-1px, 1px);
+            }
+            100% {
+                clip: rect(0, 9999px, 100px, 0);
+                transform: translate(0);
+            }
+        }
+
+        @keyframes glitch-anim2 {
+            0% {
+                clip: rect(10px, 9999px, 20px, 0);
+                transform: translate(2px, 2px);
+            }
+            25% {
+                clip: rect(70px, 9999px, 90px, 0);
+                transform: translate(-2px, -2px);
+            }
+            50% {
+                clip: rect(40px, 9999px, 60px, 0);
+                transform: translate(1px, -1px);
+            }
+            75% {
+                clip: rect(20px, 9999px, 40px, 0);
+                transform: translate(-1px, 2px);
+            }
+            100% {
+                clip: rect(0, 9999px, 100px, 0);
+                transform: translate(0);
+            }
+        }
+    }
 </style>
 
 <script>
@@ -127,70 +222,175 @@
             vy: number;
             size: number;
             isLeft: boolean;
+            type: "circle" | "data-stream" | "glyph" = "circle";
+            char: string = "";
+            opacity: number = 1;
+            speedY: number = 0;
+            hue: number = 100;
 
             constructor(w: number, h: number, forceLeft?: boolean) {
+                const isMobile = window.innerWidth < 768;
                 this.isLeft =
                     forceLeft !== undefined ? forceLeft : Math.random() > 0.5;
 
-                // y cubre toda la altura
-                this.y = Math.random() * h + (Math.random() > 0.5 ? -20 : 20);
+                if (isMobile) {
+                    // Diseño "Cyber Data Storm" Ultra-Llamativo
+                    const rand = Math.random();
+                    if (rand > 0.7) this.type = "glyph";
+                    else if (rand > 0.3) this.type = "data-stream";
+                    else this.type = "circle"; // Pulso de energía
 
-                // Efecto "V" hacia adentro: más densidad y penetración en las 4 esquinas,
-                // respetando el centro negro en forma de óvalo.
-                const normalizedY = (this.y - h / 2) / (h / 2); // de -1 (top) a 1 (bottom)
-                // Usamos un exponente (ej. 1.8) para darle la curvatura de la elipse negra central
-                const centerDist = 1 - Math.pow(Math.abs(normalizedY), 1.8);
+                    this.x = Math.random() * w;
+                    this.y = Math.random() * h;
+                    this.vx = (Math.random() - 0.5) * 0.2;
+                    this.vy = 1 + Math.random() * 6; // Diferentes velocidades
+                    this.size =
+                        this.type === "glyph"
+                            ? 8 + Math.random() * 12
+                            : 1 + Math.random() * 3;
 
-                // Ancho máximo que pueden alcanzar desde el borde:
-                // En las esquinas (centerDist ~ 0): w * 0.62 (62% de la pantalla)
-                // En el centro (centerDist ~ 1): w * 0.18 (18% desde el borde)
-                const maxOffset = w * 0.62 - centerDist * (w * 0.44);
+                    if (this.type === "glyph") {
+                        const glyphs = [
+                            "{",
+                            "}",
+                            "[",
+                            "]",
+                            "<",
+                            ">",
+                            "/",
+                            "\\",
+                            "0",
+                            "1",
+                            "!",
+                            "?",
+                            "U",
+                            "N",
+                            "I",
+                        ];
+                        this.char =
+                            glyphs[Math.floor(Math.random() * glyphs.length)];
+                    }
+                    this.opacity = 0.1 + Math.random() * 0.5;
+                } else {
+                    // Plexus original para Desktop
+                    this.type = "circle";
+                    this.y =
+                        Math.random() * h + (Math.random() > 0.5 ? -20 : 20);
 
-                // Distribuimos para que haya más partículas cerca de los extremos laterales
-                const edgeOffset = Math.pow(Math.random(), 1.2) * maxOffset;
+                    const normalizedY = (this.y - h / 2) / (h / 2);
+                    const centerDist = 1 - Math.pow(Math.abs(normalizedY), 1.8);
+                    const maxOffset = w * 0.62 - centerDist * (w * 0.44);
+                    const edgeOffset = Math.pow(Math.random(), 1.2) * maxOffset;
 
-                this.x = this.isLeft ? edgeOffset - 40 : w - edgeOffset + 40;
-
-                this.vx = (Math.random() - 0.5) * 0.7;
-                this.vy = (Math.random() - 0.5) * 0.7;
-                this.size = Math.random() * 2 + 0.5;
+                    this.x = this.isLeft
+                        ? edgeOffset - 40
+                        : w - edgeOffset + 40;
+                    this.vx = (Math.random() - 0.5) * 0.7;
+                    this.vy = (Math.random() - 0.5) * 0.7;
+                    this.size = Math.random() * 2 + 0.5;
+                }
             }
 
             update(w: number, h: number) {
-                this.x += this.vx;
-                this.y += this.vy;
+                if (this.type === "circle") {
+                    this.x += this.vx;
+                    this.y += this.vy;
 
-                // Calculamos de nuevo el límite dinámico en el centro para rebotar si intentan cruzar la zona negra
-                const normalizedY = (this.y - h / 2) / (h / 2);
-                const centerDist = 1 - Math.pow(Math.abs(normalizedY), 1.8);
-                const maxOffset = w * 0.62 - centerDist * (w * 0.44);
+                    // Calculamos de nuevo el límite dinámico en el centro para rebotar si intentan cruzar la zona negra
+                    const normalizedY = (this.y - h / 2) / (h / 2);
+                    const centerDist = 1 - Math.pow(Math.abs(normalizedY), 1.8);
+                    const maxOffset = w * 0.62 - centerDist * (w * 0.44);
 
-                if (this.isLeft) {
-                    if (this.x < -100) this.vx *= -1;
-                    if (this.x > maxOffset) this.vx *= -1; // Rebote iterativo en el límite
+                    if (this.isLeft) {
+                        if (this.x < -100) this.vx *= -1;
+                        if (this.x > maxOffset) this.vx *= -1; // Rebote iterativo en el límite
+                    } else {
+                        if (this.x > w + 100) this.vx *= -1;
+                        if (this.x < w - maxOffset) this.vx *= -1; // Rebote iterativo en el límite
+                    }
+
+                    if (this.y < -100 || this.y > h + 100) this.vy *= -1;
+
+                    // Estabilizar velocidad para que mantengan la calma
+                    const speed = Math.sqrt(
+                        this.vx * this.vx + this.vy * this.vy,
+                    );
+                    if (speed > 1.0) {
+                        this.vx = (this.vx / speed) * 1.0;
+                        this.vy = (this.vy / speed) * 1.0;
+                    } else if (speed < 0.2) {
+                        this.vx *= 1.05;
+                        this.vy *= 1.05;
+                    }
                 } else {
-                    if (this.x > w + 100) this.vx *= -1;
-                    if (this.x < w - maxOffset) this.vx *= -1; // Rebote iterativo en el límite
-                }
+                    // Lógica de lluvia para Mobile
+                    this.y += this.vy;
+                    this.x += this.vx;
 
-                if (this.y < -100 || this.y > h + 100) this.vy *= -1;
+                    if (this.y > h + 100) {
+                        this.y = -100;
+                        this.x = Math.random() * w;
+                        this.opacity = 0.1 + Math.random() * 0.5;
+                    }
 
-                // Estabilizar velocidad para que mantengan la calma
-                const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-                if (speed > 1.0) {
-                    this.vx = (this.vx / speed) * 1.0;
-                    this.vy = (this.vy / speed) * 1.0;
-                } else if (speed < 0.2) {
-                    this.vx *= 1.05;
-                    this.vy *= 1.05;
+                    // Efecto de parpadeo (glitch)
+                    if (Math.random() > 0.99) this.opacity = Math.random();
                 }
             }
 
             draw(context: CanvasRenderingContext2D) {
-                context.beginPath();
-                context.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                context.fillStyle = "rgba(117, 211, 45, 0.6)";
-                context.fill();
+                if (this.type === "data-stream") {
+                    // Barras de luz neón
+                    const gradient = context.createLinearGradient(
+                        0,
+                        this.y - 100,
+                        0,
+                        this.y,
+                    );
+                    gradient.addColorStop(0, "transparent");
+                    gradient.addColorStop(
+                        1,
+                        `rgba(117, 211, 45, ${this.opacity})`,
+                    );
+
+                    context.fillStyle = gradient;
+                    context.fillRect(this.x, this.y - 100, this.size, 100);
+
+                    // Brillo en la punta
+                    context.shadowBlur = 10;
+                    context.shadowColor = "#75D32D";
+                    context.fillStyle = "#fff";
+                    context.fillRect(this.x, this.y, this.size, 2);
+                    context.shadowBlur = 0;
+                } else if (this.type === "glyph") {
+                    // Caracteres Unicode que caen con brillo
+                    context.font = `900 ${this.size}px "Inter"`;
+                    context.fillStyle = `rgba(117, 211, 45, ${this.opacity})`;
+                    context.shadowBlur = Math.random() > 0.9 ? 15 : 0;
+                    context.shadowColor = "#75D32D";
+                    context.fillText(this.char, this.x, this.y);
+                    context.shadowBlur = 0;
+                } else {
+                    // Círculos originales (Desktop) o Pulsos de Energía (Mobile)
+                    const isMobile = window.innerWidth < 768;
+                    if (isMobile) {
+                        context.beginPath();
+                        context.arc(
+                            this.x,
+                            this.y,
+                            this.size * 2,
+                            0,
+                            Math.PI * 2,
+                        );
+                        context.fillStyle = `rgba(117, 211, 45, ${this.opacity * 0.3})`;
+                        context.fill();
+                    } else {
+                        context.beginPath();
+                        context.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                        context.fillStyle = "rgba(117, 211, 45, 0.6)";
+                        context.fill();
+                    }
+                }
             }
         }
 
@@ -202,13 +402,15 @@
 
         function init() {
             particles = [];
-            for (let i = 0; i < particleCount; i++) {
+            const isMobile = window.innerWidth < 768;
+            const currentCount = isMobile ? 80 : particleCount;
+            for (let i = 0; i < currentCount; i++) {
                 particles.push(new Particle(width, height, i % 2 === 0));
             }
         }
 
         function drawLines() {
-            if (!ctx) return;
+            if (!ctx || window.innerWidth < 768) return;
             for (let i = 0; i < particles.length; i++) {
                 for (let j = i + 1; j < particles.length; j++) {
                     // Evitar conectar izquierda con derecha

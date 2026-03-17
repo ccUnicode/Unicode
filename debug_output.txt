@@ -1,0 +1,26 @@
+
+> landing-page-unicode@0.0.1 dev
+> astro dev
+
+10:22:19 [vite] (ssr) Error when evaluating SSR module C:\Users\USER\Documents\Unicode\astro.config.mjs: Cannot find module '@astrojs/vercel' imported from 'C:/Users/USER/Documents/Unicode/astro.config.mjs'
+      at fetchModule (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:46842:19)
+      at RunnableDevEnvironment.fetchModule (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:47933:12)
+      at fetchModule (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:47887:21)
+      at handleInvoke (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:39002:28)
+      at EventEmitter.listenerForInvokeHandler (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:39075:25)
+      at EventEmitter.emit (node:events:508:20)
+      at Object.send (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:25190:40)
+      at Object.invoke (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/module-runner.js:621:34)
+      at Object.invoke (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/module-runner.js:682:34)
+      at SSRCompatModuleRunner.getModuleInformation (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/module-runner.js:1205:94)
+[astro] Unable to load your Astro config
+
+Cannot find module '@astrojs/vercel' imported from 'C:/Users/USER/Documents/Unicode/astro.config.mjs'
+  Location:
+    C:\Users\USER\Documents\Unicode\node_modules\vite\dist\node\chunks\dep-D4NMHUTW.js:46842:19
+  Stack trace:
+    at fetchModule (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:46842:19)
+    at fetchModule (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:47887:21)
+    at EventEmitter.listenerForInvokeHandler (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:39075:25)
+    at Object.send (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:25190:40)
+    at Object.invoke (file:///C:/Users/USER/Documents/Unicode/node_modules/vite/dist/node/module-runner.js:682:34)

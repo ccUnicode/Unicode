@@ -84,8 +84,8 @@ const faqs: FAQ[] = [
                             </span>
                         </button>
                         <div
-                            class="faq-content"
-                            style="max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;"
+                            class="faq-content transition-all duration-300 ease-in-out will-change-[max-height,opacity]"
+                            style="max-height: 0; opacity: 0; overflow: hidden;"
                         >
                             <div class="px-5 md:px-6 pb-5 md:pb-6">
                                 <div class="w-full h-px bg-gradient-to-r from-unicode/30 via-unicode/10 to-transparent mb-4" />
@@ -101,6 +101,12 @@ const faqs: FAQ[] = [
     </div>
 </section>
 
+<style>
+    .faq-toggle:active {
+        background-color: rgba(117, 211, 45, 0.05);
+    }
+</style>
+
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         const toggles = document.querySelectorAll(".faq-toggle");
@@ -114,7 +120,7 @@ const faqs: FAQ[] = [
                 const icon = item.querySelector(".faq-icon svg") as SVGElement;
                 const isOpen = toggle.getAttribute("aria-expanded") === "true";
 
-                // Cerrar todos los demás
+                // Cerrar otros (opcional, pero optimizado)
                 document.querySelectorAll(".faq-item").forEach((otherItem) => {
                     if (otherItem !== item) {
                         const otherContent = otherItem.querySelector(
@@ -126,6 +132,7 @@ const faqs: FAQ[] = [
                         const otherIcon = otherItem.querySelector(
                             ".faq-icon svg",
                         ) as SVGElement;
+
                         if (
                             otherToggle.getAttribute("aria-expanded") === "true"
                         ) {
@@ -133,7 +140,7 @@ const faqs: FAQ[] = [
                             otherContent.style.opacity = "0";
                             otherToggle.setAttribute("aria-expanded", "false");
                             otherIcon.style.transform = "rotate(0deg)";
-                            (otherItem as HTMLElement).classList.remove(
+                            otherItem.classList.remove(
                                 "border-unicode/30",
                                 "bg-zinc-900/80",
                             );
@@ -152,6 +159,7 @@ const faqs: FAQ[] = [
                         "bg-zinc-900/80",
                     );
                 } else {
+                    // Force a reflow/repaint for smoother transition if needed
                     content.style.maxHeight = content.scrollHeight + "px";
                     content.style.opacity = "1";
                     toggle.setAttribute("aria-expanded", "true");
