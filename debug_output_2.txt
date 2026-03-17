@@ -1,0 +1,17 @@
+
+> landing-page-unicode@0.0.1 dev
+> astro dev
+
+[2m10:22:50[22m [34m[types][39m Generated [2m1ms[22m
+[2m10:22:50[22m [34m[content][39m Syncing content
+[2m10:22:50[22m [34m[content][39m Astro config changed
+[2m10:22:50[22m [34m[content][39m Clearing content store
+[2m10:22:50[22m [34m[content][39m Synced content
+[2m10:22:50[22m [34m[vite][39m Re-optimizing dependencies because lockfile has changed
+
+[42m[1m astro [22m[49m [32mv5.18.0[39m [2mready in[22m 639 [2mms[22m
+
+[2mÔöâ[22m Local    [36mhttp://localhost:4321/[39m
+[2mÔöâ[22m Network  [36mhttp://192.168.0.104:4321/[39m
+
+[2m10:22:50[22m [32mwatching for file changes...[39m
