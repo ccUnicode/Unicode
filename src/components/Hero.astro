@@ -63,14 +63,19 @@
 
       <!-- Right Column: Image -->
       <div
-        class="relative w-full h-[320px] sm:h-[420px] lg:h-[550px] flex justify-center items-center"
+        class="relative w-full h-[280px] sm:h-[420px] lg:h-[550px] flex justify-center items-center mt-10 sm:mt-0 pb-4 sm:pb-0"
       >
-        <img
-          src="/Mascota-Unicode-Landing-Hero.webp"
-          alt="Mascota Unicode"
-          class="w-full h-full object-contain filter drop-shadow-[0_0_40px_rgba(117,211,45,0.15)] animate-float"
-          style="animation: float 6s ease-in-out infinite;"
-        />
+        <!-- Contenedor de escala (evita conflicto con la animación float) -->
+        <div
+          class="w-full h-full transform scale-[1.35] translate-y-8 sm:translate-y-0 sm:scale-100 flex justify-center items-center origin-center"
+        >
+          <img
+            src="/Mascota-Unicode-Landing-Hero-HD-clean.png"
+            alt="Mascota Unicode"
+            class="w-full h-full object-contain filter drop-shadow-[0_0_40px_rgba(117,211,45,0.15)] animate-float"
+            style="animation: float 6s ease-in-out infinite;"
+          />
+        </div>
 
         <!-- Glow effect behind mascot -->
         <div
