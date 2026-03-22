@@ -42,7 +42,7 @@ export const proximosEventos: Evento[] = [
     fecha: "18 Abr",
     hora: "4:00 PM",
     lugar: "Auditorio FIIS",
-    imagenPonente: "/Mascota-Unicode-Fondo-Individual.webp",
+    imagenPonente: "/mascota/Mascota-Unicode-Fondo-Individual.webp",
     imagenFondo: "/convocatoria_bg.webp",
     inscripcionUrl: "#",
   },
