@@ -4,14 +4,14 @@ interface Props {
 }
 
 const { project = {} } = Astro.props;
-const { title = "Proyecto", category = "PROYECTO", image } = project;
+const { title = "Proyecto", category = "PROYECTO", image, imagePosition = "center" } = project;
 ---
 
 <div
   class="shrink-0 w-[80vw] md:w-[45vw] lg:w-[35vw] aspect-video bg-zinc-900/80 rounded-[2.5rem] border-2 border-zinc-800 hover:border-unicode shadow-2xl hover:shadow-unicode-sm relative overflow-hidden transition-all duration-500 group snap-center project-card-featured"
 >
   <div
-    class={`absolute inset-0 bg-cover bg-center grayscale-50 opacity-40 group-hover:opacity-60 group-hover:grayscale-0 transition-all duration-700 group-hover:scale-110`}
+    class={`absolute inset-0 bg-cover bg-${imagePosition} grayscale-50 opacity-40 group-hover:opacity-60 group-hover:grayscale-0 transition-all duration-700 group-hover:scale-110`}
     style={image
       ? `background-image: url('${image}')`
       : "background-image: url('/placeholder-projects.webp')"}
