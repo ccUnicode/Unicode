@@ -48,7 +48,7 @@ function validarEmail(email: string): boolean {
 
 function validarTelefono(tel: string): boolean {
   const limpio = tel.replace(/[\s\-().+]/g, '');
-  return /^\d{7,15}$/.test(limpio);
+  return /^\d{9}$/.test(limpio);
 }
 
 export async function POST({ request }: { request: Request }) {
@@ -157,7 +157,7 @@ export async function POST({ request }: { request: Request }) {
   }
   if (!validarTelefono(telefono)) {
     return new Response(
-      JSON.stringify({ error: 'El formato del teléfono no es válido (solo dígitos, 7-15 caracteres).' }),
+      JSON.stringify({ error: 'El formato del teléfono no es válido (debe tener exactamente 9 dígitos).' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
   }
@@ -201,6 +201,12 @@ export async function POST({ request }: { request: Request }) {
       .insert([dataSanitizada]);
 
     if (dbError) {
+      if (dbError.code === '23505') {
+        return new Response(
+          JSON.stringify({ error: 'Este correo electrónico ya ha sido registrado.' }),
+          { status: 409, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
       console.error('Error Supabase:', dbError);
       throw new Error('Error al guardar la postulación.');
     }
@@ -213,8 +219,9 @@ export async function POST({ request }: { request: Request }) {
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
+    console.error('Error en postular:', error);
     return new Response(
-      JSON.stringify({ error: 'Error interno del servidor.' }),
+      JSON.stringify({ error: error.message || 'Error interno del servidor.' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
