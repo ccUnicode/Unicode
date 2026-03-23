@@ -595,16 +595,17 @@ import Layout from "../layouts/Layout.astro";
         .header-cell { background-color: #75d32d; color: black; font-weight: bold; border: 1.0pt solid black; text-align: center; font-size: 12pt; }
         .data-cell { border: 0.5pt solid #cccccc; vertical-align: middle; padding: 5px; }
         .row-alt { background-color: #f2f2f2; }
-        .opcion-1 { background-color: #dcfce7; font-weight: bold; color: #166534; }
+        .opcion-1 { background-color: #dcfce7; vertical-align: middle; font-weight: bold; color: #166534; }
         .title { font-size: 18pt; font-weight: bold; color: #75d32d; }
       </style>
     `;
 
     // Generar filas
-    const rowsHtml = postulantesCache.map((p, index) => {
-      const is1ra = p.opcion1 === currentArea;
-      const rowClass = index % 2 === 0 ? "" : 'class="row-alt"';
-      return `
+    const rowsHtml = postulantesCache
+      .map((p, index) => {
+        const is1ra = p.opcion1 === currentArea;
+        const rowClass = index % 2 === 0 ? "" : 'class="row-alt"';
+        return `
         <tr ${rowClass}>
           <td class="data-cell">${p.nombres}</td>
           <td class="data-cell">${p.apellidos}</td>
@@ -619,7 +620,8 @@ import Layout from "../layouts/Layout.astro";
           <td class="data-cell" style="text-align: right;">${new Date(p.created_at).toLocaleDateString("es-PE")}</td>
         </tr>
       `;
-    }).join("");
+      })
+      .join("");
 
     const htmlTemplate = `
       <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
@@ -637,7 +639,7 @@ import Layout from "../layouts/Layout.astro";
           <tr><td colspan="${headers.length}" style="color: #666; font-size: 11pt;">Área: ${currentArea} | Fecha de reporte: ${new Date().toLocaleDateString("es-PE")}</td></tr>
           <tr><td></td></tr> <!-- Espacio -->
           <thead>
-            <tr>${headers.map(h => `<th class="header-cell">${h}</th>`).join("")}</tr>
+            <tr>${headers.map((h) => `<th class="header-cell">${h}</th>`).join("")}</tr>
           </thead>
           <tbody>
             ${rowsHtml}
