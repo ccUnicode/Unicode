@@ -592,8 +592,9 @@ import Layout from "../layouts/Layout.astro";
     // CSS para el Excel (Estilos específicos que Excel reconoce mejor)
     const style = `
       <style>
-        .header-cell { background-color: #75d32d; color: black; font-weight: bold; border: 1.0pt solid black; text-align: center; font-size: 12pt; }
+        .header-cell { background-color: #75d32d; color: black; font-weight: bold; border: 1.0pt solid black; text-align: center; vertical-align: middle; font-size: 12pt; }
         .data-cell { border: 0.5pt solid #cccccc; vertical-align: middle; padding: 5px; }
+        td { vertical-align: middle; }
         .row-alt { background-color: #f2f2f2; }
         .opcion-1 { background-color: #dcfce7; vertical-align: middle; font-weight: bold; color: #166534; }
         .title { font-size: 18pt; font-weight: bold; color: #75d32d; }
@@ -607,17 +608,17 @@ import Layout from "../layouts/Layout.astro";
         const rowClass = index % 2 === 0 ? "" : 'class="row-alt"';
         return `
         <tr ${rowClass}>
-          <td class="data-cell">${p.nombres}</td>
-          <td class="data-cell">${p.apellidos}</td>
-          <td class="data-cell">${p.correo}</td>
-          <td class="data-cell" style="vnd.ms-excel.numberformat:@">${p.telefono}</td>
-          <td class="data-cell">${p.universidad || ""}</td>
-          <td class="data-cell">${p.carrera || ""}</td>
-          <td class="data-cell" style="text-align: center;">${p.ciclo_universidad || ""}</td>
-          <td class="data-cell ${is1ra ? "opcion-1" : ""}" style="text-align: center;">${p.opcion1}</td>
-          <td class="data-cell" style="text-align: center;">${p.opcion2 || ""}</td>
-          <td class="data-cell" style="font-size: 9pt; width: 350px;">${String(p.motivo_postulacion || "").replace(/\n/g, "<br>")}</td>
-          <td class="data-cell" style="text-align: right;">${new Date(p.created_at).toLocaleDateString("es-PE")}</td>
+          <td class="data-cell" style="vertical-align: middle;">${p.nombres}</td>
+          <td class="data-cell" style="vertical-align: middle;">${p.apellidos}</td>
+          <td class="data-cell" style="vertical-align: middle;">${p.correo}</td>
+          <td class="data-cell" style="vnd.ms-excel.numberformat:@; vertical-align: middle;">${p.telefono}</td>
+          <td class="data-cell" style="vertical-align: middle;">${p.universidad || ""}</td>
+          <td class="data-cell" style="vertical-align: middle;">${p.carrera || ""}</td>
+          <td class="data-cell" style="text-align: center; vertical-align: middle;">${p.ciclo_universidad || ""}</td>
+          <td class="data-cell ${is1ra ? "opcion-1" : ""}" style="text-align: center; vertical-align: middle;">${p.opcion1}</td>
+          <td class="data-cell" style="text-align: center; vertical-align: middle;">${p.opcion2 || ""}</td>
+          <td class="data-cell" style="font-size: 9pt; width: 350px; vertical-align: middle;">${String(p.motivo_postulacion || "").replace(/\n/g, "<br>")}</td>
+          <td class="data-cell" style="text-align: right; vertical-align: middle;">${new Date(p.created_at).toLocaleDateString("es-PE")}</td>
         </tr>
       `;
       })
