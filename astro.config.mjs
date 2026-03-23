@@ -25,6 +25,9 @@ export default defineConfig({
       hmr: {
         clientPort: 443
       }
+    },
+    ssr: {
+      noExternal: ['@supabase/supabase-js', '@supabase/postgrest-js', '@supabase/auth-js', '@supabase/functions-js', '@supabase/realtime-js', '@supabase/storage-js']
     }
   }
 });

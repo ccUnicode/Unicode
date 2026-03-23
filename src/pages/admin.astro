@@ -568,7 +568,7 @@ import Layout from "../layouts/Layout.astro";
     loadPostulantes();
   });
 
-  // ===== EXPORT CSV =====
+  // ===== EXPORT EXCEL (PRETTY) =====
   document.getElementById("export-btn")?.addEventListener("click", () => {
     if (postulantesCache.length === 0) {
       alert("No hay datos para exportar.");
@@ -588,29 +588,69 @@ import Layout from "../layouts/Layout.astro";
       "Motivo",
       "Fecha",
     ];
-    const rows = postulantesCache.map((p) => [
-      p.nombres,
-      p.apellidos,
-      p.correo,
-      p.telefono,
-      p.universidad,
-      p.carrera,
-      p.ciclo_universidad,
-      p.opcion1,
-      p.opcion2 || "",
-      `"${(p.motivo_postulacion || "").replace(/"/g, '""')}"`,
-      new Date(p.created_at).toLocaleDateString("es-PE"),
-    ]);
 
-    // BOM for Excel UTF-8
-    const BOM = "\uFEFF";
-    const csvContent =
-      BOM + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    // CSS para el Excel (Estilos específicos que Excel reconoce mejor)
+    const style = `
+      <style>
+        .header-cell { background-color: #75d32d; color: black; font-weight: bold; border: 1.0pt solid black; text-align: center; font-size: 12pt; }
+        .data-cell { border: 0.5pt solid #cccccc; vertical-align: middle; padding: 5px; }
+        .row-alt { background-color: #f2f2f2; }
+        .opcion-1 { background-color: #dcfce7; font-weight: bold; color: #166534; }
+        .title { font-size: 18pt; font-weight: bold; color: #75d32d; }
+      </style>
+    `;
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    // Generar filas
+    const rowsHtml = postulantesCache.map((p, index) => {
+      const is1ra = p.opcion1 === currentArea;
+      const rowClass = index % 2 === 0 ? "" : 'class="row-alt"';
+      return `
+        <tr ${rowClass}>
+          <td class="data-cell">${p.nombres}</td>
+          <td class="data-cell">${p.apellidos}</td>
+          <td class="data-cell">${p.correo}</td>
+          <td class="data-cell" style="vnd.ms-excel.numberformat:@">${p.telefono}</td>
+          <td class="data-cell">${p.universidad || ""}</td>
+          <td class="data-cell">${p.carrera || ""}</td>
+          <td class="data-cell" style="text-align: center;">${p.ciclo_universidad || ""}</td>
+          <td class="data-cell ${is1ra ? "opcion-1" : ""}" style="text-align: center;">${p.opcion1}</td>
+          <td class="data-cell" style="text-align: center;">${p.opcion2 || ""}</td>
+          <td class="data-cell" style="font-size: 9pt; width: 350px;">${String(p.motivo_postulacion || "").replace(/\n/g, "<br>")}</td>
+          <td class="data-cell" style="text-align: right;">${new Date(p.created_at).toLocaleDateString("es-PE")}</td>
+        </tr>
+      `;
+    }).join("");
+
+    const htmlTemplate = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="utf-8">
+        <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+        <x:Name>Postulantes ${currentArea}</x:Name>
+        <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+        </x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+        ${style}
+      </head>
+      <body>
+        <table>
+          <tr><td colspan="${headers.length}" class="title">UNICODE - Reporte de Postulantes</td></tr>
+          <tr><td colspan="${headers.length}" style="color: #666; font-size: 11pt;">Área: ${currentArea} | Fecha de reporte: ${new Date().toLocaleDateString("es-PE")}</td></tr>
+          <tr><td></td></tr> <!-- Espacio -->
+          <thead>
+            <tr>${headers.map(h => `<th class="header-cell">${h}</th>`).join("")}</tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob([htmlTemplate], { type: "application/vnd.ms-excel" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `postulantes_${currentArea}_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `postulantes_${currentArea}_${new Date().toISOString().slice(0, 10)}.xls`;
     link.click();
     URL.revokeObjectURL(link.href);
   });

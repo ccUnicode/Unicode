@@ -14,7 +14,11 @@ export async function GET({ request }: { request: Request }) {
   const authHeader = request.headers.get('Authorization') || '';
   const token = authHeader.replace('Bearer ', '');
 
+  console.log('API /admin-postulantes HIT');
+  console.log('PUBLIC_SUPABASE_URL:', import.meta.env.PUBLIC_SUPABASE_URL ? 'OK' : 'MISSING');
+  console.log('SUPABASE_SERVICE_ROLE_KEY:', import.meta.env.SUPABASE_SERVICE_ROLE_KEY ? 'OK' : 'MISSING');
   if (!token || !sessionStore.isValid(token)) {
+    console.warn('Unauthorized attempt or invalid token');
     return new Response(
       JSON.stringify({ error: 'No autorizado. Inicia sesión nuevamente.' }),
       { status: 401, headers: { 'Content-Type': 'application/json' } }
@@ -28,13 +32,16 @@ export async function GET({ request }: { request: Request }) {
   const orden = url.searchParams.get('orden') || 'reciente'; // 'reciente', '1ra-2da'
 
   try {
+    const { data: test, error: testErr } = await supabaseAdmin.from('postulantes').select('count');
+    console.log('Supabase check:', { test, testErr });
+
     // LLAMAMOS A SUPABASE REAL USANDO EL CLIENTE ADMIN
     const { data, error } = await supabaseAdmin
       .from('postulantes')
       .select('*');
 
     if (error) {
-      console.error('Error Supabase:', error);
+      console.error('Error Supabase en /api/admin-postulantes:', error);
       return new Response(
         JSON.stringify({ error: 'Error al obtener datos de Supabase.' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
