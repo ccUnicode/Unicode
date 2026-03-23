@@ -112,6 +112,10 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
             id="telefono"
             name="telefono"
             required
+            maxlength="9"
+            minlength="9"
+            pattern="[0-9]{9}"
+            title="Debes ingresar un número de 9 dígitos."
             class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg md:rounded-xl px-3 py-2 md:px-4 md:py-2.5 text-sm md:text-base text-white outline-none transition-all placeholder:text-zinc-600"
             placeholder="Ej. 999 999 999"
           />
@@ -382,8 +386,10 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
           body: JSON.stringify(data),
         });
 
+        const result = await res.json();
+
         if (!res.ok) {
-          throw new Error("Error en el servidor al enviar los datos.");
+          throw new Error(result.error || "Ocurrió un error al enviar los datos.");
         }
 
         // Simular éxito visualmente
@@ -402,7 +408,7 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
             "text-unicode",
           );
           statusDiv.textContent =
-            "¡Inscripción recibida correctamente! Te contactaremos pronto.";
+            result.message || "¡Inscripción recibida correctamente! Te contactaremos pronto.";
         }
 
         form.reset();
@@ -411,7 +417,7 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
         setTimeout(() => {
           closeModal();
         }, 2500);
-      } catch (error) {
+      } catch (error: any) {
         console.error(error);
         if (statusDiv) {
           statusDiv.classList.remove(
@@ -428,7 +434,7 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
             "border-red-500/20",
           );
           statusDiv.textContent =
-            "Ocurrió un error al enviar tu postulación. Por favor intenta otra vez.";
+            error.message || "Ocurrió un error al enviar tu postulación. Por favor intenta otra vez.";
         }
       } finally {
         // Restaurar botón
