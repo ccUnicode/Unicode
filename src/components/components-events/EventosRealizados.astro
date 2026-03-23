@@ -275,7 +275,7 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
         <div class="hidden md:block relative group/past-carousel-desktop">
             <div
                 id="past-events-scroll-desktop"
-                class="flex gap-12 overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-smooth pb-4 px-2"
+                class="flex gap-12 overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-smooth pb-4 px-2 items-start transition-[height] duration-500 ease-in-out"
             >
                 {
                     chunks6.map((chunk, chunkIndex) => (
@@ -496,12 +496,55 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                 if (container) {
                     const scrollStep = () => container.clientWidth;
 
+                    // Función para ajustar la altura dinámicamente (solo Desktop)
+                    const updateHeight = () => {
+                        if (
+                            cfg.id.includes("desktop") &&
+                            window.innerWidth >= 768
+                        ) {
+                            const idx = Math.round(
+                                container.scrollLeft / container.clientWidth,
+                            );
+                            const activeSlide = container.children[
+                                idx
+                            ] as HTMLElement;
+                            if (activeSlide) {
+                                // Forzamos el recálculo de la altura del contenido
+                                container.style.height = `${activeSlide.offsetHeight}px`;
+                            }
+                        }
+                    };
+
+                    // Función para subir la vista a las tarjetas (solo Desktop)
+                    const scrollToTop = () => {
+                        if (
+                            cfg.id.includes("desktop") &&
+                            window.innerWidth >= 768
+                        ) {
+                            const containerRect =
+                                container.getBoundingClientRect();
+                            const isOutOfView = containerRect.top < 100;
+
+                            if (isOutOfView) {
+                                const targetY =
+                                    window.scrollY + containerRect.top - 120;
+                                window.scrollTo({
+                                    top: targetY,
+                                    behavior: "smooth",
+                                });
+                            }
+                        }
+                    };
+
                     if (prevBtn && nextBtn) {
                         prevBtn.addEventListener("click", () => {
                             container.scrollLeft -= scrollStep();
+                            // Pequeño delay para dejar que el scroll horizontal se asiente
+                            setTimeout(scrollToTop, 150);
                         });
                         nextBtn.addEventListener("click", () => {
                             container.scrollLeft += scrollStep();
+                            setTimeout(scrollToTop, 150);
                         });
                     }
 
@@ -509,6 +552,8 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                         const idx = Math.round(
                             container.scrollLeft / container.clientWidth,
                         );
+
+                        // Actualizar puntos
                         dots.forEach((dot, i) => {
                             const isMobile = cfg.id.includes("mobile");
                             if (i === idx) {
@@ -523,6 +568,8 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                                 dot.classList.add(isMobile ? "w-2" : "w-3");
                             }
                         });
+
+                        updateHeight();
                     });
 
                     dots.forEach((dot) => {
@@ -531,8 +578,13 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                                 dot.getAttribute("data-index") || "0",
                             );
                             container.scrollLeft = i * container.clientWidth;
+                            setTimeout(scrollToTop, 150);
                         });
                     });
+
+                    // Inicialización
+                    setTimeout(updateHeight, 300);
+                    window.addEventListener("resize", updateHeight);
                 }
             });
 
