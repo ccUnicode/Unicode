@@ -137,8 +137,10 @@ import { projects, featuredProjects } from "../data/projects";
               : "bg-zinc-800 hover:bg-zinc-700"
           }`;
           pageBtn.addEventListener("click", () => {
+            const oldPage = currentPage;
+            if (oldPage === i) return;
             currentPage = i;
-            renderCurrentPage();
+            renderCurrentPage(currentPage > oldPage ? 1 : -1);
           });
           pageNumbersContainer.appendChild(pageBtn);
         }
@@ -147,30 +149,77 @@ import { projects, featuredProjects } from "../data/projects";
         if (nextPageBtn) nextPageBtn.disabled = currentPage === totalPages;
       };
 
-      const renderCurrentPage = () => {
+      const renderCurrentPage = (direction = 0) => {
         const isMobile = window.innerWidth < 768;
-
-        // Hide all items first
-        projectItems.forEach(item => {
-          (item as HTMLElement).style.display = "none";
-        });
 
         if (isMobile) {
             // Show all matched items on mobile for carousel
+            projectItems.forEach(item => {
+              (item as HTMLElement).style.display = "none";
+            });
             matchedItems.forEach(item => {
                 item.style.display = "block";
             });
             if (paginationControls) paginationControls.style.display = "none";
-        } else {
-            // Show items for current page on desktop
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            
-            matchedItems.slice(startIndex, endIndex).forEach(item => {
-               item.style.display = "block";
-            });
+            if (projectsGrid) {
+              projectsGrid.style.opacity = "1";
+              projectsGrid.style.transform = "translateX(0)";
+            }
+            return;
+        }
 
-            updatePaginationUI();
+        if (!projectsGrid) return;
+
+        const updateItemsVisibility = () => {
+          projectItems.forEach(item => {
+            (item as HTMLElement).style.display = "none";
+          });
+
+          // Show items for current page on desktop
+          const startIndex = (currentPage - 1) * itemsPerPage;
+          const endIndex = startIndex + itemsPerPage;
+          
+          matchedItems.slice(startIndex, endIndex).forEach(item => {
+             item.style.display = "block";
+          });
+
+          updatePaginationUI();
+        };
+
+        if (direction !== 0) {
+          // Calculate scroll position to show the top of the grid
+          const gridTop = projectsGrid.getBoundingClientRect().top + window.scrollY;
+          const offset = 120; // Space for the navbar
+          
+          window.scrollTo({
+            top: gridTop - offset,
+            behavior: "smooth"
+          });
+
+          // Slide out animation
+          projectsGrid.style.transition = "opacity 0.3s ease-out, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)";
+          projectsGrid.style.opacity = "0";
+          projectsGrid.style.transform = `translateX(${direction > 0 ? "-60px" : "60px"})`;
+
+          setTimeout(() => {
+            updateItemsVisibility();
+            
+            // Teleport to starting position for slide in
+            projectsGrid.style.transition = "none";
+            projectsGrid.style.transform = `translateX(${direction > 0 ? "60px" : "-60px"})`;
+            
+            // Force reflow
+            void projectsGrid.offsetHeight;
+
+            // Slide in animation
+            projectsGrid.style.transition = "opacity 0.4s ease-out, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)";
+            projectsGrid.style.opacity = "1";
+            projectsGrid.style.transform = "translateX(0)";
+          }, 300);
+        } else {
+          updateItemsVisibility();
+          projectsGrid.style.opacity = "1";
+          projectsGrid.style.transform = "translateX(0)";
         }
       };
 
@@ -212,11 +261,16 @@ import { projects, featuredProjects } from "../data/projects";
         // Toggle no results message
         if (matchedItems.length === 0) {
           noResults?.classList.remove("hidden");
-          projectsGrid?.classList.add("opacity-0");
+          projectsGrid?.classList.add("opacity-0", "pointer-events-none");
           if (paginationControls) paginationControls.style.display = "none";
+          
+          // Ensure all items are hidden from view
+          projectItems.forEach(item => {
+            (item as HTMLElement).style.display = "none";
+          });
         } else {
           noResults?.classList.add("hidden");
-          projectsGrid?.classList.remove("opacity-0");
+          projectsGrid?.classList.remove("opacity-0", "pointer-events-none");
           renderCurrentPage();
         }
       };
@@ -240,7 +294,7 @@ import { projects, featuredProjects } from "../data/projects";
         prevPageBtn.addEventListener("click", () => {
           if (currentPage > 1) {
             currentPage--;
-            renderCurrentPage();
+            renderCurrentPage(-1);
           }
         });
       }
@@ -250,7 +304,7 @@ import { projects, featuredProjects } from "../data/projects";
           const totalPages = Math.ceil(matchedItems.length / itemsPerPage);
           if (currentPage < totalPages) {
             currentPage++;
-            renderCurrentPage();
+            renderCurrentPage(1);
           }
         });
       }
