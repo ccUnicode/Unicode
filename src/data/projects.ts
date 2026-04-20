@@ -228,6 +228,26 @@ export const projects: Project[] = [
     link: "https://trikaweb.ccunicode.org/",
     area: "id",
   },
+  {
+    id: 11,
+    title: "Landing Page Unicode",
+    description: "Web que concentra toda la información y alma de unicode",
+    longDescription: "El presente proyecto consiste en la creación de una landing page para el centro cultural Unicode, concebido como un espacio que promueve la integración entre arte, cultura y tecnología. La página tiene como finalidad principal servir como una vitrina digital que permita dar a conocer las actividades, eventos, talleres y la identidad del centro cultural, generando una conexión directa con el público y fomentando su participación.En cuanto a las tecnologías utilizadas, se emplea HTML, TypeScript y Astro.",
+    status: "Activo",
+    faculty: "ID",
+    category: "Destacado",
+    image: "/projects/thumbnails/Landingpage_thumbnail.webp",
+    screenshots: ["/projects/screenshots/Landingpage-screenshoot1.webp", "/projects/screenshots/Landingpage-screenshoot2.webp"],
+    team: [
+      { name: "Jeanpier Robles", linkedin: "jeanpier-robles", image: "/projects/team/Jeanpier_Robles.webp" },
+      { name: "Leonel Cruzado", linkedin: "leonel-cruzado", image: "/projects/team/Leonel_Cruzado.webp" },
+      { name: "Renato Gutierrez", linkedin: "renato-gutierrez", image: "/projects/team/Renato_Gutierrez.webp" },
+      { name: "Luis Paucar", linkedin: "luis-antonio-paucar-ventura-6b7304381", image: "/projects/team/Luis_Paucar.webp" },
+      { name: "José", linkedin: "jean-beltran", image: "/projects/team/h.webp" },
+    ],
+    link: "https://ccunicode.org/",
+    area: "id",
+  },
 ];
 
 export const featuredProjects = projects.filter((p) => p.category === "Destacado");
