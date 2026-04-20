@@ -160,7 +160,7 @@ export const projects: Project[] = [
       { name: "Jeanpier Robles", linkedin: "jeanpier-robles", image: "/areas/AreasImages/Jeanpier_Robles.webp" },
       { name: "Rafael Olivos", linkedin: "rafael-olivos-g", image: "/areas/AreasImages/Rafael_Olivos.webp" },
       { name: "Franz Nuñez", linkedin: "franz-pool-nuñez-villazana", image: "/areas/AreasImages/Franz_Nuñez.webp" },
-      { name: "Gino Romero", linkedin: "gino-romero-osorio-8438a2274", image: "/areas/AreasImages/Gino_Romero.webp" },
+      { name: "Marco Gomez", linkedin: "marco-sebastian-gomez-felix-00a974361", image: "/areas/AreasImages/marco_gomez.webp" },
       { name: "Renato Gutierrez", linkedin: "renato-gutierrez", image: "/areas/AreasImages/Renato_Gutierrez.webp" },
       { name: "Rubí Quispe", linkedin: "rubi-quispe-sierra", image: "/areas/AreasImages/Rubi_Quispe.webp" },
       { name: "Lenin Castro", linkedin: "lenincastro", image: "/areas/AreasImages/Lenin_Castro.webp" },
