@@ -74,14 +74,22 @@ import { proximosEventos as eventos } from "../../data/events";
                     </div>
                   </div>
 
-                  <a 
-                    href={evento.inscripcionUrl && evento.inscripcionUrl !== "#" ? evento.inscripcionUrl : "https://www.linkedin.com/company/unicode-usm/"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="block text-center w-full py-3 bg-unicode/10 hover:bg-unicode text-unicode hover:text-black font-bold text-xs uppercase tracking-widest rounded-xl border border-unicode/30 transition-all duration-300"
-                  >
-                    Ver más
-                  </a>
+                  {evento.inscripcionUrl && evento.inscripcionUrl !== "#" && evento.inscripcionUrl !== "/eventos"
+                    ? (
+                      <a
+                        href={evento.inscripcionUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="block text-center w-full py-3 bg-unicode/10 hover:bg-unicode text-unicode hover:text-black font-bold text-xs uppercase tracking-widest rounded-xl border border-unicode/30 transition-all duration-300 cursor-pointer"
+                      >
+                        Ver más
+                      </a>
+                    ) : (
+                      <span class="block text-center w-full py-3 bg-zinc-800/40 text-zinc-600 font-bold text-xs uppercase tracking-widest rounded-xl border border-zinc-700/30 cursor-not-allowed select-none">
+                        Próximamente
+                      </span>
+                    )
+                  }
                 </div>
               </article>
             );
@@ -201,15 +209,22 @@ import { proximosEventos as eventos } from "../../data/events";
                     {evento.lugar}
                   </span>
                   
-                  {/* Botón Ver más PC */}
-                  <a 
-                    href={evento.inscripcionUrl && evento.inscripcionUrl !== "#" ? evento.inscripcionUrl : "https://www.linkedin.com/company/unicode-usm/"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-block py-2 px-6 ml-2 bg-unicode/10 hover:bg-unicode text-unicode hover:text-black font-bold text-xs uppercase tracking-widest rounded-full border border-unicode/30 transition-all duration-300"
-                  >
-                    Ver más
-                  </a>
+                  {evento.inscripcionUrl && evento.inscripcionUrl !== "#" && evento.inscripcionUrl !== "/eventos"
+                    ? (
+                      <a
+                        href={evento.inscripcionUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-block py-2 px-6 ml-2 bg-unicode/10 hover:bg-unicode text-unicode hover:text-black font-bold text-xs uppercase tracking-widest rounded-full border border-unicode/30 transition-all duration-300 cursor-pointer"
+                      >
+                        Ver más
+                      </a>
+                    ) : (
+                      <span class="inline-block py-2 px-6 ml-2 bg-zinc-800/40 text-zinc-600 font-bold text-xs uppercase tracking-widest rounded-full border border-zinc-700/30 cursor-not-allowed select-none">
+                        Próximamente
+                      </span>
+                    )
+                  }
                 </div>
               </div>
             </div>
