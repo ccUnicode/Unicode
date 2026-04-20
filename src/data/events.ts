@@ -87,7 +87,7 @@ export const eventosRealizados: EventoRealizado[] = [
     asistentes: 30,
     categoria: "Competencia",
     imagen: "/eventos/bee-integration.jpg",
-    ponente: "NS",
+    ponente: "Área Académica",
     lugar: "UNI",
     highlights: ["Geometría", "Competencia"],
     link: "https://www.instagram.com/p/DWSvZzhje0X/?img_index=1",
