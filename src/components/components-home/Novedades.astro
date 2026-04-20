@@ -2,10 +2,47 @@
 /**
  * Novedades.astro
  * Sección de noticias debajo del grid de estadísticas.
- * Sigue el diseño proporcionado por el diseñador.
+ * Las novedades se generan dinámicamente a partir de events.ts y projects.ts,
+ * para que siempre estén en sincronía con esos datos.
  */
 import NovedadCard from "./NovedadCard.astro";
-import { novedades } from "../../data/news";
+import { eventosRealizados } from "../../data/events";
+import { projects } from "../../data/projects";
+
+// --- Construir novedades dinámicamente ---
+interface Novedad {
+  title: string;
+  description: string;
+  image: string;
+  href: string;
+}
+
+// Proyectos activos → novedades
+const projectNews: Novedad[] = projects
+  .filter((p) => p.status === "Activo")
+  .map((p) => ({
+    title: p.title,
+    description: p.description,
+    image: p.image,
+    href: p.link && p.link !== "https://unicode.vercel.app" ? p.link : `/proyectos`,
+  }));
+
+// Últimos eventos realizados → novedades
+const eventNews: Novedad[] = eventosRealizados.map((e) => ({
+  title: e.titulo,
+  description: e.descripcion,
+  image: e.imagen,
+  href: e.link ?? "/eventos",
+}));
+
+// Intercalar para mayor variedad, limitado a 5
+const combined: Novedad[] = [];
+const maxLen = Math.max(projectNews.length, eventNews.length);
+for (let i = 0; i < maxLen && combined.length < 5; i++) {
+  if (i < eventNews.length) combined.push(eventNews[i]);
+  if (combined.length < 5 && i < projectNews.length) combined.push(projectNews[i]);
+}
+const novedades = combined.slice(0, 5);
 ---
 
 <section id="novedades" class="w-full py-16 md:py-24 relative">

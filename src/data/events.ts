@@ -34,17 +34,30 @@ export interface EventoRealizado {
 
 export const proximosEventos: Evento[] = [
   {
-    id: "evt-2026-0",
-    ponente: "TECH DAY",
-    tema: '"La IA como nuestro motor de cambio"',
+    id: "evt-2026-1",
+    ponente: "DISCOVER DATA WORLD",
+    tema: '"Conoce y aprende cómo los datos generan valor"',
     descripcion:
-      "Una jornada diseñada para comprender el impacto práctico de la Inteligencia Artificial, Data e Infraestructura Cloud en el entorno profesional actual. Conoce de cerca la experiencia de ponentes expertos en el Auditorio CTIC.",
-    fecha: "18 Abr",
-    hora: "3:30 PM",
-    lugar: "Auditorio CTIC - UNI",
-    imagenPonente: "/projects/thumbnails/techday_thumbnail.webp",
+      "Un evento en conjunto con Data Science Research Perú donde exploraremos el mundo del dáta, la ciencia de datos y su impacto en el entorno profesional actual.",
+    fecha: "23 May",
+    hora: "9:30 AM – 1:00 PM",
+    lugar: "Auditorio FIIS",
+    imagenPonente: "/mascota/Mascota-Unicode-Fondo-Individual.webp",
     imagenFondo: "/convocatoria_bg.webp",
-    inscripcionUrl: "https://luma.com/mevizytu",
+    inscripcionUrl: "/eventos",
+  },
+  {
+    id: "evt-2026-2",
+    ponente: "SOFTWARE WEEK",
+    tema: '"Un espacio entre profesionales tech y estudiantes"',
+    descripcion:
+      "La segunda edición de la Software Week en la FIIS, un congreso donde conviven profesionales de tecnología y estudiantes. Actividades, charlas, talleres y mucho networking.",
+    fecha: "1 – 5 Set",
+    hora: "Por definir",
+    lugar: "UNI",
+    imagenPonente: "/mascota/Mascota-Unicode-Fondo-Individual.webp",
+    imagenFondo: "/convocatoria_bg.webp",
+    inscripcionUrl: "/eventos",
   },
 ];
 
@@ -53,6 +66,32 @@ export const proximosEventos: Evento[] = [
 // =============================================
 
 export const eventosRealizados: EventoRealizado[] = [
+  {
+    titulo: "Tech Day",
+    descripcion:
+      "Una jornada sobre el impacto práctico de la IA, Data e Infraestructura Cloud con ponentes expertos. Realizado el 18 de abril en el Auditorio CTIC de la UNI.",
+    fecha: "18 Abr 2026",
+    asistentes: 60,
+    categoria: "Charla",
+    imagen: "/projects/thumbnails/techday_thumbnail.webp",
+    ponente: "Arturo Ospina, Jhonatan Morgan, José Guerra",
+    lugar: "Auditorio CTIC – UNI",
+    highlights: ["IA", "Data", "Cloud"],
+    link: "https://luma.com/mevizytu",
+  },
+  {
+    titulo: "BEE Geometry",
+    descripcion:
+      "Concurso de geometría que reunió a estudiantes apasionados por las matemáticas, compitiendo en un entorno de razonamiento espacial y pensamiento analítico.",
+    fecha: "21 Mar 2026",
+    asistentes: 30,
+    categoria: "Competencia",
+    imagen: "/eventos/bee-integration.jpg",
+    ponente: "NS",
+    lugar: "UNI",
+    highlights: ["Geometría", "Competencia"],
+    link: "https://www.instagram.com/p/DWSvZzhje0X/?img_index=1",
+  },
   {
     titulo: "Frontiers AI Summit – Applied Intelligence",
     descripcion:

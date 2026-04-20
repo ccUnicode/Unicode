@@ -214,7 +214,7 @@ export const projects: Project[] = [
     status: "Activo",
     faculty: "ID",
     category: "Destacado",
-    image: "/projects/thumbnails/trikaweb_thumbnail.jpg",
+    image: "/projects/thumbnails/trikaweb_thumbnail_new.webp",
     screenshots: ["/projects/screenshots/trikaweb-screenshoot1.png", "/projects/screenshots/trikaweb-screenshoot2.png"],
     team: [
       { name: "Alexis Garay", linkedin: "alexisgarayyovera", image: "/projects/team/Alexis_Garay.webp" },
