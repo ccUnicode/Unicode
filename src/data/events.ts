@@ -142,7 +142,7 @@ export const eventosRealizados: EventoRealizado[] = [
     ponente: "Directores UNICODE",
     lugar: "Losas FIIS",
     highlights: ["Social", "Integración"],
-    link: "https://www.linkedin.com/feed/update/urn:li:activity:7372626080282615808",
+    link: "",
   },
   {
     titulo: "Recepción de Cachimbos",
@@ -155,7 +155,7 @@ export const eventosRealizados: EventoRealizado[] = [
     ponente: "Directores UNICODE",
     lugar: "Puerta 4",
     highlights: ["Social", "Bienvenida"],
-    link: "https://www.linkedin.com/feed/update/urn:li:activity:7407272428764155904",
+    link: "",
   },
   {
     titulo: "Curso \u201CIntroducción a la programación competitiva\u201D",

@@ -193,17 +193,16 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                                 <p class="text-zinc-400 text-xs leading-relaxed line-clamp-2 mb-4">
                                     {evento.descripcion}
                                 </p>
-                                <a
-                                    href={
-                                        evento.link ||
-                                        "https://www.linkedin.com/company/unicode-usm/"
-                                    }
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="block text-center w-full py-2.5 bg-unicode/10 hover:bg-unicode text-unicode hover:text-black font-bold text-xs uppercase tracking-widest rounded-xl border border-unicode/30 transition-all duration-300"
-                                >
-                                    Ver más
-                                </a>
+                                {evento.link != null && evento.link !== "" && (
+                                    <a
+                                        href={evento.link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="block text-center w-full mt-auto py-2.5 bg-unicode/10 hover:bg-unicode text-unicode hover:text-black font-bold text-xs uppercase tracking-widest rounded-xl border border-unicode/30 transition-all duration-300"
+                                    >
+                                        Ver más
+                                    </a>
+                                )}
                             </div>
                         </article>
                     ))
@@ -351,17 +350,16 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                                                     #{h.split(" ")[0]}
                                                 </span>
                                             ))}
-                                            <a
-                                                href={
-                                                    evento.link ||
-                                                    "https://www.linkedin.com/company/unicode-usm/"
-                                                }
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                class="inline-block ml-auto py-1.5 px-4 bg-unicode/10 hover:bg-unicode text-unicode hover:text-black font-bold text-[10px] uppercase tracking-widest rounded-xl border border-unicode/30 transition-all duration-300"
-                                            >
-                                                Ver más
-                                            </a>
+                                            {evento.link != null && evento.link !== "" && (
+                                                <a
+                                                    href={evento.link}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    class="inline-block ml-auto py-1.5 px-4 bg-unicode/10 hover:bg-unicode text-unicode hover:text-black font-bold text-[10px] uppercase tracking-widest rounded-xl border border-unicode/30 transition-all duration-300"
+                                                >
+                                                    Ver más
+                                                </a>
+                                            )}
                                         </div>
                                     </div>
                                 </article>
