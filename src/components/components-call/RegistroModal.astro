@@ -94,6 +94,8 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
           id="correo"
           name="correo"
           required
+          pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+          title="Ingresa un correo electrónico válido (ej. juan@gmail.com, maria@uni.edu.pe)"
           class="w-full bg-zinc-900 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg md:rounded-xl px-3 py-2 md:px-4 md:py-2.5 text-sm md:text-base text-white outline-none transition-all placeholder:text-zinc-600"
           placeholder="Ej. juan@uni.edu.pe"
         />
