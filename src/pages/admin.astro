@@ -43,7 +43,7 @@ import Layout from "../layouts/Layout.astro";
         <button
           type="submit"
           id="login-btn"
-          class="w-full bg-unicode hover:bg-unicode-light text-black font-bold text-sm py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+          class="w-full bg-unicode hover:bg-unicode-light text-black font-bold text-sm py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
         >
           <span id="login-btn-text">Ingresar</span>
           <svg
@@ -92,7 +92,7 @@ import Layout from "../layouts/Layout.astro";
         </div>
         <button
           id="logout-btn"
-          class="text-red-400 hover:text-red-300 text-xs sm:text-sm font-medium transition-colors"
+          class="text-red-400 hover:text-red-300 text-xs sm:text-sm font-medium transition-colors cursor-pointer"
         >
           Cerrar Sesión
         </button>
@@ -147,7 +147,7 @@ import Layout from "../layouts/Layout.astro";
           <!-- Export Excel -->
           <button
             id="export-btn"
-            class="flex items-center gap-1.5 bg-unicode hover:bg-unicode-light text-black font-bold text-xs px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all"
+            class="flex items-center gap-1.5 bg-unicode hover:bg-unicode-light text-black font-bold text-xs px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all cursor-pointer"
           >
             <svg
               class="w-3.5 h-3.5 sm:w-4 sm:h-4"
@@ -229,7 +229,7 @@ import Layout from "../layouts/Layout.astro";
         </p>
         <button
           id="retry-btn"
-          class="mt-4 text-unicode text-sm underline hover:text-unicode-light"
+          class="mt-4 text-unicode text-sm underline hover:text-unicode-light cursor-pointer"
         >
           Reintentar
         </button>
@@ -247,6 +247,7 @@ import Layout from "../layouts/Layout.astro";
     background: transparent;
     color: #a1a1aa; /* zinc-400 */
     border: 1px solid #27272a; /* zinc-800 */
+    cursor: pointer;
   }
   .area-tab:hover {
     border-color: #75d32d40;
@@ -452,11 +453,21 @@ import Layout from "../layouts/Layout.astro";
         return;
       }
 
-      const result = await res.json();
-
       if (!res.ok) {
-        throw new Error(result.error || "Error desconocido");
+        // Try to get JSON error first
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const errData = await res.json();
+          throw new Error(errData.error || `Error ${res.status}`);
+        } else {
+          // If not JSON, it's likely an HTML error page (500, 404, etc.)
+          const text = await res.text();
+          console.error("HTML Error Response:", text);
+          throw new Error(`Error del servidor (${res.status}). Revisa la consola o los registros.`);
+        }
       }
+
+      const result = await res.json();
 
       postulantesCache = result.data || [];
       document.getElementById("count")!.textContent = String(result.total || 0);
@@ -529,7 +540,7 @@ import Layout from "../layouts/Layout.astro";
               <span class="text-zinc-700">•</span>
               <span>${p.carrera || "N/A"}</span>
               <span class="text-zinc-700">•</span>
-              <span>${p.ciclo_universidad || "N/A"}° Ciclo</span>
+              <span>${(p.ciclo_universidad === 0 || p.ciclo_universidad === "0") ? "Egresado" : (p.ciclo_universidad ? p.ciclo_universidad + "° Ciclo" : "N/A")}</span>
             </div>
 
             <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-xs sm:text-sm text-zinc-400">
@@ -614,7 +625,7 @@ import Layout from "../layouts/Layout.astro";
           <td class="data-cell" style="vnd.ms-excel.numberformat:@; vertical-align: middle;">${p.telefono}</td>
           <td class="data-cell" style="vertical-align: middle;">${p.universidad || ""}</td>
           <td class="data-cell" style="vertical-align: middle;">${p.carrera || ""}</td>
-          <td class="data-cell" style="text-align: center; vertical-align: middle;">${p.ciclo_universidad || ""}</td>
+          <td class="data-cell" style="text-align: center; vertical-align: middle;">${(p.ciclo_universidad === 0 || p.ciclo_universidad === "0") ? "Egresado" : (p.ciclo_universidad || "")}</td>
           <td class="data-cell ${is1ra ? "opcion-1" : ""}" style="text-align: center; vertical-align: middle;">${p.opcion1}</td>
           <td class="data-cell" style="text-align: center; vertical-align: middle;">${p.opcion2 || ""}</td>
           <td class="data-cell" style="font-size: 9pt; width: 350px; vertical-align: middle;">${String(p.motivo_postulacion || "").replace(/\n/g, "<br>")}</td>
