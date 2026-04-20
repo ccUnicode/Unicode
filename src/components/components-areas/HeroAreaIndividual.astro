@@ -36,9 +36,11 @@ const {
     whatWeLookFor = [],
     weValue = [],
     whatYouWin = [],
-    projects = [],
+    projects: rawProjects = [],
     directors = []
 } = Astro.props;
+
+const projects = rawProjects.filter(p => p.status !== "Inactivo");
 ---
 
 <main class="w-full min-h-screen relative pt-32 pb-24 bg-[#050505] overflow-hidden">
@@ -138,7 +140,7 @@ const {
         <!-- SECCIÓN 4: Directores -->
         {directors.length > 0 && (
             <div id="nuestros-directores" class="w-full mb-16 flex flex-col items-center scroll-mt-24 animate-lifting" style="animation-delay: 600ms;">
-                <h2 class="text-3xl md:text-4xl font-bold text-unicode text-glow mb-10 md:mb-16 text-center">Directores</h2>
+                <h2 class="text-3xl md:text-4xl font-bold text-unicode text-glow mb-10 md:mb-16 text-center">DIRECTORES</h2>
                 
                 <div class="flex flex-wrap justify-center gap-10 md:gap-32">
                     {directors.map(d => <AreaDirectorProfile name={d.name} linkedin={d.linkedin} imageSrc={d.imageSrc} />)}
