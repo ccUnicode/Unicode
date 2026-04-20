@@ -32,9 +32,9 @@ export const projects: Project[] = [
     description: "Plataforma web diseñada para la difusión del contenido de las clases presenciales de la FIIS grabadas por Unicode.",
     longDescription: "El proyecto UNIOpenCourse 25-2, impulsado por Unicode, es una plataforma digital que democratiza el acceso al conocimiento mediante la centralización y organización de las clases grabadas en la Facultad de Ingeniería Industrial y de Sistemas. Inspirada en modelos de educación abierta como el MIT OpenCourseWare, la herramienta ofrece una experiencia de aprendizaje estructurada que incluye el acceso a evaluaciones, recomendaciones personalizadas basadas en el perfil del usuario y funcionalidades colaborativas para la donación de materiales y reportes de contenido. Al integrar la producción académica con un entorno interactivo y herramientas de gestión interna, la plataforma no solo actúa como un repositorio eficiente, sino que consolida una iniciativa innovadora que beneficia tanto a la comunidad universitaria como al público externo interesado en fortalecer su formación académica.",
     status: "Activo",
-    faculty: "ACD",
+    faculty: "ID",
     category: "Destacado",
-    image: "/projects/thumbnails/UNIOPENCOURSE-thumbnail.webp",
+    image: "/projects/thumbnails/uniopencourse_platform_thumbnail.webp",
     screenshots: [
       "/projects/screenshots/uniopencourse_screenshoot1.jpg",
       "/projects/screenshots/uniopencourse_screenshoot2.jpg"
@@ -214,7 +214,8 @@ export const projects: Project[] = [
     status: "Activo",
     faculty: "ID",
     category: "Destacado",
-    image: "/projects/thumbnails/trikaweb_thumbnail_new.webp",
+    image: "/projects/thumbnails/trikaweb_thumbnail_correct.webp",
+    imagePosition: "center",
     screenshots: ["/projects/screenshots/trikaweb-screenshoot1.png", "/projects/screenshots/trikaweb-screenshoot2.png"],
     team: [
       { name: "Alexis Garay", linkedin: "alexisgarayyovera", image: "/projects/team/Alexis_Garay.webp" },
