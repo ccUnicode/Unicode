@@ -43,7 +43,8 @@ const AREAS_VALIDAS = ['GTH', 'ACD', 'RRPP', 'DCC', 'ID'];
 const CICLOS_VALIDOS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '0'];
 
 function validarEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  // Regex más estricto: requiere @, un dominio válido, y una extensión (ej. .com, .pe) de al menos 2 letras
+  return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
 }
 
 function validarTelefono(tel: string): boolean {

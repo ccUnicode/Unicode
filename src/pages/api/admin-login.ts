@@ -127,14 +127,9 @@ export async function POST({ request }: { request: Request }) {
   // Success — reset attempts
   loginAttempts.delete(ip);
 
-  // Generate a simple session token (random hex)
-  const tokenArray = new Uint8Array(32);
-  crypto.getRandomValues(tokenArray);
-  const sessionToken = Array.from(tokenArray).map(b => b.toString(16).padStart(2, '0')).join('');
-
-  // Store the token server-side with expiry (4 hours)
+  // Generate a stateless session token
   const { sessionStore } = await import('../../lib/sessionStore');
-  sessionStore.set(sessionToken, { createdAt: now, expiresAt: now + 4 * 60 * 60 * 1000 });
+  const sessionToken = await sessionStore.createToken();
 
   return new Response(
     JSON.stringify({ success: true, token: sessionToken }),

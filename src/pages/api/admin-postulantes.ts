@@ -17,7 +17,7 @@ export async function GET({ request }: { request: Request }) {
   console.log('API /admin-postulantes HIT');
   console.log('PUBLIC_SUPABASE_URL:', import.meta.env.PUBLIC_SUPABASE_URL ? 'OK' : 'MISSING');
   console.log('SUPABASE_SERVICE_ROLE_KEY:', import.meta.env.SUPABASE_SERVICE_ROLE_KEY ? 'OK' : 'MISSING');
-  if (!token || !sessionStore.isValid(token)) {
+  if (!token || !(await sessionStore.isValid(token))) {
     console.warn('Unauthorized attempt or invalid token');
     return new Response(
       JSON.stringify({ error: 'No autorizado. Inicia sesión nuevamente.' }),
