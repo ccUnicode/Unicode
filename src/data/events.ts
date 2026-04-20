@@ -36,12 +36,12 @@ export const proximosEventos: Evento[] = [
   {
     id: "evt-2026-1",
     ponente: "DISCOVER DATA WORLD",
-    tema: '"Conectando propósitos, creando oportunidades"',
+    tema: '"Conoce y aprende cómo los datos generan valor"',
     descripcion:
       "Un evento en conjunto con Data Science Research Perú donde exploraremos el mundo del dáta, la ciencia de datos y su impacto en el entorno profesional actual.",
     fecha: "23 May",
     hora: "9:30 AM – 1:00 PM",
-    lugar: "Por confirmar",
+    lugar: "Auditorio FIIS",
     imagenPonente: "/mascota/Mascota-Unicode-Fondo-Individual.webp",
     imagenFondo: "/convocatoria_bg.webp",
     inscripcionUrl: "/eventos",
@@ -54,7 +54,7 @@ export const proximosEventos: Evento[] = [
       "La segunda edición de la Software Week en la FIIS, un congreso donde conviven profesionales de tecnología y estudiantes. Actividades, charlas, talleres y mucho networking.",
     fecha: "1 – 5 Set",
     hora: "Por definir",
-    lugar: "FIIS – UNI",
+    lugar: "UNI",
     imagenPonente: "/mascota/Mascota-Unicode-Fondo-Individual.webp",
     imagenFondo: "/convocatoria_bg.webp",
     inscripcionUrl: "/eventos",
