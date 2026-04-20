@@ -35,16 +35,16 @@ export interface EventoRealizado {
 export const proximosEventos: Evento[] = [
   {
     id: "evt-2026-0",
-    ponente: "TECH ELEVATE",
-    tema: '"Data, IA, Cloud y Liderazgo Tech"',
+    ponente: "TECH DAY",
+    tema: '"La IA como nuestro motor de cambio"',
     descripcion:
-      "Una jornada intensiva donde exploraremos las tendencias más disruptivas en Análisis de Datos, Inteligencia Artificial y Cloud Computing, junto con las habilidades de liderazgo necesarias para triunfar en el ecosistema tecnológico actual.",
+      "Una jornada diseñada para comprender el impacto práctico de la Inteligencia Artificial, Data e Infraestructura Cloud en el entorno profesional actual. Conoce de cerca la experiencia de ponentes expertos en el Auditorio CTIC.",
     fecha: "18 Abr",
-    hora: "4:00 PM",
-    lugar: "Auditorio FIIS",
-    imagenPonente: "/mascota/Mascota-Unicode-Fondo-Individual.webp",
+    hora: "3:30 PM",
+    lugar: "Auditorio CTIC - UNI",
+    imagenPonente: "/projects/thumbnails/techday_thumbnail.webp",
     imagenFondo: "/convocatoria_bg.webp",
-    inscripcionUrl: "#",
+    inscripcionUrl: "https://luma.com/mevizytu",
   },
 ];
 
@@ -110,7 +110,7 @@ export const eventosRealizados: EventoRealizado[] = [
     descripcion:
       "Actividad en la que todo UNICODE recibe con ansias a los ingresantes del ciclo 2026-1.",
     fecha: "20 Feb 2026",
-    asistentes: 80,
+    asistentes: 30,
     categoria: "Social",
     imagen: "/eventos/recepcion-cachimbos.webp",
     ponente: "Directores UNICODE",
@@ -136,7 +136,7 @@ export const eventosRealizados: EventoRealizado[] = [
     descripcion:
       "Concurso de integrales que reunió a estudiantes de todas las facultades interesados en este tema, mientras participaban por un premio monetario. Más allá del resultado, fue valioso ver el nivel de competitividad sana, constancia y sobre todo disciplina de todos los participantes.",
     fecha: "05 Dic 2025",
-    asistentes: 30,
+    asistentes: 32,
     categoria: "Competencia",
     imagen: "/eventos/bee-integration.jpg",
     ponente: "NS",
@@ -149,7 +149,7 @@ export const eventosRealizados: EventoRealizado[] = [
     descripcion:
       "3 sesiones dedicadas a sembrar mentalidad innovadora, tecnológica y trabajo colaborativo que permitieron que muchos den su primer paso hacia este mundo. Dirigida a los estudiantes que quieran participar por primera vez en una Hackathon.",
     fecha: "22 Nov 2025",
-    asistentes: 40,
+    asistentes: 30,
     categoria: "Clase",
     imagen: "/eventos/hackathon-taller.jpg",
     ponente: "NS",

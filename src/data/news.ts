@@ -12,11 +12,11 @@ export interface NewsItem {
 
 export const novedades: NewsItem[] = [
   {
-    title: "Próximamente: Tech Elevate 2026",
+    title: "Próximamente: Tech Day 2026",
     description:
-      "Únete a nosotros este 18 de abril para explorar las tendencias en Data, IA y Cloud Computing. Una jornada de liderazgo tech imperdible.",
-    image: "/convocatoria_bg.webp",
-    href: "https://www.linkedin.com/company/unicode-fiis-uni/",
+      "Este sábado 18 de abril ven a aprender sobre IA, Data y Cloud en el Auditorio CTIC con expertos de la industria. ¡Regístrate ahora!",
+    image: "/projects/thumbnails/techday_thumbnail.webp",
+    href: "https://luma.com/mevizytu",
   },
   {
     title: "UNIOpenCourse 25-2: Clases para todos",
