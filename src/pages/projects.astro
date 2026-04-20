@@ -44,7 +44,11 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
       <ProjectGrid projects={activeProjects} />
 
       <!-- Pagination Controls -->
-      <div id="pagination-controls" class="flex items-center justify-center gap-6 mt-12" style="display: none;">
+      <div
+        id="pagination-controls"
+        class="flex items-center justify-center gap-6 mt-12"
+        style="display: none;"
+      >
         <button
           id="prev-page"
           type="button"
@@ -58,13 +62,15 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
             stroke="currentColor"
             stroke-width="3"
           >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"
-            ></path>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 19l-7-7 7-7"></path>
           </svg>
         </button>
 
         <div id="page-numbers" class="flex justify-center gap-3">
-           <!-- Page dots will be injected here by JS -->
+          <!-- Page dots will be injected here by JS -->
         </div>
 
         <button
@@ -80,8 +86,10 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
             stroke="currentColor"
             stroke-width="3"
           >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"
-            ></path>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9 5l7 7-7 7"></path>
           </svg>
         </button>
       </div>
@@ -89,8 +97,6 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
   </main>
 
   <ProjectModal />
-
-
 
   <script>
     function initSearch() {
@@ -107,8 +113,12 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
       const featuredSection = document.getElementById("featured-section");
       const paginationControls = document.getElementById("pagination-controls");
       const pageNumbersContainer = document.getElementById("page-numbers");
-      const prevPageBtn = document.getElementById("prev-page") as HTMLButtonElement;
-      const nextPageBtn = document.getElementById("next-page") as HTMLButtonElement;
+      const prevPageBtn = document.getElementById(
+        "prev-page",
+      ) as HTMLButtonElement;
+      const nextPageBtn = document.getElementById(
+        "next-page",
+      ) as HTMLButtonElement;
 
       let currentPage = 1;
       const itemsPerPage = 6;
@@ -118,10 +128,10 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
 
       const updatePaginationUI = () => {
         if (!paginationControls || !pageNumbersContainer) return;
-        
+
         const isMobile = window.innerWidth < 768;
         const totalPages = Math.ceil(matchedItems.length / itemsPerPage);
-        
+
         if (totalPages <= 1 || isMobile) {
           paginationControls.style.display = "none";
           return;
@@ -135,8 +145,8 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
           pageBtn.type = "button";
           pageBtn.ariaLabel = `Ir a la página ${i}`;
           pageBtn.className = `w-2 h-2 rounded-full transition-all duration-300 cursor-pointer ${
-            i === currentPage 
-              ? "bg-unicode w-6" 
+            i === currentPage
+              ? "bg-unicode w-6"
               : "bg-zinc-800 hover:bg-zinc-700"
           }`;
           pageBtn.addEventListener("click", () => {
@@ -156,34 +166,34 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
         const isMobile = window.innerWidth < 768;
 
         if (isMobile) {
-            // Show all matched items on mobile for carousel
-            projectItems.forEach(item => {
-              (item as HTMLElement).style.display = "none";
-            });
-            matchedItems.forEach(item => {
-                item.style.display = "block";
-            });
-            if (paginationControls) paginationControls.style.display = "none";
-            if (projectsGrid) {
-              projectsGrid.style.opacity = "1";
-              projectsGrid.style.transform = "translateX(0)";
-            }
-            return;
+          // Show all matched items on mobile for carousel
+          projectItems.forEach((item) => {
+            (item as HTMLElement).style.display = "none";
+          });
+          matchedItems.forEach((item) => {
+            item.style.display = "block";
+          });
+          if (paginationControls) paginationControls.style.display = "none";
+          if (projectsGrid) {
+            projectsGrid.style.opacity = "1";
+            projectsGrid.style.transform = "translateX(0)";
+          }
+          return;
         }
 
         if (!projectsGrid) return;
 
         const updateItemsVisibility = () => {
-          projectItems.forEach(item => {
+          projectItems.forEach((item) => {
             (item as HTMLElement).style.display = "none";
           });
 
           // Show items for current page on desktop
           const startIndex = (currentPage - 1) * itemsPerPage;
           const endIndex = startIndex + itemsPerPage;
-          
-          matchedItems.slice(startIndex, endIndex).forEach(item => {
-             item.style.display = "block";
+
+          matchedItems.slice(startIndex, endIndex).forEach((item) => {
+            item.style.display = "block";
           });
 
           updatePaginationUI();
@@ -191,31 +201,34 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
 
         if (direction !== 0) {
           // Calculate scroll position to show the top of the grid
-          const gridTop = projectsGrid.getBoundingClientRect().top + window.scrollY;
+          const gridTop =
+            projectsGrid.getBoundingClientRect().top + window.scrollY;
           const offset = 120; // Space for the navbar
-          
+
           window.scrollTo({
             top: gridTop - offset,
-            behavior: "smooth"
+            behavior: "smooth",
           });
 
           // Slide out animation
-          projectsGrid.style.transition = "opacity 0.3s ease-out, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)";
+          projectsGrid.style.transition =
+            "opacity 0.3s ease-out, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)";
           projectsGrid.style.opacity = "0";
           projectsGrid.style.transform = `translateX(${direction > 0 ? "-60px" : "60px"})`;
 
           setTimeout(() => {
             updateItemsVisibility();
-            
+
             // Teleport to starting position for slide in
             projectsGrid.style.transition = "none";
             projectsGrid.style.transform = `translateX(${direction > 0 ? "60px" : "-60px"})`;
-            
+
             // Force reflow
             void projectsGrid.offsetHeight;
 
             // Slide in animation
-            projectsGrid.style.transition = "opacity 0.4s ease-out, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)";
+            projectsGrid.style.transition =
+              "opacity 0.4s ease-out, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)";
             projectsGrid.style.opacity = "1";
             projectsGrid.style.transform = "translateX(0)";
           }, 300);
@@ -257,7 +270,7 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
             selectedArea === "" || itemArea === selectedArea;
 
           if (isVisibleSearch && isVisibleArea) {
-             matchedItems.push(item as HTMLElement);
+            matchedItems.push(item as HTMLElement);
           }
         });
 
@@ -266,9 +279,9 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
           noResults?.classList.remove("hidden");
           projectsGrid?.classList.add("opacity-0", "pointer-events-none");
           if (paginationControls) paginationControls.style.display = "none";
-          
+
           // Ensure all items are hidden from view
-          projectItems.forEach(item => {
+          projectItems.forEach((item) => {
             (item as HTMLElement).style.display = "none";
           });
         } else {
