@@ -232,26 +232,6 @@ export const projects: Project[] = [
   },
   {
     id: 11,
-<<<<<<< HEAD
-    title: "Landing Page Unicode",
-    description: "Web que concentra toda la información y alma de unicode",
-    longDescription: "El presente proyecto consiste en la creación de una landing page para el centro cultural Unicode, concebido como un espacio que promueve la integración entre arte, cultura y tecnología. La página tiene como finalidad principal servir como una vitrina digital que permita dar a conocer las actividades, eventos, talleres y la identidad del centro cultural, generando una conexión directa con el público y fomentando su participación.En cuanto a las tecnologías utilizadas, se emplea HTML, TypeScript y Astro.",
-    status: "Activo",
-    faculty: "ID",
-    category: "Destacado",
-    image: "/projects/thumbnails/Landingpage_thumbnail.webp",
-    screenshots: ["/projects/screenshots/Landingpage-screenshoot1.webp", "/projects/screenshots/Landingpage-screenshoot2.webp"],
-    team: [
-      { name: "Jeanpier Robles", linkedin: "jeanpier-robles", image: "/projects/team/Jeanpier_Robles.webp" },
-      { name: "Leonel Cruzado", linkedin: "leonel-cruzado", image: "/projects/team/Leonel_Cruzado.webp" },
-      { name: "Renato Gutierrez", linkedin: "renato-gutierrez", image: "/projects/team/Renato_Gutierrez.webp" },
-      { name: "Luis Paucar", linkedin: "luis-antonio-paucar-ventura-6b7304381", image: "/projects/team/Luis_Paucar.webp" },
-      { name: "José Arredondo", linkedin: "josé-antonio-arredondo-tomairo-31a9b3374", image: "/projects/team/José_Arredondo.webp" },
-    ],
-    link: "https://ccunicode.org/",
-    area: "id",
-    //AMO A DARÍA
-=======
     title: "UNIOpenCourse 25-2",
     description: "Grabación de las clases dictadas presencialmente en la FIIS para ponerlas a disposición de la comunidad universitaria.",
     longDescription: "El proyecto UNIOpenCourse 25-2 es una iniciativa impulsada por Unicode que nace con el propósito de democratizar el acceso al conocimiento universitario, tomando como referencia el modelo de cursos abiertos promovido por instituciones como MIT OpenCourseWare. \nEn un contexto donde muchos estudiantes enfrentan limitaciones de acceso a recursos académicos de calidad, UNIOpenCourse busca reducir brechas educativas mediante la grabación sistemática de clases presenciales y su posterior publicación como material de libre consulta.\nLa metodología del proyecto se basa en la planificación coordinada con docentes, la grabación estructurada de sesiones completas en aula y su difusión estratégica a través de plataformas digitales como Youtube. \nEn cuanto a su alcance, UNIOpenCourse beneficia no solo a estudiantes de la universidad, sino también a la comunidad externa interesada en fortalecer sus conocimientos en cursos fundamentales como Cálculo Integral, Álgebra Lineal y Sistemas Operativos. Así, el proyecto contribuye activamente a promover educación abierta, accesible y de calidad, consolidándose como una propuesta innovadora con impacto académico y social.",
@@ -274,7 +254,26 @@ export const projects: Project[] = [
     ],
     link: "https://www.youtube.com/@ccunicode",
     area: "acd",
->>>>>>> ac82d03d911d91a9cd91a761f5850c9194958290
+  },
+  {
+    id: 12,
+    title: "Landing Page Unicode",
+    description: "Web que concentra toda la información y alma de unicode",
+    longDescription: "El presente proyecto consiste en la creación de una landing page para el centro cultural Unicode, concebido como un espacio que promueve la integración entre arte, cultura y tecnología. La página tiene como finalidad principal servir como una vitrina digital que permita dar a conocer las actividades, eventos, talleres y la identidad del centro cultural, generando una conexión directa con el público y fomentando su participación.En cuanto a las tecnologías utilizadas, se emplea HTML, TypeScript y Astro.",
+    status: "Activo",
+    faculty: "ID",
+    category: "Destacado",
+    image: "/projects/thumbnails/Landingpage_thumbnail.webp",
+    screenshots: ["/projects/screenshots/Landingpage-screenshoot1.webp", "/projects/screenshots/Landingpage-screenshoot2.webp"],
+    team: [
+      { name: "Jeanpier Robles", linkedin: "jeanpier-robles", image: "/projects/team/Jeanpier_Robles.webp" },
+      { name: "Leonel Cruzado", linkedin: "leonel-cruzado", image: "/projects/team/Leonel_Cruzado.webp" },
+      { name: "Renato Gutierrez", linkedin: "renato-gutierrez", image: "/projects/team/Renato_Gutierrez.webp" },
+      { name: "Luis Paucar", linkedin: "luis-antonio-paucar-ventura-6b7304381", image: "/projects/team/Luis_Paucar.webp" },
+      { name: "José Arredondo", linkedin: "josé-antonio-arredondo-tomairo-31a9b3374", image: "/projects/team/José_Arredondo.webp" },
+    ],
+    link: "https://ccunicode.org/",
+    area: "id",
   },
 ];
 
