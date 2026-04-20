@@ -1,0 +1,111 @@
+---
+/**
+ * Componente de Presidentes para el Home
+ * Muestra las fotos, nombres y LinkedIn de los presidentes actuales.
+ */
+---
+
+<section class="w-full py-16 md:py-24 bg-[#050505] relative overflow-hidden">
+    <!-- Brillo decorativo de fondo -->
+    <div
+        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-unicode/5 rounded-full blur-[100px] pointer-events-none"
+    >
+    </div>
+
+    <div class="max-w-7xl mx-auto px-6 text-center relative z-10">
+        <!-- Título principal -->
+        <h2
+            class="text-4xl md:text-5xl font-extrabold text-unicode text-glow mb-16 uppercase tracking-tight"
+        >
+            Presidentes
+        </h2>
+
+        <div
+            class="flex flex-col sm:flex-row items-center justify-center gap-16 sm:gap-32 md:gap-40"
+        >
+            <!-- Presidente 1 -->
+            <div class="flex flex-col items-center group">
+                <div
+                    class="w-40 h-40 md:w-56 md:h-56 rounded-full overflow-hidden border border-zinc-800 group-hover:border-unicode/50 group-hover:shadow-unicode transition-all duration-300 mb-6 bg-zinc-900/50"
+                >
+                    <img
+                        src="/public/Christopher_Albino.webp"
+                        alt="Presidente 1"
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                    />
+                </div>
+                <h3
+                    class="text-2xl font-bold text-white mb-2 group-hover:text-unicode transition-colors"
+                >
+                    Christopher Albino
+                </h3>
+                <a
+                    href="christopher-henrry-albino-soto-880a48189"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex items-center gap-1.5 transition-colors mt-0.5"
+                >
+                    <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <path
+                            d="M20.447 20.452H16.89V14.881C16.89 13.551 16.866 11.838 15.04 11.838C13.19 11.838 12.906 13.284 12.906 14.787V20.452H9.351V9H12.768V10.564H12.816C13.292 9.662 14.456 8.708 16.204 8.708C19.827 8.708 20.447 11.092 20.447 14.168V20.452ZM5.337 7.433C4.195 7.433 3.268 6.505 3.268 5.363C3.268 4.22 4.195 3.293 5.337 3.293C6.478 3.293 7.406 4.22 7.406 5.363C7.406 6.505 6.478 7.433 5.337 7.433ZM7.118 20.452H3.555V9H7.118V20.452ZM22.225 0H1.771C0.792 0 0 0.774 0 1.729V22.271C0 23.227 0.792 24 1.771 24H22.222C23.2 24 24 23.227 24 22.271V1.729C24 0.774 23.2 0 22.225 0Z"
+                            fill="#0A66C2"></path>
+                    </svg>
+                    <span
+                        class="text-sm font-medium text-zinc-400 hover:text-[#0A66C2] transition-colors duration-200"
+                        >LinkedIn</span
+                    >
+                </a>
+            </div>
+
+            <!-- Presidente 2 -->
+            <div class="flex flex-col items-center group">
+                <!-- Foto -->
+                <div
+                    class="w-40 h-40 md:w-56 md:h-56 rounded-full overflow-hidden border border-zinc-800 group-hover:border-unicode/50 group-hover:shadow-unicode transition-all duration-300 mb-6 bg-zinc-900/50"
+                >
+                    <img
+                        src="/public/Ricco_Rashuaman.webp"
+                        alt="Presidente 2"
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                    />
+                </div>
+                <!-- Nombre y LinkedIn -->
+                <h3
+                    class="text-2xl font-bold text-white mb-2 group-hover:text-unicode transition-colors"
+                >
+                    Ricco Rashuaman
+                </h3>
+                <a
+                    href="ricco-didier-rashuaman-sapallanay-b88880289"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex items-center gap-1.5 transition-colors mt-0.5"
+                >
+                    <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <path
+                            d="M20.447 20.452H16.89V14.881C16.89 13.551 16.866 11.838 15.04 11.838C13.19 11.838 12.906 13.284 12.906 14.787V20.452H9.351V9H12.768V10.564H12.816C13.292 9.662 14.456 8.708 16.204 8.708C19.827 8.708 20.447 11.092 20.447 14.168V20.452ZM5.337 7.433C4.195 7.433 3.268 6.505 3.268 5.363C3.268 4.22 4.195 3.293 5.337 3.293C6.478 3.293 7.406 4.22 7.406 5.363C7.406 6.505 6.478 7.433 5.337 7.433ZM7.118 20.452H3.555V9H7.118V20.452ZM22.225 0H1.771C0.792 0 0 0.774 0 1.729V22.271C0 23.227 0.792 24 1.771 24H22.222C23.2 24 24 23.227 24 22.271V1.729C24 0.774 23.2 0 22.225 0Z"
+                            fill="#0A66C2"></path>
+                    </svg>
+                    <span
+                        class="text-sm font-medium text-zinc-400 hover:text-[#0A66C2] transition-colors duration-200"
+                        >LinkedIn</span
+                    >
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
