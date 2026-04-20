@@ -158,7 +158,7 @@ export const projects: Project[] = [
     team: [
       { name: "Diego Larico", linkedin: "diego-larico-cruz", image: "/areas/AreasImages/Diego_Larico.webp" },
       { name: "Andhlé Campos", linkedin: "andhle-campos-castillo-081a47311", image: "/areas/AreasImages/Andhlé_Campos.webp" },
-      { name: "Jeanpier Robles", linkedin: "jeanpier-robles", image: "/areas/AreasImages/Jeanpier_Robles.webp" },
+      { name: "Jeanpier Alexander Robles Fabían", linkedin: "jeanpier-robles", image: "/areas/AreasImages/Jeanpier_Robles.webp" },
       { name: "Rafael Olivos", linkedin: "rafael-olivos-g", image: "/areas/AreasImages/Rafael_Olivos.webp" },
       { name: "Franz Nuñez", linkedin: "franz-pool-nuñez-villazana", image: "/areas/AreasImages/Franz_Nuñez.webp" },
       { name: "Marco Gomez", linkedin: "marco-sebastian-gomez-felix-00a974361", image: "/areas/AreasImages/marco_gomez.webp" },
@@ -221,7 +221,7 @@ export const projects: Project[] = [
     team: [
       { name: "Alexis Garay", linkedin: "alexisgarayyovera", image: "/projects/team/Alexis_Garay.webp" },
       { name: "Diego Pinedo", linkedin: "diego-pinedo-998ab1351", image: "/projects/team/Diego_Pinedo.jpg" },
-      { name: "Jeanpier Robles", linkedin: "jeanpier-robles/", image: "/areas/AreasImages/Jeanpier_Robles.webp" },
+      { name: "Jeanpier Alexander Robles Fabían", linkedin: "jeanpier-robles/", image: "/areas/AreasImages/Jeanpier_Robles.webp" },
       { name: "Jean Paul Beltran", linkedin: "jean-beltran", image: "/projects/team/Jean_Paul_Beltran.webp" },
       { name: "Gabriel Eustaquio", linkedin: "luis-gabriel-eustaquio-avila-a473b3347", image: "" },
       { name: "John Tucto", linkedin: "john-tucto-386b3a1b8", image: "/projects/team/John_Tucto.jpg" },
@@ -232,6 +232,7 @@ export const projects: Project[] = [
   },
   {
     id: 11,
+<<<<<<< HEAD
     title: "Landing Page Unicode",
     description: "Web que concentra toda la información y alma de unicode",
     longDescription: "El presente proyecto consiste en la creación de una landing page para el centro cultural Unicode, concebido como un espacio que promueve la integración entre arte, cultura y tecnología. La página tiene como finalidad principal servir como una vitrina digital que permita dar a conocer las actividades, eventos, talleres y la identidad del centro cultural, generando una conexión directa con el público y fomentando su participación.En cuanto a las tecnologías utilizadas, se emplea HTML, TypeScript y Astro.",
@@ -250,6 +251,30 @@ export const projects: Project[] = [
     link: "https://ccunicode.org/",
     area: "id",
     //AMO A DARÍA
+=======
+    title: "UNIOpenCourse 25-2",
+    description: "Grabación de las clases dictadas presencialmente en la FIIS para ponerlas a disposición de la comunidad universitaria.",
+    longDescription: "El proyecto UNIOpenCourse 25-2 es una iniciativa impulsada por Unicode que nace con el propósito de democratizar el acceso al conocimiento universitario, tomando como referencia el modelo de cursos abiertos promovido por instituciones como MIT OpenCourseWare. \nEn un contexto donde muchos estudiantes enfrentan limitaciones de acceso a recursos académicos de calidad, UNIOpenCourse busca reducir brechas educativas mediante la grabación sistemática de clases presenciales y su posterior publicación como material de libre consulta.\nLa metodología del proyecto se basa en la planificación coordinada con docentes, la grabación estructurada de sesiones completas en aula y su difusión estratégica a través de plataformas digitales como Youtube. \nEn cuanto a su alcance, UNIOpenCourse beneficia no solo a estudiantes de la universidad, sino también a la comunidad externa interesada en fortalecer sus conocimientos en cursos fundamentales como Cálculo Integral, Álgebra Lineal y Sistemas Operativos. Así, el proyecto contribuye activamente a promover educación abierta, accesible y de calidad, consolidándose como una propuesta innovadora con impacto académico y social.",
+    status: "Activo",
+    faculty: "ACD",
+    image: "/projects/thumbnails/UNIOPENCOURSE-thumbnail.webp",
+    screenshots: [
+      "/projects/screenshots/uniopencourse-screenshoot1.webp",
+      "/projects/screenshots/uniopencourse-screenshoot2.webp",
+    ],
+    team: [
+      { name: "Jean Paul Tomas Beltran", linkedin: "jean-beltran", image: "/projects/team/Jean_Paul_Beltran.webp" },
+      { name: "Jeanpier Alexander Robles Fabían", linkedin: "jeanpier-robles/", image: "/areas/AreasImages/Jeanpier_Robles.webp" },
+      { name: "Renato Gutiérrez Serra", linkedin: "renato-gutierrez", image: "/areas/AreasImages/Renato_Gutierrez.webp" },
+      { name: "Alexis Yanpoll Garay Yovera", linkedin: "alexisgarayyovera", image: "/projects/team/Alexis_Garay.webp" },
+      { name: "Nuñez Villazana Franz Pool", linkedin: "franz-pool-nuñez-villazana", image: "/areas/AreasImages/Franz_Nuñez.webp" },
+      { name: "Gino Romero Osorio", linkedin: "gino-romero-osorio-8438a2274/", image: "" },
+      { name: "Roy Farid Puris Ricaldi", linkedin: "roy-farid-puris-ricaldi-95638233a/", image: "" },
+      { name: "Gomez Felix Marco Sebastian", linkedin: "marco-sebastian-gomez-felix-00a974361", image: "/areas/AreasImages/marco_gomez.webp" },
+    ],
+    link: "https://www.youtube.com/@ccunicode",
+    area: "acd",
+>>>>>>> ac82d03d911d91a9cd91a761f5850c9194958290
   },
 ];
 
