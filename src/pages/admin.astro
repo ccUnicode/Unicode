@@ -507,11 +507,18 @@ import Layout from "../layouts/Layout.astro";
         opcionExtraDisplay = `<span class="text-zinc-500 text-[10px] sm:text-xs ml-2">(1ra: ${p.opcion1})</span>`;
       }
 
-      const fecha = new Date(p.created_at).toLocaleDateString("es-PE", {
+      const fechaObj = new Date(p.created_at);
+      const fecha = fechaObj.toLocaleDateString("es-PE", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
       });
+      const hora = fechaObj.toLocaleTimeString("es-PE", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true
+      });
+      const fechaCompleta = `${fecha} ${hora}`;
 
       const card = document.createElement("article");
       card.className =
@@ -529,7 +536,7 @@ import Layout from "../layouts/Layout.astro";
                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
-                ${fecha}
+                ${fechaCompleta}
               </span>
               ${opcionBadge}
               ${opcionExtraDisplay}
@@ -597,7 +604,7 @@ import Layout from "../layouts/Layout.astro";
       "Opción 1",
       "Opción 2",
       "Motivo",
-      "Fecha",
+      "Fecha de Registro",
     ];
 
     // CSS para el Excel (Estilos específicos que Excel reconoce mejor)
@@ -629,7 +636,7 @@ import Layout from "../layouts/Layout.astro";
           <td class="data-cell ${is1ra ? "opcion-1" : ""}" style="text-align: center; vertical-align: middle;">${p.opcion1}</td>
           <td class="data-cell" style="text-align: center; vertical-align: middle;">${p.opcion2 || ""}</td>
           <td class="data-cell" style="font-size: 9pt; width: 350px; vertical-align: middle;">${String(p.motivo_postulacion || "").replace(/\n/g, "<br>")}</td>
-          <td class="data-cell" style="text-align: right; vertical-align: middle;">${new Date(p.created_at).toLocaleDateString("es-PE")}</td>
+          <td class="data-cell" style="text-align: right; vertical-align: middle;">${new Date(p.created_at).toLocaleString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true })}</td>
         </tr>
       `;
       })
