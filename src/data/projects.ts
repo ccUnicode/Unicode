@@ -268,7 +268,6 @@ export const projects: Project[] = [
     team: [
       { name: "Jeanpier Robles", linkedin: "jeanpier-robles", image: "/projects/team/Jeanpier_Robles.webp" },
       { name: "Leonel Cruzado", linkedin: "leonel-cruzado", image: "/projects/team/Leonel_Cruzado.webp" },
-      { name: "Renato Gutierrez", linkedin: "renato-gutierrez", image: "/projects/team/Renato_Gutierrez.webp" },
       { name: "Luis Paucar", linkedin: "luis-antonio-paucar-ventura-6b7304381", image: "/projects/team/Luis_Paucar.webp" },
       { name: "José Arredondo", linkedin: "josé-antonio-arredondo-tomairo-31a9b3374", image: "/projects/team/José_Arredondo.webp" },
     ],
