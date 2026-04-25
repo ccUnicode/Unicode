@@ -7,4 +7,4 @@
  *  - true:  Se muestra el formulario de inscripción y el botón "Postula aquí".
  *  - false: Se muestra un mensaje de convocatoria cerrada y el botón está deshabilitado.
  */
-export const CONVOCATORIA_ABIERTA = true;
+export const CONVOCATORIA_ABIERTA = false;
