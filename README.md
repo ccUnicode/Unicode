@@ -40,9 +40,19 @@ Una visión general de la arquitectura básica:
 │   └── styles/       # Hojas de estilo globales (global.css)
 ├── supabase/         # Archivos de configuración y esquemas de base de datos (schema.sql)
 ├── astro.config.mjs  # Configuración principal de Astro
-├── package.json      # Dependencias y scripts de Node.js
-└── README.md         # Documentación del proyecto
+├── tailwind.config.mjs   # Configuración de Tailwind CSS
+├── tsconfig.json         # Configuración de TypeScript
+└── README.md             # Documentación principal del proyecto
 ```
+
+## Documentación Adicional
+
+Para más detalles específicos sobre el proyecto, consulta los siguientes documentos en la carpeta `docs/` y en la raíz:
+
+- 📖 **[Guía de Contribución](./CONTRIBUTING.md)**: Reglas estrictas de Git, ramas, y convenciones de commits. (Obligatorio para colaboradores).
+- 🎨 **[Frontend y UI/UX](./docs/frontend.md)**: Arquitectura detallada, estructura, componentes y guía de estilos.
+- ⚙️ **[Onboarding y Mantenimiento](./docs/onboarding.md)**: Guía esencial para que los nuevos equipos de cada ciclo mantengan el contenido (proyectos, eventos) y usen el panel de administración.
+- 🚀 **[Despliegue y Rollback](./docs/despliegue.md)**: Instrucciones paso a paso para el paso a producción y manejo de caídas.
 
 ## Instalación y Configuración
 
@@ -80,7 +90,7 @@ npm run dev
 
 El sitio estará disponible de forma local en `http://localhost:4321/`.
 
-##Comandos Útiles
+## Comandos Útiles
 
 | Comando                   | Descripción                                                    |
 | :------------------------ | :------------------------------------------------------------- |
