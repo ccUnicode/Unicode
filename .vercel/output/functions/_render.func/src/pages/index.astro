@@ -1,0 +1,60 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Hero from "../components/Hero.astro";
+import Stats from "../components/components-home/Stats.astro";
+import Novedades from "../components/components-home/Novedades.astro";
+import Nosotros from "../components/components-home/Nosotros.astro";
+import Alianzas from "../components/components-home/Alianzas.astro";
+import ExploraUnicode from "../components/components-home/ExploraUnicode.astro";
+import Presidentes from "../components/components-home/Presidentes.astro";
+---
+
+<Layout title="Inicio">
+	<Navbar />
+	<Hero />
+
+	<main class="w-full">
+		<div
+			class="w-full h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent"
+		>
+		</div>
+
+		<Stats />
+
+		<div
+			class="w-full h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent"
+		>
+		</div>
+
+		<Novedades />
+
+		<div
+			class="w-full h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent"
+		>
+		</div>
+
+		<Nosotros />
+
+		<div
+			class="w-full h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent"
+		>
+		</div>
+
+		<Alianzas />
+
+		<div
+			class="w-full h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent"
+		>
+		</div>
+
+		<ExploraUnicode />
+
+		<div
+			class="w-full h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent"
+		>
+		</div>
+
+		<Presidentes />
+	</main>
+</Layout>

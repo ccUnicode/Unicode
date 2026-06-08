@@ -1,0 +1,61 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+import HeroAreaIndividual from "../../components/components-areas/HeroAreaIndividual.astro";
+
+const whatWeLookForData = [
+    "Estudiantes con ganas de integrarse y ayudar a construir un buen clima organizacional dentro de UNICODE.",
+    "Personas interesadas en apoyar la organización y ejecución de eventos institucionales, culturales, deportivos y de integración.",
+    "Estudiantes con disposición para colaborar como staff en actividades de distintas áreas del centro cultural.",
+    "Personas interesadas en la planificación de actividades recreativas como integraciones, tertulias, salidas grupales, torneos y dinámicas.",
+    "Estudiantes motivados en participar en la gestión de eventos desde la planificación, coordinación, logística y ejecución.",
+];
+
+const weValueData = [
+    "Actitud de servicio y disposición para apoyar.",
+    "Responsabilidad y compromiso con las tareas asumidas.",
+    "Buena comunicación y trato cordial con otras personas.",
+    "Capacidad para trabajar en equipo y adaptarse a diferentes situaciones.",
+    "Iniciativa, proactividad y ganas de aprender.",
+];
+
+const whatYouWinData = [
+    "Un espacio para desarrollarte a nivel personal y organizacional.",
+    "Experiencia en gestión de eventos, logística y trabajo en equipo.",
+    "Oportunidad de interactuar con distintas áreas y ampliar tu red de contactos.",
+    "Participación activa en actividades que fortalecen la identidad y comunidad UNICODE.",
+    "Formación práctica en organización, coordinación y liderazgo.",
+];
+
+import { projects } from "../../data/projects";
+
+const projectsData = projects.filter((p) => p.area === "gth");
+
+const directorsData = [
+    {
+        name: "Andhlé Campos",
+        linkedin:
+            "https://www.linkedin.com/in/andhle-campos-castillo-081a47311/",
+        imageSrc: "/areas/AreasImages/Andhlé_Campos.webp",
+    },
+    {
+        name: "Diego Larico",
+        linkedin: "https://www.linkedin.com/in/diego-larico-cruz/",
+        imageSrc: "/areas/AreasImages/Diego_Larico.webp",
+    },
+];
+---
+
+<Layout title="Gestión del Talento Humano | Áreas UNICODE">
+    <Navbar />
+
+    <HeroAreaIndividual
+        title="Gestión del Talento Humano"
+        description="El área de Gestión del Talento Humano (GTH) en UNICODE no se limita a la administración de personal; es el motor que impulsa el bienestar y el crecimiento estratégico de su comunidad. Su labor fundamental es salvaguardar la armonía interna, garantizando un entorno seguro donde la integridad física, emocional y moral de cada miembro sea la prioridad. A través de la organización de espacios de integración, el área transforma el compañerismo en una verdadera confraternidad, fortaleciendo el sentido de pertenencia."
+        whatWeLookFor={whatWeLookForData}
+        weValue={weValueData}
+        whatYouWin={whatYouWinData}
+        projects={projectsData}
+        directors={directorsData}
+    />
+</Layout>
