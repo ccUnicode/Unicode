@@ -45,18 +45,18 @@ El siguiente diagrama detalla los flujos de comunicación y persistencia entre l
 
 ```mermaid
 graph TD
-    subgraph Cliente (Navegador)
+    subgraph client ["Cliente (Navegador)"]
         User([Usuario / Postulante]) -->|Completa datos| Form[RegistroModal.astro]
         Form -->|Validaciones de Formato| ClientVal[Script de Validación]
         Admin([Administrador]) -->|Accede| AdminUI[admin.astro]
     end
 
-    subgraph Servidor (Astro Endpoints)
+    subgraph server ["Servidor (Astro Endpoints)"]
         ClientVal -->|POST /api/postular| API_Postular[postular.ts]
         AdminUI -->|GET /api/admin-postulantes| API_Admin[admin-postulantes.ts]
     end
 
-    subgraph Persistencia (Supabase BaaS)
+    subgraph db ["Persistencia (Supabase BaaS)"]
         API_Postular -->|Insert con supabaseAdmin| Supabase[(Supabase Engine)]
         API_Admin -->|Select con supabaseAdmin| Supabase
         Supabase -->|Estructura física| Table[(applicants Table)]
