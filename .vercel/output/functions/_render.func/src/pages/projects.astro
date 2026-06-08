@@ -1,0 +1,344 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import ProjectFilters from "../components/components-projects/ProjectFilters.astro";
+import ProjectModal from "../components/components-projects/ProjectModal.astro";
+import ProjectGrid from "../components/components-projects/ProjectGrid.astro";
+import ProjectHero from "../components/components-projects/ProjectHero.astro";
+import FeaturedSection from "../components/components-projects/FeaturedSection.astro";
+import { projects, featuredProjects } from "../data/projects";
+
+const activeProjects = projects.filter((p) => p.status === "Activo");
+const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
+---
+
+<Layout title="Proyectos">
+  <Navbar />
+
+  <main
+    class="min-h-screen bg-[#0a0a0a] text-white pt-24 pb-20 overflow-x-hidden"
+  >
+    <ProjectHero />
+    {activeFeatured.length > 0 && <FeaturedSection projects={activeFeatured} />}
+
+    <section class="max-w-7xl mx-auto px-6 relative z-10">
+      <h2 class="text-4xl font-bold mb-8 text-center">
+        Lista de <span class="text-unicode">proyectos</span>
+      </h2>
+
+      <div class="flex justify-center mb-6">
+        <ProjectFilters />
+      </div>
+
+      <div id="no-results" class="hidden text-center py-20 animate-fade-in">
+        <p class="text-zinc-500 text-xl font-medium">
+          No se encontraron proyectos que coincidan con tu búsqueda.
+        </p>
+        <button
+          id="clear-search"
+          class="mt-4 text-unicode hover:underline text-sm"
+          >Limpiar búsqueda</button
+        >
+      </div>
+
+      <ProjectGrid projects={activeProjects} />
+
+      <!-- Pagination Controls -->
+      <div
+        id="pagination-controls"
+        class="flex items-center justify-center gap-6 mt-12"
+        style="display: none;"
+      >
+        <button
+          id="prev-page"
+          type="button"
+          class="w-12 h-12 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg hover:border-unicode/50 cursor-pointer disabled:opacity-50"
+          aria-label="Anterior"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="3"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+
+        <div id="page-numbers" class="flex justify-center gap-3">
+          <!-- Page dots will be injected here by JS -->
+        </div>
+
+        <button
+          id="next-page"
+          type="button"
+          class="w-12 h-12 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg hover:border-unicode/50 cursor-pointer disabled:opacity-50"
+          aria-label="Siguiente"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="3"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9 5l7 7-7 7"></path>
+          </svg>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <ProjectModal />
+
+  <script>
+    function initSearch() {
+      const searchInput = document.getElementById(
+        "project-search",
+      ) as HTMLInputElement;
+      const filterSelect = document.getElementById(
+        "project-area-filter",
+      ) as HTMLSelectElement;
+      const projectItems = document.querySelectorAll(".project-item");
+      const noResults = document.getElementById("no-results");
+      const projectsGrid = document.getElementById("projects-grid");
+      const clearSearchBtn = document.getElementById("clear-search");
+      const featuredSection = document.getElementById("featured-section");
+      const paginationControls = document.getElementById("pagination-controls");
+      const pageNumbersContainer = document.getElementById("page-numbers");
+      const prevPageBtn = document.getElementById(
+        "prev-page",
+      ) as HTMLButtonElement;
+      const nextPageBtn = document.getElementById(
+        "next-page",
+      ) as HTMLButtonElement;
+
+      let currentPage = 1;
+      const itemsPerPage = 6;
+      let matchedItems: HTMLElement[] = [];
+
+      if ((!searchInput && !filterSelect) || projectItems.length === 0) return;
+
+      const updatePaginationUI = () => {
+        if (!paginationControls || !pageNumbersContainer) return;
+
+        const isMobile = window.innerWidth < 768;
+        const totalPages = Math.ceil(matchedItems.length / itemsPerPage);
+
+        if (totalPages <= 1 || isMobile) {
+          paginationControls.style.display = "none";
+          return;
+        }
+
+        paginationControls.style.display = "flex";
+        pageNumbersContainer.innerHTML = "";
+
+        for (let i = 1; i <= totalPages; i++) {
+          const pageBtn = document.createElement("button");
+          pageBtn.type = "button";
+          pageBtn.ariaLabel = `Ir a la página ${i}`;
+          pageBtn.className = `w-2 h-2 rounded-full transition-all duration-300 cursor-pointer ${
+            i === currentPage
+              ? "bg-unicode w-6"
+              : "bg-zinc-800 hover:bg-zinc-700"
+          }`;
+          pageBtn.addEventListener("click", () => {
+            const oldPage = currentPage;
+            if (oldPage === i) return;
+            currentPage = i;
+            renderCurrentPage(currentPage > oldPage ? 1 : -1);
+          });
+          pageNumbersContainer.appendChild(pageBtn);
+        }
+
+        if (prevPageBtn) prevPageBtn.disabled = currentPage === 1;
+        if (nextPageBtn) nextPageBtn.disabled = currentPage === totalPages;
+      };
+
+      const renderCurrentPage = (direction = 0) => {
+        const isMobile = window.innerWidth < 768;
+
+        if (isMobile) {
+          // Show all matched items on mobile for carousel
+          projectItems.forEach((item) => {
+            (item as HTMLElement).style.display = "none";
+          });
+          matchedItems.forEach((item) => {
+            item.style.display = "block";
+          });
+          if (paginationControls) paginationControls.style.display = "none";
+          if (projectsGrid) {
+            projectsGrid.style.opacity = "1";
+            projectsGrid.style.transform = "translateX(0)";
+          }
+          return;
+        }
+
+        if (!projectsGrid) return;
+
+        const updateItemsVisibility = () => {
+          projectItems.forEach((item) => {
+            (item as HTMLElement).style.display = "none";
+          });
+
+          // Show items for current page on desktop
+          const startIndex = (currentPage - 1) * itemsPerPage;
+          const endIndex = startIndex + itemsPerPage;
+
+          matchedItems.slice(startIndex, endIndex).forEach((item) => {
+            item.style.display = "block";
+          });
+
+          updatePaginationUI();
+        };
+
+        if (direction !== 0) {
+          // Calculate scroll position to show the top of the grid
+          const gridTop =
+            projectsGrid.getBoundingClientRect().top + window.scrollY;
+          const offset = 120; // Space for the navbar
+
+          window.scrollTo({
+            top: gridTop - offset,
+            behavior: "smooth",
+          });
+
+          // Slide out animation
+          projectsGrid.style.transition =
+            "opacity 0.3s ease-out, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)";
+          projectsGrid.style.opacity = "0";
+          projectsGrid.style.transform = `translateX(${direction > 0 ? "-60px" : "60px"})`;
+
+          setTimeout(() => {
+            updateItemsVisibility();
+
+            // Teleport to starting position for slide in
+            projectsGrid.style.transition = "none";
+            projectsGrid.style.transform = `translateX(${direction > 0 ? "60px" : "-60px"})`;
+
+            // Force reflow
+            void projectsGrid.offsetHeight;
+
+            // Slide in animation
+            projectsGrid.style.transition =
+              "opacity 0.4s ease-out, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)";
+            projectsGrid.style.opacity = "1";
+            projectsGrid.style.transform = "translateX(0)";
+          }, 300);
+        } else {
+          updateItemsVisibility();
+          projectsGrid.style.opacity = "1";
+          projectsGrid.style.transform = "translateX(0)";
+        }
+      };
+
+      const filterProjects = (resetPage = true) => {
+        const searchTerm = searchInput
+          ? searchInput.value.toLowerCase().trim()
+          : "";
+        const selectedArea = filterSelect
+          ? filterSelect.value.toLowerCase()
+          : "";
+
+        if (resetPage) currentPage = 1;
+        matchedItems = [];
+
+        // Toggle featured section: hide if searching or filtering
+        if (searchTerm.length > 0 || selectedArea.length > 0) {
+          featuredSection?.classList.add("hidden");
+        } else {
+          featuredSection?.classList.remove("hidden");
+        }
+
+        projectItems.forEach((item) => {
+          const title =
+            item.querySelector("h3")?.textContent?.toLowerCase() || "";
+          const description =
+            item.querySelector("p")?.textContent?.toLowerCase() || "";
+          const itemArea = item.getAttribute("data-area")?.toLowerCase() || "";
+
+          const isVisibleSearch =
+            title.includes(searchTerm) || description.includes(searchTerm);
+          const isVisibleArea =
+            selectedArea === "" || itemArea === selectedArea;
+
+          if (isVisibleSearch && isVisibleArea) {
+            matchedItems.push(item as HTMLElement);
+          }
+        });
+
+        // Toggle no results message
+        if (matchedItems.length === 0) {
+          noResults?.classList.remove("hidden");
+          projectsGrid?.classList.add("opacity-0", "pointer-events-none");
+          if (paginationControls) paginationControls.style.display = "none";
+
+          // Ensure all items are hidden from view
+          projectItems.forEach((item) => {
+            (item as HTMLElement).style.display = "none";
+          });
+        } else {
+          noResults?.classList.add("hidden");
+          projectsGrid?.classList.remove("opacity-0", "pointer-events-none");
+          renderCurrentPage();
+        }
+      };
+
+      if (searchInput) {
+        searchInput.addEventListener("input", () => filterProjects(true));
+      }
+
+      if (filterSelect) {
+        filterSelect.addEventListener("change", () => filterProjects(true));
+      }
+
+      clearSearchBtn?.addEventListener("click", () => {
+        searchInput.value = "";
+        if (filterSelect) filterSelect.value = "";
+        filterProjects(true);
+        searchInput.focus();
+      });
+
+      if (prevPageBtn) {
+        prevPageBtn.addEventListener("click", () => {
+          if (currentPage > 1) {
+            currentPage--;
+            renderCurrentPage(-1);
+          }
+        });
+      }
+
+      if (nextPageBtn) {
+        nextPageBtn.addEventListener("click", () => {
+          const totalPages = Math.ceil(matchedItems.length / itemsPerPage);
+          if (currentPage < totalPages) {
+            currentPage++;
+            renderCurrentPage(1);
+          }
+        });
+      }
+
+      // Initial call to apply pagination
+      filterProjects(true);
+    }
+
+    // Run on initial load
+    initSearch();
+
+    window.addEventListener("resize", () => {
+      initSearch();
+    });
+
+    // Re-initialize after view transitions (if any)
+    document.addEventListener("astro:page-load", () => {
+      initSearch();
+    });
+  </script>
+</Layout>

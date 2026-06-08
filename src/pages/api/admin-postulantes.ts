@@ -17,7 +17,7 @@ export async function GET({ request }: { request: Request }) {
   console.log('API /admin-postulantes HIT');
   console.log('PUBLIC_SUPABASE_URL:', import.meta.env.PUBLIC_SUPABASE_URL ? 'OK' : 'MISSING');
   console.log('SUPABASE_SERVICE_ROLE_KEY:', import.meta.env.SUPABASE_SERVICE_ROLE_KEY ? 'OK' : 'MISSING');
-  if (!token || !sessionStore.isValid(token)) {
+  if (!token || !(await sessionStore.isValid(token))) {
     console.warn('Unauthorized attempt or invalid token');
     return new Response(
       JSON.stringify({ error: 'No autorizado. Inicia sesión nuevamente.' }),
@@ -32,12 +32,12 @@ export async function GET({ request }: { request: Request }) {
   const orden = url.searchParams.get('orden') || 'reciente'; // 'reciente', '1ra-2da'
 
   try {
-    const { data: test, error: testErr } = await supabaseAdmin.from('postulantes').select('count');
+    const { data: test, error: testErr } = await supabaseAdmin.from('applicants').select('count');
     console.log('Supabase check:', { test, testErr });
 
     // LLAMAMOS A SUPABASE REAL USANDO EL CLIENTE ADMIN
     const { data, error } = await supabaseAdmin
-      .from('postulantes')
+      .from('applicants')
       .select('*');
 
     if (error) {
@@ -53,9 +53,9 @@ export async function GET({ request }: { request: Request }) {
     // Filter by area
     if (area) {
       filteredData = filteredData.filter((p: any) => {
-        if (opcion === '1ra') return p.opcion1 === area;
-        if (opcion === '2da') return p.opcion2 === area;
-        return p.opcion1 === area || p.opcion2 === area;
+        if (opcion === '1ra') return p.first_choice_area === area;
+        if (opcion === '2da') return p.second_choice_area === area;
+        return p.first_choice_area === area || p.second_choice_area === area;
       });
     }
 
@@ -63,8 +63,8 @@ export async function GET({ request }: { request: Request }) {
     filteredData = filteredData.sort((a: any, b: any) => {
       // 1) Si ordenan por prioridad de opciones
       if (area && orden === '1ra-2da') {
-        const aIs1ra = a.opcion1 === area;
-        const bIs1ra = b.opcion1 === area;
+        const aIs1ra = a.first_choice_area === area;
+        const bIs1ra = b.first_choice_area === area;
         if (aIs1ra && !bIs1ra) return -1;
         if (!aIs1ra && bIs1ra) return 1;
       }

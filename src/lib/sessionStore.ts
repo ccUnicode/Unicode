@@ -1,42 +1,70 @@
 /**
  * sessionStore.ts
- * Simple in-memory session store for admin tokens.
- * Tokens expire after 4 hours.
+ * Stateless session store for Vercel/Edge environments.
+ * Uses Web Crypto API to sign and verify a token so it survives serverless restarts.
  */
 
-interface Session {
-  createdAt: number;
-  expiresAt: number;
+const SECRET_KEY = import.meta.env.ADMIN_PASSWORD || 'default_fallback_secret_123!';
+
+async function getHmacKey(): Promise<CryptoKey> {
+  const enc = new TextEncoder();
+  return await crypto.subtle.importKey(
+    "raw",
+    enc.encode(SECRET_KEY),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign", "verify"]
+  );
 }
 
-const store = new Map<string, Session>();
-
-// Cleanup expired sessions every 10 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [token, session] of store.entries()) {
-    if (session.expiresAt < now) {
-      store.delete(token);
-    }
-  }
-}, 10 * 60 * 1000);
+function bufferToHex(buffer: ArrayBuffer): string {
+  return Array.from(new Uint8Array(buffer))
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
+}
 
 export const sessionStore = {
-  set(token: string, session: Session) {
-    store.set(token, session);
+  async createToken(): Promise<string> {
+    const expiresAt = Date.now() + 4 * 60 * 60 * 1000; // 4 hours from now
+    const payloadStr = JSON.stringify({ expiresAt });
+    // btoa is safe here because the payload only contains ASCII (numbers)
+    const payloadB64 = btoa(payloadStr);
+
+    const key = await getHmacKey();
+    const signatureBuffer = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      new TextEncoder().encode(payloadB64)
+    );
+    const signatureHex = bufferToHex(signatureBuffer);
+
+    return `${payloadB64}.${signatureHex}`;
   },
 
-  isValid(token: string): boolean {
-    const session = store.get(token);
-    if (!session) return false;
-    if (session.expiresAt < Date.now()) {
-      store.delete(token);
+  async isValid(token: string): Promise<boolean> {
+    if (!token) return false;
+    const parts = token.split('.');
+    if (parts.length !== 2) return false;
+    const [payloadB64, signatureHex] = parts;
+
+    try {
+      const key = await getHmacKey();
+      const expectedSignatureBuffer = await crypto.subtle.sign(
+        "HMAC",
+        key,
+        new TextEncoder().encode(payloadB64)
+      );
+      const expectedSignatureHex = bufferToHex(expectedSignatureBuffer);
+
+      if (signatureHex !== expectedSignatureHex) return false;
+
+      const payloadStr = atob(payloadB64);
+      const payload = JSON.parse(payloadStr);
+      
+      if (payload.expiresAt < Date.now()) return false;
+      return true;
+    } catch {
       return false;
     }
-    return true;
-  },
-
-  delete(token: string) {
-    store.delete(token);
-  },
+  }
 };
