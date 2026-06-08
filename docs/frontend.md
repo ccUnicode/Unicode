@@ -272,7 +272,13 @@ El desarrollo de la plataforma se encuentra estructurado en base a la asignació
 *   **Sección Proyectos:** Responsable de la maquetación de tarjetas, vistas y filtros avanzados de los proyectos desarrollados por el centro (Encargado: José).
 *   **Sección Eventos:** Responsable del diseño y visualización cronológica de actividades e historial de eventos de las áreas (Encargado: Luis).
 
-### 3.6. Arquitectura y Especificación Técnica de la Sección Áreas (Responsable: Leonel)
+### 3.6. Arquitectura y Especificación Técnica de las Secciones
+
+#### 3.6.1. Home
+
+*(Sección en blanco)*
+
+#### 3.6.2. Áreas (Responsable: Leonel)
 Esta sección detalla la arquitectura modular y los patrones implementados para la gestión de las disciplinas de UNICODE:
 
 1.  **Componentes Modulares Asociados (`src/components/components-areas/`)**:
@@ -286,6 +292,25 @@ Esta sección detalla la arquitectura modular y los patrones implementados para 
     Las rutas de las disciplinas se gestionan a través de archivos estáticos individuales bajo el directorio `src/pages/areas/` (ej. `academica.astro`, `gestion-del-talento-humano.astro`), garantizando compatibilidad total con renderizado SSR y posicionamiento en buscadores (SEO) sin dependencias de enrutamiento dinámico en el navegador.
 3.  **Integración de Estado Reactivo**:
     El control de la navegación interactiva y la retención de filtros por disciplina en la interfaz del cliente se delega a `src/lib/dbStore.ts` basado en Nanostores. Esto mantiene el consumo de memoria en niveles mínimos y desacopla los componentes de dependencias de frameworks externos complejos.
+
+#### 3.6.3. Proyectos (Responsable: José)
+Esta sección detalla la arquitectura modular y los patrones implementados para la vitrina de soluciones tecnológicas de UNICODE:
+
+1.  **Componentes Modulares Asociados (`src/components/components-projects/`)**:
+    *   `ProjectHero.astro`: Encabezado visual de la sección con un título estilizado y una breve descripción introductoria.
+    *   `FeaturedSection.astro` y `FeaturedProjectCard.astro`: Bloques diseñados para destacar proyectos especiales de ancho completo, incluyendo detalles de la solución y botones interactivos.
+    *   `ProjectFilters.astro`: Panel interactivo que provee un campo de búsqueda de texto en tiempo real y un selector de filtros para segmentar por área organizativa.
+    *   `ProjectGrid.astro` y `ProjectCard.astro`: Grilla responsiva y tarjeta individual para mostrar la vista previa de cada proyecto activo (imagen, etiquetas, título y descripción).
+    *   `ProjectModal.astro`: Diálogo modal nativo que renderiza la ficha técnica detallada del proyecto seleccionado, incluyendo capturas de pantalla, tecnologías, repositorio, sitio web y miembros del equipo.
+    *   `ProjectSlider.astro`: Carrusel interactivo y responsivo para proyectos de código abierto (*open source*).
+2.  **Sistema de Enrutamiento y Generación**:
+    La vista principal se gestiona a través de la ruta física `/projects` mapeada al archivo `src/pages/projects.astro`, el cual aprovecha el renderizado en el servidor (SSR) para obtener los proyectos del archivo de datos estáticos y renderizar el contenido inicial.
+3.  **Integración de Estado Reactivo e Interactividad**:
+    La interactividad del catálogo (filtrado en tiempo real, búsqueda de texto, paginado y control del modal detallado) se ejecuta mediante scripts vanilla en el cliente. La paginación en pantallas de escritorio muestra hasta 6 elementos por página y se adapta dinámicamente, mientras que en pantallas móviles se muestra la lista completa de manera fluida.
+
+#### 3.6.4. Eventos
+
+*(Sección en blanco)*
 
 ---
 
