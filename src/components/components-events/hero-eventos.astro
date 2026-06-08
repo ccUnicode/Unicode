@@ -1,0 +1,454 @@
+---
+/**
+ * hero-eventos.astro
+ * Sección Hero para la página de Eventos.
+ * Diseño: "Neural Mesh Plexus" - Fondo de red neuronal con nodos conectados en los bordes y malla hexagonal.
+ * Estética: Tech de alto impacto, minimalista en el centro y compleja en los bordes.
+ */
+---
+
+<section
+    id="hero-eventos"
+    class="relative w-full min-h-svh flex items-center justify-center overflow-hidden bg-[#050505] font-sans"
+>
+    <!-- 1. Capa de Fondo: Patrón Hexagonal -->
+    <div
+        class="absolute inset-0 z-0 pointer-events-none"
+        style="background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MiIgaGVpZ2h0PSI2MCI+PHBhdGggZD0iTTI2IDBMMDUyIDE1VjQ1TDI2IDYwTDAgNDVWMTVMMjYgMFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsIDI1NSwgMjU1LCAwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9zdmc+'); background-size: 52px 60px;"
+    >
+    </div>
+
+    <!-- 2. Capa de Animación: Plexus (Nodos y Conexiones en los laterales) -->
+    <canvas id="hero-plexus" class="absolute inset-0 z-10 pointer-events-none"
+    ></canvas>
+
+    <!-- 3. Viñeta Radial para oscurecer el centro/bordes e integrar visualmente -->
+    <div
+        class="absolute inset-0 z-20 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(5,5,5,0.7)_80%,#050505_100%)]"
+    >
+    </div>
+
+    <!-- 3.5 Capa de Efectos CRT / Scanlines (Solo Mobile) -->
+    <div
+        class="absolute inset-0 z-25 pointer-events-none opacity-[0.03] md:hidden"
+        style="background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); background-size: 100% 2px, 3px 100%;"
+    >
+    </div>
+
+    <!-- 4. Contenido Principal -->
+    <div
+        class="relative z-30 flex flex-col items-center text-center px-4 md:px-6 w-full max-w-5xl mx-auto"
+    >
+        <!-- Brillo central dinámico para mobile -->
+        <div
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 w-full aspect-square max-w-[400px] bg-unicode/20 blur-[120px] rounded-full animate-pulse md:hidden"
+        >
+        </div>
+        <div
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 w-[80%] aspect-square bg-unicode/10 blur-[80px] rounded-full delay-700 animate-pulse md:hidden"
+        >
+        </div>
+
+        <!-- Título Principal -->
+        <h1
+            class="reveal-item hero-title flex flex-col items-center gap-0 font-black tracking-tight leading-[0.9] mb-8 uppercase select-none"
+            style="animation-delay: 200ms;"
+        >
+            <span
+                class="text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-white drop-shadow-md relative"
+                data-text="EVENTOS"
+            >
+                EVENTOS
+            </span>
+            <span
+                class="text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-unicode drop-shadow-[0_0_35px_rgba(117,211,45,0.4)] relative"
+                data-text="UNICODE"
+            >
+                UNICODE
+            </span>
+        </h1>
+
+        <!-- Descripción -->
+        <p
+            class="reveal-item text-sm md:text-base lg:text-lg text-zinc-300 max-w-xl leading-relaxed font-medium mb-10 px-4"
+            style="animation-delay: 400ms;"
+        >
+            Aprende, conecta y construye el futuro tecnológico junto a nuestra
+            comunidad.
+        </p>
+
+        <!-- Botón Conoce más -->
+        <div class="reveal-item" style="animation-delay: 600ms;">
+            <a
+                href="#proximos-eventos"
+                class="inline-flex items-center justify-center gap-2 px-8 py-3 bg-unicode text-black font-extrabold uppercase text-sm tracking-wider rounded-full hover:bg-[#8ff241] transition-all duration-300 shadow-[0_0_25px_rgba(117,211,45,0.4)] hover:shadow-[0_0_35px_rgba(117,211,45,0.6)]"
+            >
+                CONOCE MÁS
+                <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="3"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                </svg>
+            </a>
+        </div>
+    </div>
+</section>
+
+<style>
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap");
+
+    #hero-eventos {
+        font-family: "Inter", sans-serif;
+    }
+
+    .reveal-item {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: reveal 0.8s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes reveal {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Efecto Glitch para Mobile */
+    @media (max-width: 768px) {
+        .hero-title span::before,
+        .hero-title span::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.8;
+        }
+
+        .hero-title span::before {
+            color: #ff00ff;
+            z-index: -1;
+            animation: glitch-anim 3s infinite linear alternate-reverse;
+        }
+
+        .hero-title span::after {
+            color: #00ffff;
+            z-index: -2;
+            animation: glitch-anim2 2s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim {
+            0% {
+                clip: rect(20px, 9999px, 40px, 0);
+                transform: translate(-2px, -2px);
+            }
+            20% {
+                clip: rect(60px, 9999px, 80px, 0);
+                transform: translate(2px, 2px);
+            }
+            40% {
+                clip: rect(10px, 9999px, 30px, 0);
+                transform: translate(-2px, 2px);
+            }
+            60% {
+                clip: rect(50px, 9999px, 70px, 0);
+                transform: translate(2px, -2px);
+            }
+            80% {
+                clip: rect(30px, 9999px, 50px, 0);
+                transform: translate(-1px, 1px);
+            }
+            100% {
+                clip: rect(0, 9999px, 100px, 0);
+                transform: translate(0);
+            }
+        }
+
+        @keyframes glitch-anim2 {
+            0% {
+                clip: rect(10px, 9999px, 20px, 0);
+                transform: translate(2px, 2px);
+            }
+            25% {
+                clip: rect(70px, 9999px, 90px, 0);
+                transform: translate(-2px, -2px);
+            }
+            50% {
+                clip: rect(40px, 9999px, 60px, 0);
+                transform: translate(1px, -1px);
+            }
+            75% {
+                clip: rect(20px, 9999px, 40px, 0);
+                transform: translate(-1px, 2px);
+            }
+            100% {
+                clip: rect(0, 9999px, 100px, 0);
+                transform: translate(0);
+            }
+        }
+    }
+</style>
+
+<script>
+    /**
+     * Motor de Animación Plexus - Enfocado en los bordes laterales
+     */
+    document.addEventListener("DOMContentLoaded", () => {
+        const canvas = document.getElementById(
+            "hero-plexus",
+        ) as HTMLCanvasElement;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        let width: number, height: number;
+        let particles: Particle[] = [];
+        const connectionDist = 200;
+        const particleCount = 250; // Aumento de densidad para abarcar más espacio
+
+        class Particle {
+            x: number;
+            y: number;
+            vx: number;
+            vy: number;
+            size: number;
+            isLeft: boolean;
+            type: "circle" | "data-stream" | "glyph" = "circle";
+            char: string = "";
+            opacity: number = 1;
+            speedY: number = 0;
+            hue: number = 100;
+
+            constructor(w: number, h: number, forceLeft?: boolean) {
+                const isMobile = window.innerWidth < 768;
+                this.isLeft =
+                    forceLeft !== undefined ? forceLeft : Math.random() > 0.5;
+
+                if (isMobile) {
+                    // Diseño "Cyber Data Storm" Ultra-Llamativo
+                    const rand = Math.random();
+                    if (rand > 0.7) this.type = "glyph";
+                    else if (rand > 0.3) this.type = "data-stream";
+                    else this.type = "circle"; // Pulso de energía
+
+                    this.x = Math.random() * w;
+                    this.y = Math.random() * h;
+                    this.vx = (Math.random() - 0.5) * 0.2;
+                    this.vy = 1 + Math.random() * 6; // Diferentes velocidades
+                    this.size =
+                        this.type === "glyph"
+                            ? 8 + Math.random() * 12
+                            : 1 + Math.random() * 3;
+
+                    if (this.type === "glyph") {
+                        const glyphs = [
+                            "{",
+                            "}",
+                            "[",
+                            "]",
+                            "<",
+                            ">",
+                            "/",
+                            "\\",
+                            "0",
+                            "1",
+                            "!",
+                            "?",
+                            "U",
+                            "N",
+                            "I",
+                        ];
+                        this.char =
+                            glyphs[Math.floor(Math.random() * glyphs.length)];
+                    }
+                    this.opacity = 0.1 + Math.random() * 0.5;
+                } else {
+                    // Plexus original para Desktop
+                    this.type = "circle";
+                    this.y =
+                        Math.random() * h + (Math.random() > 0.5 ? -20 : 20);
+
+                    const normalizedY = (this.y - h / 2) / (h / 2);
+                    const centerDist = 1 - Math.pow(Math.abs(normalizedY), 1.8);
+                    const maxOffset = w * 0.62 - centerDist * (w * 0.44);
+                    const edgeOffset = Math.pow(Math.random(), 1.2) * maxOffset;
+
+                    this.x = this.isLeft
+                        ? edgeOffset - 40
+                        : w - edgeOffset + 40;
+                    this.vx = (Math.random() - 0.5) * 0.7;
+                    this.vy = (Math.random() - 0.5) * 0.7;
+                    this.size = Math.random() * 2 + 0.5;
+                }
+            }
+
+            update(w: number, h: number) {
+                if (this.type === "circle") {
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    // Calculamos de nuevo el límite dinámico en el centro para rebotar si intentan cruzar la zona negra
+                    const normalizedY = (this.y - h / 2) / (h / 2);
+                    const centerDist = 1 - Math.pow(Math.abs(normalizedY), 1.8);
+                    const maxOffset = w * 0.62 - centerDist * (w * 0.44);
+
+                    if (this.isLeft) {
+                        if (this.x < -100) this.vx *= -1;
+                        if (this.x > maxOffset) this.vx *= -1; // Rebote iterativo en el límite
+                    } else {
+                        if (this.x > w + 100) this.vx *= -1;
+                        if (this.x < w - maxOffset) this.vx *= -1; // Rebote iterativo en el límite
+                    }
+
+                    if (this.y < -100 || this.y > h + 100) this.vy *= -1;
+
+                    // Estabilizar velocidad para que mantengan la calma
+                    const speed = Math.sqrt(
+                        this.vx * this.vx + this.vy * this.vy,
+                    );
+                    if (speed > 1.0) {
+                        this.vx = (this.vx / speed) * 1.0;
+                        this.vy = (this.vy / speed) * 1.0;
+                    } else if (speed < 0.2) {
+                        this.vx *= 1.05;
+                        this.vy *= 1.05;
+                    }
+                } else {
+                    // Lógica de lluvia para Mobile
+                    this.y += this.vy;
+                    this.x += this.vx;
+
+                    if (this.y > h + 100) {
+                        this.y = -100;
+                        this.x = Math.random() * w;
+                        this.opacity = 0.1 + Math.random() * 0.5;
+                    }
+
+                    // Efecto de parpadeo (glitch)
+                    if (Math.random() > 0.99) this.opacity = Math.random();
+                }
+            }
+
+            draw(context: CanvasRenderingContext2D) {
+                if (this.type === "data-stream") {
+                    // Barras de luz neón
+                    const gradient = context.createLinearGradient(
+                        0,
+                        this.y - 100,
+                        0,
+                        this.y,
+                    );
+                    gradient.addColorStop(0, "transparent");
+                    gradient.addColorStop(
+                        1,
+                        `rgba(117, 211, 45, ${this.opacity})`,
+                    );
+
+                    context.fillStyle = gradient;
+                    context.fillRect(this.x, this.y - 100, this.size, 100);
+
+                    // Brillo en la punta
+                    context.shadowBlur = 10;
+                    context.shadowColor = "#75D32D";
+                    context.fillStyle = "#fff";
+                    context.fillRect(this.x, this.y, this.size, 2);
+                    context.shadowBlur = 0;
+                } else if (this.type === "glyph") {
+                    // Caracteres Unicode que caen con brillo
+                    context.font = `900 ${this.size}px "Inter"`;
+                    context.fillStyle = `rgba(117, 211, 45, ${this.opacity})`;
+                    context.shadowBlur = Math.random() > 0.9 ? 15 : 0;
+                    context.shadowColor = "#75D32D";
+                    context.fillText(this.char, this.x, this.y);
+                    context.shadowBlur = 0;
+                } else {
+                    // Círculos originales (Desktop) o Pulsos de Energía (Mobile)
+                    const isMobile = window.innerWidth < 768;
+                    if (isMobile) {
+                        context.beginPath();
+                        context.arc(
+                            this.x,
+                            this.y,
+                            this.size * 2,
+                            0,
+                            Math.PI * 2,
+                        );
+                        context.fillStyle = `rgba(117, 211, 45, ${this.opacity * 0.3})`;
+                        context.fill();
+                    } else {
+                        context.beginPath();
+                        context.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                        context.fillStyle = "rgba(117, 211, 45, 0.6)";
+                        context.fill();
+                    }
+                }
+            }
+        }
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            init();
+        }
+
+        function init() {
+            particles = [];
+            const isMobile = window.innerWidth < 768;
+            const currentCount = isMobile ? 80 : particleCount;
+            for (let i = 0; i < currentCount; i++) {
+                particles.push(new Particle(width, height, i % 2 === 0));
+            }
+        }
+
+        function drawLines() {
+            if (!ctx || window.innerWidth < 768) return;
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    // Evitar conectar izquierda con derecha
+                    if (particles[i].isLeft !== particles[j].isLeft) continue;
+
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < connectionDist) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        // Opacidad decreciente según la distancia
+                        const opacity = (1 - dist / connectionDist) * 0.35;
+                        ctx.strokeStyle = `rgba(117, 211, 45, ${opacity})`;
+                        ctx.lineWidth = 1.2;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, width, height);
+
+            particles.forEach((p) => {
+                p.update(width, height);
+                p.draw(ctx);
+            });
+
+            drawLines();
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener("resize", resize);
+        resize();
+        animate();
+    });
+</script>

@@ -19,13 +19,13 @@ Cada tecnología del entorno del cliente ha sido seleccionada para cumplir con l
 * **Astro Framework (v4.x):** Actúa como el orquestador principal de la interfaz de usuario. Utiliza la arquitectura de islas para compilar estáticamente las vistas principales en el servidor, inyectando código JavaScript hidratado únicamente en las secciones interactivas que lo requieran para agilizar el tiempo de carga (LCP).
 * **TypeScript:** Implementa un entorno de tipado estricto en el lado del cliente. Asegura que los contratos de datos de la capa API local y las propiedades transferidas a los componentes coincidan estrictamente con las interfaces de control, previniendo excepciones en tiempo de ejecución.
 * **Tailwind CSS:** Framework utilitario que agiliza la maquetación bajo el enfoque orientado a móviles corporativo. Centraliza la paleta de colores del tema oscuro dominante y restringe las interacciones y llamados a la acción (CTAs) al color de acento verde neón institucional (`#75D32D`).
-* **Nanostores (`lib/dbStore.ts`):** Gestor de estado ligero y agnóstico que administra la reactividad global y los estados síncronos de navegación en el navegador sin la penalización de peso de frameworks masivos de terceros.
+* **Nanostores (`lib/db-store.ts`):** Gestor de estado ligero y agnóstico que administra la reactividad global y los estados síncronos de navegación en el navegador sin la penalización de peso de frameworks masivos de terceros.
 
 #### 1.2.2. Distribución de Módulos y Responsabilidades por Ramas
 Para evitar colisiones en el control de versiones y garantizar la autonomía del desarrollo, el sistema se divide de manera modular en cuatro flujos asignados por áreas de trabajo:
 
 * **Módulo de Convocatorias y Página de Inicio (Desarrollador: Jeanpier):** a
-* **Módulo de Áreas de Conocimiento (Desarrollador: Leonel):** Responsable de la arquitectura y subrutas físicas individuales de las disciplinas organizacionales en `src/pages/areas/`. Coordina la inyección de la tienda de estados `lib/dbStore.ts` para mantener la reactividad de las pestañas activas, gestiona los componentes de esqueleto de carga visual (*Skeleton Loaders*) y centraliza los mocks de datos estáticos en `src/data/projects.ts`.
+* **Módulo de Áreas de Conocimiento (Desarrollador: Leonel):** Responsable de la arquitectura y subrutas físicas individuales de las disciplinas organizacionales en `src/pages/areas/`. Coordina la inyección de la tienda de estados `lib/db-store.ts` para mantener la reactividad de las pestañas activas, gestiona los componentes de esqueleto de carga visual (*Skeleton Loaders*) y centraliza los mocks de datos estáticos en `src/data/projects.ts`.
 * **Módulo de Catálogo de Proyectos (Desarrollador: José):** a
 * **Módulo de Agenda y Calendario de Eventos (Desarrollador: Luis):** a
 
@@ -71,56 +71,56 @@ src/
 ├── assets/                             # Recursos estáticos globales (Gráficos y SVG)
 │   ├── astro.svg                       # Logotipo por defecto de Astro
 │   ├── background.svg                  # Gráfico SVG de fondo para el lienzo
-│   └── allianceLogos/                  # Logotipos de comunidades aliadas
+│   └── alliance-logos/                  # Logotipos de comunidades aliadas
 ├── components/                         # Componentes globales y modulares de la interfaz
-│   ├── Footer.astro                    # Pie de página institucional
-│   ├── Hero.astro                      # Sección de encabezado de la Landing principal
-│   ├── Navbar.astro                    # Barra de navegación colapsable y responsiva
-│   ├── Welcome.astro                   # Panel de bienvenida inicial
+│   ├── footer.astro                    # Pie de página institucional
+│   ├── hero.astro                      # Sección de encabezado de la Landing principal
+│   ├── navbar.astro                    # Barra de navegación colapsable y responsiva
+│   ├── welcome.astro                   # Panel de bienvenida inicial
 │   ├── components-areas/               # Módulos del flujo de áreas de conocimiento
-│   │   ├── AreaCard.astro              # Tarjeta individual del catálogo maestro
-│   │   ├── AreaDirectorProfile.astro   # Perfil y foto del director del área
-│   │   ├── AreaProjectCard.astro       # Tarjeta de proyectos pertenecientes al área
-│   │   ├── AreaProjectSlider.astro     # Deslizador horizontal de proyectos del área
-│   │   ├── AreaRequirement.astro       # Lista de requisitos del área
-│   │   ├── AreaValor.astro             # Valores y competencias del área
-│   │   ├── AreaWinCard.astro           # Logros y metas de la disciplina
-│   │   ├── HeroAreaIndividual.astro    # Encabezado visual para las páginas individuales
-│   │   └── HeroAreas.astro             # Encabezado para el catálogo de disciplinas
+│   │   ├── area-card.astro              # Tarjeta individual del catálogo maestro
+│   │   ├── area-director-profile.astro   # Perfil y foto del director del área
+│   │   ├── area-project-card.astro       # Tarjeta de proyectos pertenecientes al área
+│   │   ├── area-project-slider.astro     # Deslizador horizontal de proyectos del área
+│   │   ├── area-requirement.astro       # Lista de requisitos del área
+│   │   ├── area-valor.astro             # Valores y competencias del área
+│   │   ├── area-win-card.astro           # Logros y metas de la disciplina
+│   │   ├── hero-area-individual.astro    # Encabezado visual para las páginas individuales
+│   │   └── hero-areas.astro             # Encabezado para el catálogo de disciplinas
 │   ├── components-call/                # Componentes para el flujo de convocatorias
-│   │   ├── HeroCall.astro              # Banner principal de la sección de convocatoria
-│   │   ├── PorQueUnicode.astro         # Propuesta de valor institucional
-│   │   └── RegistroModal.astro         # Modal con el formulario de postulación
+│   │   ├── hero-call.astro              # Banner principal de la sección de convocatoria
+│   │   ├── por-que-unicode.astro         # Propuesta de valor institucional
+│   │   └── registro-modal.astro         # Modal con el formulario de postulación
 │   ├── components-events/              # Componentes para el calendario y agenda
-│   │   ├── EventosRealizados.astro     # Galería de actividades completadas
-│   │   ├── FAQEventos.astro            # Preguntas frecuentes con acordeón
-│   │   ├── HeroEventos.astro           # Encabezado del cronograma
-│   │   └── ProximosEventos.astro       # Actividades agendadas activas
+│   │   ├── eventos-realizados.astro     # Galería de actividades completadas
+│   │   ├── faq-eventos.astro            # Preguntas frecuentes con acordeón
+│   │   ├── hero-eventos.astro           # Encabezado del cronograma
+│   │   └── proximos-eventos.astro       # Actividades agendadas activas
 │   ├── components-home/                # Elementos exclusivos de la Landing principal
-│   │   ├── About.astro                 # Propósito general de UNICODE
-│   │   ├── Alianzas.astro              # Rejilla adaptativa de logos aliados
-│   │   ├── CTA.astro                   # Llamada a la acción flotante
-│   │   ├── ExploraUnicode.astro        # Bloque interactivo de inducción
-│   │   ├── Nosotros.astro              # Misión, visión y objetivos
-│   │   ├── NovedadCard.astro           # Tarjeta individual de noticia
-│   │   ├── Novedades.astro             # Contenedor de noticias
-│   │   ├── Presidentes.astro           # Muro de honor o sección informativa de la directiva
-│   │   └── Stats.astro                 # Estadísticas de impacto
+│   │   ├── about.astro                 # Propósito general de UNICODE
+│   │   ├── alianzas.astro              # Rejilla adaptativa de logos aliados
+│   │   ├── cta.astro                   # Llamada a la acción flotante
+│   │   ├── explora-unicode.astro        # Bloque interactivo de inducción
+│   │   ├── nosotros.astro              # Misión, visión y objetivos
+│   │   ├── novedad-card.astro           # Tarjeta individual de noticia
+│   │   ├── novedades.astro             # Contenedor de noticias
+│   │   ├── presidentes.astro           # Muro de honor o sección informativa de la directiva
+│   │   └── stats.astro                 # Estadísticas de impacto
 │   └── components-projects/            # Componentes del catálogo de proyectos
-│       ├── FeaturedProjectCard.astro   # Tarjeta destacada de ancho completo
-│       ├── FeaturedSection.astro       # Contenedor de la sección destacada
-│       ├── ProjectCard.astro           # Tarjeta para el catálogo general
-│       ├── ProjectFilters.astro        # Filtros por áreas y campo de búsqueda
-│       ├── ProjectGrid.astro           # Rejilla adaptativa y responsiva
-│       ├── ProjectHero.astro           # Encabezado de la vitrina técnica
-│       ├── ProjectModal.astro          # Ficha técnica detallada del proyecto
-│       └── ProjectSlider.astro         # Carrusel de proyectos open source
+│       ├── featured-project-card.astro   # Tarjeta destacada de ancho completo
+│       ├── featured-section.astro       # Contenedor de la sección destacada
+│       ├── project-card.astro           # Tarjeta para el catálogo general
+│       ├── project-filters.astro        # Filtros por áreas y campo de búsqueda
+│       ├── project-grid.astro           # Rejilla adaptativa y responsiva
+│       ├── project-hero.astro           # Encabezado de la vitrina técnica
+│       ├── project-modal.astro          # Ficha técnica detallada del proyecto
+│       └── project-slider.astro         # Carrusel de proyectos open source
 ├── data/                               # Datos locales estáticos
 │   ├── events.ts                       # Colección tipada de actividades y agenda
 │   ├── projects.ts                     # Datos estáticos de los proyectos
 │   └── siteConfig.ts                   # Configuración del sitio y estado de convocatoria
 ├── layouts/                            # Estructuras base compartidas
-│   └── Layout.astro                    # Plantilla común (inyecta Navbar y Footer)
+│   └── layout.astro                    # Plantilla común (inyecta Navbar y Footer)
 ├── lib/                                # Librerías e infraestructura
 │   ├── dbStore.ts                      # Base de datos en memoria para pruebas locales
 │   ├── sessionStore.ts                 # Validaciones criptográficas de sesiones admin
@@ -282,27 +282,27 @@ El desarrollo de la plataforma se encuentra estructurado en base a la asignació
 Esta sección detalla la arquitectura modular y los patrones implementados para la gestión de las disciplinas de UNICODE:
 
 1.  **Componentes Modulares Asociados (`src/components/components-areas/`)**:
-    *   `AreaCard.astro`: Renderiza la presentación resumida y acceso individual de la disciplina en la grilla general del catálogo.
-    *   `HeroAreaIndividual.astro`: Encabezado responsivo personalizado para cada disciplina, importando metadatos particulares.
-    *   `AreaDirectorProfile.astro`: Estructura visual para renderizar la foto, biografía corta y rol del director del área correspondiente.
-    *   `AreaValor.astro` y `AreaWinCard.astro`: Bloques dinámicos diseñados para renderizar los pilares y logros específicos del área de conocimiento.
-    *   `AreaProjectCard.astro` y `AreaProjectSlider.astro`: Carrusel responsivo que filtra y muestra exclusivamente los proyectos de desarrollo tecnológico del área seleccionada.
-    *   `AreaRequirement.astro`: Bloque informativo que lista de forma declarativa los perfiles técnicos y requerimientos mínimos exigidos a los postulantes.
+    *   `area-card.astro`: Renderiza la presentación resumida y acceso individual de la disciplina en la grilla general del catálogo.
+    *   `hero-area-individual.astro`: Encabezado responsivo personalizado para cada disciplina, importando metadatos particulares.
+    *   `area-director-profile.astro`: Estructura visual para renderizar la foto, biografía corta y rol del director del área correspondiente.
+    *   `area-valor.astro` y `area-win-card.astro`: Bloques dinámicos diseñados para renderizar los pilares y logros específicos del área de conocimiento.
+    *   `area-project-card.astro` y `area-project-slider.astro`: Carrusel responsivo que filtra y muestra exclusivamente los proyectos de desarrollo tecnológico del área seleccionada.
+    *   `area-requirement.astro`: Bloque informativo que lista de forma declarativa los perfiles técnicos y requerimientos mínimos exigidos a los postulantes.
 2.  **Sistema de Enrutamiento y Generación**:
     Las rutas de las disciplinas se gestionan a través de archivos estáticos individuales bajo el directorio `src/pages/areas/` (ej. `academica.astro`, `gestion-del-talento-humano.astro`), garantizando compatibilidad total con renderizado SSR y posicionamiento en buscadores (SEO) sin dependencias de enrutamiento dinámico en el navegador.
 3.  **Integración de Estado Reactivo**:
-    El control de la navegación interactiva y la retención de filtros por disciplina en la interfaz del cliente se delega a `src/lib/dbStore.ts` basado en Nanostores. Esto mantiene el consumo de memoria en niveles mínimos y desacopla los componentes de dependencias de frameworks externos complejos.
+    El control de la navegación interactiva y la retención de filtros por disciplina en la interfaz del cliente se delega a `src/lib/db-store.ts` basado en Nanostores. Esto mantiene el consumo de memoria en niveles mínimos y desacopla los componentes de dependencias de frameworks externos complejos.
 
 #### 3.6.3. Proyectos (Responsable: José)
 Esta sección detalla la arquitectura modular y los patrones implementados para la vitrina de soluciones tecnológicas de UNICODE:
 
 1.  **Componentes Modulares Asociados (`src/components/components-projects/`)**:
-    *   `ProjectHero.astro`: Encabezado visual de la sección con un título estilizado y una breve descripción introductoria.
-    *   `FeaturedSection.astro` y `FeaturedProjectCard.astro`: Bloques diseñados para destacar proyectos especiales de ancho completo, incluyendo detalles de la solución y botones interactivos.
-    *   `ProjectFilters.astro`: Panel interactivo que provee un campo de búsqueda de texto en tiempo real y un selector de filtros para segmentar por área organizativa.
-    *   `ProjectGrid.astro` y `ProjectCard.astro`: Grilla responsiva y tarjeta individual para mostrar la vista previa de cada proyecto activo (imagen, etiquetas, título y descripción).
-    *   `ProjectModal.astro`: Diálogo modal nativo que renderiza la ficha técnica detallada del proyecto seleccionado, incluyendo capturas de pantalla, tecnologías, repositorio, sitio web y miembros del equipo.
-    *   `ProjectSlider.astro`: Carrusel interactivo y responsivo para proyectos de código abierto (*open source*).
+    *   `project-hero.astro`: Encabezado visual de la sección con un título estilizado y una breve descripción introductoria.
+    *   `featured-section.astro` y `featured-project-card.astro`: Bloques diseñados para destacar proyectos especiales de ancho completo, incluyendo detalles de la solución y botones interactivos.
+    *   `project-filters.astro`: Panel interactivo que provee un campo de búsqueda de texto en tiempo real y un selector de filtros para segmentar por área organizativa.
+    *   `project-grid.astro` y `project-card.astro`: Grilla responsiva y tarjeta individual para mostrar la vista previa de cada proyecto activo (imagen, etiquetas, título y descripción).
+    *   `project-modal.astro`: Diálogo modal nativo que renderiza la ficha técnica detallada del proyecto seleccionado, incluyendo capturas de pantalla, tecnologías, repositorio, sitio web y miembros del equipo.
+    *   `project-slider.astro`: Carrusel interactivo y responsivo para proyectos de código abierto (*open source*).
 2.  **Sistema de Enrutamiento y Generación**:
     La vista principal se gestiona a través de la ruta física `/projects` mapeada al archivo `src/pages/projects.astro`, el cual aprovecha el renderizado en el servidor (SSR) para obtener los proyectos del archivo de datos estáticos y renderizar el contenido inicial.
 3.  **Integración de Estado Reactivo e Interactividad**:
@@ -323,7 +323,7 @@ Este tutorial enseña a añadir un área de conocimiento adicional a la Landing 
 *   Tener acceso al archivo del modal de registro y el panel de administración.
 
 ### Paso 1: Registrar el código del área en el Modal de Inscripción
-Abra el archivo `src/components/components-call/RegistroModal.astro`. Busque el selector de `opcion1` e inyecte una nueva etiqueta `<option>` con la abreviatura de tres letras en inglés del área que va a crear:
+Abra el archivo `src/components/components-call/registro-modal.astro`. Busque el selector de `opcion1` e inyecte una nueva etiqueta `<option>` con la abreviatura de tres letras en inglés del área que va a crear:
 
 ```html
 <!-- Ejemplo para añadir un área ficticia 'TI' -->
@@ -364,10 +364,10 @@ Maquete el archivo heredando la plantilla maestra e importando los componentes c
 
 ```astro
 ---
-import Layout from "../../layouts/Layout.astro";
-import Navbar from "../../components/Navbar.astro";
-import HeroAreaIndividual from "../../components/components-areas/HeroAreaIndividual.astro";
-import AreaDirectorProfile from "../../components/components-areas/AreaDirectorProfile.astro";
+import Layout from "../../layouts/layout.astro";
+import Navbar from "../../components/navbar.astro";
+import HeroAreaIndividual from "../../components/components-areas/hero-area-individual.astro";
+import AreaDirectorProfile from "../../components/components-areas/area-director-profile.astro";
 ---
 
 <Layout title="Tecnologías de la Información - UNICODE">

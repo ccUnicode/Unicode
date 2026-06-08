@@ -128,7 +128,7 @@ export async function POST({ request }: { request: Request }) {
   loginAttempts.delete(ip);
 
   // Generate a stateless session token
-  const { sessionStore } = await import('../../lib/sessionStore');
+  const { sessionStore } = await import('../../lib/session-store');
   const sessionToken = await sessionStore.createToken();
 
   return new Response(

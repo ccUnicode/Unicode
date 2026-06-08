@@ -1,11 +1,11 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import Navbar from "../components/Navbar.astro";
-import ProjectFilters from "../components/components-projects/ProjectFilters.astro";
-import ProjectModal from "../components/components-projects/ProjectModal.astro";
-import ProjectGrid from "../components/components-projects/ProjectGrid.astro";
-import ProjectHero from "../components/components-projects/ProjectHero.astro";
-import FeaturedSection from "../components/components-projects/FeaturedSection.astro";
+import Layout from "../layouts/layout.astro";
+import Navbar from "../components/navbar.astro";
+import ProjectFilters from "../components/components-projects/project-filters.astro";
+import ProjectModal from "../components/components-projects/project-modal.astro";
+import ProjectGrid from "../components/components-projects/project-grid.astro";
+import ProjectHero from "../components/components-projects/project-hero.astro";
+import FeaturedSection from "../components/components-projects/featured-section.astro";
 import { projects, featuredProjects } from "../data/projects";
 
 const activeProjects = projects.filter((p) => p.status === "Activo");
@@ -43,7 +43,6 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
 
       <ProjectGrid projects={activeProjects} />
 
-      <!-- Pagination Controls -->
       <div
         id="pagination-controls"
         class="flex items-center justify-center gap-6 mt-12"
@@ -99,6 +98,11 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
   <ProjectModal />
 
   <script>
+    /**
+     * Initializes the project search, filtering, and pagination system.
+     * Sets up event handlers for live search inputs and category dropdown filters,
+     * and manages responsive pagination transitions on desktop and mobile.
+     */
     function initSearch() {
       const searchInput = document.getElementById(
         "project-search",
@@ -126,6 +130,10 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
 
       if ((!searchInput && !filterSelect) || projectItems.length === 0) return;
 
+      /**
+       * Rebuilds the pagination indicator dots and updates the state of
+       * prev/next control buttons based on the current page.
+       */
       const updatePaginationUI = () => {
         if (!paginationControls || !pageNumbersContainer) return;
 
@@ -162,11 +170,17 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
         if (nextPageBtn) nextPageBtn.disabled = currentPage === totalPages;
       };
 
+      /**
+       * Renders the visible items for the current page.
+       * Implements a slide transition effect on desktop, scrolls back to
+       * the grid container header, and falls back to a vertical list on mobile.
+       * 
+       * @param direction - Sliding transition direction: 1 (right), -1 (left), 0 (none).
+       */
       const renderCurrentPage = (direction = 0) => {
         const isMobile = window.innerWidth < 768;
 
         if (isMobile) {
-          // Show all matched items on mobile for carousel
           projectItems.forEach((item) => {
             (item as HTMLElement).style.display = "none";
           });
@@ -188,7 +202,6 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
             (item as HTMLElement).style.display = "none";
           });
 
-          // Show items for current page on desktop
           const startIndex = (currentPage - 1) * itemsPerPage;
           const endIndex = startIndex + itemsPerPage;
 
@@ -200,17 +213,15 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
         };
 
         if (direction !== 0) {
-          // Calculate scroll position to show the top of the grid
           const gridTop =
             projectsGrid.getBoundingClientRect().top + window.scrollY;
-          const offset = 120; // Space for the navbar
+          const offset = 120; // Accounts for the height of the sticky navigation bar
 
           window.scrollTo({
             top: gridTop - offset,
             behavior: "smooth",
           });
 
-          // Slide out animation
           projectsGrid.style.transition =
             "opacity 0.3s ease-out, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)";
           projectsGrid.style.opacity = "0";
@@ -219,14 +230,13 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
           setTimeout(() => {
             updateItemsVisibility();
 
-            // Teleport to starting position for slide in
+            // Disable transition temporarily to instantly teleport the element
             projectsGrid.style.transition = "none";
             projectsGrid.style.transform = `translateX(${direction > 0 ? "60px" : "-60px"})`;
 
-            // Force reflow
+            // Read offsetHeight to force a browser reflow and apply the teleport styling
             void projectsGrid.offsetHeight;
 
-            // Slide in animation
             projectsGrid.style.transition =
               "opacity 0.4s ease-out, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)";
             projectsGrid.style.opacity = "1";
@@ -239,6 +249,12 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
         }
       };
 
+      /**
+       * Filters the list of projects based on search text and category dropdown.
+       * Hides the featured projects section if active filters are applied.
+       * 
+       * @param resetPage - Whether to reset the page index back to the first page.
+       */
       const filterProjects = (resetPage = true) => {
         const searchTerm = searchInput
           ? searchInput.value.toLowerCase().trim()
@@ -250,7 +266,6 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
         if (resetPage) currentPage = 1;
         matchedItems = [];
 
-        // Toggle featured section: hide if searching or filtering
         if (searchTerm.length > 0 || selectedArea.length > 0) {
           featuredSection?.classList.add("hidden");
         } else {
@@ -274,13 +289,11 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
           }
         });
 
-        // Toggle no results message
         if (matchedItems.length === 0) {
           noResults?.classList.remove("hidden");
           projectsGrid?.classList.add("opacity-0", "pointer-events-none");
           if (paginationControls) paginationControls.style.display = "none";
 
-          // Ensure all items are hidden from view
           projectItems.forEach((item) => {
             (item as HTMLElement).style.display = "none";
           });
@@ -325,18 +338,15 @@ const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
         });
       }
 
-      // Initial call to apply pagination
       filterProjects(true);
     }
 
-    // Run on initial load
     initSearch();
 
     window.addEventListener("resize", () => {
       initSearch();
     });
 
-    // Re-initialize after view transitions (if any)
     document.addEventListener("astro:page-load", () => {
       initSearch();
     });

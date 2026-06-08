@@ -27,7 +27,7 @@ El sistema está diseñado bajo una arquitectura de **Frontend en el cliente int
 
 El sistema se estructura en tres capas principales:
 
-1. **Frontend UI:** Componentes como `RegistroModal.astro` y la página `admin.astro` que interactúan directamente con el usuario.
+1. **Frontend UI:** Componentes como `registro-modal.astro` y la página `admin.astro` que interactúan directamente con el usuario.
 2. **Capa de validación y control:** Funciones de validación implementadas en el cliente por **Jeanpier** y endpoints de API en Astro (`/api/postular` y `/api/admin-postulantes`) que actúan como middleware de validación dura, sanitización contra XSS y control de acceso.
 3. **Persistencia (Base de Datos):** La capa de datos implementada en Supabase que expone la tabla `applicants`.
 
@@ -46,7 +46,7 @@ El siguiente diagrama detalla los flujos de comunicación y persistencia entre l
 ```mermaid
 graph TD
     subgraph client ["Cliente (Navegador)"]
-        User([Usuario / Postulante]) -->|Completa datos| Form[RegistroModal.astro]
+        User([Usuario / Postulante]) -->|Completa datos| Form[registro-modal.astro]
         Form -->|Validaciones de Formato| ClientVal[Script de Validación]
         Admin([Administrador]) -->|Accede| AdminUI[admin.astro]
     end

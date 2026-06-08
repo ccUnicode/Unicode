@@ -6,7 +6,7 @@
 
 export const prerender = false;
 
-import { sessionStore } from '../../lib/sessionStore';
+import { sessionStore } from '../../lib/session-store';
 import { supabaseAdmin } from '../../lib/supabase';
 
 export async function GET({ request }: { request: Request }) {
