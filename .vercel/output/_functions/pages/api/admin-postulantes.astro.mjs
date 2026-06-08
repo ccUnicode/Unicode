@@ -1,14 +1,65 @@
-import { sessionStore } from '../../chunks/sessionStore_Bt5E9fqU.mjs';
-import { s as supabaseAdmin } from '../../chunks/supabase_CnEQ1eUF.mjs';
+import { s as supabaseAdmin } from '../../chunks/supabase_1kq38O9G.mjs';
 export { renderers } from '../../renderers.mjs';
+
+const SECRET_KEY = "default_fallback_secret_123!";
+async function getHmacKey() {
+  const enc = new TextEncoder();
+  return await crypto.subtle.importKey(
+    "raw",
+    enc.encode(SECRET_KEY),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign", "verify"]
+  );
+}
+function bufferToHex(buffer) {
+  return Array.from(new Uint8Array(buffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+const sessionStore = {
+  async createToken() {
+    const expiresAt = Date.now() + 4 * 60 * 60 * 1e3;
+    const payloadStr = JSON.stringify({ expiresAt });
+    const payloadB64 = btoa(payloadStr);
+    const key = await getHmacKey();
+    const signatureBuffer = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      new TextEncoder().encode(payloadB64)
+    );
+    const signatureHex = bufferToHex(signatureBuffer);
+    return `${payloadB64}.${signatureHex}`;
+  },
+  async isValid(token) {
+    if (!token) return false;
+    const parts = token.split(".");
+    if (parts.length !== 2) return false;
+    const [payloadB64, signatureHex] = parts;
+    try {
+      const key = await getHmacKey();
+      const expectedSignatureBuffer = await crypto.subtle.sign(
+        "HMAC",
+        key,
+        new TextEncoder().encode(payloadB64)
+      );
+      const expectedSignatureHex = bufferToHex(expectedSignatureBuffer);
+      if (signatureHex !== expectedSignatureHex) return false;
+      const payloadStr = atob(payloadB64);
+      const payload = JSON.parse(payloadStr);
+      if (payload.expiresAt < Date.now()) return false;
+      return true;
+    } catch {
+      return false;
+    }
+  }
+};
 
 const prerender = false;
 async function GET({ request }) {
   const authHeader = request.headers.get("Authorization") || "";
   const token = authHeader.replace("Bearer ", "");
   console.log("API /admin-postulantes HIT");
-  console.log("PUBLIC_SUPABASE_URL:", "OK" );
-  console.log("SUPABASE_SERVICE_ROLE_KEY:", "OK" );
+  console.log("PUBLIC_SUPABASE_URL:", "MISSING");
+  console.log("SUPABASE_SERVICE_ROLE_KEY:", "MISSING");
   if (!token || !await sessionStore.isValid(token)) {
     console.warn("Unauthorized attempt or invalid token");
     return new Response(

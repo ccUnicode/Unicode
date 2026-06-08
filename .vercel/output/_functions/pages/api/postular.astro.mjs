@@ -1,4 +1,4 @@
-import { s as supabaseAdmin } from '../../chunks/supabase_CnEQ1eUF.mjs';
+import { s as supabaseAdmin } from '../../chunks/supabase_1kq38O9G.mjs';
 export { renderers } from '../../renderers.mjs';
 
 const prerender = false;

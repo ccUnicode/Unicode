@@ -2,25 +2,9 @@ export { renderers } from '../../renderers.mjs';
 
 const prerender = false;
 const loginAttempts = /* @__PURE__ */ new Map();
-const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 15 * 60 * 1e3;
-const LOCKOUT_MS = 15 * 60 * 1e3;
 function getClientIP(request) {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
-}
-function safeCompare(a, b) {
-  if (a.length !== b.length) {
-    let result2 = a.length ^ b.length;
-    for (let i = 0; i < Math.max(a.length, b.length); i++) {
-      result2 |= (a.charCodeAt(i % a.length) || 0) ^ (b.charCodeAt(i % b.length) || 0);
-    }
-    return false;
-  }
-  let result = 0;
-  for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return result === 0;
 }
 async function POST({ request }) {
   const ip = getClientIP(request);
@@ -56,36 +40,13 @@ async function POST({ request }) {
       { status: 400, headers: { "Content-Type": "application/json" } }
     );
   }
-  const adminPassword = "unicode_admin_2026";
-  const isValid = safeCompare(password, adminPassword);
-  if (!isValid) {
-    record.count += 1;
-    if (record.count >= MAX_ATTEMPTS) {
-      record.lockedUntil = now + LOCKOUT_MS;
-      return new Response(
-        JSON.stringify({
-          error: `Demasiados intentos fallidos. Cuenta bloqueada por 15 minutos.`,
-          locked: true,
-          remainingSeconds: LOCKOUT_MS / 1e3
-        }),
-        { status: 429, headers: { "Content-Type": "application/json" } }
-      );
-    }
+  {
+    console.error("CRITICAL: ADMIN_PASSWORD environment variable is not configured.");
     return new Response(
-      JSON.stringify({
-        error: "Contraseña incorrecta.",
-        attemptsRemaining: MAX_ATTEMPTS - record.count
-      }),
-      { status: 401, headers: { "Content-Type": "application/json" } }
+      JSON.stringify({ error: "Error de configuración del servidor." }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
-  loginAttempts.delete(ip);
-  const { sessionStore } = await import('../../chunks/sessionStore_Bt5E9fqU.mjs');
-  const sessionToken = await sessionStore.createToken();
-  return new Response(
-    JSON.stringify({ success: true, token: sessionToken }),
-    { status: 200, headers: { "Content-Type": "application/json" } }
-  );
 }
 
 const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({

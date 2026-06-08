@@ -56,7 +56,7 @@ Contacto
 </a> </div> </div> <!-- Bottom Bar --> <div class="pt-8 border-t border-zinc-900 flex flex-col md:flex-row justify-between items-center gap-6"> <p class="text-zinc-500 text-[11px] uppercase tracking-[0.2em] font-medium order-2 md:order-1">
 © ${currentYear} UNICODE — CENTRO CULTURAL ESTUDIANTIL DE INGENIERÍA
 </p> <div class="flex items-center gap-8 order-1 md:order-2"> <span class="text-zinc-600 text-[10px] tracking-widest uppercase">FIIS — Universidad Nacional de Ingeniería</span> </div> </div> </div> <!-- Decoración visual de fondo --> <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-unicode/5 rounded-full blur-[100px] opacity-30"></div> </footer>`;
-}, "C:/Users/JEANPIER/Desktop/Unicode/src/components/Footer.astro", void 0);
+}, "D:/Carpeta_de_clases_2023-2025/ID-UNICODE/Unicode/src/components/Footer.astro", void 0);
 
 const $$Astro = createAstro();
 const $$Layout = createComponent(($$result, $$props, $$slots) => {
@@ -69,6 +69,6 @@ const $$Layout = createComponent(($$result, $$props, $$slots) => {
   } = Astro2.props;
   const canonicalURL = new URL(Astro2.url.pathname, Astro2.site || "https://ccunicode.org");
   return renderTemplate`<html lang="es" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="icon" type="image/png" href="/favicon.png"><meta name="generator"${addAttribute(Astro2.generator, "content")}><!-- SEO Basics --><title>${title} | UNICODE</title><meta name="description"${addAttribute(description, "content")}><link rel="canonical"${addAttribute(canonicalURL.href, "href")}><!-- Open Graph / Facebook --><meta property="og:type" content="website"><meta property="og:url"${addAttribute(canonicalURL.href, "content")}><meta property="og:title"${addAttribute(`${title} | UNICODE`, "content")}><meta property="og:description"${addAttribute(description, "content")}><meta property="og:image"${addAttribute(image, "content")}><meta property="og:site_name" content="UNICODE - Centro Cultural FIIS UNI"><meta property="og:locale" content="es_PE"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title"${addAttribute(`${title} | UNICODE`, "content")}><meta name="twitter:description"${addAttribute(description, "content")}><meta name="twitter:image"${addAttribute(image, "content")}><!-- Extra SEO --><meta name="robots" content="index, follow"><meta name="theme-color" content="#75D32D"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">${renderHead()}</head> <body class="bg-[#050505] text-white antialiased min-h-screen flex flex-col font-sans"> ${renderSlot($$result, $$slots["default"])} ${renderComponent($$result, "Footer", $$Footer, {})} </body></html>`;
-}, "C:/Users/JEANPIER/Desktop/Unicode/src/layouts/Layout.astro", void 0);
+}, "D:/Carpeta_de_clases_2023-2025/ID-UNICODE/Unicode/src/layouts/Layout.astro", void 0);
 
 export { $$Layout as $ };

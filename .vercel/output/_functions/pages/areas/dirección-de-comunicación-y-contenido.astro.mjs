@@ -1,8 +1,8 @@
 import { e as createComponent, k as renderComponent, r as renderTemplate } from '../../chunks/astro/server_C2iRGO63.mjs';
 import 'piccolore';
-import { $ as $$Layout } from '../../chunks/Layout_CsKb6_WZ.mjs';
-import { $ as $$Navbar } from '../../chunks/Navbar_Bwy2egbE.mjs';
-import { $ as $$HeroAreaIndividual } from '../../chunks/HeroAreaIndividual_CIQNpAl5.mjs';
+import { $ as $$Layout } from '../../chunks/Layout_CfJX6JHL.mjs';
+import { $ as $$Navbar } from '../../chunks/Navbar_CBjdAvp7.mjs';
+import { $ as $$HeroAreaIndividual } from '../../chunks/HeroAreaIndividual_DUhwp0mK.mjs';
 import { p as projects } from '../../chunks/projects_llmFszin.mjs';
 export { renderers } from '../../renderers.mjs';
 
@@ -38,9 +38,9 @@ const $$DireccinDeComunicacinYContenido = createComponent(($$result, $$props, $$
     }
   ];
   return renderTemplate`${renderComponent($$result, "Layout", $$Layout, { "title": "Direcci\xF3n de Comunicaci\xF3n y Contenido | \xC1reas UNICODE" }, { "default": ($$result2) => renderTemplate` ${renderComponent($$result2, "Navbar", $$Navbar, {})} ${renderComponent($$result2, "HeroAreaIndividual", $$HeroAreaIndividual, { "title": "Direcci\xF3n de Comunicaci\xF3n y Contenido", "description": "La Direcci\xF3n de Comunicaci\xF3n y Contenido (DCC) es el motor creativo encargado de traducir el conocimiento t\xE9cnico de UNICODE en un mensaje claro y de alto impacto. Su labor se centra en dise\xF1ar y ejecutar estrategias integrales de marketing, edici\xF3n audiovisual y redacci\xF3n editorial que fortalezcan el posicionamiento de la organizaci\xF3n. Asimismo, asegura la difusi\xF3n efectiva de eventos, solucionarios y proyectos tecnol\xF3gicos para mantener a la comunidad informada y conectada. Tambi\xE9n potencia las habilidades t\xE9cnicas y de creaci\xF3n de contenido de sus miembros, form\xE1ndolos como verdaderos embajadores de marca. Finalmente, transforma conceptos acad\xE9micos complejos en recursos educativos valiosos que enriquecen el ecosistema estudiantil.", "whatWeLookFor": whatWeLookForData, "weValue": weValueData, "whatYouWin": whatYouWinData, "projects": projectsData, "directors": directorsData })} ` })}`;
-}, "C:/Users/JEANPIER/Desktop/Unicode/src/pages/areas/direcci\xF3n-de-comunicaci\xF3n-y-contenido.astro", void 0);
+}, "D:/Carpeta_de_clases_2023-2025/ID-UNICODE/Unicode/src/pages/areas/direcci\xF3n-de-comunicaci\xF3n-y-contenido.astro", void 0);
 
-const $$file = "C:/Users/JEANPIER/Desktop/Unicode/src/pages/areas/dirección-de-comunicación-y-contenido.astro";
+const $$file = "D:/Carpeta_de_clases_2023-2025/ID-UNICODE/Unicode/src/pages/areas/dirección-de-comunicación-y-contenido.astro";
 const $$url = "/areas/dirección-de-comunicación-y-contenido";
 
 const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({

@@ -1,8 +1,8 @@
 import { e as createComponent, k as renderComponent, r as renderTemplate } from '../../chunks/astro/server_C2iRGO63.mjs';
 import 'piccolore';
-import { $ as $$Layout } from '../../chunks/Layout_CsKb6_WZ.mjs';
-import { $ as $$Navbar } from '../../chunks/Navbar_Bwy2egbE.mjs';
-import { $ as $$HeroAreaIndividual } from '../../chunks/HeroAreaIndividual_CIQNpAl5.mjs';
+import { $ as $$Layout } from '../../chunks/Layout_CfJX6JHL.mjs';
+import { $ as $$Navbar } from '../../chunks/Navbar_CBjdAvp7.mjs';
+import { $ as $$HeroAreaIndividual } from '../../chunks/HeroAreaIndividual_DUhwp0mK.mjs';
 import { p as projects } from '../../chunks/projects_llmFszin.mjs';
 export { renderers } from '../../renderers.mjs';
 
@@ -41,9 +41,9 @@ const $$Acadmica = createComponent(($$result, $$props, $$slots) => {
     }
   ];
   return renderTemplate`${renderComponent($$result, "Layout", $$Layout, { "title": "Acad\xE9mica | \xC1reas UNICODE" }, { "default": ($$result2) => renderTemplate` ${renderComponent($$result2, "Navbar", $$Navbar, {})} ${renderComponent($$result2, "HeroAreaIndividual", $$HeroAreaIndividual, { "title": "Acad\xE9mica", "description": "El \xC1rea Acad\xE9mica planifica y ejecuta iniciativas orientadas al fortalecimiento de la formaci\xF3n universitaria. Su labor se centra en brindar apoyo acad\xE9mico curricular y extracurricular, promoviendo espacios de acompa\xF1amiento, orientaci\xF3n y refuerzo que contribuyan a \r\n        mejorar el rendimiento estudiantil y disminuir las dificultades presentes en los cursos. Asimismo, impulsa actividades de formaci\xF3n complementaria que permiten desarrollar competencias t\xE9cnicas y habilidades profesionales, enfocadas en mejorar el desempe\xF1o acad\xE9mico de los estudiantes. Tambi\xE9n promueve la creaci\xF3n y difusi\xF3n de recursos educativos que ampl\xEDan el acceso al conocimiento y fomentan el aprendizaje continuo, consolidando as\xED una cultura de excelencia, compromiso y crecimiento acad\xE9mico permanente.", "whatWeLookFor": whatWeLookForData, "weValue": weValueData, "whatYouWin": whatYouWinData, "projects": projectsData, "directors": directorsData })} ` })}`;
-}, "C:/Users/JEANPIER/Desktop/Unicode/src/pages/areas/acad\xE9mica.astro", void 0);
+}, "D:/Carpeta_de_clases_2023-2025/ID-UNICODE/Unicode/src/pages/areas/acad\xE9mica.astro", void 0);
 
-const $$file = "C:/Users/JEANPIER/Desktop/Unicode/src/pages/areas/académica.astro";
+const $$file = "D:/Carpeta_de_clases_2023-2025/ID-UNICODE/Unicode/src/pages/areas/académica.astro";
 const $$url = "/areas/académica";
 
 const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({

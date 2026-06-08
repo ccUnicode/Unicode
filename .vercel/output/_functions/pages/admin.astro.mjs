@@ -1,6 +1,6 @@
 import { e as createComponent, k as renderComponent, l as renderScript, r as renderTemplate, m as maybeRenderHead } from '../chunks/astro/server_C2iRGO63.mjs';
 import 'piccolore';
-import { $ as $$Layout } from '../chunks/Layout_CsKb6_WZ.mjs';
+import { $ as $$Layout } from '../chunks/Layout_CfJX6JHL.mjs';
 /* empty css                                 */
 export { renderers } from '../renderers.mjs';
 
@@ -29,10 +29,10 @@ No hay postulantes para esta área.
 Error al cargar los datos.
 </p> <button id="retry-btn" class="mt-4 text-unicode text-sm underline hover:text-unicode-light cursor-pointer" data-astro-cid-2zp6q64z>
 Reintentar
-</button> </div> <!-- Postulantes list --> <div id="postulantes-list" class="hidden space-y-3 sm:space-y-4" data-astro-cid-2zp6q64z></div> </main> </div> ` })}  ${renderScript($$result, "C:/Users/JEANPIER/Desktop/Unicode/src/pages/admin.astro?astro&type=script&index=0&lang.ts")}`;
-}, "C:/Users/JEANPIER/Desktop/Unicode/src/pages/admin.astro", void 0);
+</button> </div> <!-- Postulantes list --> <div id="postulantes-list" class="hidden space-y-3 sm:space-y-4" data-astro-cid-2zp6q64z></div> </main> </div> ` })}  ${renderScript($$result, "D:/Carpeta_de_clases_2023-2025/ID-UNICODE/Unicode/src/pages/admin.astro?astro&type=script&index=0&lang.ts")}`;
+}, "D:/Carpeta_de_clases_2023-2025/ID-UNICODE/Unicode/src/pages/admin.astro", void 0);
 
-const $$file = "C:/Users/JEANPIER/Desktop/Unicode/src/pages/admin.astro";
+const $$file = "D:/Carpeta_de_clases_2023-2025/ID-UNICODE/Unicode/src/pages/admin.astro";
 const $$url = "/admin";
 
 const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({

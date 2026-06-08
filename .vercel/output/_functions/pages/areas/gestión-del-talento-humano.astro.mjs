@@ -1,8 +1,8 @@
 import { e as createComponent, k as renderComponent, r as renderTemplate } from '../../chunks/astro/server_C2iRGO63.mjs';
 import 'piccolore';
-import { $ as $$Layout } from '../../chunks/Layout_CsKb6_WZ.mjs';
-import { $ as $$Navbar } from '../../chunks/Navbar_Bwy2egbE.mjs';
-import { $ as $$HeroAreaIndividual } from '../../chunks/HeroAreaIndividual_CIQNpAl5.mjs';
+import { $ as $$Layout } from '../../chunks/Layout_CfJX6JHL.mjs';
+import { $ as $$Navbar } from '../../chunks/Navbar_CBjdAvp7.mjs';
+import { $ as $$HeroAreaIndividual } from '../../chunks/HeroAreaIndividual_DUhwp0mK.mjs';
 import { p as projects } from '../../chunks/projects_llmFszin.mjs';
 export { renderers } from '../../renderers.mjs';
 
@@ -42,9 +42,9 @@ const $$GestinDelTalentoHumano = createComponent(($$result, $$props, $$slots) =>
     }
   ];
   return renderTemplate`${renderComponent($$result, "Layout", $$Layout, { "title": "Gesti\xF3n del Talento Humano | \xC1reas UNICODE" }, { "default": ($$result2) => renderTemplate` ${renderComponent($$result2, "Navbar", $$Navbar, {})} ${renderComponent($$result2, "HeroAreaIndividual", $$HeroAreaIndividual, { "title": "Gesti\xF3n del Talento Humano", "description": "El \xE1rea de Gesti\xF3n del Talento Humano (GTH) en UNICODE no se limita a la administraci\xF3n de personal; es el motor que impulsa el bienestar y el crecimiento estrat\xE9gico de su comunidad. Su labor fundamental es salvaguardar la armon\xEDa interna, garantizando un entorno seguro donde la integridad f\xEDsica, emocional y moral de cada miembro sea la prioridad. A trav\xE9s de la organizaci\xF3n de espacios de integraci\xF3n, el \xE1rea transforma el compa\xF1erismo en una verdadera confraternidad, fortaleciendo el sentido de pertenencia.", "whatWeLookFor": whatWeLookForData, "weValue": weValueData, "whatYouWin": whatYouWinData, "projects": projectsData, "directors": directorsData })} ` })}`;
-}, "C:/Users/JEANPIER/Desktop/Unicode/src/pages/areas/gesti\xF3n-del-talento-humano.astro", void 0);
+}, "D:/Carpeta_de_clases_2023-2025/ID-UNICODE/Unicode/src/pages/areas/gesti\xF3n-del-talento-humano.astro", void 0);
 
-const $$file = "C:/Users/JEANPIER/Desktop/Unicode/src/pages/areas/gestión-del-talento-humano.astro";
+const $$file = "D:/Carpeta_de_clases_2023-2025/ID-UNICODE/Unicode/src/pages/areas/gestión-del-talento-humano.astro";
 const $$url = "/areas/gestión-del-talento-humano";
 
 const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({

@@ -12610,10 +12610,9 @@ function shouldShowDeprecationWarning() {
 }
 if (shouldShowDeprecationWarning()) console.warn("⚠️  Node.js 18 and below are deprecated and will no longer be supported in future versions of @supabase/supabase-js. Please upgrade to Node.js 20 or later. For more information, visit: https://github.com/orgs/supabase/discussions/37217");
 
-const supabaseUrl = "https://ozzxgzkbwhwvudyyjjuf.supabase.co";
-const supabaseAnonKey = "yJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96enhnemtid2h3dnVkeXlqanVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MzkzOTYsImV4cCI6MjA4OTIxNTM5Nn0.vFXQgoWgm9Ca7zedQSsvH3TeqdlpwVgp_BE75NBCfEU";
-const supabaseServiceKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96enhnemtid2h3dnVkeXlqanVmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzYzOTM5NiwiZXhwIjoyMDg5MjE1Mzk2fQ.vIjIxu9ekTiZycxpS6veIAVWw8UdNPu6pa8c6Pt9slE";
+const supabaseUrl = undefined                                   ;
+const supabaseAnonKey = undefined                                        ;
 createClient(supabaseUrl, supabaseAnonKey);
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseAdmin = createClient(supabaseUrl, supabaseAnonKey);
 
 export { supabaseAdmin as s };

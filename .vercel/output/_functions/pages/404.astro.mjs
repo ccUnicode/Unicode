@@ -1,7 +1,7 @@
 import { e as createComponent, k as renderComponent, r as renderTemplate, m as maybeRenderHead } from '../chunks/astro/server_C2iRGO63.mjs';
 import 'piccolore';
-import { $ as $$Layout } from '../chunks/Layout_CsKb6_WZ.mjs';
-import { $ as $$Navbar } from '../chunks/Navbar_Bwy2egbE.mjs';
+import { $ as $$Layout } from '../chunks/Layout_CfJX6JHL.mjs';
+import { $ as $$Navbar } from '../chunks/Navbar_CBjdAvp7.mjs';
 export { renderers } from '../renderers.mjs';
 
 const $$404 = createComponent(($$result, $$props, $$slots) => {
@@ -17,9 +17,9 @@ Ir al inicio
 </a> <a href="/areas" class="border border-unicode/40 text-unicode font-bold px-8 py-3 rounded-full hover:bg-unicode hover:text-black transition-all text-sm sm:text-base">
 Ver áreas
 </a> </div> </div> </main> ` })}`;
-}, "C:/Users/JEANPIER/Desktop/Unicode/src/pages/404.astro", void 0);
+}, "D:/Carpeta_de_clases_2023-2025/ID-UNICODE/Unicode/src/pages/404.astro", void 0);
 
-const $$file = "C:/Users/JEANPIER/Desktop/Unicode/src/pages/404.astro";
+const $$file = "D:/Carpeta_de_clases_2023-2025/ID-UNICODE/Unicode/src/pages/404.astro";
 const $$url = "/404";
 
 const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
