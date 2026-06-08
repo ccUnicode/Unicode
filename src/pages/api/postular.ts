@@ -98,20 +98,20 @@ export async function POST({ request }: { request: Request }) {
 
   // 4. Whitelist — extraer SOLO los campos permitidos
   const {
-    nombres,
-    apellidos,
-    correo,
-    telefono,
-    universidad,
-    carrera,
-    ciclo_universidad,
-    opcion1,
-    opcion2,
-    motivo_postulacion
+    first_name,
+    last_name,
+    email,
+    phone,
+    university,
+    career,
+    university_semester,
+    first_choice_area,
+    second_choice_area,
+    application_reason
   } = parsedBody;
 
   // 5. Validar campos obligatorios
-  if (!nombres || !apellidos || !correo || !telefono || !universidad || !carrera || !ciclo_universidad || !opcion1 || !motivo_postulacion) {
+  if (!first_name || !last_name || !email || !phone || !university || !career || !university_semester || !first_choice_area || !application_reason) {
     return new Response(
       JSON.stringify({ error: 'Faltan campos obligatorios.' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
@@ -119,7 +119,7 @@ export async function POST({ request }: { request: Request }) {
   }
 
   // 6. Validar tipos (todos deben ser strings)
-  const campos = { nombres, apellidos, correo, telefono, universidad, carrera, ciclo_universidad, opcion1, motivo_postulacion };
+  const campos = { first_name, last_name, email, phone, university, career, university_semester, first_choice_area, application_reason };
   for (const [campo, valor] of Object.entries(campos)) {
     if (typeof valor !== 'string') {
       return new Response(
@@ -130,19 +130,19 @@ export async function POST({ request }: { request: Request }) {
   }
 
   // 7. Validar longitudes
-  if (nombres.length > 150 || apellidos.length > 150) {
+  if (first_name.length > 150 || last_name.length > 150) {
     return new Response(
       JSON.stringify({ error: 'Nombres o apellidos demasiado largos (máx. 150 caracteres).' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
   }
-  if (correo.length > 150 || universidad.length > 150 || carrera.length > 150) {
+  if (email.length > 150 || university.length > 150 || career.length > 150) {
     return new Response(
       JSON.stringify({ error: 'Uno de los campos excede el límite de 150 caracteres.' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
   }
-  if (motivo_postulacion.length > 2000) {
+  if (application_reason.length > 2000) {
     return new Response(
       JSON.stringify({ error: 'El motivo de postulación es demasiado largo (máx. 2000 caracteres).' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
@@ -150,31 +150,31 @@ export async function POST({ request }: { request: Request }) {
   }
 
   // 8. Validar formatos específicos
-  if (!validarEmail(correo)) {
+  if (!validarEmail(email)) {
     return new Response(
       JSON.stringify({ error: 'El formato del correo electrónico no es válido.' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
   }
-  if (!validarTelefono(telefono)) {
+  if (!validarTelefono(phone)) {
     return new Response(
       JSON.stringify({ error: 'El formato del teléfono no es válido (debe tener exactamente 9 dígitos).' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
   }
-  if (!CICLOS_VALIDOS.includes(ciclo_universidad)) {
+  if (!CICLOS_VALIDOS.includes(university_semester)) {
     return new Response(
       JSON.stringify({ error: 'Ciclo universitario no válido.' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
   }
-  if (!AREAS_VALIDAS.includes(opcion1)) {
+  if (!AREAS_VALIDAS.includes(first_choice_area)) {
     return new Response(
       JSON.stringify({ error: 'Área de primera opción no válida.' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
   }
-  if (opcion2 && !AREAS_VALIDAS.includes(opcion2)) {
+  if (second_choice_area && !AREAS_VALIDAS.includes(second_choice_area)) {
     return new Response(
       JSON.stringify({ error: 'Área de segunda opción no válida.' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
@@ -183,22 +183,22 @@ export async function POST({ request }: { request: Request }) {
 
   // 9. Sanitizar todos los campos (previene XSS almacenado)
   const dataSanitizada = {
-    nombres: sanitize(nombres),
-    apellidos: sanitize(apellidos),
-    correo: sanitize(correo),
-    telefono: sanitize(telefono),
-    universidad: sanitize(universidad),
-    carrera: sanitize(carrera),
-    ciclo_universidad: sanitize(ciclo_universidad),
-    opcion1: sanitize(opcion1),
-    opcion2: opcion2 ? sanitize(opcion2) : undefined,
-    motivo_postulacion: sanitize(motivo_postulacion),
+    first_name: sanitize(first_name),
+    last_name: sanitize(last_name),
+    email: sanitize(email),
+    phone: sanitize(phone),
+    university: sanitize(university),
+    career: sanitize(career),
+    university_semester: sanitize(university_semester),
+    first_choice_area: sanitize(first_choice_area),
+    second_choice_area: second_choice_area ? sanitize(second_choice_area) : undefined,
+    application_reason: sanitize(application_reason),
   };
 
   // 10. Insertar en la base de datos Supabase
   try {
     const { error: dbError } = await supabaseAdmin
-      .from('postulantes')
+      .from('applicants')
       .insert([dataSanitizada]);
 
     if (dbError) {
