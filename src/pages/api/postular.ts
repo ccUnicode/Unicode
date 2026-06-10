@@ -1,13 +1,13 @@
 /**
  * API Endpoint: POST /api/postular
- * Endpoint para recibir postulaciones de la convocatoria.
+ * Endpoint to receive recruitment applications.
  * 
- * Medidas de seguridad:
- * - Whitelist de campos (solo acepta campos permitidos)
- * - Validación de formatos (correo, teléfono, longitudes)
- * - Sanitización de strings (previene XSS almacenado)
- * - Rate limiting (máx 3 postulaciones por IP cada 10 min)
- * - Protección CSRF (valida header X-Requested-With)
+ * Security measures:
+ * - Field whitelisting (accepts only permitted fields)
+ * - Format validation (email, phone, lengths)
+ * - String sanitization (prevents stored XSS)
+ * - Rate limiting (max 3 submissions per IP every 10 minutes)
+ * - CSRF protection (validates X-Requested-With header)
  */
 
 export const prerender = false;
@@ -17,8 +17,14 @@ import { supabaseAdmin } from '../../lib/supabase';
 // --- Rate Limiter ---
 const postulacionAttempts = new Map<string, { count: number; firstAttempt: number }>();
 const MAX_POSTULACIONES = 3;
-const WINDOW_MS = 10 * 60 * 1000; // 10 minutos
+const WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 
+/**
+ * Extracts the client IP address from the request headers.
+ * 
+ * @param {Request} request - The incoming API request object.
+ * @returns {string} The client IP address.
+ */
 function getClientIP(request: Request): string {
   return (
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
@@ -27,7 +33,12 @@ function getClientIP(request: Request): string {
   );
 }
 
-// --- Sanitización ---
+/**
+ * Sanitizes input string to prevent stored XSS attacks.
+ * 
+ * @param {string} input - Unsanitized string.
+ * @returns {string} Sanitized string.
+ */
 function sanitize(input: string): string {
   return input
     .replace(/&/g, '&amp;')
@@ -38,22 +49,42 @@ function sanitize(input: string): string {
     .trim();
 }
 
-// --- Validaciones ---
+// --- Validations ---
 const AREAS_VALIDAS = ['GTH', 'ACD', 'RRPP', 'DCC', 'ID'];
 const CICLOS_VALIDOS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '0'];
 
+/**
+ * Validates the email format.
+ * 
+ * @param {string} email - Email address to check.
+ * @returns {boolean} True if the email format is valid.
+ */
 function validarEmail(email: string): boolean {
-  // Regex más estricto: requiere @, un dominio válido, y una extensión (ej. .com, .pe) de al menos 2 letras
+  // Strict regex: requires @, a valid domain, and a TLD (e.g., .com, .pe) of at least 2 letters
   return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
 }
 
+/**
+ * Validates the phone format.
+ * 
+ * @param {string} tel - Phone number to check.
+ * @returns {boolean} True if the phone format contains exactly 9 digits.
+ */
 function validarTelefono(tel: string): boolean {
   const limpio = tel.replace(/[\s\-().+]/g, '');
   return /^\d{9}$/.test(limpio);
 }
 
+/**
+ * POST handler for applicant registration.
+ * 
+ * @async
+ * @param {Object} context - Request context containing the request object.
+ * @param {Request} context.request - The API request object.
+ * @returns {Promise<Response>} API Response indicating success or error status.
+ */
 export async function POST({ request }: { request: Request }) {
-  // 1. Protección CSRF: validar que venga de nuestro frontend
+  // 1. CSRF Protection: validate request originates from our frontend
   const xRequestedWith = request.headers.get('X-Requested-With');
   if (xRequestedWith !== 'XMLHttpRequest') {
     return new Response(
@@ -62,7 +93,7 @@ export async function POST({ request }: { request: Request }) {
     );
   }
 
-  // 2. Rate limiting
+  // 2. Rate limiting check
   const ip = getClientIP(request);
   const now = Date.now();
   let record = postulacionAttempts.get(ip);
@@ -84,7 +115,7 @@ export async function POST({ request }: { request: Request }) {
     postulacionAttempts.set(ip, record);
   }
 
-  // 3. Parsear body
+  // 3. Parse request body
   let parsedBody: any;
   try {
     const bodyText = await request.text();
@@ -96,7 +127,7 @@ export async function POST({ request }: { request: Request }) {
     );
   }
 
-  // 4. Whitelist — extraer SOLO los campos permitidos
+  // 4. Whitelist - extract ONLY permitted fields
   const {
     first_name,
     last_name,
@@ -110,7 +141,7 @@ export async function POST({ request }: { request: Request }) {
     application_reason
   } = parsedBody;
 
-  // 5. Validar campos obligatorios
+  // 5. Validate required fields
   if (!first_name || !last_name || !email || !phone || !university || !career || !university_semester || !first_choice_area || !application_reason) {
     return new Response(
       JSON.stringify({ error: 'Faltan campos obligatorios.' }),
@@ -118,7 +149,7 @@ export async function POST({ request }: { request: Request }) {
     );
   }
 
-  // 6. Validar tipos (todos deben ser strings)
+  // 6. Validate types (all fields must be strings)
   const campos = { first_name, last_name, email, phone, university, career, university_semester, first_choice_area, application_reason };
   for (const [campo, valor] of Object.entries(campos)) {
     if (typeof valor !== 'string') {
@@ -129,7 +160,7 @@ export async function POST({ request }: { request: Request }) {
     }
   }
 
-  // 7. Validar longitudes
+  // 7. Validate field lengths
   if (first_name.length > 150 || last_name.length > 150) {
     return new Response(
       JSON.stringify({ error: 'Nombres o apellidos demasiado largos (máx. 150 caracteres).' }),
@@ -149,7 +180,7 @@ export async function POST({ request }: { request: Request }) {
     );
   }
 
-  // 8. Validar formatos específicos
+  // 8. Validate specific formats
   if (!validarEmail(email)) {
     return new Response(
       JSON.stringify({ error: 'El formato del correo electrónico no es válido.' }),
@@ -181,7 +212,7 @@ export async function POST({ request }: { request: Request }) {
     );
   }
 
-  // 9. Sanitizar todos los campos (previene XSS almacenado)
+  // 9. Sanitize all fields (prevents stored XSS)
   const dataSanitizada = {
     first_name: sanitize(first_name),
     last_name: sanitize(last_name),
@@ -195,7 +226,7 @@ export async function POST({ request }: { request: Request }) {
     application_reason: sanitize(application_reason),
   };
 
-  // 10. Insertar en la base de datos Supabase
+  // 10. Insert record into Supabase database
   try {
     const { error: dbError } = await supabaseAdmin
       .from('applicants')
@@ -212,7 +243,7 @@ export async function POST({ request }: { request: Request }) {
       throw new Error('Error al guardar la postulación.');
     }
 
-    // Incrementar el conteo de rate limiting solo en éxito
+    // Increment rate limit attempts counter only on success
     record.count += 1;
 
     return new Response(

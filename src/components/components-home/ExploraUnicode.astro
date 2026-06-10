@@ -1,8 +1,10 @@
 ---
 /**
  * ExploraUnicode.astro
- * Sección "EXPLORA UNICODE" con 4 tarjetas de navegación
- * hacia las principales secciones de la web.
+ * Renders the "EXPLORE UNICODE" navigation hub, displaying 4 interactive cards
+ * linking users to core sections of the application.
+ *
+ * @component
  */
 
 interface ExploraItem {
@@ -42,7 +44,6 @@ const items: ExploraItem[] = [
 
 <section id="explora" class="w-full py-16 md:py-24 relative">
   <div class="max-w-5xl mx-auto px-6">
-    <!-- Título -->
     <div class="text-center mb-6">
       <h2
         class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight"
@@ -51,17 +52,14 @@ const items: ExploraItem[] = [
       </h2>
     </div>
 
-    <!-- Subtítulo -->
     <p class="text-zinc-400 text-sm md:text-base text-center mb-14">
       Descubre nuestros pilares y participa.
     </p>
 
-    <!-- Grid de tarjetas -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
       {
         items.map((item) => (
           <div class="group bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 md:p-8 flex flex-col items-center text-center transition-all duration-300 hover:border-unicode/40 hover:bg-zinc-900/90">
-            {/* Icono */}
             <div class="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-unicode/10 border border-unicode/20 flex items-center justify-center mb-5 group-hover:bg-unicode/15 transition-colors duration-300">
               {item.icon === "areas" && (
                 <svg
@@ -74,7 +72,7 @@ const items: ExploraItem[] = [
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                    d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"
+                    d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"
                   />
                 </svg>
               )}
@@ -125,12 +123,10 @@ const items: ExploraItem[] = [
               )}
             </div>
 
-            {/* Título */}
             <h3 class="text-white font-bold text-base md:text-lg mb-4 group-hover:text-unicode transition-colors duration-300">
               {item.title}
             </h3>
 
-            {/* Botón */}
             <a
               href={item.href}
               class="px-6 py-2 bg-unicode hover:bg-unicode-light text-black font-bold text-xs rounded-full transition-all duration-300 shadow-unicode hover:shadow-unicode-lg"
