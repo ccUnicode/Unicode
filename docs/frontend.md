@@ -21,13 +21,13 @@ Cada tecnología del entorno del cliente ha sido seleccionada para cumplir con l
 * **Tailwind CSS:** Framework utilitario que agiliza la maquetación bajo el enfoque orientado a móviles corporativo. Centraliza la paleta de colores del tema oscuro dominante y restringe las interacciones y llamados a la acción (CTAs) al color de acento verde neón institucional (`#75D32D`).
 * **Nanostores (`lib/dbStore.ts`):** Gestor de estado ligero y agnóstico que administra la reactividad global y los estados síncronos de navegación en el navegador sin la penalización de peso de frameworks masivos de terceros.
 
-#### 1.2.2. Distribución de Módulos y Responsabilidades por Ramas
+#### 1.2.2. Distribución de Módulos por Ramas
 Para evitar colisiones en el control de versiones y garantizar la autonomía del desarrollo, el sistema se divide de manera modular en cuatro flujos asignados por áreas de trabajo:
 
-* **Módulo de Convocatorias y Página de Inicio (Desarrollador: Jeanpier):** a
-* **Módulo de Áreas de Conocimiento (Desarrollador: Leonel):** Responsable de la arquitectura y subrutas físicas individuales de las disciplinas organizacionales en `src/pages/areas/`. Coordina la inyección de la tienda de estados `lib/dbStore.ts` para mantener la reactividad de las pestañas activas, gestiona los componentes de esqueleto de carga visual (*Skeleton Loaders*) y centraliza los mocks de datos estáticos en `src/data/projects.ts`.
-* **Módulo de Catálogo de Proyectos (Desarrollador: José):** a
-* **Módulo de Agenda y Calendario de Eventos (Desarrollador: Luis):** a
+* **Módulo de Convocatorias y Página de Inicio:** Contiene la lógica del formulario de postulación y los componentes interactivos de la landing page principal.
+* **Módulo de Áreas de Conocimiento:** Responsable de la arquitectura y subrutas físicas individuales de las disciplinas organizacionales en `src/pages/areas/`. Coordina la inyección de la tienda de estados `lib/dbStore.ts` para mantener la reactividad de las pestañas activas, gestiona los componentes de esqueleto de carga visual (*Skeleton Loaders*) y centraliza los mocks de datos estáticos en `src/data/projects.ts`.
+* **Módulo de Catálogo de Proyectos:** Contiene el catálogo de soluciones tecnológicas desarrolladas por el centro, incluyendo filtros avanzados y fichas técnicas.
+* **Módulo de Agenda y Calendario de Eventos:** Encargado de la visualización cronológica de actividades e historial de eventos del centro.
 
 ### 1.3. Flujo de Datos y Capa de API Intermedia
 Para interactuar de forma segura con la base de datos de Supabase, la aplicación implementa una capa intermedia de endpoints locales en el directorio `src/pages/api/`. En lugar de inicializar clientes de administración con privilegios elevados en el navegador, el cliente del frontend realiza consultas HTTPS directas a estos endpoints locales. Este enfoque previene la exposición de claves privadas del servidor (como `SUPABASE_SERVICE_ROLE_KEY`) y permite centralizar la validación de tokens de sesión y el control de tasas de solicitudes en el servidor.
@@ -264,17 +264,17 @@ Obtiene la lista de los candidatos inscritos. Requiere autenticación.
     *   Atributos `aria-label` descriptivos aplicados a todos los botones que contienen únicamente iconos (por ejemplo, flechas de paginación o botones de cierre).
     *   Contraste de color superior a 4.5:1 en textos de lectura general y títulos primarios.
 
-### 3.5. Asignación de Módulos y Responsabilidades
-El desarrollo de la plataforma se encuentra estructurado en base a la asignación de módulos individuales coordinados:
+### 3.5. Distribución de Módulos
+El desarrollo de la plataforma se encuentra estructurado en base a la distribución de módulos individuales coordinados:
 
-*   **Sección Home y Sección Convocatoria:** Responsable de la lógica de negocio, control de estados del formulario y validaciones seguras del cliente conectadas a Supabase (Encargado: Jeanpier).
-*   **Sección Áreas:** Responsable de la estructura modular de las disciplinas de I+D (ID), Relaciones Públicas (RRPP), Gestión del Talento Humano (GTH), Académica (ACD) y Dirección de Creación y Contenido (DCC) (Encargado: Leonel).
-*   **Sección Proyectos:** Responsable de la maquetación de tarjetas, vistas y filtros avanzados de los proyectos desarrollados por el centro (Encargado: José).
-*   **Sección Eventos:** Responsable del diseño y visualización cronológica de actividades e historial de eventos de las áreas (Encargado: Luis).
+*   **Sección Home y Sección Convocatoria:** Responsable de la lógica de negocio, control de estados del formulario y validaciones seguras del cliente conectadas a Supabase.
+*   **Sección Áreas:** Responsable de la estructura modular de las disciplinas de I+D (ID), Relaciones Públicas (RRPP), Gestión del Talento Humano (GTH), Académica (ACD) y Dirección de Creación y Contenido (DCC).
+*   **Sección Proyectos:** Responsable de la maquetación de tarjetas, vistas y filtros avanzados de los proyectos desarrollados por el centro.
+*   **Sección Eventos:** Responsable del diseño y visualización cronológica de actividades e historial de eventos de las áreas.
 
 ### 3.6. Arquitectura y Especificación Técnica de las Secciones
 
-#### 3.6.1. Home (Responsable: Jeanpier)
+#### 3.6.1. Home
 Esta sección detalla la arquitectura modular y los patrones implementados para la página de inicio (Landing Page) de UNICODE:
 
 1.  **Componentes Modulares Asociados (`src/components/components-home/` y `src/components/`)**:
@@ -288,7 +288,7 @@ Esta sección detalla la arquitectura modular y los patrones implementados para 
 2.  **Sistema de Enrutamiento y Generación**:
     La Landing Page de inicio se gestiona mediante la ruta raíz `/` mapeada al archivo `src/pages/index.astro`, compilada del lado del servidor para garantizar el máximo rendimiento de carga (LCP) y SEO.
 
-#### 3.6.2. Áreas (Responsable: Leonel)
+#### 3.6.2. Áreas
 Esta sección detalla la arquitectura modular y los patrones implementados para la gestión de las disciplinas de UNICODE:
 
 1.  **Componentes Modulares Asociados (`src/components/components-areas/`)**:
@@ -303,7 +303,7 @@ Esta sección detalla la arquitectura modular y los patrones implementados para 
 3.  **Integración de Estado Reactivo**:
     El control de la navegación interactiva y la retención de filtros por disciplina en la interfaz del cliente se delega a `src/lib/dbStore.ts` basado en Nanostores. Esto mantiene el consumo de memoria en niveles mínimos y desacopla los componentes de dependencias de frameworks externos complejos.
 
-#### 3.6.3. Proyectos (Responsable: José)
+#### 3.6.3. Proyectos
 Esta sección detalla la arquitectura modular y los patrones implementados para la vitrina de soluciones tecnológicas de UNICODE:
 
 1.  **Componentes Modulares Asociados (`src/components/components-projects/`)**:
@@ -318,7 +318,7 @@ Esta sección detalla la arquitectura modular y los patrones implementados para 
 3.  **Integración de Estado Reactivo e Interactividad**:
     La interactividad del catálogo (filtrado en tiempo real, búsqueda de texto, paginado y control del modal detallado) se ejecuta mediante scripts vanilla en el cliente. La paginación en pantallas de escritorio muestra hasta 6 elementos por página y se adapta dinámicamente, mientras que en pantallas móviles se muestra la lista completa de manera fluida.
 
-#### 3.6.4. Eventos (Responsable: Luis)
+#### 3.6.4. Eventos
 Esta sección detalla la arquitectura modular y los patrones implementados para el cronograma y FAQ de actividades:
 
 1.  **Componentes Modulares Asociados (`src/components/components-events/`)**:
@@ -331,7 +331,7 @@ Esta sección detalla la arquitectura modular y los patrones implementados para 
 3.  **Interactividad y Control del DOM**:
     Los efectos del acordeón para las FAQ de eventos y la navegación fluida a través de las actividades se implementan utilizando lógica nativa de JavaScript (Vanilla JS) en el cliente.
 
-#### 3.6.5. Convocatoria (Responsable: Jeanpier)
+#### 3.6.5. Convocatoria
 Esta sección detalla la arquitectura modular, integraciones y flujos funcionales del proceso de postulación a UNICODE:
 
 1.  **Componentes Modulares Asociados (`src/components/components-call/`)**:
