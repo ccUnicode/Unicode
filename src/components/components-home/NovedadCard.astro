@@ -1,8 +1,8 @@
 ---
 /**
  * NovedadCard.astro
- * Componente individual para las noticias de UNICODE.
- * Sigue el diseño proporcionado por el diseñador.
+ * Individual news/novelty card component for UNICODE.
+ * Adheres to the designated design specifications.
  */
 
 interface Props {
@@ -18,7 +18,6 @@ const { image, title, description, href = "#" } = Astro.props;
 <div
   class="group bg-[#111111]/80 border border-zinc-800 rounded-[2.5rem] p-5 transition-all duration-300 hover:border-unicode/30 hover:bg-[#151515] flex flex-col h-full"
 >
-  <!-- Imagen -->
   <div class="relative w-full aspect-4/3 rounded-4xl overflow-hidden mb-6 bg-zinc-900">
     <img
       src={image}
@@ -28,7 +27,6 @@ const { image, title, description, href = "#" } = Astro.props;
     />
   </div>
 
-  <!-- Contenido -->
   <div class="flex flex-col grow px-2">
     <h3
       class="text-white font-bold text-xl leading-snug mb-3 group-hover:text-unicode transition-colors duration-300"
@@ -40,7 +38,6 @@ const { image, title, description, href = "#" } = Astro.props;
       {description}
     </p>
 
-    <!-- Botón -->
     <div class="mt-auto">
       <a
         href={href}

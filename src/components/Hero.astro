@@ -1,5 +1,12 @@
 ---
-// Hero Component
+/**
+ * Hero.astro
+ * Hero section for the landing page featuring the organization branding,
+ * visual mascot, core value description, navigation buttons,
+ * and smooth scroll page animation.
+ *
+ * @component
+ */
 ---
 
 <section
@@ -7,11 +14,9 @@
 >
   <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-8 w-full relative z-10">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
-      <!-- Left Column: Content -->
       <div
         class="flex flex-col text-center lg:text-left justify-center mt-8 lg:mt-0 px-2 sm:px-0 lg:pl-18"
       >
-        <!-- Logo Text inline with SVG -->
         <div
           class="flex flex-wrap items-center justify-center lg:justify-start gap-3 md:gap-4 mb-4 md:mb-6"
         >
@@ -42,7 +47,6 @@
           conocimiento de nuestra comunidad universitaria.
         </p>
 
-        <!-- CTAs -->
         <div
           class="flex flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4 w-full max-w-md mx-auto lg:mx-0 sm:max-w-none"
         >
@@ -61,11 +65,10 @@
         </div>
       </div>
 
-      <!-- Right Column: Image -->
       <div
         class="relative w-full h-[280px] sm:h-[420px] lg:h-[550px] flex justify-center items-center mt-10 sm:mt-0 pb-4 sm:pb-0"
       >
-        <!-- Contenedor de escala (evita conflicto con la animación float) -->
+        <!-- Scale wrapper prevents conflicting layout dimensions during float keyframes -->
         <div
           class="w-full h-full transform scale-[1.35] translate-y-8 sm:translate-y-0 sm:scale-100 flex justify-center items-center origin-center"
         >
@@ -77,7 +80,6 @@
           />
         </div>
 
-        <!-- Glow effect behind mascot -->
         <div
           class="absolute inset-0 bg-unicode/5 blur-[120px] rounded-full z-[-1] transform scale-75 hidden lg:block"
         >
@@ -87,6 +89,13 @@
   </div>
 
   <script is:inline>
+    /**
+     * Set up smooth scroll interpolation handlers for landing page anchor links
+     * utilizing a cubic ease-in-out time calculation.
+     *
+     * @function setupHeroScrollLinks
+     * @returns {void}
+     */
     document.addEventListener("DOMContentLoaded", () => {
       const links = document.querySelectorAll(".hero-scroll-link");
 
@@ -102,7 +111,7 @@
           if (targetElement) {
             let offsetHeight = 80;
             if (targetId === "nosotros") {
-              // Restauramos el offset a 80 para que el título "NOSOTROS" sea visible
+              // Restore header offsets to 80px to keep section heading visible
               offsetHeight = 80;
             } else if (targetId === "novedades") {
               offsetHeight = 80;

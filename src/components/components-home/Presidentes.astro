@@ -1,19 +1,18 @@
 ---
 /**
- * Componente de Presidentes para el Home
- * Muestra las fotos, nombres y LinkedIn de los presidentes actuales.
+ * Presidentes.astro
+ * Presidents component for the Home page.
+ * Displays profiles, names, and LinkedIn links of the current presidents.
  */
 ---
 
 <section class="w-full py-16 md:py-24 bg-[#050505] relative overflow-hidden">
-    <!-- Brillo decorativo de fondo -->
     <div
         class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-unicode/5 rounded-full blur-[100px] pointer-events-none"
     >
     </div>
 
     <div class="max-w-7xl mx-auto px-6 text-center relative z-10">
-        <!-- Título principal -->
         <h2
             class="text-4xl md:text-5xl font-extrabold text-unicode text-glow mb-16 uppercase tracking-tight"
         >
@@ -23,14 +22,13 @@
         <div
             class="flex flex-col sm:flex-row items-center justify-center gap-16 sm:gap-32 md:gap-40"
         >
-            <!-- Presidente 1 -->
             <div class="flex flex-col items-center group">
                 <div
                     class="w-40 h-40 md:w-56 md:h-56 rounded-full overflow-hidden border border-zinc-800 group-hover:border-unicode/50 group-hover:shadow-unicode transition-all duration-300 mb-6 bg-zinc-900/50"
                 >
                     <img
                         src="/Christopher_Albino.webp"
-                        alt="Presidente 1"
+                        alt="Presidente Christopher Albino"
                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
                     />
@@ -64,20 +62,17 @@
                 </a>
             </div>
 
-            <!-- Presidente 2 -->
             <div class="flex flex-col items-center group">
-                <!-- Foto -->
                 <div
                     class="w-40 h-40 md:w-56 md:h-56 rounded-full overflow-hidden border border-zinc-800 group-hover:border-unicode/50 group-hover:shadow-unicode transition-all duration-300 mb-6 bg-zinc-900/50"
                 >
                     <img
                         src="/Ricco_Rashuaman.webp"
-                        alt="Presidente 2"
+                        alt="Presidente Ricco Rashuaman"
                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
                     />
                 </div>
-                <!-- Nombre y LinkedIn -->
                 <h3
                     class="text-2xl font-bold text-white mb-2 group-hover:text-unicode transition-colors"
                 >

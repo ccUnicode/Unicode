@@ -1,7 +1,10 @@
 ---
 /**
- * Footer.astro (Global)
- * Versión mejorada con estructura multi-columna y estética premium.
+ * Footer.astro
+ * Global multi-column footer displaying branding, navigation tree,
+ * area redirects, contact information, social links, and copyright notices.
+ *
+ * @component
  */
 const currentYear = new Date().getFullYear();
 
@@ -46,7 +49,6 @@ const social = [
 ---
 
 <footer class="bg-[#050505] relative overflow-hidden">
-  <!-- Línea de luz superior con glow -->
   <div
     class="absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-unicode/30 to-transparent"
   >
@@ -56,7 +58,6 @@ const social = [
     <div
       class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 mb-20"
     >
-      <!-- Columna 1: Marca -->
       <div class="space-y-6">
         <a href="/" class="flex items-center gap-3 group">
           <div
@@ -100,7 +101,6 @@ const social = [
         </div>
       </div>
 
-      <!-- Columna 2: Navegación -->
       <div>
         <h3
           class="text-white font-semibold mb-6 text-sm uppercase tracking-widest"
@@ -124,7 +124,6 @@ const social = [
         </ul>
       </div>
 
-      <!-- Columna 3: Áreas -->
       <div>
         <h3
           class="text-white font-semibold mb-6 text-sm uppercase tracking-widest"
@@ -148,7 +147,6 @@ const social = [
         </ul>
       </div>
 
-      <!-- Columna 4: Contacto / CTA -->
       <div class="space-y-6">
         <h3
           class="text-white font-semibold mb-6 text-sm uppercase tracking-widest"
@@ -201,7 +199,6 @@ const social = [
           </div>
         </div>
 
-        <!-- Botón CTA -->
         <a
           href="/call"
           class="inline-flex items-center justify-center px-6 py-3 rounded-xl border border-unicode/30 bg-unicode/5 text-unicode text-sm font-semibold hover:bg-unicode hover:text-black transition-all duration-300 shadow-unicode-sm hover:shadow-unicode mt-4"
@@ -211,7 +208,6 @@ const social = [
       </div>
     </div>
 
-    <!-- Bottom Bar -->
     <div
       class="pt-8 border-t border-zinc-900 flex flex-col md:flex-row justify-between items-center gap-6"
     >
@@ -229,7 +225,6 @@ const social = [
     </div>
   </div>
 
-  <!-- Decoración visual de fondo -->
   <div
     class="absolute -bottom-24 -left-24 w-96 h-96 bg-unicode/5 rounded-full blur-[100px] opacity-30"
   >
