@@ -274,9 +274,19 @@ El desarrollo de la plataforma se encuentra estructurado en base a la asignació
 
 ### 3.6. Arquitectura y Especificación Técnica de las Secciones
 
-#### 3.6.1. Home
+#### 3.6.1. Home (Responsable: Jeanpier)
+Esta sección detalla la arquitectura modular y los patrones implementados para la página de inicio (Landing Page) de UNICODE:
 
-*(Sección en blanco)*
+1.  **Componentes Modulares Asociados (`src/components/components-home/` y `src/components/`)**:
+    *   `Hero.astro`: Panel principal que presenta la propuesta de valor con un diseño inmersivo de fondo SVG y el color de acento institucional verde neón.
+    *   `Stats.astro`: Componente que muestra de forma numérica los logros y métricas de impacto de la organización.
+    *   `Novedades.astro` y `NovedadCard.astro`: Grilla responsiva y tarjeta individual para renderizar noticias y actualizaciones del centro.
+    *   `Nosotros.astro`: Detalle conceptual de la misión, visión y objetivos organizacionales de UNICODE.
+    *   `Alianzas.astro`: Módulo que renderiza logotipos responsivos de organizaciones y comunidades asociadas.
+    *   `ExploraUnicode.astro`: Panel de navegación interactivo con enlaces a los diferentes módulos de la plataforma.
+    *   `Presidentes.astro`: Sección para destacar el equipo de liderazgo y directiva del centro.
+2.  **Sistema de Enrutamiento y Generación**:
+    La Landing Page de inicio se gestiona mediante la ruta raíz `/` mapeada al archivo `src/pages/index.astro`, compilada del lado del servidor para garantizar el máximo rendimiento de carga (LCP) y SEO.
 
 #### 3.6.2. Áreas (Responsable: Leonel)
 Esta sección detalla la arquitectura modular y los patrones implementados para la gestión de las disciplinas de UNICODE:
@@ -308,9 +318,32 @@ Esta sección detalla la arquitectura modular y los patrones implementados para 
 3.  **Integración de Estado Reactivo e Interactividad**:
     La interactividad del catálogo (filtrado en tiempo real, búsqueda de texto, paginado y control del modal detallado) se ejecuta mediante scripts vanilla en el cliente. La paginación en pantallas de escritorio muestra hasta 6 elementos por página y se adapta dinámicamente, mientras que en pantallas móviles se muestra la lista completa de manera fluida.
 
-#### 3.6.4. Eventos
+#### 3.6.4. Eventos (Responsable: Luis)
+Esta sección detalla la arquitectura modular y los patrones implementados para el cronograma y FAQ de actividades:
 
-*(Sección en blanco)*
+1.  **Componentes Modulares Asociados (`src/components/components-events/`)**:
+    *   `HeroEventos.astro`: Banner introductorio de la sección que expone el título de la agenda.
+    *   `ProximosEventos.astro`: Panel que expone los eventos activos y calendarizados a futuro mediante tarjetas interactivas.
+    *   `EventosRealizados.astro`: Galería estructurada de actividades previas que han concluido con éxito.
+    *   `FAQEventos.astro`: Sección de preguntas frecuentes con un diseño de acordeón interactivo estilizado.
+2.  **Sistema de Enrutamiento y Generación**:
+    La sección de eventos se mapea a la ruta física `/eventos` gestionada por el archivo `src/pages/eventos.astro`. Obtiene los registros dinámicos del mock estático ubicado en `src/data/events.ts`.
+3.  **Interactividad y Control del DOM**:
+    Los efectos del acordeón para las FAQ de eventos y la navegación fluida a través de las actividades se implementan utilizando lógica nativa de JavaScript (Vanilla JS) en el cliente.
+
+#### 3.6.5. Convocatoria (Responsable: Jeanpier)
+Esta sección detalla la arquitectura modular, integraciones y flujos funcionales del proceso de postulación a UNICODE:
+
+1.  **Componentes Modulares Asociados (`src/components/components-call/`)**:
+    *   `HeroCall.astro`: Encabezado visual diseñado para incentivar el registro de candidatos durante el periodo activo.
+    *   `PorQueUnicode.astro`: Módulo que destaca las ventajas y beneficios de ser miembro activo del centro.
+    *   `RegistroModal.astro`: Componente crítico e interactivo de diálogo modal (utilizando el elemento nativo `<dialog>`) que encapsula el formulario de postulación del candidato.
+2.  **Sistema de Enrutamiento y Generación**:
+    El flujo de registro reside en la ruta `/call` gestionada por el archivo `src/pages/call.astro`. Su visibilidad depende del estado lógico global configurado en el archivo `src/data/siteConfig.ts` (`CONVOCATORIA_ABIERTA`).
+3.  **Flujo de Integración Asíncrona con el Backend**:
+    *   **Control de Apertura y Cierre:** Se inyectan controladores en el cliente para interceptar enlaces con el ancla `#postular`. Al hacer clic, se invoca `.showModal()` y se bloquea el desplazamiento del cuerpo de la página (`overflow: hidden`).
+    *   **Consumo de la API de Registro:** El envío del formulario se intercepta asíncronamente mediante un evento `submit` en el cliente. Los datos del formulario se envían mediante una petición `POST` al endpoint `/api/postular`.
+    *   **Gestión de Respuestas y Errores:** Al iniciar la llamada, se desactiva el botón de envío y se muestra un spinner visual. En caso de respuesta exitosa (200 OK), se muestra un mensaje en color verde neón y el modal se cierra automáticamente tras 2.5 segundos. Ante cualquier fallo del servidor (400/500) o problema de red, el bloque `catch` inhabilita la carga y renderiza una alerta en color rojo neón que orienta al usuario para un reintento seguro.
 
 ---
 
