@@ -9,6 +9,14 @@ export const prerender = false;
 import { sessionStore } from '../../lib/session-store';
 import { supabaseAdmin } from '../../lib/supabase';
 
+/**
+ * GET handler to fetch applicant details from Supabase with search/filter options.
+ *
+ * @async
+ * @param {Object} context - Request context containing the request object.
+ * @param {Request} context.request - The API request object.
+ * @returns {Promise<Response>} API Response with applicants dataset.
+ */
 export async function GET({ request }: { request: Request }) {
   // Validate session token
   const authHeader = request.headers.get('Authorization') || '';
@@ -35,7 +43,7 @@ export async function GET({ request }: { request: Request }) {
     const { data: test, error: testErr } = await supabaseAdmin.from('applicants').select('count');
     console.log('Supabase check:', { test, testErr });
 
-    // LLAMAMOS A SUPABASE REAL USANDO EL CLIENTE ADMIN
+    // Call real Supabase table using the admin client credentials
     const { data, error } = await supabaseAdmin
       .from('applicants')
       .select('*');
@@ -59,16 +67,16 @@ export async function GET({ request }: { request: Request }) {
       });
     }
 
-    // Sort y Order
+    // Sort and Order
     filteredData = filteredData.sort((a: any, b: any) => {
-      // 1) Si ordenan por prioridad de opciones
+      // 1) Sort by option priority if specified
       if (area && orden === '1ra-2da') {
         const aIs1ra = a.first_choice_area === area;
         const bIs1ra = b.first_choice_area === area;
         if (aIs1ra && !bIs1ra) return -1;
         if (!aIs1ra && bIs1ra) return 1;
       }
-      // 2) Default a más recientes (fecha)
+      // 2) Default sorting: most recent first (based on date)
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
 

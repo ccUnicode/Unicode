@@ -1,8 +1,16 @@
 ---
 /**
+<<<<<<< HEAD:src/components/components-call/por-que-unicode.astro
  * por-que-unicode.astro
  * Sección "¿Por qué UNICODE?" con grid de beneficios
  * y la mascota del centro cultural.
+=======
+ * PorQueUnicode.astro
+ * Renders the benefits of joining UNICODE in a grid layout
+ * alongside the organizational mascot.
+ *
+ * @component
+>>>>>>> bf04641d858301e6eaae062ab786000d50517516:src/components/components-call/PorQueUnicode.astro
  */
 
 interface Beneficio {
@@ -28,28 +36,23 @@ const beneficios: Beneficio[] = [
 <section id="por-que" class="w-full py-16 md:py-24 relative overflow-hidden">
   <div class="max-w-6xl mx-auto px-6">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-      <!-- Columna izquierda: Card de beneficios -->
       <div
         class="bg-[#050505]/80 border border-unicode rounded-[32px] p-8 md:p-10 shadow-[0_0_30px_rgba(117,211,45,0.1)]"
       >
-        <!-- Título -->
         <h2
           class="text-2xl md:text-3xl font-extrabold text-unicode text-center mb-10 tracking-tight text-glow"
         >
           ¿Por qué UNICODE?
         </h2>
 
-        <!-- Grid de beneficios 2x2 -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-8">
           {
             beneficios.map((beneficio) => (
               <div class="flex items-start gap-4">
-                {/* Punto verde */}
                 <div class="shrink-0 mt-1.5 md:mt-1">
                   <div class="w-2.5 h-2.5 rounded-full bg-unicode mt-0.5" />
                 </div>
 
-                {/* Texto */}
                 <p class="text-zinc-300 text-xs md:text-[13px] leading-relaxed font-medium">
                   {beneficio.text}
                 </p>
@@ -59,10 +62,8 @@ const beneficios: Beneficio[] = [
         </div>
       </div>
 
-      <!-- Columna derecha: Mascota -->
       <div class="flex justify-center lg:justify-end">
         <div class="relative">
-          <!-- Glow detrás de la mascota -->
           <div
             class="absolute inset-0 bg-unicode/15 rounded-full blur-[90px] scale-75 pointer-events-none"
           >

@@ -1,9 +1,18 @@
 ---
 /**
+<<<<<<< HEAD:src/components/components-call/registro-modal.astro
  * registro-modal.astro
  * Componente de ventana flotante (Modal) para el formulario de inscripción.
  * Refleja exactamente las columnas de la tabla 'postulantes' en schema.sql.
  * Solo se renderiza si la convocatoria está abierta.
+=======
+ * RegistroModal.astro
+ * Overlay modal window containing the candidate registration form.
+ * Directly maps fields to the 'postulantes' table columns in the database schema.
+ * Only renders when recruitment phases are open.
+ *
+ * @component
+>>>>>>> bf04641d858301e6eaae062ab786000d50517516:src/components/components-call/RegistroModal.astro
  */
 import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
 ---
@@ -16,7 +25,6 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
   <div
     class="p-4 md:p-8 relative max-h-[85vh] overflow-y-auto custom-scrollbar"
   >
-    <!-- Botón cerrar -->
     <button
       id="closeModalBtn"
       class="absolute top-6 right-6 text-zinc-400 hover:text-white transition-colors p-1 cursor-pointer"
@@ -45,10 +53,8 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
       </p>
     </div>
 
-    <!-- Formulario -->
     <form id="registroForm" class="space-y-4 md:space-y-5">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
-        <!-- Nombres -->
         <div class="flex flex-col gap-1 md:gap-1.5">
           <label
             for="first_name"
@@ -64,7 +70,6 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
             placeholder="Ej. Juan Marcos"
           />
         </div>
-        <!-- Apellidos -->
         <div class="flex flex-col gap-1 md:gap-1.5">
           <label
             for="last_name"
@@ -82,7 +87,6 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
         </div>
       </div>
 
-      <!-- Correo -->
       <div class="flex flex-col gap-1 md:gap-1.5">
         <label
           for="email"
@@ -102,7 +106,6 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
       </div>
 
       <div class="grid grid-cols-2 gap-4 md:gap-5">
-        <!-- Teléfono -->
         <div class="flex flex-col gap-1 md:gap-1.5">
           <label
             for="phone"
@@ -122,7 +125,6 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
             placeholder="Ej. 999 999 999"
           />
         </div>
-        <!-- Universidad -->
         <div class="flex flex-col gap-1 md:gap-1.5">
           <label
             for="university"
@@ -141,7 +143,6 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
-        <!-- Carrera -->
         <div class="flex flex-col gap-1 md:gap-1.5">
           <label
             for="career"
@@ -158,7 +159,6 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
           />
         </div>
 
-        <!-- Ciclo -->
         <div class="flex flex-col gap-1 md:gap-1.5">
           <label
             for="university_semester"
@@ -188,7 +188,6 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
       </div>
 
       <div class="grid grid-cols-2 gap-4 md:gap-5">
-        <!-- Opcion 1 -->
         <div class="flex flex-col gap-1 md:gap-1.5">
           <label
             for="first_choice_area"
@@ -209,7 +208,6 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
             <option value="ID">Investigación y Desarrollo (ID)</option>
           </select>
         </div>
-        <!-- Opcion 2 -->
         <div class="flex flex-col gap-1 md:gap-1.5">
           <label
             for="second_choice_area"
@@ -231,7 +229,6 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
         </div>
       </div>
 
-      <!-- Motivo Postulacion -->
       <div class="flex flex-col gap-1 md:gap-1.5">
         <label
           for="application_reason"
@@ -248,14 +245,12 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
         ></textarea>
       </div>
 
-      <!-- Mensaje de estado -->
       <div
         id="formStatus"
         class="hidden rounded-xl p-3 text-sm font-medium text-center"
       >
       </div>
 
-      <!-- Submit -->
       <div class="pt-2">
         <button
           type="submit"
@@ -291,7 +286,7 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
 )}
 
 <style>
-  /* Personalización del select para que la flecha sea verde estilo UNICODE */
+  /* Custom select drop-down arrow styling using UNICODE green SVG */
   select {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2375D32D'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
     background-position: right 1rem center;
@@ -300,7 +295,7 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
     padding-right: 2.5rem;
   }
 
-  /* Scrollbar custom para el modal */
+  /* Custom scrollbar styling for the modal dialog */
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
   }
@@ -316,36 +311,41 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
     background: #3f3f46; /* zinc-700 */
   }
 
-  /* Ocultar scrollbar completamente en móvil */
+  /* Hide scrollbars on mobile viewports */
   @media (max-width: 768px) {
     .custom-scrollbar::-webkit-scrollbar {
       display: none;
     }
     .custom-scrollbar {
-      -ms-overflow-style: none; /* IE y Edge */
+      -ms-overflow-style: none; /* IE and Edge */
       scrollbar-width: none; /* Firefox */
     }
   }
 </style>
 
 <script>
-  // Cliente-side logic para el modal y envío del form simulado (o futuro supabase client)
+  /**
+   * Configures modal trigger buttons and handles forms asynchronously,
+   * managing loading indicators and feedback messages based on API responses.
+   *
+   * @function initializeRegistrationModal
+   * @returns {void}
+   */
   document.addEventListener("DOMContentLoaded", () => {
     const modal = document.getElementById("registroModal") as HTMLDialogElement;
     const closeModalBtn = document.getElementById("closeModalBtn");
 
-    // Todos los botones que tengan href="#postular" abrirán este modal
+    // Select all page triggers targeting the #postular anchor
     const openBtns = document.querySelectorAll('a[href="#postular"]');
 
     const openModal = () => {
       modal.showModal();
-      document.body.style.overflow = "hidden"; // Evita el scroll del body
+      document.body.style.overflow = "hidden"; // Block body scroll on open
     };
 
     const closeModal = () => {
       modal.close();
-      document.body.style.overflow = "auto";
-      // Ocultar mensajes de estado al cerrar
+      document.body.style.overflow = "auto"; // Restore scroll
       const statusDiv = document.getElementById("formStatus");
       if (statusDiv) statusDiv.classList.add("hidden");
     };
@@ -364,21 +364,28 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
     const loadingSpinner = document.getElementById("loadingSpinner");
     const statusDiv = document.getElementById("formStatus");
 
+    /**
+     * Handles candidate registration form submission asynchronously,
+     * communicating with the internal /api/postular endpoint.
+     *
+     * @async
+     * @function handleFormSubmit
+     * @param {SubmitEvent} e - Form submission event trigger
+     * @returns {Promise<void>}
+     */
     form?.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      // Estado de carga visual
+      // Enable visual loading state
       submitBtn.disabled = true;
       submitBtn.classList.add("opacity-80", "cursor-not-allowed");
       loadingSpinner?.classList.remove("hidden");
       if (statusDiv) statusDiv.classList.add("hidden");
 
       try {
-        // Recoger datos
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
 
-        // Enviar de verdad al API
         const res = await fetch("/api/postular", {
           method: "POST",
           headers: {
@@ -394,7 +401,6 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
           throw new Error(result.error || "Ocurrió un error al enviar los datos.");
         }
 
-        // Simular éxito visualmente
         if (statusDiv) {
           statusDiv.classList.remove(
             "hidden",
@@ -415,7 +421,7 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
 
         form.reset();
 
-        // Cerrar el modal automáticamente después de x seg
+        // Dismiss modal after positive feedback delay
         setTimeout(() => {
           closeModal();
         }, 2500);
@@ -439,7 +445,7 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
             error.message || "Ocurrió un error al enviar tu postulación. Por favor intenta otra vez.";
         }
       } finally {
-        // Restaurar botón
+        // Restore CTA interactions
         submitBtn.disabled = false;
         submitBtn.classList.remove("opacity-80", "cursor-not-allowed");
         loadingSpinner?.classList.add("hidden");

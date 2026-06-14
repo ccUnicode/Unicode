@@ -1,7 +1,15 @@
 ---
 /**
+<<<<<<< HEAD:src/components/components-home/alianzas.astro
  * alianzas.astro
  * Sección "NUESTRAS ALIANZAS" con grid de logos de organizaciones aliadas.
+=======
+ * Alianzas.astro
+ * Renders the "OUR ALLIANCES" section, displaying an infinite scrolling marquee
+ * of corporate partner logos and dynamic balancing metrics.
+ *
+ * @component
+>>>>>>> bf04641d858301e6eaae062ab786000d50517516:src/components/components-home/Alianzas.astro
  */
 
 const allianceImages = import.meta.glob<{ default: any }>(
@@ -13,7 +21,7 @@ const alianzas = Object.entries(allianceImages).map(([path, module]) => {
   const fileName = path.split("/").pop() || "";
   const rawName = fileName.split(".")[0];
   
-  // Factores de escala para equilibrar logos con mucho aire
+  // Normalized visual scaling factors to balance partner logos
   let scale = "scale-100";
   let hoverScale = "group-hover:scale-110";
   let brightness = "brightness-200";
@@ -45,7 +53,6 @@ const alianzasFila2 = [...alianzas].reverse();
 
 <section id="alianzas" class="w-full py-16 md:py-24 relative overflow-hidden">
   <div class="max-w-7xl mx-auto px-6">
-    <!-- Título -->
     <div class="text-center mb-6">
       <h2
         class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight"
@@ -54,7 +61,6 @@ const alianzasFila2 = [...alianzas].reverse();
       </h2>
     </div>
 
-    <!-- Subtítulo -->
     <p
       class="text-zinc-300/80 text-sm md:text-base text-center max-w-xl mx-auto mb-14 leading-relaxed"
     >
@@ -62,9 +68,8 @@ const alianzasFila2 = [...alianzas].reverse();
       y fomentar el desarrollo tecnológico en nuestra comunidad.
     </p>
 
-    <!-- Carruseles Infinitos -->
     <div class="flex flex-col gap-2 overflow-hidden mask-image-fade py-6">
-      <!-- Fila 1: Derecha a Izquierda -->
+      <!-- Row 1: Right to Left scrolling marquee -->
       <div class="relative w-full flex overflow-hidden py-14 -my-4">
         <div
           class="animate-marquee flex gap-12 whitespace-nowrap items-center h-full"
@@ -79,7 +84,7 @@ const alianzasFila2 = [...alianzas].reverse();
                     title={alianza.name}
                     class={`h-12 md:h-16 w-auto object-contain opacity-40 grayscale ${alianza.brightness} ${alianza.scale} ${alianza.hoverScale} contrast-125 group-hover:opacity-100 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-500`}
                   />
-                  <!-- Tooltip (Punto medio ideal) -->
+                  <!-- Hover tooltip indicator -->
                   <div class="absolute -top-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 group-hover:-top-11 transition-all duration-500 pointer-events-none z-50">
                     <span class="bg-zinc-900/95 text-unicode text-[10px] md:text-sm font-bold px-4 py-2 rounded-full border border-unicode/40 whitespace-nowrap shadow-2xl backdrop-blur-md">
                       {alianza.name}
@@ -92,7 +97,7 @@ const alianzasFila2 = [...alianzas].reverse();
         </div>
       </div>
 
-      <!-- Fila 2: Izquierda a Derecha -->
+      <!-- Row 2: Left to Right scrolling marquee -->
       <div class="relative w-full flex overflow-hidden py-14 -my-4">
         <div
           class="animate-marquee-reverse flex gap-12 whitespace-nowrap items-center h-full"
@@ -107,7 +112,7 @@ const alianzasFila2 = [...alianzas].reverse();
                     title={alianza.name}
                     class={`h-12 md:h-16 w-auto object-contain opacity-40 grayscale ${alianza.brightness} ${alianza.scale} ${alianza.hoverScale} contrast-125 group-hover:opacity-100 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-500`}
                   />
-                  <!-- Tooltip (Punto medio ideal) -->
+                  <!-- Hover tooltip indicator -->
                   <div class="absolute -top-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 group-hover:-top-11 transition-all duration-500 pointer-events-none z-50">
                     <span class="bg-zinc-900/95 text-unicode text-[10px] md:text-sm font-bold px-4 py-2 rounded-full border border-unicode/40 whitespace-nowrap shadow-2xl backdrop-blur-md">
                       {alianza.name}
@@ -124,7 +129,7 @@ const alianzasFila2 = [...alianzas].reverse();
 </section>
 
 <style>
-  /* Máscara de desvanecimiento en los bordes */
+  /* Edge gradient masking for fading marquee boundaries */
   .mask-image-fade {
     mask-image: linear-gradient(
       to right,
@@ -142,7 +147,7 @@ const alianzasFila2 = [...alianzas].reverse();
     );
   }
 
-  /* Animaciones infinitas */
+  /* Infinite marquee speed handlers */
   .animate-marquee {
     animation: marquee 40s linear infinite;
   }
