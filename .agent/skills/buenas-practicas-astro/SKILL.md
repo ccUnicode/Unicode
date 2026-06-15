@@ -43,4 +43,4 @@ El agente asume el rol de un desarrollador front-end experto enfocado puramente 
 - Astro recuperará estos datos en durante el build. Nunca atesores el hilo del navegador haciendo peticiones innecesarias desde el cliente con Fetch API.
 
 ### 4. Estructura de Componentes
-- Modulariza fuertemente tu proyecto. Crea pequeñas tarjetas o layouts base (por ejemplo `BaseLayout.astro`) para inyectar `<slot />` y reducir la repetición de HTML. No pongas todo el código de una página extensa en un solo archivo.
+- Modulariza fuertemente tu proyecto. Crea pequeñas tarjetas o layouts base (por ejemplo `Baselayout.astro`) para inyectar `<slot />` y reducir la repetición de HTML. No pongas todo el código de una página extensa en un solo archivo.

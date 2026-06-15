@@ -1,0 +1,268 @@
+---
+import FeaturedProjectCard from "./featured-project-card.astro";
+
+interface Project {
+  title: string;
+  category?: string;
+  image?: string;
+}
+
+interface Props {
+  projects: Project[];
+}
+
+const { projects } = Astro.props;
+---
+
+<div class="relative w-full overflow-hidden group">
+  <!-- Navigation Buttons Hint -->
+  <div
+    class="absolute left-0 top-0 bottom-0 w-24 bg-linear-to-r from-[#0a0a0a] to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+  >
+  </div>
+  <div
+    class="absolute right-0 top-0 bottom-0 w-24 bg-linear-to-l from-[#0a0a0a] to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+  >
+  </div>
+
+  <!-- Slider Container -->
+  <div
+    id="project-slider"
+    class="flex gap-12 overflow-x-auto pb-12 snap-x snap-mandatory scroll-smooth scrollbar-hide px-6 md:px-[15vw] cursor-grab active:cursor-grabbing"
+  >
+    {
+      projects.map((project) => (
+        <FeaturedProjectCard project={project as any} />
+      ))
+    }
+  </div>
+
+  <!-- Custom Scrollbar/Indicator and Controls -->
+  <div class="flex items-center justify-center gap-6 mt-8">
+    <button
+      id="prev-project"
+      class="w-12 h-12 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 active:border-unicode active:shadow-unicode transition-all shadow-lg hover:border-unicode/50 cursor-pointer"
+      aria-label="Anterior"
+    >
+      <svg
+        class="w-6 h-6"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="3"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"
+        ></path>
+      </svg>
+    </button>
+
+    <div class="flex justify-center gap-3">
+      {
+        projects.map((_, i) => (
+          <button
+            class="slider-dot w-2 h-2 rounded-full bg-zinc-800 transition-all duration-300 cursor-pointer"
+            data-index={i}
+            aria-label={`Ir al proyecto ${i + 1}`}
+          />
+        ))
+      }
+    </div>
+
+    <button
+      id="next-project"
+      class="w-12 h-12 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 active:border-unicode active:shadow-unicode transition-all shadow-lg hover:border-unicode/50 cursor-pointer"
+      aria-label="Siguiente"
+    >
+      <svg
+        class="w-6 h-6"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="3"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"
+        ></path>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<style>
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+</style>
+
+<script>
+  function initSlider() {
+    const slider = document.getElementById("project-slider");
+    const dots = document.querySelectorAll(".slider-dot");
+    const cards = slider?.querySelectorAll(".project-card-featured"); // Assuming class for better selection
+
+    if (slider && dots.length > 0) {
+      const updateDots = () => {
+        const sliderRect = slider.getBoundingClientRect();
+        const sliderCenter = sliderRect.left + sliderRect.width / 2;
+        const cardElements = Array.from(slider.children);
+
+        let minDistance = Infinity;
+        let activeIndex = 0;
+
+        cardElements.forEach((card, i) => {
+          const cardRect = card.getBoundingClientRect();
+          const cardCenter = cardRect.left + cardRect.width / 2;
+          const distance = Math.abs(sliderCenter - cardCenter);
+
+          if (distance < minDistance) {
+            minDistance = distance;
+            activeIndex = i;
+          }
+        });
+
+        dots.forEach((dot, i) => {
+          if (i === activeIndex) {
+            dot.classList.add("bg-unicode", "w-6");
+            dot.classList.remove("bg-zinc-800");
+          } else {
+            dot.classList.remove("bg-unicode", "w-6");
+            dot.classList.add("bg-zinc-800");
+          }
+        });
+      };
+
+      // Initial centering of the 3rd project (index 2)
+      const centerThirdProject = () => {
+        const cardElements = slider.children;
+        if (cardElements.length >= 3) {
+          const thirdProject = cardElements[2] as HTMLElement;
+          const sliderWidth = slider.offsetWidth;
+          const cardWidth = thirdProject.offsetWidth;
+          const cardOffset = thirdProject.offsetLeft;
+
+          // Calculate the scroll position to put the 3rd card in the middle
+          const scrollTo = cardOffset - sliderWidth / 2 + cardWidth / 2;
+
+          slider.scrollTo({
+            left: scrollTo,
+            behavior: "instant" as ScrollBehavior,
+          });
+
+          updateDots();
+        }
+      };
+
+      slider.addEventListener("scroll", updateDots);
+
+      // Small timeout to ensure DOM is fully rendered before calculating offsets
+      setTimeout(centerThirdProject, 100);
+
+      // Also allow clicking dots to navigate
+      dots.forEach((dot, i) => {
+        dot.addEventListener("click", () => {
+          const cardElements = slider.children;
+          if (cardElements[i]) {
+            const card = cardElements[i] as HTMLElement;
+            const sliderWidth = slider.offsetWidth;
+            const cardWidth = card.offsetWidth;
+            const cardOffset = card.offsetLeft;
+            const scrollTo = cardOffset - sliderWidth / 2 + cardWidth / 2;
+
+            slider.scrollTo({
+              left: scrollTo,
+              behavior: "smooth",
+            });
+          }
+        });
+      });
+
+      // Arrow navigation
+      const prevBtn = document.getElementById("prev-project");
+      const nextBtn = document.getElementById("next-project");
+
+      const getActiveIndex = () => {
+        let current = 0;
+        dots.forEach((dot, i) => {
+          if (dot.classList.contains("bg-unicode")) current = i;
+        });
+        return current;
+      };
+
+      if (prevBtn && nextBtn) {
+        prevBtn.addEventListener("click", () => {
+          const currentIndex = getActiveIndex();
+          const targetIndex = Math.max(0, currentIndex - 1);
+          if (dots[targetIndex]) (dots[targetIndex] as HTMLElement).click();
+        });
+
+        nextBtn.addEventListener("click", () => {
+          const currentIndex = getActiveIndex();
+          const targetIndex = Math.min(dots.length - 1, currentIndex + 1);
+          if (dots[targetIndex]) (dots[targetIndex] as HTMLElement).click();
+        });
+      }
+
+      // Mouse drag logic
+      let isDown = false;
+      let startX = 0;
+      let scrollLeft = 0;
+      let isDragging = false;
+
+      slider.addEventListener("mousedown", (e) => {
+        isDown = true;
+        isDragging = false;
+        slider.style.scrollBehavior = "auto"; // Disable smooth scroll during drag
+        slider.classList.remove("snap-x", "snap-mandatory");
+        startX = (e as MouseEvent).pageX - slider.offsetLeft;
+        scrollLeft = slider.scrollLeft;
+      });
+
+      const stopDragging = (e: Event) => {
+        if (!isDown) return;
+        isDown = false;
+        slider.style.scrollBehavior = "smooth";
+        slider.classList.add("snap-x", "snap-mandatory");
+        // Snap to nearest element
+        updateDots();
+        
+        // Reset dragging flag after a short delay so click event can be blocked
+        setTimeout(() => {
+          isDragging = false;
+        }, 50);
+      };
+
+      slider.addEventListener("mouseleave", stopDragging);
+      slider.addEventListener("mouseup", stopDragging);
+
+      slider.addEventListener("mousemove", (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = (e as MouseEvent).pageX - slider.offsetLeft;
+        const walk = (x - startX) * 2; // Scroling speed multiplier
+        if (Math.abs(walk) > 10) {
+           isDragging = true;
+        }
+        slider.scrollLeft = scrollLeft - walk;
+      });
+
+      slider.addEventListener("click", (e) => {
+        if (isDragging) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }, { capture: true });
+    }
+  }
+
+  // Initialize
+  initSlider();
+
+  // Re-run for Astro view transitions
+  document.addEventListener("astro:page-load", initSlider);
+</script>

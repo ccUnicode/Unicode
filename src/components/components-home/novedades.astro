@@ -1,0 +1,347 @@
+---
+/**
+<<<<<<< HEAD:src/components/components-home/novedades.astro
+ * novedades.astro
+ * Sección de noticias debajo del grid de estadísticas.
+ * Las novedades se generan dinámicamente a partir de events.ts y projects.ts,
+ * para que siempre estén en sincronía con esos datos.
+=======
+ * Novedades.astro
+ * News/novelty section displayed below the statistics grid.
+ * Novelties are dynamically assembled from events.ts and projects.ts data
+ * to ensure synchronization.
+>>>>>>> bf04641d858301e6eaae062ab786000d50517516:src/components/components-home/Novedades.astro
+ */
+import NovedadCard from "./novedad-card.astro";
+import { eventosRealizados } from "../../data/events";
+import { projects } from "../../data/projects";
+
+interface Novedad {
+  title: string;
+  description: string;
+  image: string;
+  href: string;
+}
+
+// Active projects -> novelties
+const projectNews: Novedad[] = projects
+  .filter((p) => p.status === "Activo")
+  .map((p) => ({
+    title: p.title,
+    description: p.description,
+    image: p.image,
+    href: p.link && p.link !== "https://unicode.vercel.app" ? p.link : `/proyectos`,
+  }));
+
+// Last completed events -> novelties
+const eventNews: Novedad[] = eventosRealizados.map((e) => ({
+  title: e.titulo,
+  description: e.descripcion,
+  image: e.imagen,
+  href: e.link ?? "/eventos",
+}));
+
+// Interleave lists for greater variety, limited to a max of 5
+const combined: Novedad[] = [];
+const maxLen = Math.max(projectNews.length, eventNews.length);
+for (let i = 0; i < maxLen && combined.length < 5; i++) {
+  if (i < eventNews.length) combined.push(eventNews[i]);
+  if (combined.length < 5 && i < projectNews.length) combined.push(projectNews[i]);
+}
+const novedades = combined.slice(0, 5);
+---
+
+<section id="novedades" class="w-full py-16 md:py-24 relative">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="text-center mb-16">
+      <h2
+        class="text-4xl md:text-6xl font-bold text-unicode text-glow tracking-wider uppercase"
+      >
+        NOVEDADES
+      </h2>
+    </div>
+
+    <div class="relative group/news-carousel w-full overflow-hidden">
+      <div
+        id="novedades-track"
+        class="flex gap-6 lg:gap-8 pb-4 md:pb-0 transition-transform duration-700 ease-in-out cursor-grab active:cursor-grabbing w-full"
+      >
+        {
+          novedades.map((novedad) => (
+            <div class="novedad-item flex-none w-[88vw] md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1.33rem)] transition-all duration-700 ease-out transform scale-95 opacity-50">
+              <NovedadCard
+                title={novedad.title}
+                description={novedad.description}
+                image={novedad.image}
+                href={novedad.href}
+              />
+            </div>
+          ))
+        }
+      </div>
+
+      <!-- Arrow Controls & Indicator (All views) -->
+      <div class="flex items-center justify-center gap-6 mt-10">
+        <button
+          id="prev-news"
+          class="w-12 h-12 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg hover:border-unicode/50"
+          aria-label="Anterior"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="3"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+
+        <div
+          id="novedades-carousel-indicator"
+          class="flex justify-center flex-wrap gap-2 max-w-[200px]"
+        >
+          {
+            novedades.map((_, i) => (
+              <button
+                class={`w-2 h-2 rounded-full transition-all duration-300 ${i === 0 ? "bg-unicode w-6" : "bg-zinc-800"}`}
+                aria-label={`Ir a novedad ${i + 1}`}
+                data-index={i}
+              />
+            ))
+          }
+        </div>
+
+        <button
+          id="next-news"
+          class="w-12 h-12 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg hover:border-unicode/50"
+          aria-label="Siguiente"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="3"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9 5l7 7-7 7"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>
+
+<script is:inline>
+  /**
+   * Initializes the news/novelty carousel, handling responsive dimensions,
+   * navigation controls, touch swipe gestures, and pagination dot updates.
+   */
+  function initNewsCarousel() {
+    const track = document.getElementById("novedades-track");
+    const indicator = document.getElementById("novedades-carousel-indicator");
+
+    if (!track || !indicator) return;
+
+    const dots = indicator.querySelectorAll("button");
+    const cards = track.querySelectorAll(".novedad-item");
+    const prevBtn = document.getElementById("prev-news");
+    const nextBtn = document.getElementById("next-news");
+
+    let currentIndex = 0;
+    let isDragging = false;
+    let startPos = 0;
+    let currentTranslate = 0;
+    let prevTranslate = 0;
+
+    const getVisibleCardsCount = () => {
+      if (window.innerWidth >= 1024) return 3; // lg breakpoint
+      if (window.innerWidth >= 768) return 2; // md breakpoint
+      return 1; // default mobile
+    };
+
+    const getMaxIndex = () => {
+      return Math.max(0, cards.length - getVisibleCardsCount());
+    };
+
+    // Scroll by width of one item + gap
+    const getScrollStep = () => {
+      const firstItem = track.querySelector(".novedad-item");
+      if (!firstItem) return track.clientWidth;
+      const gap = parseInt(window.getComputedStyle(track).gap) || 0;
+      return firstItem.offsetWidth + gap;
+    };
+
+    const updateUIState = (index) => {
+      const maxIndex = getMaxIndex();
+
+      dots.forEach((dot, i) => {
+        // Dynamically hide pagination dots that don't have matching cards
+        if (i > maxIndex) {
+          dot.classList.add("hidden");
+        } else {
+          dot.classList.remove("hidden");
+        }
+
+        if (i === index) {
+          dot.classList.add("bg-unicode", "w-6");
+          dot.classList.remove("bg-zinc-800");
+        } else {
+          dot.classList.remove("bg-unicode", "w-6");
+          dot.classList.add("bg-zinc-800");
+        }
+      });
+
+      cards.forEach((card, i) => {
+        const visibleCount = getVisibleCardsCount();
+        if (i >= index && i < index + visibleCount) {
+          // Scale up only the cards currently visible on screen
+          card.classList.add("scale-100", "opacity-100");
+          card.classList.remove("scale-95", "opacity-50");
+        } else {
+          card.classList.remove("scale-100", "opacity-100");
+          card.classList.add("scale-95", "opacity-50");
+        }
+      });
+
+      // Visually disable control buttons when limits are reached
+      if (prevBtn) {
+        prevBtn.style.opacity = index <= 0 ? "0.3" : "1";
+        prevBtn.style.pointerEvents = index <= 0 ? "none" : "auto";
+      }
+      if (nextBtn) {
+        nextBtn.style.opacity = index >= maxIndex ? "0.3" : "1";
+        nextBtn.style.pointerEvents = index >= maxIndex ? "none" : "auto";
+      }
+    };
+
+    const setPositionByIndex = () => {
+      const step = getScrollStep();
+      const maxIndex = getMaxIndex();
+
+      // Keep index within bounds to avoid empty gaps
+      if (currentIndex > maxIndex) currentIndex = maxIndex;
+      if (currentIndex < 0) currentIndex = 0;
+
+      currentTranslate = currentIndex * -step;
+      prevTranslate = currentTranslate;
+      track.style.transform = `translateX(${currentTranslate}px)`;
+      updateUIState(currentIndex);
+    };
+
+    if (prevBtn && nextBtn) {
+      prevBtn.addEventListener("click", () => {
+        if (currentIndex > 0) {
+          currentIndex -= 1;
+          setPositionByIndex();
+        }
+      });
+      nextBtn.addEventListener("click", () => {
+        if (currentIndex < getMaxIndex()) {
+          currentIndex += 1;
+          setPositionByIndex();
+        }
+      });
+    }
+
+    dots.forEach((dot) => {
+      dot.addEventListener("click", () => {
+        currentIndex = parseInt(dot.getAttribute("data-index") || "0");
+        setPositionByIndex();
+      });
+    });
+
+    // Touch gesture support for mobile devices
+    track.addEventListener("touchstart", touchStart);
+    track.addEventListener("touchend", touchEnd);
+    track.addEventListener("touchmove", touchMove);
+    track.addEventListener("mousedown", touchStart);
+    track.addEventListener("mouseup", touchEnd);
+    track.addEventListener("mouseleave", () => {
+      if (isDragging) touchEnd();
+    });
+    track.addEventListener("mousemove", touchMove);
+
+    function touchStart(event) {
+      isDragging = true;
+      startPos = getPositionX(event);
+      if (track)
+        track.classList.remove(
+          "transition-transform",
+          "duration-700",
+          "ease-in-out",
+        );
+    }
+
+    function touchMove(event) {
+      if (isDragging && track) {
+        const currentPosition = getPositionX(event);
+        const diff = currentPosition - startPos;
+        track.style.transform = `translateX(${prevTranslate + diff}px)`;
+      }
+    }
+
+    function touchEnd() {
+      if (!track) return;
+      isDragging = false;
+      const movedBy = currentTranslate - prevTranslate;
+      track.classList.add(
+        "transition-transform",
+        "duration-700",
+        "ease-in-out",
+      );
+
+      const transformMatrix = window
+        .getComputedStyle(track)
+        .getPropertyValue("transform");
+      let currentX = prevTranslate;
+      if (transformMatrix !== "none") {
+        currentX = parseFloat(transformMatrix.split(",")[4]) || 0;
+      }
+
+      const diff = currentX - prevTranslate;
+
+      if (diff < -100 && currentIndex < getMaxIndex()) currentIndex += 1;
+      if (diff > 100 && currentIndex > 0) currentIndex -= 1;
+
+      setPositionByIndex();
+    }
+
+    function getPositionX(event) {
+      return event.type.includes("mouse")
+        ? event.pageX
+        : event.touches[0].clientX;
+    }
+
+    // Resize event logic
+    window.addEventListener("resize", () => {
+      setPositionByIndex();
+    });
+
+    // Initialize
+    updateUIState(0);
+  }
+
+  // Run on initial load
+  initNewsCarousel();
+
+  // Run on Astro View Transitions
+  document.addEventListener("astro:page-load", initNewsCarousel);
+</script>

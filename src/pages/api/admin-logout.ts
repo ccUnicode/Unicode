@@ -5,7 +5,7 @@
 
 export const prerender = false;
 
-import { sessionStore } from '../../lib/sessionStore';
+import { sessionStore } from '../../lib/session-store';
 
 export async function POST({ request }: { request: Request }) {
   // En un sistema stateless (como JWT), el cierre de sesión real ocurre

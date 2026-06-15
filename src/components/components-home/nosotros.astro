@@ -1,0 +1,88 @@
+---
+/**
+<<<<<<< HEAD:src/components/components-home/nosotros.astro
+ * nosotros.astro
+ * Sección "NOSOTROS" del Home con fotos del centro cultural,
+ * descripción, y tarjetas de Misión y Visión.
+=======
+ * Nosotros.astro
+ * "About Us" section of the Home page, containing photos of the cultural center,
+ * a general description, and Mission/Vision cards.
+>>>>>>> bf04641d858301e6eaae062ab786000d50517516:src/components/components-home/Nosotros.astro
+ */
+---
+
+<section id="nosotros" class="w-full py-12 md:py-16 relative">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="text-center mb-8">
+      <h2
+        class="text-4xl md:text-5xl font-bold text-unicode text-glow tracking-wider uppercase"
+      >
+        NOSOTROS
+      </h2>
+    </div>
+
+    <div
+      class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-8 mb-10 max-w-5xl mx-auto"
+    >
+      <div class="rounded-3xl overflow-hidden border border-zinc-800">
+        <img
+          src="/home-img1.webp"
+          alt="Evento UNICODE - Equipo en auditorio"
+          class="w-full h-56 sm:h-72 lg:h-80 object-cover"
+          loading="lazy"
+        />
+      </div>
+      <div class="rounded-3xl overflow-hidden border border-zinc-800">
+        <img
+          src="/home-img2.webp"
+          alt="Evento UNICODE - Grupo de miembros"
+          class="w-full h-56 sm:h-72 lg:h-80 object-cover"
+          loading="lazy"
+        />
+      </div>
+    </div>
+
+    <div class="text-center max-w-3xl mx-auto mb-10">
+      <h3 class="text-2xl md:text-3xl font-bold text-white mb-4">
+        Centro Cultural UNICODE
+      </h3>
+      <p class="text-zinc-400 text-sm md:text-base leading-relaxed">
+        El Centro Cultural UNICODE es un espacio vibrante dedicado a fomentar la
+        creatividad, el aprendizaje y la conexión entre la comunidad. Ofrecemos
+        a nuestra comunidad una amplia gama de actividades y recursos para
+        enriquecer la vida cultural de nuestros miembros.
+      </p>
+    </div>
+
+    <div
+      class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto"
+    >
+      <div
+        class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 transition-all duration-300 hover:border-unicode/30"
+      >
+        <h4 class="text-lg md:text-xl font-bold text-unicode mb-2">
+          Nuestra Misión
+        </h4>
+        <p class="text-zinc-400 text-sm md:text-base leading-relaxed">
+          Inspirar y empoderar a través de las artes, promoviendo la expresión
+          individual y colectiva, y construyendo una comunidad cultural sólida e
+          inclusiva.
+        </p>
+      </div>
+
+      <div
+        class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 transition-all duration-300 hover:border-unicode/30"
+      >
+        <h4 class="text-lg md:text-xl font-bold text-unicode mb-2">
+          Nuestra Visión
+        </h4>
+        <p class="text-zinc-400 text-sm md:text-base leading-relaxed">
+          Ser el epicentro cultural de la universidad, reconocido por nuestra
+          innovación, diversidad y contribución al desarrollo integral de
+          nuestros miembros y la sociedad.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>

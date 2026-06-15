@@ -1,0 +1,205 @@
+---
+import AreaRequirement from "./area-requirement.astro";
+import AreaValor from "./area-valor.astro";
+import AreaWinCard from "./area-win-card.astro";
+import AreaDirectorProfile from "./area-director-profile.astro";
+import AreaProjectSlider from "./area-project-slider.astro";
+import ProjectModal from "../components-projects/project-modal.astro";
+
+interface Project {
+    title: string;
+    description: string;
+    image?: string;
+    status?: string;
+    faculty?: string;
+}
+
+interface Director {
+    name: string;
+    linkedin?: string;
+    imageSrc: string;
+}
+
+interface Props {
+    title: string;
+    description: string;
+    whatWeLookFor?: string[];
+    weValue?: string[];
+    whatYouWin?: string[];
+    projects?: Project[];
+    directors?: Director[];
+}
+
+const { 
+    title, 
+    description,
+    whatWeLookFor = [],
+    weValue = [],
+    whatYouWin = [],
+    projects: rawProjects = [],
+    directors = []
+} = Astro.props;
+
+const projects = rawProjects.filter(p => p.status !== "Inactivo");
+---
+
+<main class="w-full min-h-screen relative pt-32 pb-24 bg-[#050505] overflow-hidden">
+    <!-- Imagen de fondo decorativa (Mascota) -->
+    <div class="absolute top-20 md:top-30 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[400px] md:h-[750px] pointer-events-none z-0 opacity-25 md:opacity-35">
+        <img 
+            src="/mascota/mascota-unicode-fondo-individual.webp" 
+            alt="" 
+            class="w-full h-full object-contain object-top md:object-center"
+        />
+    </div>
+
+
+<!-- Arriba está la img, no confundir -->
+
+
+    <div class="max-w-7xl mx-auto px-6 relative z-10 flex flex-col items-start w-full">
+        <!-- Título y Descripción base de todas las páginas de áreas -->
+        <h1 class="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-6 md:mb-8 mt-10 md:mt-20 tracking-tight animate-lifting">
+            Área {title === "Académica" ? "" : "de "} <span class="text-unicode text-glow">{title}</span>
+        </h1>
+
+        <p class="text-[14px] md:text-[18px] max-w-5xl leading-relaxed mb-8 md:mb-10 animate-lifting" style="animation-delay: 100ms;">
+            {description}
+        </p>
+
+        <!-- Botones de navegación interna (proyectos y directores) -->
+        <div class="flex flex-wrap gap-3 md:gap-4 mb-12 md:mb-20 animate-lifting" style="animation-delay: 150ms;">
+            {projects.length > 0 && (
+                <button 
+                    id="btn-scroll-proyectos"
+                    type="button"
+                    class="bg-unicode text-black font-bold px-7 py-3 md:px-9 md:py-3.5 rounded-full hover:bg-unicode-light transition-all duration-300 shadow-unicode hover:shadow-unicode-lg cursor-pointer hover:scale-105 active:scale-95 text-base md:text-lg"
+                >
+                    Proyectos
+                </button>
+            )}
+            {directors.length > 0 && (
+                <a 
+                    href="/call" 
+                    class="bg-zinc-900 text-white font-bold px-7 py-3 md:px-9 md:py-3.5 rounded-full border border-zinc-800 hover:border-unicode hover:text-unicode hover:shadow-[0_0_15px_rgba(117,211,45,0.3)] transition-all text-base md:text-lg group hover:scale-105 active:scale-95 duration-300"
+                >
+                    Postular
+                </a>
+            )}
+        </div>
+
+        <!-- Slot base por si acaso alguna página necesita meter HTML a la fuerza -->
+        <div class="w-full flex-col">
+            <slot />
+        </div>
+
+        <!-- SECCIÓN 1: Buscamos & Valoramos -->
+        {(whatWeLookFor.length > 0 || weValue.length > 0) && (
+            <div class="w-full flex flex-col lg:flex-row lg:justify-between gap-8 md:gap-12 mb-16 md:mb-24 mt-8 md:mt-16">
+                <!-- Columna: ¿Qué buscamos? -->
+                {whatWeLookFor.length > 0 && (
+                    <div class="lg:w-[60%] flex flex-col gap-5 animate-lifting" style="animation-delay: 300ms;">
+                        <h2 class="text-xl md:text-3xl font-bold text-white mb-2 md:mb-4">¿Qué buscamos en {title}?</h2>
+                        {whatWeLookFor.map(text => <AreaRequirement text={text} />)}
+                    </div>
+                )}
+                
+                <!-- Columna: Valoramos... -->
+                {weValue.length > 0 && (
+                    <div class="lg:w-[32%] flex flex-col gap-6 animate-lifting" style="animation-delay: 300ms;">
+                        <h2 class="text-xl md:text-3xl font-bold text-white mb-2">Valoramos...</h2>
+                        {weValue.map(text => <AreaValor text={text} />)}
+                    </div>
+                )}
+            </div>
+        )}
+
+        <!-- SECCIÓN 2: ¿Qué ganas? -->
+        {whatYouWin.length > 0 && (
+            <div class="w-full border border-[#203610] bg-[#0A0D08] rounded-4xl p-8 md:p-12 mb-32 relative overflow-hidden mt-8 animate-lifting" style="animation-delay: 400ms;">
+                <!-- Efecto Glow de fondo -->
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-[120px] bg-[#3B7F15]/15 blur-[60px] pointer-events-none rounded-full"></div>
+                
+                <h2 class="text-3xl md:text-4xl font-bold text-unicode text-glow mb-12 text-center relative z-10">¿Qué ganas?</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 relative z-10">
+                    {whatYouWin.map(text => <AreaWinCard text={text} />)}
+                </div>
+            </div>
+        )}
+
+        <!-- SECCIÓN 3: Proyectos -->
+        {projects.length > 0 && (
+            <div id="nuestros-proyectos" class="w-full mb-32 flex flex-col items-center scroll-mt-24 animate-lifting" style="animation-delay: 500ms;">
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-8 text-center">Nuestros <span class="text-unicode text-glow">Proyectos</span></h2>
+                
+                <AreaProjectSlider projects={projects} />
+            </div>
+        )}
+
+        <!-- SECCIÓN 4: Directores -->
+        {directors.length > 0 && (
+            <div id="nuestros-directores" class="w-full mb-16 flex flex-col items-center scroll-mt-24 animate-lifting" style="animation-delay: 600ms;">
+                <h2 class="text-3xl md:text-4xl font-bold text-unicode text-glow mb-10 md:mb-16 text-center">DIRECTORES</h2>
+                
+                <div class="flex flex-wrap justify-center gap-10 md:gap-32">
+                    {directors.map(d => <AreaDirectorProfile name={d.name} linkedin={d.linkedin} imageSrc={d.imageSrc} />)}
+                </div>
+            </div>
+        )}
+    </div>
+    <ProjectModal />
+</main>
+
+
+<style>
+    .animate-lifting {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: reveal 0.8s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes reveal {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<script is:inline>
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('btn-scroll-proyectos');
+        if (!btn) return;
+
+        btn.addEventListener('click', () => {
+            const target = document.getElementById('nuestros-proyectos');
+            if (!target) return;
+
+            const offsetHeight = 80;
+            const targetPosition = target.getBoundingClientRect().top + window.scrollY - offsetHeight;
+            const startPosition = window.scrollY;
+            const distance = targetPosition - startPosition;
+            const duration = 300;
+            let start = null;
+
+            window.requestAnimationFrame(function step(timestamp) {
+                if (!start) start = timestamp;
+                const progress = timestamp - start;
+
+                const easeInOutCubic = progress / duration < 0.5
+                    ? 4 * Math.pow(progress / duration, 3)
+                    : 1 - Math.pow((-2 * progress) / duration + 2, 3) / 2;
+
+                const currentPosition = startPosition + distance * easeInOutCubic;
+                window.scrollTo(0, currentPosition);
+
+                if (progress < duration) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    window.scrollTo(0, targetPosition);
+                }
+            });
+        });
+    });
+</script>
