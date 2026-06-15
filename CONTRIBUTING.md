@@ -140,7 +140,7 @@ Antes de solicitar la aprobación de tu PR, verifica que cumples con lo siguient
 
 Si te estás sumando al proyecto, sigue estos pasos:
 
-1. Clona el proyecto: `git clone <url-del-repositorio>`
+1. Clona el proyecto: `git clone https://github.com/ccUnicode/Unicode.git`
 2. Instala dependencias locales: `npm install`
 3. Crea tu archivo `.env` en la raíz del proyecto y solicita las claves de Supabase correspondientes.
 4. Levanta el entorno de desarrollo: `npm run dev`

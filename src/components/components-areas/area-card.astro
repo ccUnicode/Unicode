@@ -95,7 +95,7 @@ const {
                 }
             </div>
             <a
-                href={`/areas/${title.toLowerCase().replace(/\s+/g, "-")}`}
+                href={`/areas/${title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, "-")}`}
                 class={`bg-unicode text-black font-bold px-8 py-3 rounded-full hover:bg-unicode-light transition-all w-fit text-sm md:text-base shadow-unicode hover:shadow-unicode-lg ${reverse ? "self-end" : ""}`}
                 >Conoce más</a
             >
@@ -144,7 +144,7 @@ const {
             }
         </div>
         <a
-            href={`/areas/${title.toLowerCase().replace(/\s+/g, "-")}`}
+            href={`/areas/${title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, "-")}`}
             class="bg-unicode text-black font-bold px-6 py-2.5 rounded-full hover:bg-unicode-light transition-all w-fit text-[13px] shadow-unicode"
             >Conoce más</a
         >

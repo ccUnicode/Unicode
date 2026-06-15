@@ -14,7 +14,7 @@ Bienvenido al equipo de desarrollo web de **UNICODE**. Este documento contiene l
 ### Paso 1: Clonar e Instalar
 Clona el repositorio oficial e instala las dependencias de paquetes limpias:
 ```bash
-git clone <URL_DEL_REPOSITORIO>
+git clone https://github.com/ccUnicode/Unicode.git
 cd Unicode
 npm install
 ```
