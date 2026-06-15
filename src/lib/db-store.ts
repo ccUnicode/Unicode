@@ -1,10 +1,10 @@
 /**
- * dbStore.ts
- * Simulador temporal de Base de Datos en Memoria para testing.
- * Permite guardar las postulaciones y listarlas en /admin sin Supabase real.
+ * db-store.ts
+ * Temporary In-Memory Database Simulator for testing.
+ * Allows saving applications and listing them in /admin without real Supabase connection.
  */
 
-// Estructura de un Postulante
+// Applicant Structure
 export interface Applicant {
   id: string;
   first_name: string;
@@ -20,34 +20,34 @@ export interface Applicant {
   created_at: string;
 }
 
-// Simulador en memoria RAM usando el patrón Singleton
+// RAM In-Memory Simulator using Singleton pattern
 class TemporaryDatabase {
   private applicants: Applicant[] = [];
 
   constructor() {
-    // Si quieres podemos inyectar data de prueba falsa aquí, 
-    // pero de momento lo dejamos vacío para que uses tú el formulario.
+    // You can inject mock test data here if desired,
+    // but for now it is left empty for form submissions.
   }
 
-  // Método para guardar un nuevo registro desde el formulario
+  // Method to save a new record from the form
   async insert(data: Omit<Applicant, "id" | "created_at">) {
     const nuevoRegistro: Applicant = {
       ...data,
-      id: crypto.randomUUID(), // Genera un ID fake temporal
-      created_at: new Date().toISOString(), // Fecha actual real
+      id: crypto.randomUUID(), // Generates a temporary mock ID
+      created_at: new Date().toISOString(), // Real current date
     };
 
     this.applicants.push(nuevoRegistro);
     return { data: nuevoRegistro, error: null };
   }
 
-  // Método para leer datos desde el dashboard admin
+  // Method to read data from the admin dashboard
   async select() {
-    // Simula el tiempo de carga del internet (200ms)
+    // Simulates internet loading latency (200ms)
     await new Promise((res) => setTimeout(res, 200));
     return { data: [...this.applicants], error: null };
   }
 }
 
-// Instancia global exportada
+// Exported global instance
 export const dbLocal = new TemporaryDatabase();

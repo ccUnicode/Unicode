@@ -9,7 +9,6 @@ const { name, linkedin, imageSrc } = Astro.props;
 ---
 
 <div class="flex flex-col items-center group">
-    <!-- Foto de Perfil (Círculo) -->
     <div
         class="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden mb-4 border border-zinc-800 bg-zinc-900/50 group-hover:border-unicode/50 group-hover:shadow-unicode transition-all duration-300"
     >
@@ -21,12 +20,10 @@ const { name, linkedin, imageSrc } = Astro.props;
         />
     </div>
 
-    <!-- Nombre -->
     <h3 class="text-white font-bold text-lg md:text-xl mb-1 group-hover:text-unicode transition-colors">
         {name}
     </h3>
 
-    <!-- LinkedIn: solo ícono, sin texto -->
     {linkedin && (
         <a
             href={linkedin}

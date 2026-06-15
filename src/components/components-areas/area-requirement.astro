@@ -9,7 +9,6 @@ const { text } = Astro.props;
 <div
     class="flex items-center gap-3 bg-zinc-900/40 border border-zinc-800/50 rounded-full px-3 py-1.5 md:px-4 md:py-2 transition-all hover:border-unicode/30 group animate-lifting"
 >
-    <!-- Punto verde con brillo -->
     <div class="relative flex items-center justify-center flex-shrink-0">
         <div
             class="absolute w-4 h-4 rounded-full bg-[#75D32D] blur-[4px] opacity-60"
@@ -18,7 +17,6 @@ const { text } = Astro.props;
         <div class="relative w-2 h-2 rounded-full bg-[#75D32D]"></div>
     </div>
 
-    <!-- Texto -->
     <p class="text-zinc-300 text-[12px] md:text-[15px] leading-snug">
         {text}
     </p>

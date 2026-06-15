@@ -44,7 +44,6 @@ const projects = rawProjects.filter(p => p.status !== "Inactivo");
 ---
 
 <main class="w-full min-h-screen relative pt-32 pb-24 bg-[#050505] overflow-hidden">
-    <!-- Imagen de fondo decorativa (Mascota) -->
     <div class="absolute top-20 md:top-30 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[400px] md:h-[750px] pointer-events-none z-0 opacity-25 md:opacity-35">
         <img 
             src="/mascota/mascota-unicode-fondo-individual.webp" 
@@ -54,11 +53,7 @@ const projects = rawProjects.filter(p => p.status !== "Inactivo");
     </div>
 
 
-<!-- Arriba está la img, no confundir -->
-
-
     <div class="max-w-7xl mx-auto px-6 relative z-10 flex flex-col items-start w-full">
-        <!-- Título y Descripción base de todas las páginas de áreas -->
         <h1 class="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-6 md:mb-8 mt-10 md:mt-20 tracking-tight animate-lifting">
             Área {title === "Académica" ? "" : "de "} <span class="text-unicode text-glow">{title}</span>
         </h1>
@@ -67,7 +62,6 @@ const projects = rawProjects.filter(p => p.status !== "Inactivo");
             {description}
         </p>
 
-        <!-- Botones de navegación interna (proyectos y directores) -->
         <div class="flex flex-wrap gap-3 md:gap-4 mb-12 md:mb-20 animate-lifting" style="animation-delay: 150ms;">
             {projects.length > 0 && (
                 <button 
@@ -88,15 +82,12 @@ const projects = rawProjects.filter(p => p.status !== "Inactivo");
             )}
         </div>
 
-        <!-- Slot base por si acaso alguna página necesita meter HTML a la fuerza -->
         <div class="w-full flex-col">
             <slot />
         </div>
 
-        <!-- SECCIÓN 1: Buscamos & Valoramos -->
         {(whatWeLookFor.length > 0 || weValue.length > 0) && (
             <div class="w-full flex flex-col lg:flex-row lg:justify-between gap-8 md:gap-12 mb-16 md:mb-24 mt-8 md:mt-16">
-                <!-- Columna: ¿Qué buscamos? -->
                 {whatWeLookFor.length > 0 && (
                     <div class="lg:w-[60%] flex flex-col gap-5 animate-lifting" style="animation-delay: 300ms;">
                         <h2 class="text-xl md:text-3xl font-bold text-white mb-2 md:mb-4">¿Qué buscamos en {title}?</h2>
@@ -104,7 +95,6 @@ const projects = rawProjects.filter(p => p.status !== "Inactivo");
                     </div>
                 )}
                 
-                <!-- Columna: Valoramos... -->
                 {weValue.length > 0 && (
                     <div class="lg:w-[32%] flex flex-col gap-6 animate-lifting" style="animation-delay: 300ms;">
                         <h2 class="text-xl md:text-3xl font-bold text-white mb-2">Valoramos...</h2>
@@ -114,10 +104,8 @@ const projects = rawProjects.filter(p => p.status !== "Inactivo");
             </div>
         )}
 
-        <!-- SECCIÓN 2: ¿Qué ganas? -->
         {whatYouWin.length > 0 && (
             <div class="w-full border border-[#203610] bg-[#0A0D08] rounded-4xl p-8 md:p-12 mb-32 relative overflow-hidden mt-8 animate-lifting" style="animation-delay: 400ms;">
-                <!-- Efecto Glow de fondo -->
                 <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-[120px] bg-[#3B7F15]/15 blur-[60px] pointer-events-none rounded-full"></div>
                 
                 <h2 class="text-3xl md:text-4xl font-bold text-unicode text-glow mb-12 text-center relative z-10">¿Qué ganas?</h2>
@@ -128,7 +116,6 @@ const projects = rawProjects.filter(p => p.status !== "Inactivo");
             </div>
         )}
 
-        <!-- SECCIÓN 3: Proyectos -->
         {projects.length > 0 && (
             <div id="nuestros-proyectos" class="w-full mb-32 flex flex-col items-center scroll-mt-24 animate-lifting" style="animation-delay: 500ms;">
                 <h2 class="text-3xl md:text-4xl font-bold text-white mb-8 text-center">Nuestros <span class="text-unicode text-glow">Proyectos</span></h2>
@@ -137,7 +124,6 @@ const projects = rawProjects.filter(p => p.status !== "Inactivo");
             </div>
         )}
 
-        <!-- SECCIÓN 4: Directores -->
         {directors.length > 0 && (
             <div id="nuestros-directores" class="w-full mb-16 flex flex-col items-center scroll-mt-24 animate-lifting" style="animation-delay: 600ms;">
                 <h2 class="text-3xl md:text-4xl font-bold text-unicode text-glow mb-10 md:mb-16 text-center">DIRECTORES</h2>

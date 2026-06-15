@@ -29,7 +29,7 @@ export interface EventoRealizado {
 }
 
 // =============================================
-// Próximos Eventos
+// Upcoming Events
 // =============================================
 
 export const proximosEventos: Evento[] = [
@@ -62,7 +62,7 @@ export const proximosEventos: Evento[] = [
 ];
 
 // =============================================
-// Eventos Realizados
+// Past Events
 // =============================================
 
 export const eventosRealizados: EventoRealizado[] = [
@@ -199,7 +199,7 @@ export const eventosRealizados: EventoRealizado[] = [
 ];
 
 // =============================================
-// Mapeo de categorías a estilos de badges
+// Category to badge styles mapping
 // =============================================
 
 export const categoriaBadge: Record<string, string> = {

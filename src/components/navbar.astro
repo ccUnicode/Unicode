@@ -52,7 +52,7 @@ const isActive = (path: string) => {
         >
       </div>
 
-      <!-- BOTON MENU MOBILE -->
+      <!-- MOBILE MENU BUTTON -->
       <div class="md:hidden flex items-center">
         <button
           id="mobile-menu-btn"
@@ -73,7 +73,7 @@ const isActive = (path: string) => {
     </div>
   </div>
 
-  <!-- MENU MOBILE DESPLEGABLE -->
+  <!-- MOBILE MENU DROP-DOWN -->
   <div
     id="mobile-menu"
     class="hidden md:hidden bg-[#050505]/95 border-t border-zinc-900 px-4 pt-2 pb-4 space-y-2 text-center shadow-lg"
@@ -107,7 +107,7 @@ const isActive = (path: string) => {
     const menu = document.getElementById("mobile-menu");
 
     if (btn && menu) {
-      // Usamos onclick para no duplicar listeners si se ejecuta varias veces
+      // Use onclick to avoid duplicating listeners if executed multiple times
       btn.onclick = () => {
         menu.classList.toggle("hidden");
         btn.classList.toggle("is-active");
@@ -115,8 +115,8 @@ const isActive = (path: string) => {
     }
   }
 
-  // Inicializar en carga inicial
+  // Initialize on initial page load
   setupMobileMenu();
-  // Reinicializar si se usa ViewTransitions (Astro)
+  // Reinitialize if Astro ViewTransitions is used
   document.addEventListener("astro:after-swap", setupMobileMenu);
 </script>

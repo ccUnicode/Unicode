@@ -25,7 +25,6 @@ const {
 <div
     class={`grid grid-cols-[38%_1fr] md:flex md:flex-row gap-x-4 gap-y-5 md:gap-8 bg-[#151515] rounded-2xl md:rounded-[2rem] p-4 sm:p-5 md:p-6 items-center border border-zinc-800/50 hover:border-unicode/30 transition-all duration-300 group ${reverse ? "md:flex-row-reverse" : ""}`}
 >
-    <!-- Contenedor de Imagen -->
     <div
         class="w-full aspect-square md:aspect-auto md:w-[25%] xl:w-[22%] max-w-[150px] md:max-w-[280px] flex-shrink-0 md:self-stretch rounded-2xl md:rounded-3xl overflow-hidden border border-transparent md:border-2 group-hover:border-unicode/40 transition-all duration-500 group-hover:shadow-unicode"
     >
@@ -37,7 +36,6 @@ const {
         />
     </div>
 
-    <!-- Contenedor de Información (Desktop: Todo junto / Móvil: Solo título y desc) -->
     <div
         class={`flex flex-col justify-center text-left md:py-2 md:w-[75%] xl:w-[78%] ${reverse ? "md:items-end md:text-right" : "md:items-start md:text-left"}`}
     >
@@ -53,7 +51,6 @@ const {
             {description}
         </p>
 
-        <!-- Directores y Botón (Oculto en móvil aquí para mantener el flujo de celdas, se mostrará en Desktop) -->
         <div class="hidden md:flex flex-col w-full mt-5 md:mt-2 xl:mt-4">
             <div
                 class={`flex gap-4 sm:gap-6 w-full mb-6 mt-5 md:mt-0 ${reverse ? "justify-end" : "justify-start"}`}
@@ -105,7 +102,6 @@ const {
         </div>
     </div>
 
-    <!-- Directores y Botón (Solo visible en Móvil, abarcando 2 columnas en la parte inferior) -->
     <div
         class="col-span-2 flex flex-col items-center justify-center w-full mt-2 md:hidden"
     >

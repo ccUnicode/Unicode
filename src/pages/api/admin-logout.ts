@@ -8,10 +8,10 @@ export const prerender = false;
 import { sessionStore } from '../../lib/session-store';
 
 export async function POST({ request }: { request: Request }) {
-  // En un sistema stateless (como JWT), el cierre de sesión real ocurre
-  // cuando el cliente borra el token de su local/session storage.
-  // Aquí podríamos añadir el token a una blacklist si usáramos base de datos,
-  // pero para este caso basta con devolver un 200 OK.
+  // In a stateless system (like JWT), actual logout occurs
+  // when the client deletes the token from local/session storage.
+  // We could add the token to a blacklist here if we used a database,
+  // but returning 200 OK is sufficient for this stateless implementation.
 
   return new Response(
     JSON.stringify({ success: true }),

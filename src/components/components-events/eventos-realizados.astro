@@ -1,9 +1,9 @@
 ---
 /**
  * eventos-realizados.astro
- * Sección de galería de Eventos Realizados con visualización responsiva:
- * - Mobile/Tablet: Carrusel horizontal interactivo.
- * - PC (Desktop): Grid tradicional de 3 columnas (diseño original).
+ * Past Events gallery section with responsive visualization:
+ * - Mobile/Tablet: Interactive horizontal carousel.
+ * - PC (Desktop): Traditional 3-column grid (original design).
  */
 
 import { eventosRealizados, categoriaBadge } from "../../data/events";
@@ -15,7 +15,6 @@ const totalAsistentes = eventosRealizados.reduce(
 );
 const categorias = [...new Set(eventosRealizados.map((e) => e.categoria))];
 
-// Fragmentar eventos en grupos de 6 para la vista de Tablet y PC
 const chunks6 = [];
 for (let i = 0; i < eventosRealizados.length; i += 6) {
     chunks6.push(eventosRealizados.slice(i, i + 6));
@@ -32,7 +31,6 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
     </div>
 
     <div class="max-w-7xl mx-auto px-6 relative z-10">
-        <!-- Header -->
         <div
             class="scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out text-center mb-16"
         >
@@ -59,7 +57,6 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
             </p>
         </div>
 
-        <!-- Estadísticas -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20 px-2">
             {
                 [
@@ -93,7 +90,6 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
             }
         </div>
 
-        <!-- Buscador -->
         <div
             class="flex justify-center mb-10 scroll-reveal opacity-0 translate-y-8 transition-all duration-700 ease-out"
         >
@@ -130,9 +126,6 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
             </p>
         </div>
 
-        <!-- ==========================================
-             VISTA MÓVIL (1 CARD POR PÁGINA)
-             ========================================== -->
         <div class="md:hidden relative group/past-carousel-mobile">
             <div
                 id="past-events-scroll-mobile"
@@ -210,7 +203,6 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
             </div>
 
             <div class="flex items-center justify-center gap-8 mt-6">
-                <!-- Flecha Izquierda -->
                 <button
                     id="prev-past-event-mobile"
                     class="w-12 h-12 flex items-center justify-center bg-zinc-900/50 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg"
@@ -230,7 +222,6 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                     </svg>
                 </button>
 
-                <!-- Indicadores -->
                 <div
                     id="past-carousel-indicator-mobile"
                     class="flex justify-center items-center gap-2"
@@ -246,7 +237,6 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                     }
                 </div>
 
-                <!-- Flecha Derecha -->
                 <button
                     id="next-past-event-mobile"
                     class="w-12 h-12 flex items-center justify-center bg-zinc-900/50 border border-zinc-800 text-unicode rounded-full active:scale-95 transition-all shadow-lg"
@@ -268,9 +258,6 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
             </div>
         </div>
 
-        <!-- ==========================================
-             VISTA TABLET Y PC (6 CARDS POR PÁGINA)
-             ========================================== -->
         <div class="hidden md:block relative group/past-carousel-desktop">
             <div
                 id="past-events-scroll-desktop"
@@ -436,7 +423,6 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // --- Estadísticas ---
             const statsObs = new IntersectionObserver(
                 (entries) => {
                     entries.forEach((entry) => {
@@ -469,7 +455,6 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
             const section = document.querySelector("#eventos-realizados");
             if (section) statsObs.observe(section);
 
-            // --- Carruseles (Mobile y Desktop/Tablet) ---
             const carousels = [
                 {
                     id: "past-events-scroll-mobile",
@@ -494,7 +479,7 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                 if (container) {
                     const scrollStep = () => container.clientWidth;
 
-                    // Función para ajustar la altura dinámicamente (solo Desktop)
+                    // Function to update the height dynamically (Desktop only)
                     const updateHeight = () => {
                         if (
                             cfg.id.includes("desktop") &&
@@ -507,13 +492,13 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                                 idx
                             ] as HTMLElement;
                             if (activeSlide) {
-                                // Forzamos el recálculo de la altura del contenido sumando el padding inferior (pb-4 = 16px)
+                                // Force calculation of content height adding bottom padding (pb-4 = 16px)
                                 container.style.height = `${activeSlide.offsetHeight + 16}px`;
                             }
                         }
                     };
 
-                    // Función para subir la vista a las tarjetas (solo Desktop)
+                    // Function to scroll up to the cards (Desktop only)
                     const scrollToTop = () => {
                         if (
                             cfg.id.includes("desktop") &&
@@ -537,7 +522,7 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                     if (prevBtn && nextBtn) {
                         prevBtn.addEventListener("click", () => {
                             container.scrollLeft -= scrollStep();
-                            // Pequeño delay para dejar que el scroll horizontal se asiente
+                            // Small delay to let the horizontal scroll settle
                             setTimeout(scrollToTop, 150);
                         });
                         nextBtn.addEventListener("click", () => {
@@ -551,7 +536,6 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                             container.scrollLeft / container.clientWidth,
                         );
 
-                        // Actualizar puntos
                         dots.forEach((dot, i) => {
                             const isMobile = cfg.id.includes("mobile");
                             if (i === idx) {
@@ -580,13 +564,11 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                         });
                     });
 
-                    // Inicialización
                     setTimeout(updateHeight, 300);
                     window.addEventListener("resize", updateHeight);
                 }
             });
 
-            // --- Scroll Reveal ---
             const revealObs = new IntersectionObserver(
                 (entries) => {
                     entries.forEach((entry) => {
@@ -609,7 +591,6 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                 .querySelectorAll(".scroll-reveal")
                 .forEach((el) => revealObs.observe(el));
 
-            // --- Búsqueda de Eventos ---
             const searchInput = document.getElementById(
                 "event-search",
             ) as HTMLInputElement;
@@ -623,7 +604,7 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
 
                     eventItems.forEach((item) => {
                         const elem = item as HTMLElement;
-                        // Búsqueda aproximada en todo el texto del article
+                        // Approximate search in the entire article text
                         const fullText = elem.textContent?.toLowerCase() || "";
 
                         if (fullText.includes(searchTerm)) {
@@ -640,7 +621,7 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                         noResults?.classList.add("hidden");
                     }
 
-                    // Ocultar flechas e indicadores en móvil cuando se busca
+                    // Hide arrows and indicators on mobile when searching
                     const indicatorContainer = document.getElementById(
                         "past-carousel-indicator",
                     )?.parentElement;

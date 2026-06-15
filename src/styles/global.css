@@ -25,7 +25,6 @@ html {
   sans-serif;
 }
 
-/* Utilitarios personalizados para efectos premium */
 @utility shadow-unicode-sm {
   box-shadow: 0 0 10px rgba(117, 211, 45, 0.2);
 }

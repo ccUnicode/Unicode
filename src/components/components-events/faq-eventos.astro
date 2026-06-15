@@ -1,8 +1,8 @@
 ---
 /**
  * faq-eventos.astro
- * Sección de Preguntas Frecuentes con acordeón interactivo.
- * Usa JavaScript vanilla para el efecto de expandir/contraer.
+ * FAQ Section with an interactive accordion.
+ * Uses vanilla JavaScript for the expand/collapse transition effect.
  */
 
 interface FAQ {
@@ -37,7 +37,6 @@ const faqs: FAQ[] = [
 
 <section id="faq-eventos" class="w-full py-20 md:py-28 bg-[#050505]">
     <div class="max-w-4xl mx-auto px-6">
-        <!-- Título -->
         <h2
             class="scroll-reveal opacity-0 translate-y-12 transition-all duration-700 ease-out text-4xl md:text-5xl font-extrabold text-center mb-4 uppercase tracking-tight"
         >
@@ -51,7 +50,6 @@ const faqs: FAQ[] = [
             respuestas más comunes.
         </p>
 
-        <!-- Acordeón -->
         <div class="flex flex-col gap-3" id="faq-accordion">
             {
                 faqs.map((faq, index) => (
@@ -120,7 +118,7 @@ const faqs: FAQ[] = [
                 const icon = item.querySelector(".faq-icon svg") as SVGElement;
                 const isOpen = toggle.getAttribute("aria-expanded") === "true";
 
-                // Cerrar otros (opcional, pero optimizado)
+                // Close others (optional, but optimized)
                 document.querySelectorAll(".faq-item").forEach((otherItem) => {
                     if (otherItem !== item) {
                         const otherContent = otherItem.querySelector(
@@ -148,7 +146,6 @@ const faqs: FAQ[] = [
                     }
                 });
 
-                // Toggle actual
                 if (isOpen) {
                     content.style.maxHeight = "0";
                     content.style.opacity = "0";
@@ -169,7 +166,6 @@ const faqs: FAQ[] = [
             });
         });
 
-        // --- Scroll Reveal Logic ---
         const observerOptions = {
             root: null,
             rootMargin: "0px",

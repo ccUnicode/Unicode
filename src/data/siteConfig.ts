@@ -1,10 +1,10 @@
 /**
- * Configuración global del sitio.
- * Cambia estos valores para controlar el comportamiento de secciones clave.
+ * Global site configuration.
+ * Change these values to control the behavior of key sections.
  */
 
-/** Controla si la convocatoria está abierta o cerrada.
- *  - true:  Se muestra el formulario de inscripción y el botón "Postula aquí".
- *  - false: Se muestra un mensaje de convocatoria cerrada y el botón está deshabilitado.
+/** Controls whether the call for applications is open or closed.
+ *  - true:  Shows the application form and the "Apply here" button.
+ *  - false: Shows a message indicating applications are closed and disables the button.
  */
 export const CONVOCATORIA_ABIERTA = false;

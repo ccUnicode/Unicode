@@ -12,15 +12,19 @@ CREATE TABLE applicants(
   email VARCHAR(150) NOT NULL UNIQUE,
   phone VARCHAR(20) NOT NULL,
   career VARCHAR(150) NOT NULL,
-  first_choice_area VARCHAR(150) NOT NULL,
+  first_choice_area VARCHAR(150) NOT NULL CHECK (first_choice_area IN ('ID', 'RRPP', 'GTH', 'ACD', 'DCC')),
   university VARCHAR(150) NOT NULL,
   university_semester VARCHAR(20) NOT NULL,
   application_reason TEXT NOT NULL,
-  second_choice_area VARCHAR(150),
+  second_choice_area VARCHAR(150) CHECK (second_choice_area IS NULL OR second_choice_area IN ('ID', 'RRPP', 'GTH', 'ACD', 'DCC')),
 
   -- Metadata
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- Performance Indexes
+CREATE INDEX idx_applicants_choices ON applicants(first_choice_area, second_choice_area);
+CREATE INDEX idx_applicants_created_at ON applicants(created_at DESC);
 
 -- ==============================================
 -- Row Level Security (RLS)

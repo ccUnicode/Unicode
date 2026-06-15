@@ -9,7 +9,6 @@ const { projects } = Astro.props;
 ---
 
 <div class="relative group/main-carousel w-full">
-  <!-- Container -->
   <div
     id="projects-grid"
     class="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-hidden pb-4 md:pb-0 scroll-smooth snap-x snap-mandatory scrollbar-hide"
@@ -26,7 +25,6 @@ const { projects } = Astro.props;
     }
   </div>
 
-  <!-- Carousel arrows & dots (Mobile Only) -->
   <div class="flex md:hidden items-center justify-center gap-6 mt-8">
     <button
       id="prev-main"
@@ -202,7 +200,6 @@ const { projects } = Astro.props;
     });
   }
 
-  // Load logic
   initMainCarousel();
   document.addEventListener("astro:page-load", initMainCarousel);
 </script>

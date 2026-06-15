@@ -64,7 +64,7 @@ Buscamos seguir una convención clara basada en el tipo de cambio: `tipo(ámbito
 
 ## 6. Convenciones de Nomenclatura
 
-* **Componentes (Astro, React, etc.):** `PascalCase`. Ejemplo: `area-card.astro`, `area-director-profile.astro`. (Confirmado en el uso real de componentes en `src/components`).
+* **Componentes (Astro, React, etc.):** kebab-case. Ejemplo: area-card.astro, area-director-profile.astro. (Confirmado en el uso real de componentes en src/components).
 * **Organización de Componentes:** Los componentes se agrupan en subcarpetas dentro de `src/components` usando la convención `components-<tema>` (ej. `components-areas`, `components-home`, `components-events`).
 * **Páginas y Rutas:** `kebab-case`. Se permiten tildes en nombres de archivos que definen rutas de áreas específicas del centro (ej. `academica.astro`, `direccion-de-comunicacion-y-contenido.astro`).
 * **Variables y Funciones:** `camelCase`. Ejemplo: `obtenerPostulantes()`, `isModalOpen`, `setupMobileMenu`, `validarEmail`. (Confirmado en el código).

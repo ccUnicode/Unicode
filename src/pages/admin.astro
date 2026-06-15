@@ -1,16 +1,15 @@
 ---
 /**
  * admin.astro
- * Panel de administración para ver postulantes de convocatoria.
- * - Login con contraseña protegido por rate limiting server-side.
- * - Dashboard con filtros por área, tipo de opción y ordenamiento.
- * - Exportar a Excel (CSV).
+ * Administration panel to view application candidates.
+ * - Password login protected by server-side rate limiting.
+ * - Dashboard with filters by area, option type, and sorting.
+ * - Export to Excel (CSV).
  */
 import Layout from "../layouts/layout.astro";
 ---
 
 <Layout title="Admin">
-  <!-- ===== PANTALLA DE LOGIN ===== -->
   <div
     id="login-screen"
     class="min-h-screen flex items-center justify-center px-4"
@@ -33,7 +32,6 @@ import Layout from "../layouts/layout.astro";
           />
         </div>
 
-        <!-- Error message -->
         <div
           id="login-error"
           class="hidden text-red-400 text-xs text-center font-medium py-2 bg-red-500/10 rounded-lg border border-red-500/20"
@@ -71,9 +69,7 @@ import Layout from "../layouts/layout.astro";
     </div>
   </div>
 
-  <!-- ===== DASHBOARD ===== -->
   <div id="dashboard-screen" class="hidden min-h-screen">
-    <!-- Top bar -->
     <header
       class="sticky top-0 z-50 bg-[#050505]/95 backdrop-blur-md border-b border-zinc-800/50"
     >
@@ -100,7 +96,6 @@ import Layout from "../layouts/layout.astro";
     </header>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-      <!-- Tabs de áreas -->
       <div class="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6">
         <button
           class="area-tab active-tab px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200"
@@ -134,7 +129,6 @@ import Layout from "../layouts/layout.astro";
         </button>
       </div>
 
-      <!-- Info bar + Controls -->
       <div
         class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6"
       >
@@ -144,7 +138,6 @@ import Layout from "../layouts/layout.astro";
         </p>
 
         <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-          <!-- Export Excel -->
           <button
             id="export-btn"
             class="flex items-center gap-1.5 bg-unicode hover:bg-unicode-light text-black font-bold text-xs px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all cursor-pointer"
@@ -165,7 +158,6 @@ import Layout from "../layouts/layout.astro";
             Exportar Excel
           </button>
 
-          <!-- Filtro opción -->
           <select
             id="filter-opcion"
             class="bg-zinc-900 border border-zinc-700 text-zinc-300 text-xs rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 outline-none focus:border-unicode cursor-pointer appearance-none admin-select"
@@ -175,7 +167,6 @@ import Layout from "../layouts/layout.astro";
             <option value="2da">Solo 2da opción</option>
           </select>
 
-          <!-- Ordenamiento -->
           <select
             id="filter-orden"
             class="bg-zinc-900 border border-zinc-700 text-zinc-300 text-xs rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 outline-none focus:border-unicode cursor-pointer appearance-none admin-select"
@@ -186,7 +177,6 @@ import Layout from "../layouts/layout.astro";
         </div>
       </div>
 
-      <!-- Loading -->
       <div
         id="loading-indicator"
         class="flex items-center justify-center py-20"
@@ -215,14 +205,12 @@ import Layout from "../layouts/layout.astro";
         </div>
       </div>
 
-      <!-- Empty state -->
       <div id="empty-state" class="hidden text-center py-20">
         <p class="text-zinc-500 text-base">
           No hay postulantes para esta área.
         </p>
       </div>
 
-      <!-- Error state -->
       <div id="error-state" class="hidden text-center py-20">
         <p class="text-red-400 text-base" id="error-message">
           Error al cargar los datos.
@@ -235,14 +223,12 @@ import Layout from "../layouts/layout.astro";
         </button>
       </div>
 
-      <!-- Postulantes list -->
       <div id="postulantes-list" class="hidden space-y-3 sm:space-y-4"></div>
     </main>
   </div>
 </Layout>
 
 <style>
-  /* Active tab */
   .area-tab {
     background: transparent;
     color: #a1a1aa; /* zinc-400 */
@@ -259,7 +245,6 @@ import Layout from "../layouts/layout.astro";
     border-color: #75d32d;
   }
 
-  /* Select custom arrow */
   .admin-select {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2375D32D'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
     background-position: right 0.5rem center;
@@ -268,7 +253,6 @@ import Layout from "../layouts/layout.astro";
     padding-right: 2rem;
   }
 
-  /* Card animations */
   .postulante-card {
     animation: fadeInUp 0.3s ease-out forwards;
     opacity: 0;
@@ -285,14 +269,12 @@ import Layout from "../layouts/layout.astro";
     }
   }
 
-  /* No footer on admin */
   :global(footer) {
     display: none !important;
   }
 </style>
 
 <script>
-  // ===== STATE =====
   let sessionToken = "";
   let currentArea = "GTH";
   let currentOpcion = "todas";
@@ -307,7 +289,6 @@ import Layout from "../layouts/layout.astro";
     DCC: "Área DCC",
   };
 
-  // ===== LOGIN =====
   const loginScreen = document.getElementById("login-screen")!;
   const dashboardScreen = document.getElementById("dashboard-screen")!;
   const loginForm = document.getElementById("login-form") as HTMLFormElement;
@@ -324,7 +305,6 @@ import Layout from "../layouts/layout.astro";
     const password = passwordInput.value.trim();
     if (!password) return;
 
-    // UI loading state
     loginBtn.disabled = true;
     loginBtnText.textContent = "Verificando...";
     loginSpinner.classList.remove("hidden");
@@ -350,7 +330,6 @@ import Layout from "../layouts/layout.astro";
         return;
       }
 
-      // Success
       sessionToken = data.token;
       sessionStorage.setItem("admin_token", sessionToken);
       loginScreen.classList.add("hidden");
@@ -375,7 +354,6 @@ import Layout from "../layouts/layout.astro";
     loadPostulantes();
   }
 
-  // ===== LOGOUT =====
   document.getElementById("logout-btn")?.addEventListener("click", async () => {
     try {
       await fetch("/api/admin-logout", {
@@ -394,7 +372,6 @@ import Layout from "../layouts/layout.astro";
     passwordInput.focus();
   });
 
-  // ===== AREA TABS =====
   document.querySelectorAll(".area-tab").forEach((tab) => {
     tab.addEventListener("click", () => {
       document
@@ -408,7 +385,6 @@ import Layout from "../layouts/layout.astro";
     });
   });
 
-  // ===== FILTERS =====
   document.getElementById("filter-opcion")?.addEventListener("change", (e) => {
     currentOpcion = (e.target as HTMLSelectElement).value;
     loadPostulantes();
@@ -419,7 +395,6 @@ import Layout from "../layouts/layout.astro";
     loadPostulantes();
   });
 
-  // ===== LOAD DATA =====
   async function loadPostulantes() {
     const loadingEl = document.getElementById("loading-indicator")!;
     const emptyEl = document.getElementById("empty-state")!;
@@ -489,7 +464,6 @@ import Layout from "../layouts/layout.astro";
     }
   }
 
-  // ===== RENDER =====
   function renderPostulantes(postulantes: any[]) {
     const listEl = document.getElementById("postulantes-list")!;
     listEl.innerHTML = "";
@@ -566,7 +540,7 @@ import Layout from "../layouts/layout.astro";
             </div>
           </div>
 
-          <!-- Right: Motivo -->
+          <!-- Right: Reason -->
           <div class="lg:w-[45%] shrink-0">
             <div class="mb-3">
               <p class="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-1">Motivo:</p>
@@ -581,7 +555,6 @@ import Layout from "../layouts/layout.astro";
     });
   }
 
-  // ===== RETRY =====
   document.getElementById("retry-btn")?.addEventListener("click", () => {
     loadPostulantes();
   });
@@ -607,7 +580,7 @@ import Layout from "../layouts/layout.astro";
       "Fecha de Registro",
     ];
 
-    // CSS para el Excel (Estilos específicos que Excel reconoce mejor)
+    // CSS for Excel (Specific styles that Excel recognizes better)
     const style = `
       <style>
         .header-cell { background-color: #75d32d; color: black; font-weight: bold; border: 1.0pt solid black; text-align: center; vertical-align: middle; font-size: 12pt; }
@@ -619,7 +592,6 @@ import Layout from "../layouts/layout.astro";
       </style>
     `;
 
-    // Generar filas
     const rowsHtml = postulantesCache
       .map((p, index) => {
         const is1ra = p.first_choice_area === currentArea;
@@ -656,7 +628,7 @@ import Layout from "../layouts/layout.astro";
         <table>
           <tr><td colspan="${headers.length}" class="title">UNICODE - Reporte de Postulantes</td></tr>
           <tr><td colspan="${headers.length}" style="color: #666; font-size: 11pt;">Área: ${currentArea} | Fecha de reporte: ${new Date().toLocaleDateString("es-PE")}</td></tr>
-          <tr><td></td></tr> <!-- Espacio -->
+          <tr><td></td></tr>
           <thead>
             <tr>${headers.map((h) => `<th class="header-cell">${h}</th>`).join("")}</tr>
           </thead>

@@ -1,16 +1,9 @@
 ---
 /**
-<<<<<<< HEAD:src/components/components-home/novedades.astro
- * novedades.astro
- * Sección de noticias debajo del grid de estadísticas.
- * Las novedades se generan dinámicamente a partir de events.ts y projects.ts,
- * para que siempre estén en sincronía con esos datos.
-=======
  * Novedades.astro
  * News/novelty section displayed below the statistics grid.
  * Novelties are dynamically assembled from events.ts and projects.ts data
  * to ensure synchronization.
->>>>>>> bf04641d858301e6eaae062ab786000d50517516:src/components/components-home/Novedades.astro
  */
 import NovedadCard from "./novedad-card.astro";
 import { eventosRealizados } from "../../data/events";
@@ -23,7 +16,6 @@ interface Novedad {
   href: string;
 }
 
-// Active projects -> novelties
 const projectNews: Novedad[] = projects
   .filter((p) => p.status === "Activo")
   .map((p) => ({
@@ -33,7 +25,6 @@ const projectNews: Novedad[] = projects
     href: p.link && p.link !== "https://unicode.vercel.app" ? p.link : `/proyectos`,
   }));
 
-// Last completed events -> novelties
 const eventNews: Novedad[] = eventosRealizados.map((e) => ({
   title: e.titulo,
   description: e.descripcion,
@@ -80,7 +71,6 @@ const novedades = combined.slice(0, 5);
         }
       </div>
 
-      <!-- Arrow Controls & Indicator (All views) -->
       <div class="flex items-center justify-center gap-6 mt-10">
         <button
           id="prev-news"
@@ -330,16 +320,13 @@ const novedades = combined.slice(0, 5);
         : event.touches[0].clientX;
     }
 
-    // Resize event logic
     window.addEventListener("resize", () => {
       setPositionByIndex();
     });
 
-    // Initialize
     updateUIState(0);
   }
 
-  // Run on initial load
   initNewsCarousel();
 
   // Run on Astro View Transitions

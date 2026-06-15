@@ -9,7 +9,6 @@
   <div
     class="p-4 md:p-12 lg:p-16 relative max-h-[85vh] overflow-y-auto custom-scrollbar"
   >
-    <!-- Close btn -->
     <button
       id="close-project-modal"
       class="absolute top-6 right-6 md:top-8 md:right-8 lg:top-10 lg:right-10 text-zinc-400 hover:text-white transition-colors p-1 cursor-pointer"
@@ -39,7 +38,6 @@
     </div>
 
     <div id="modal-grid-container" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 items-stretch">
-      <!-- Descripcion -->
       <div 
         id="modal-desc-container" 
         class="border border-zinc-800 bg-[#0d0d0d] rounded-3xl p-10 md:p-12 col-span-1 md:col-span-2 transition-all duration-300"
@@ -53,7 +51,6 @@
         </p>
       </div>
 
-      <!-- Screenshots Container -->
       <div id="modal-screenshots-wrapper" class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div
           id="modal-screenshot-1-container"
@@ -80,7 +77,6 @@
       </div>
     </div>
 
-    <!-- Our team (Nuestro equipo) -->
     <div
       class="bg-[#111111] border border-zinc-800 rounded-3xl p-6 md:p-16 mb-8"
     >
@@ -96,7 +92,6 @@
       </div>
     </div>
 
-    <!-- Call to action button -->
     <div class="flex justify-center mt-8">
       <a
         id="modal-project-link"
@@ -142,7 +137,6 @@
     const modal = document.getElementById("project-modal") as HTMLDialogElement;
     const closeBtn = document.getElementById("close-project-modal");
 
-    // Modal Elements
     const titleEl = document.getElementById("modal-project-title");
     const descEl = document.getElementById("modal-project-desc");
     const descContainer = document.getElementById("modal-desc-container");
@@ -212,7 +206,6 @@
               img2Container?.classList.remove("hidden");
             }
           } else {
-            // No screenshots
             if (descContainer) descContainer.classList.add("md:col-span-2");
             screenshotsWrapper?.classList.add("hidden");
           }
@@ -222,7 +215,6 @@
             linkEl.textContent = `Click aquí para conocer ${project.title}`;
           }
 
-          // Populate Team
           if (teamContainer) {
             teamContainer.innerHTML = "";
             const team = project.team || [];
@@ -274,7 +266,6 @@
     });
   }
 
-  // Load modal js
   initModals();
   document.addEventListener("astro:page-load", initModals);
 </script>

@@ -1,4 +1,4 @@
-// Mantenemos interfaces base hasta que Database sea generada automáticamente
+// Keep base interfaces until database types are automatically generated
 export interface Area {
   id: string;
   name: string;

@@ -32,17 +32,18 @@ Para compilar y empaquetar el proyecto de manera óptima para producción, se re
 
 ## 3. Configuración de Variables de Entorno en el Hosting
 
-Para que la Landing Page y el módulo de Convocatoria funcionen correctamente, es necesario configurar de forma segura las credenciales de Supabase en el panel de control del proveedor de hosting (Vercel):
+Para que la Landing Page y el módulo de Convocatoria funcionen en producción, deben configurarse las siguientes variables de entorno en el panel de control del hosting (Project Settings > Environment Variables en Vercel):
 
-### Variables requeridas (deben configurarse en Project Settings > Environment Variables):
+*   `PUBLIC_SUPABASE_URL`
+*   `PUBLIC_SUPABASE_ANON_KEY`
+*   `SUPABASE_SERVICE_ROLE_KEY`
+*   `ADMIN_PASSWORD`
 
-* `PUBLIC_SUPABASE_URL`: Endpoint seguro del API REST de tu instancia en Supabase.
-* `PUBLIC_SUPABASE_ANON_KEY`: Llave pública anónima de cliente para permitir la conexión desde el frontend.
-* `SUPABASE_SERVICE_ROLE_KEY`: Llave administrativa secreta utilizada exclusivamente por las funciones de backend (`/api/postular` y `/api/admin-postulantes`).
-* `ADMIN_PASSWORD`: Contraseña para el acceso al panel de administración de `/admin`.
+Para conocer la descripción técnica detallada del propósito y nivel de exposición de cada una de estas variables, consulte:
+*   [Guía de Onboarding - Variables de Entorno](onboarding.md#12-variables-de-entorno)
 
 > [!WARNING]
-> Nunca se debe incluir el archivo `.env` local en los commits de Git. Verifica que el archivo `.env` esté correctamente listado en el archivo `.gitignore` en la raíz del proyecto para evitar la filtración accidental de llaves de API.
+> Nunca se debe incluir el archivo `.env` local en los commits de Git. Asegúrese de que el archivo `.env` esté listado en `.gitignore` para evitar la filtración accidental de credenciales.
 
 ---
 

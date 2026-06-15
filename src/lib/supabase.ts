@@ -4,10 +4,10 @@ const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 const supabaseServiceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Cliente estándar para el frontend (usando Anon Key)
+// Standard client for frontend (using Anon Key)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Cliente administrador para el backend (usando Service Role Key)
-// ¡IMPORTANTE!: No usar este cliente en componentes del cliente (.astro fuera de la sección del script o componentes de React/Vue/etc)
+// Admin client for backend (using Service Role Key)
+// IMPORTANT: Do not use this client in client-side components (.astro outside script section, or React/Vue components)
 export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey || supabaseAnonKey);
 

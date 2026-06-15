@@ -18,17 +18,17 @@ Estructura física de la tabla `applicants` utilizada para consolidar las postul
 
 | Columna | Tipo de dato | Restricciones (Constraints) | Descripción (Propósito) |
 | :--- | :--- | :--- | :--- |
-| `id` | `uuid` | Primary Key, `default gen_random_uuid()` | Identificador único global autogenerado para cada postulación. |
-| `first_name` | `varchar(100)` | Not Null | Nombre o nombres del postulante. |
-| `last_name` | `varchar(100)` | Not Null | Apellido o apellidos del postulante. |
+| `id` | `uuid` | Primary Key, `default uuid_generate_v4()` | Identificador único global autogenerado para cada postulación. |
+| `first_name` | `varchar(150)` | Not Null | Nombre o nombres del postulante. |
+| `last_name` | `varchar(150)` | Not Null | Apellido o apellidos del postulante. |
 | `email` | `varchar(150)` | Unique, Not Null | Correo electrónico de contacto único de cada postulante. |
 | `phone` | `varchar(20)` | Not Null | Teléfono móvil o fijo de contacto del postulante. |
-| `career` | `varchar(100)` | Not Null | Escuela profesional o carrera universitaria en curso. |
-| `first_choice_area` | `varchar(50)` | Not Null | Primera opción de área de postulación dentro de la organización. |
+| `career` | `varchar(150)` | Not Null | Escuela profesional o carrera universitaria en curso. |
+| `first_choice_area` | `varchar(150)` | Not Null, Check (IN ('ID', 'RRPP', 'GTH', 'ACD', 'DCC')) | Primera opción de área de postulación dentro de la organización. |
 | `university` | `varchar(150)` | Not Null | Universidad de origen del postulante. |
 | `university_semester` | `varchar(20)` | Not Null | Semestre o ciclo académico actual del postulante. |
 | `application_reason` | `text` | Not Null | Motivos de postulación detallados para el ingreso a la organización. |
-| `second_choice_area` | `varchar(50)` | Nullable | Segunda opción opcional de área de postulación dentro de la organización. |
+| `second_choice_area` | `varchar(150)` | Nullable, Check (NULL or IN ('ID', 'RRPP', 'GTH', 'ACD', 'DCC')) | Segunda opción opcional de área de postulación dentro de la organización. |
 | `created_at` | `timestamptz` | Default: `now()` | Fecha y hora exacta en la que se realizó el registro en el sistema. |
 
 ---
@@ -49,24 +49,24 @@ Sentencia DDL SQL declarativa completa para inicializar la tabla con sus respect
 -- Create applicants table for landing page registrations
 CREATE TABLE applicants (
     -- Unique identifier using uuid
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     
     -- Personal details
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
+    first_name VARCHAR(150) NOT NULL,
+    last_name VARCHAR(150) NOT NULL,
     
     -- Contact details
     email VARCHAR(150) UNIQUE NOT NULL,
     phone VARCHAR(20) NOT NULL,
     
     -- Academic info
-    career VARCHAR(100) NOT NULL,
+    career VARCHAR(150) NOT NULL,
     university VARCHAR(150) NOT NULL,
     university_semester VARCHAR(20) NOT NULL,
     
     -- Application options constrained to valid areas
-    first_choice_area VARCHAR(50) NOT NULL CHECK (first_choice_area IN ('ID', 'RRPP', 'GTH', 'ACD', 'DCC')),
-    second_choice_area VARCHAR(50) NULL CHECK (second_choice_area IS NULL OR second_choice_area IN ('ID', 'RRPP', 'GTH', 'ACD', 'DCC')),
+    first_choice_area VARCHAR(150) NOT NULL CHECK (first_choice_area IN ('ID', 'RRPP', 'GTH', 'ACD', 'DCC')),
+    second_choice_area VARCHAR(150) NULL CHECK (second_choice_area IS NULL OR second_choice_area IN ('ID', 'RRPP', 'GTH', 'ACD', 'DCC')),
     
     -- Text area for statement of purpose
     application_reason TEXT NOT NULL,
@@ -74,4 +74,8 @@ CREATE TABLE applicants (
     -- Auto-generated timestamp
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
+
+-- Performance Indexes
+CREATE INDEX idx_applicants_choices ON applicants(first_choice_area, second_choice_area);
+CREATE INDEX idx_applicants_created_at ON applicants(created_at DESC);
 ```

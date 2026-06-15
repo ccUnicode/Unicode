@@ -19,13 +19,13 @@ Cada tecnología del entorno del cliente ha sido seleccionada para cumplir con l
 * **Astro Framework (v4.x):** Actúa como el orquestador principal de la interfaz de usuario. Utiliza la arquitectura de islas para compilar estáticamente las vistas principales en el servidor, inyectando código JavaScript hidratado únicamente en las secciones interactivas que lo requieran para agilizar el tiempo de carga (LCP).
 * **TypeScript:** Implementa un entorno de tipado estricto en el lado del cliente. Asegura que los contratos de datos de la capa API local y las propiedades transferidas a los componentes coincidan estrictamente con las interfaces de control, previniendo excepciones en tiempo de ejecución.
 * **Tailwind CSS:** Framework utilitario que agiliza la maquetación bajo el enfoque orientado a móviles corporativo. Centraliza la paleta de colores del tema oscuro dominante y restringe las interacciones y llamados a la acción (CTAs) al color de acento verde neón institucional (`#75D32D`).
-* **Nanostores (`lib/db-store.ts`):** Gestor de estado ligero y agnóstico que administra la reactividad global y los estados síncronos de navegación en el navegador sin la penalización de peso de frameworks masivos de terceros.
+* **State Store (`lib/session-store.ts` & client-side storage):** El estado de la sesión administrativa se gestiona a nivel de cliente usando `sessionStorage` y se valida criptográficamente en el servidor mediante el módulo de sesión de Edge, eliminando la necesidad de dependencias reactivas masivas.
 
 #### 1.2.2. Distribución de Módulos por Ramas
 Para evitar colisiones en el control de versiones y garantizar la autonomía del desarrollo, el sistema se divide de manera modular en cuatro flujos asignados por áreas de trabajo:
 
 * **Módulo de Convocatorias y Página de Inicio:** Contiene la lógica del formulario de postulación y los componentes interactivos de la landing page principal.
-* **Módulo de Áreas de Conocimiento:** Responsable de la arquitectura y subrutas físicas individuales de las disciplinas organizacionales en `src/pages/areas/`. Coordina la inyección de la tienda de estados `lib/dbStore.ts` para mantener la reactividad de las pestañas activas, gestiona los componentes de esqueleto de carga visual (*Skeleton Loaders*) y centraliza los mocks de datos estáticos en `src/data/projects.ts`.
+* **Módulo de Áreas de Conocimiento:** Responsable de la arquitectura y subrutas físicas individuales de las disciplinas organizacionales en `src/pages/areas/`. Coordina la inyección de estilos activos para mantener la retroalimentación de las pestañas seleccionadas, gestiona los componentes de esqueleto de carga visual (*Skeleton Loaders*) y centraliza los mocks de datos estáticos en `src/data/projects.ts`.
 * **Módulo de Catálogo de Proyectos:** Contiene el catálogo de soluciones tecnológicas desarrolladas por el centro, incluyendo filtros avanzados y fichas técnicas.
 * **Módulo de Agenda y Calendario de Eventos:** Encargado de la visualización cronológica de actividades e historial de eventos del centro.
 
@@ -63,91 +63,24 @@ Para implementar y controlar ventanas emergentes en el navegador sin interferir 
 
 Esta sección contiene datos concretos, contratos de interfaces y especificaciones técnicas para consulta rápida.
 
-### 3.1. Árbol de Carpetas del Frontend (`src/`)
-A continuación se detalla la ubicación física de los archivos del frontend:
+### 3.1. Estructura de Directorios del Frontend (`src/`)
+A continuación se detalla la organización modular de las carpetas principales del cliente:
 
 ```text
 src/
-├── assets/                             # Recursos estáticos globales (Gráficos y SVG)
-│   ├── astro.svg                       # Logotipo por defecto de Astro
-│   ├── background.svg                  # Gráfico SVG de fondo para el lienzo
-│   └── alliance-logos/                  # Logotipos de comunidades aliadas
-├── components/                         # Componentes globales y modulares de la interfaz
-│   ├── footer.astro                    # Pie de página institucional
-│   ├── hero.astro                      # Sección de encabezado de la Landing principal
-│   ├── navbar.astro                    # Barra de navegación colapsable y responsiva
-│   ├── welcome.astro                   # Panel de bienvenida inicial
+├── assets/                             # Recursos estáticos (Imágenes y logotipos)
+├── components/                         # Componentes globales y modulares (Astro)
 │   ├── components-areas/               # Módulos del flujo de áreas de conocimiento
-│   │   ├── area-card.astro              # Tarjeta individual del catálogo maestro
-│   │   ├── area-director-profile.astro   # Perfil y foto del director del área
-│   │   ├── area-project-card.astro       # Tarjeta de proyectos pertenecientes al área
-│   │   ├── area-project-slider.astro     # Deslizador horizontal de proyectos del área
-│   │   ├── area-requirement.astro       # Lista de requisitos del área
-│   │   ├── area-valor.astro             # Valores y competencias del área
-│   │   ├── area-win-card.astro           # Logros y metas de la disciplina
-│   │   ├── hero-area-individual.astro    # Encabezado visual para las páginas individuales
-│   │   └── hero-areas.astro             # Encabezado para el catálogo de disciplinas
 │   ├── components-call/                # Componentes para el flujo de convocatorias
-│   │   ├── hero-call.astro              # Banner principal de la sección de convocatoria
-│   │   ├── por-que-unicode.astro         # Propuesta de valor institucional
-│   │   └── registro-modal.astro         # Modal con el formulario de postulación
 │   ├── components-events/              # Componentes para el calendario y agenda
-│   │   ├── eventos-realizados.astro     # Galería de actividades completadas
-│   │   ├── faq-eventos.astro            # Preguntas frecuentes con acordeón
-│   │   ├── hero-eventos.astro           # Encabezado del cronograma
-│   │   └── proximos-eventos.astro       # Actividades agendadas activas
 │   ├── components-home/                # Elementos exclusivos de la Landing principal
-│   │   ├── about.astro                 # Propósito general de UNICODE
-│   │   ├── alianzas.astro              # Rejilla adaptativa de logos aliados
-│   │   ├── cta.astro                   # Llamada a la acción flotante
-│   │   ├── explora-unicode.astro        # Bloque interactivo de inducción
-│   │   ├── nosotros.astro              # Misión, visión y objetivos
-│   │   ├── novedad-card.astro           # Tarjeta individual de noticia
-│   │   ├── novedades.astro             # Contenedor de noticias
-│   │   ├── presidentes.astro           # Muro de honor o sección informativa de la directiva
-│   │   └── stats.astro                 # Estadísticas de impacto
 │   └── components-projects/            # Componentes del catálogo de proyectos
-│       ├── featured-project-card.astro   # Tarjeta destacada de ancho completo
-│       ├── featured-section.astro       # Contenedor de la sección destacada
-│       ├── project-card.astro           # Tarjeta para el catálogo general
-│       ├── project-filters.astro        # Filtros por áreas y campo de búsqueda
-│       ├── project-grid.astro           # Rejilla adaptativa y responsiva
-│       ├── project-hero.astro           # Encabezado de la vitrina técnica
-│       ├── project-modal.astro          # Ficha técnica detallada del proyecto
-│       └── project-slider.astro         # Carrusel de proyectos open source
-├── data/                               # Datos locales estáticos
-│   ├── events.ts                       # Colección tipada de actividades y agenda
-│   ├── projects.ts                     # Datos estáticos de los proyectos
-│   └── siteConfig.ts                   # Configuración del sitio y estado de convocatoria
-├── layouts/                            # Estructuras base compartidas
-│   └── layout.astro                    # Plantilla común (inyecta Navbar y Footer)
-├── lib/                                # Librerías e infraestructura
-│   ├── dbStore.ts                      # Base de datos en memoria para pruebas locales
-│   ├── sessionStore.ts                 # Validaciones criptográficas de sesiones admin
-│   └── supabase.ts                     # Inicialización del cliente Supabase
-├── styles/                             # Directivas globales de diseño
-│   └── global.css                      # Configuración CSS y Tailwind
-├── types/                              # Declaración de tipos estáticos
-│   └── index.d.ts                      # Interfaces de TypeScript del dominio
-└── pages/                              # Enrutamiento de páginas físicas
-    ├── 404.astro                       # Página de error de ruta no encontrada
-    ├── admin.astro                     # Dashboard de la directiva
-    ├── areas.astro                     # Catálogo de disciplinas
-    ├── call.astro                      # Página de convocatorias
-    ├── eventos.astro                   # Sección de agenda y eventos
-    ├── index.astro                     # Landing page de inicio
-    ├── projects.astro                  # Vitrina de soluciones tecnológicas
-    ├── api/                            # Endpoints de API ejecutados en servidor (SSR)
-    │   ├── admin-login.ts              # Validador de credenciales de acceso
-    │   ├── admin-logout.ts             # Invalidación de sesión del administrador
-    │   ├── admin-postulantes.ts        # Consulta y filtrado de postulantes
-    │   └── postular.ts                 # Mutación para añadir postulaciones
-    └── areas/                          # Subpáginas de cada disciplina
-        ├── academica.astro
-        ├── direccion-de-comunicacion-y-contenido.astro
-        ├── gestion-del-talento-humano.astro
-        ├── investigacion-y-desarrollo.astro
-        └── relaciones-publicas.astro
+├── data/                               # Datos estáticos y mocks estructurados
+├── layouts/                            # Estructuras base de página compartidas
+├── lib/                                # Librerías, utilidades y clientes de persistencia
+├── styles/                             # Directivas globales de diseño (Tailwind CSS)
+├── types/                              # Tipos estáticos y definiciones TypeScript
+└── pages/                              # Enrutamiento basado en archivos físicos y endpoints locales
 ```
 
 ### 3.2. Enrutamiento y Páginas Físicas
@@ -166,89 +99,8 @@ La aplicación utiliza enrutamiento basado en archivos físicos dentro del direc
 *   `/admin` -> Panel de administración y dashboard de postulantes (`admin.astro`).
 
 ### 3.3. Contratos de la API (Endpoints en `src/pages/api/`)
-
-#### 3.3.1. `POST /api/postular`
-Registra un nuevo postulante en el sistema.
-*   **Cabeceras Requeridas**: `Content-Type: application/json`
-*   **Cuerpo de la Petición**:
-    ```json
-    {
-      "nombres": "string (obligatorio)",
-      "apellidos": "string (obligatorio)",
-      "correo": "string (obligatorio, formato email)",
-      "telefono": "string (obligatorio, 9 dígitos)",
-      "universidad": "string (obligatorio)",
-      "carrera": "string (obligatorio)",
-      "ciclo_universidad": "string o número (obligatorio)",
-      "opcion1": "string (obligatorio, GTH|ACD|RRPP|DCC|ID)",
-      "opcion2": "string (opcional, GTH|ACD|RRPP|DCC|ID)",
-      "motivo_postulacion": "string (obligatorio)"
-    }
-    ```
-*   **Respuesta Exitosa (200 OK)**:
-    ```json
-    {
-      "message": "¡Inscripción recibida correctamente! Te contactaremos pronto."
-    }
-    ```
-*   **Respuesta de Error (400 Bad Request)**:
-    ```json
-    {
-      "error": "Todos los campos obligatorios deben ser completados."
-    }
-    ```
-
-#### 3.3.2. `POST /api/admin-login`
-Autentica al administrador y emite un token criptográfico temporal firmado.
-*   **Cuerpo de la Petición**:
-    ```json
-    {
-      "password": "string (obligatorio)"
-    }
-    ```
-*   **Respuesta Exitosa (200 OK)**:
-    ```json
-    {
-      "token": "string (Token firmado HMAC-SHA256)"
-    }
-    ```
-*   **Respuesta de Error (401 Unauthorized / Lockout)**:
-    ```json
-    {
-      "error": "Contraseña incorrecta.",
-      "attemptsRemaining": 2
-    }
-    ```
-
-#### 3.3.3. `GET /api/admin-postulantes`
-Obtiene la lista de los candidatos inscritos. Requiere autenticación.
-*   **Cabeceras Requeridas**: `Authorization: Bearer <token>`
-*   **Parámetros de Consulta (Query Params)**:
-    *   `area` (GTH|ACD|RRPP|DCC|ID) - Filtra por disciplina de interés.
-    *   `opcion` (todas|1ra|2da) - Filtra por prioridad de opción elegida.
-    *   `orden` (reciente|1ra-2da) - Criterio de ordenamiento.
-*   **Respuesta Exitosa (200 OK)**:
-    ```json
-    {
-      "data": [
-        {
-          "id": "uuid",
-          "nombres": "Juan",
-          "apellidos": "Pérez",
-          "correo": "juan@uni.edu.pe",
-          "telefono": "999999999",
-          "universidad": "UNI",
-          "carrera": "Ingeniería de Sistemas",
-          "ciclo_universidad": "5",
-          "opcion1": "ID",
-          "opcion2": "ACD",
-          "motivo_postulacion": "Deseo aprender desarrollo de software...",
-          "created_at": "ISO-8601-Timestamp"
-        }
-      ],
-      "total": 1
-    }
-    ```
+Para consultar los detalles formales de los contratos JSON de petición, parámetros de consulta, códigos de respuesta HTTP y ejemplos para cada uno de los endpoints de la plataforma (`/api/postular`, `/api/admin-login`, `/api/admin-logout`, `/api/admin-postulantes`), consulte la documentación unificada en:
+*   [Especificación de Endpoints (API)](endpoints.md)
 
 ### 3.4. Tokens de Diseño y Accesibilidad
 *   **Colores de la Paleta de Tailwind**:
@@ -300,8 +152,8 @@ Esta sección detalla la arquitectura modular y los patrones implementados para 
     *   `area-requirement.astro`: Bloque informativo que lista de forma declarativa los perfiles técnicos y requerimientos mínimos exigidos a los postulantes.
 2.  **Sistema de Enrutamiento y Generación**:
     Las rutas de las disciplinas se gestionan a través de archivos estáticos individuales bajo el directorio `src/pages/areas/` (ej. `academica.astro`, `gestion-del-talento-humano.astro`), garantizando compatibilidad total con renderizado SSR y posicionamiento en buscadores (SEO) sin dependencias de enrutamiento dinámico en el navegador.
-3.  **Integración de Estado Reactivo**:
-    El control de la navegación interactiva y la retención de filtros por disciplina en la interfaz del cliente se delega a `src/lib/db-store.ts` basado en Nanostores. Esto mantiene el consumo de memoria en niveles mínimos y desacopla los componentes de dependencias de frameworks externos complejos.
+3.  **Integración de Estado e Interactividad**:
+    El control de la navegación interactiva y la retención de filtros por disciplina en la interfaz del cliente se delega a la manipulación directa del DOM mediante scripts de vanilla JavaScript optimizados. Esto mantiene el consumo de memoria en niveles mínimos y desacopla los componentes de dependencias de frameworks reactivos de terceros.
 
 #### 3.6.3. Proyectos
 Esta sección detalla la arquitectura modular y los patrones implementados para la vitrina de soluciones tecnológicas de UNICODE:
