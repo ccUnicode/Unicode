@@ -50,9 +50,14 @@ Una visión general de la arquitectura básica:
 Para más detalles específicos sobre el proyecto, consulta los siguientes documentos en la carpeta `docs/` y en la raíz:
 
 - 📖 **[Guía de Contribución](./CONTRIBUTING.md)**: Reglas estrictas de Git, ramas, y convenciones de commits. (Obligatorio para colaboradores).
+- 🏛️ **[Arquitectura del Sistema](./docs/arquitectura.md)**: Vista general del diseño del sistema, diagramas de flujo y riesgos técnicos.
 - 🎨 **[Frontend y UI/UX](./docs/frontend.md)**: Arquitectura detallada, estructura, componentes y guía de estilos.
-- ⚙️ **[Onboarding y Mantenimiento](./docs/onboarding.md)**: Guía esencial para que los nuevos equipos de cada ciclo mantengan el contenido (proyectos, eventos) y usen el panel de administración.
+- ⚙️ **[Backend y API](./docs/backend.md)**: Detalle del servidor, sesión criptográfica, rate limiting y seguridad.
+- 🔌 **[Especificación de Endpoints](./docs/endpoints.md)**: Referencia y contratos de los endpoints locales de la API.
+- 💾 **[Base de Datos](./docs/base-de-datos.md)**: Esquema de PostgreSQL, restricciones DDL, índices y configuración.
 - 🚀 **[Despliegue y Rollback](./docs/despliegue.md)**: Instrucciones paso a paso para el paso a producción y manejo de caídas.
+- 🧪 **[Pruebas y QA](./docs/testing.md)**: Estrategias de control de calidad, casos de prueba manuales y performance.
+- ⚙️ **[Onboarding y Mantenimiento](./docs/onboarding.md)**: Guía esencial para que los nuevos equipos de cada ciclo mantengan el contenido y usen el panel de administración.
 
 ## Instalación y Configuración
 
@@ -75,7 +80,13 @@ npm install
 
 ### 3. Configurar variables de entorno
 
-Crea un archivo `.env` en la raíz del proyecto y añade tus credenciales de Supabase y administración:
+Crea un archivo `.env` en la raíz del proyecto basándote en el archivo de plantilla [.env.example](./.env.example):
+
+```bash
+cp .env.example .env
+```
+
+Abre el archivo `.env` y añade tus credenciales de Supabase y administración:
 
 ```env
 PUBLIC_SUPABASE_URL=tu_supabase_url

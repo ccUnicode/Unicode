@@ -44,7 +44,7 @@ Los nombres de las ramas deben ser descriptivos, en minúsculas y usar guiones (
 Buscamos seguir una convención clara basada en el tipo de cambio: `tipo(ámbito): descripción`.
 
 **Ejemplos reales del proyecto:**
-* `feat(home): implementar sección de novedades`
+* `feat(home): implement news section`
 * `fix(docs): improve the file of arquitectura.md`
 * `refactor(docs): changed the files in docs`
 * `fix(call): Call is closed`

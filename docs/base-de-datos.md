@@ -79,3 +79,16 @@ CREATE TABLE applicants (
 CREATE INDEX idx_applicants_choices ON applicants(first_choice_area, second_choice_area);
 CREATE INDEX idx_applicants_created_at ON applicants(created_at DESC);
 ```
+
+---
+
+## 5. Gestión de Migraciones y Semillas (Seeds)
+
+En la fase actual del desarrollo, la definición de la estructura física de la base de datos se almacena en el archivo declarativo [schema.sql](../../supabase/schema.sql) ubicado en el directorio `/supabase/` en la raíz.
+
+### Pasos para replicar el esquema en un nuevo proyecto de Supabase:
+1. **Acceso al Dashboard**: Inicie sesión en el panel de control de **Supabase** y navegue hacia el proyecto correspondiente.
+2. **Editor de SQL**: En la barra lateral izquierda, seleccione la herramienta **SQL Editor**.
+3. **Cargar Estructura**: Cree una nueva consulta (*New Query*), copie la totalidad del contenido del archivo `supabase/schema.sql` y péguelo en el editor SQL.
+4. **Ejecución**: Presione el botón **Run** para crear la tabla `applicants` con sus respectivas restricciones de validación y los índices de rendimiento optimizados.
+5. **Configuración RLS**: Asegúrese de ir a la sección **Database > Policies** en Supabase para habilitar las políticas de seguridad a nivel de fila (*Row Level Security*), configurando permisos exclusivos de `INSERT` para roles públicos y restringiendo lecturas a la capa del servidor.

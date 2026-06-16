@@ -42,3 +42,17 @@ Debido a que Vercel ejecuta las solicitudes de forma distribuida en múltiples c
 *   **Sanitización contra XSS**: Todos los campos de texto libre introducidos por el usuario son limpiados en el servidor a través de una función de sanitización que reemplaza los caracteres HTML reservados (`<`, `>`, `&`, `"`, `'`) por sus entidades equivalentes, mitigando ataques de XSS almacenado.
 *   **CSRF Protection**: Las peticiones de mutación requieren la cabecera `X-Requested-With: XMLHttpRequest` para verificar que la petición procede del cliente web original y no de llamadas embebidas de terceros.
 *   **Mitigación de Timing Attacks**: El validador de contraseñas `/api/admin-login` utiliza una función de comparación de cadenas en tiempo constante (`safeCompare`). Esto garantiza que el tiempo de ejecución de la validación sea uniforme independientemente de qué caracteres de la contraseña coincidan, evitando que un atacante deduzca la contraseña analizando las micro-latencias de respuesta del servidor.
+
+---
+
+## 5. Estructura Física y Contratos de la API
+
+La lógica de backend y rutas API se encuentra centralizada en la ruta `/src/pages/api/` y se compone de los siguientes archivos:
+
+*   **`admin-login.ts`**: Validador de contraseña y generador de firmas HMAC.
+*   **`admin-logout.ts`**: Invalidador lógico de la cookie de sesión del administrador.
+*   **`admin-postulantes.ts`**: Recuperación filtrada y ordenada de datos de la base de datos de Supabase.
+*   **`postular.ts`**: Validación rígida de campos, control de tasa (rate limit), sanitización y persistencia segura de candidatos.
+
+Para conocer la estructura formal de los payloads JSON, parámetros de consulta y respuestas HTTP de estos endpoints, consulte:
+*   [Especificación de Endpoints (API)](endpoints.md)

@@ -5,7 +5,8 @@
 El ciclo de vida del proyecto está estructurado sobre los siguientes entornos de ejecución:
 
 * **Entorno de Desarrollo (Local):** Ejecutado en la máquina local de cada desarrollador. Se utiliza para la codificación, depuración e integración de componentes.
-* **Entorno de Producción (Live):** El sitio web público y funcional de Unicode. Está alojado en la plataforma cloud de **Vercel** como proveedor predeterminado y sincronizado directamente con la rama `main` del repositorio de GitHub.
+* **Entorno de Previsualización (Preview / Staging Limitado):** Generado de forma dinámica por Vercel para cada Pull Request. Permite verificar cambios visuales y de flujo de cliente en un entorno en la nube antes del merge. *Nota: En la fase actual, este ambiente consume el mismo backend/base de datos de desarrollo y no cuenta con una base de datos física persistente e independiente dedicada exclusivamente a Staging.*
+* **Entorno de Producción (Live):** El sitio web público y funcional de Unicode. Está alojado en la plataforma cloud de **Vercel** como proveedor predeterminado y sincronizado directamente con la rama `main` del repositorio de GitHub. Conectado a la base de datos de producción aislada en Supabase.
 
 ---
 

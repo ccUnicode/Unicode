@@ -2,6 +2,9 @@
 
 Este documento detalla las estrategias, flujos de pruebas manuales y validaciones de seguridad obligatorias para garantizar la calidad y el cumplimiento del estándar técnico antes de cada versión en producción.
 
+> [!IMPORTANT]
+> **Nota de QA:** En la fase actual del desarrollo, el proyecto **no cuenta** con pruebas unitarias, de integración o de extremo a extremo (E2E) automatizadas configuradas en el entorno local (tales como Vitest o Cypress). Por ende, el aseguramiento de la calidad recae al 100% en la correcta ejecución de los planes de pruebas manuales, de rendimiento y de seguridad detallados en este documento antes de solicitar un merge a producción.
+
 ---
 
 ## 1. Pruebas Manuales (Formulario de Postulación)
