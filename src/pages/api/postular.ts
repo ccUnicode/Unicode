@@ -199,15 +199,9 @@ export async function POST({ request }: { request: Request }) {
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
   }
-  if (!AREAS_VALIDAS.includes(first_choice_area)) {
+  if (first_choice_area !== 'DCC') {
     return new Response(
-      JSON.stringify({ error: 'Área de primera opción no válida.' }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
-  if (second_choice_area && !AREAS_VALIDAS.includes(second_choice_area)) {
-    return new Response(
-      JSON.stringify({ error: 'Área de segunda opción no válida.' }),
+      JSON.stringify({ error: 'La convocatoria actual está disponible exclusivamente para el área DCC.' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
   }
