@@ -88,18 +88,18 @@ La aplicación utiliza enrutamiento basado en archivos físicos dentro del direc
 
 *   `/` -> Página de inicio (`index.astro`).
 *   `/areas` -> Catálogo maestro de áreas (`areas.astro`).
-*   `/areas/academica` -> Detalle del área Académica (`areas/academica.astro`).
-*   `/areas/direccion-de-comunicacion-y-contenido` -> Detalle de DCC (`areas/direccion-de-comunicacion-y-contenido.astro`).
-*   `/areas/gestion-del-talento-humano` -> Detalle de GTH (`areas/gestion-del-talento-humano.astro`).
-*   `/areas/investigacion-y-desarrollo` -> Detalle de I+D (`areas/investigacion-y-desarrollo.astro`).
-*   `/areas/relaciones-publicas` -> Detalle de RRPP (`areas/relaciones-publicas.astro`).
+*   `/areas/academic` -> Detalle del área Académica (`areas/academic.astro`).
+*   `/areas/communication-and-content` -> Detalle de DCC (`areas/communication-and-content.astro`).
+*   `/areas/talent-management` -> Detalle de GTH (`areas/talent-management.astro`).
+*   `/areas/research-and-development` -> Detalle de I+D (`areas/research-and-development.astro`).
+*   `/areas/public-relations` -> Detalle de RRPP (`areas/public-relations.astro`).
 *   `/call` -> Formulario de inscripción y convocatoria activa (`call.astro`).
-*   `/eventos` -> Agenda e historial de actividades del centro (`eventos.astro`).
+*   `/events` -> Agenda e historial de actividades del centro (`events.astro`).
 *   `/projects` -> Repositorio visual y vitrina de proyectos (`projects.astro`).
 *   `/admin` -> Panel de administración y dashboard de postulantes (`admin.astro`).
 
 ### 3.3. Contratos de la API (Endpoints en `src/pages/api/`)
-Para consultar los detalles formales de los contratos JSON de petición, parámetros de consulta, códigos de respuesta HTTP y ejemplos para cada uno de los endpoints de la plataforma (`/api/postular`, `/api/admin-login`, `/api/admin-logout`, `/api/admin-postulantes`), consulte la documentación unificada en:
+Para consultar los detalles formales de los contratos JSON de petición, parámetros de consulta, códigos de respuesta HTTP y ejemplos para cada uno de los endpoints de la plataforma (`/api/apply`, `/api/admin-login`, `/api/admin-logout`, `/api/admin-applicants`), consulte la documentación unificada en:
 *   [Especificación de Endpoints (API)](endpoints.md)
 
 ### 3.4. Tokens de Diseño y Accesibilidad
@@ -132,11 +132,11 @@ Esta sección detalla la arquitectura modular y los patrones implementados para 
 1.  **Componentes Modulares Asociados (`src/components/components-home/` y `src/components/`)**:
     *   `Hero.astro`: Panel principal que presenta la propuesta de valor con un diseño inmersivo de fondo SVG y el color de acento institucional verde neón.
     *   `Stats.astro`: Componente que muestra de forma numérica los logros y métricas de impacto de la organización.
-    *   `Novedades.astro` y `NovedadCard.astro`: Grilla responsiva y tarjeta individual para renderizar noticias y actualizaciones del centro.
-    *   `Nosotros.astro`: Detalle conceptual de la misión, visión y objetivos organizacionales de UNICODE.
-    *   `Alianzas.astro`: Módulo que renderiza logotipos responsivos de organizaciones y comunidades asociadas.
-    *   `ExploraUnicode.astro`: Panel de navegación interactivo con enlaces a los diferentes módulos de la plataforma.
-    *   `Presidentes.astro`: Sección para destacar el equipo de liderazgo y directiva del centro.
+    *   `news.astro` y `news-card.astro`: Grilla responsiva y tarjeta individual para renderizar noticias y actualizaciones del centro.
+    *   `us.astro`: Detalle conceptual de la misión, visión y objetivos organizacionales de UNICODE.
+    *   `alliances.astro`: Módulo que renderiza logotipos responsivos de organizaciones y comunidades asociadas.
+    *   `explore-unicode.astro`: Panel de navegación interactivo con enlaces a los diferentes módulos de la plataforma.
+    *   `presidents.astro`: Sección para destacar el equipo de liderazgo y directiva del centro.
 2.  **Sistema de Enrutamiento y Generación**:
     La Landing Page de inicio se gestiona mediante la ruta raíz `/` mapeada al archivo `src/pages/index.astro`, compilada del lado del servidor para garantizar el máximo rendimiento de carga (LCP) y SEO.
 
@@ -151,7 +151,7 @@ Esta sección detalla la arquitectura modular y los patrones implementados para 
     *   `area-project-card.astro` y `area-project-slider.astro`: Carrusel responsivo que filtra y muestra exclusivamente los proyectos de desarrollo tecnológico del área seleccionada.
     *   `area-requirement.astro`: Bloque informativo que lista de forma declarativa los perfiles técnicos y requerimientos mínimos exigidos a los postulantes.
 2.  **Sistema de Enrutamiento y Generación**:
-    Las rutas de las disciplinas se gestionan a través de archivos estáticos individuales bajo el directorio `src/pages/areas/` (ej. `academica.astro`, `gestion-del-talento-humano.astro`), garantizando compatibilidad total con renderizado SSR y posicionamiento en buscadores (SEO) sin dependencias de enrutamiento dinámico en el navegador.
+    Las rutas de las disciplinas se gestionan a través de archivos estáticos individuales bajo el directorio `src/pages/areas/` (ej. `academic.astro`, `talent-management.astro`), garantizando compatibilidad total con renderizado SSR y posicionamiento en buscadores (SEO) sin dependencias de enrutamiento dinámico en el navegador.
 3.  **Integración de Estado e Interactividad**:
     El control de la navegación interactiva y la retención de filtros por disciplina en la interfaz del cliente se delega a la manipulación directa del DOM mediante scripts de vanilla JavaScript optimizados. Esto mantiene el consumo de memoria en niveles mínimos y desacopla los componentes de dependencias de frameworks reactivos de terceros.
 
@@ -174,12 +174,12 @@ Esta sección detalla la arquitectura modular y los patrones implementados para 
 Esta sección detalla la arquitectura modular y los patrones implementados para el cronograma y FAQ de actividades:
 
 1.  **Componentes Modulares Asociados (`src/components/components-events/`)**:
-    *   `HeroEventos.astro`: Banner introductorio de la sección que expone el título de la agenda.
-    *   `ProximosEventos.astro`: Panel que expone los eventos activos y calendarizados a futuro mediante tarjetas interactivas.
-    *   `EventosRealizados.astro`: Galería estructurada de actividades previas que han concluido con éxito.
-    *   `FAQEventos.astro`: Sección de preguntas frecuentes con un diseño de acordeón interactivo estilizado.
+    *   `hero-events.astro`: Banner introductorio de la sección que expone el título de la agenda.
+    *   `upcoming-events.astro`: Panel que expone los eventos activos y calendarizados a futuro mediante tarjetas interactivas.
+    *   `completed-events.astro`: Galería estructurada de actividades previas que han concluido con éxito.
+    *   `faq-events.astro`: Sección de preguntas frecuentes con un diseño de acordeón interactivo estilizado.
 2.  **Sistema de Enrutamiento y Generación**:
-    La sección de eventos se mapea a la ruta física `/eventos` gestionada por el archivo `src/pages/eventos.astro`. Obtiene los registros dinámicos del mock estático ubicado en `src/data/events.ts`.
+    La sección de eventos se mapea a la ruta física `/events` gestionada por el archivo `src/pages/events.astro`. Obtiene los registros dinámicos del mock estático ubicado en `src/data/events.ts`.
 3.  **Interactividad y Control del DOM**:
     Los efectos del acordeón para las FAQ de eventos y la navegación fluida a través de las actividades se implementan utilizando lógica nativa de JavaScript (Vanilla JS) en el cliente.
 
@@ -187,14 +187,14 @@ Esta sección detalla la arquitectura modular y los patrones implementados para 
 Esta sección detalla la arquitectura modular, integraciones y flujos funcionales del proceso de postulación a UNICODE:
 
 1.  **Componentes Modulares Asociados (`src/components/components-call/`)**:
-    *   `HeroCall.astro`: Encabezado visual diseñado para incentivar el registro de candidatos durante el periodo activo.
-    *   `PorQueUnicode.astro`: Módulo que destaca las ventajas y beneficios de ser miembro activo del centro.
-    *   `RegistroModal.astro`: Componente crítico e interactivo de diálogo modal (utilizando el elemento nativo `<dialog>`) que encapsula el formulario de postulación del candidato.
+    *   `hero-call.astro`: Encabezado visual diseñado para incentivar el registro de candidatos durante el periodo activo.
+    *   `why-unicode.astro`: Módulo que destaca las ventajas y beneficios de ser miembro activo del centro.
+    *   `register-modal.astro`: Componente crítico e interactivo de diálogo modal (utilizando el elemento nativo `<dialog>`) que encapsula el formulario de postulación del candidato.
 2.  **Sistema de Enrutamiento y Generación**:
     El flujo de registro reside en la ruta `/call` gestionada por el archivo `src/pages/call.astro`. Su visibilidad depende del estado lógico global configurado en el archivo `src/data/siteConfig.ts` (`CONVOCATORIA_ABIERTA`).
 3.  **Flujo de Integración Asíncrona con el Backend**:
     *   **Control de Apertura y Cierre:** Se inyectan controladores en el cliente para interceptar enlaces con el ancla `#postular`. Al hacer clic, se invoca `.showModal()` y se bloquea el desplazamiento del cuerpo de la página (`overflow: hidden`).
-    *   **Consumo de la API de Registro:** El envío del formulario se intercepta asíncronamente mediante un evento `submit` en el cliente. Los datos del formulario se envían mediante una petición `POST` al endpoint `/api/postular`.
+    *   **Consumo de la API de Registro:** El envío del formulario se intercepta asíncronamente mediante un evento `submit` en el cliente. Los datos del formulario se envían mediante una petición `POST` al endpoint `/api/apply`.
     *   **Gestión de Respuestas y Errores:** Al iniciar la llamada, se desactiva el botón de envío y se muestra un spinner visual. En caso de respuesta exitosa (200 OK), se muestra un mensaje en color verde neón y el modal se cierra automáticamente tras 2.5 segundos. Ante cualquier fallo del servidor (400/500) o problema de red, el bloque `catch` inhabilita la carga y renderiza una alerta en color rojo neón que orienta al usuario para un reintento seguro.
 
 ---
@@ -208,14 +208,14 @@ Este tutorial enseña a añadir un área de conocimiento adicional a la Landing 
 *   Tener acceso al archivo del modal de registro y el panel de administración.
 
 ### Paso 1: Registrar el código del área en el Modal de Inscripción
-Abra el archivo `src/components/components-call/registro-modal.astro`. Busque el selector de `opcion1` e inyecte una nueva etiqueta `<option>` con la abreviatura de tres letras en inglés del área que va a crear:
+Abra el archivo `src/components/components-call/register-modal.astro`. Busque el selector de `first_choice_area` e inyecte una nueva etiqueta `<option>` con la abreviatura de tres letras en inglés del área que va a crear:
 
 ```html
 <!-- Ejemplo para añadir un área ficticia 'TI' -->
 <option value="TI">Tecnologías de la Información (TI)</option>
 ```
 
-Repita la inserción de la opción en el selector correspondiente a `opcion2` dentro del mismo archivo para permitir su selección secundaria.
+Repita la inserción de la opción en el selector correspondiente a `second_choice_area` dentro del mismo archivo para permitir su selección secundaria.
 
 ### Paso 2: Registrar la pestaña en el Panel de Administración
 Abra el archivo `src/pages/admin.astro`. Inserte un botón para la pestaña del área dentro de la sección de filtros por área:
@@ -243,13 +243,13 @@ const areaNames: Record<string, string> = {
 ```
 
 ### Paso 3: Crear la página de detalles del área en la estructura de rutas
-Cree un archivo físico bajo el directorio `src/pages/areas/` siguiendo el formato kebab-case en minúsculas y sin acentos. Por ejemplo: `src/pages/areas/tecnologias-de-la-informacion.astro`.
+Cree un archivo físico bajo el directorio `src/pages/areas/` siguiendo el formato kebab-case en minúsculas y sin acentos. Por ejemplo: `src/pages/areas/information-technologies.astro`.
 
 Maquete el archivo heredando la plantilla maestra e importando los componentes correspondientes:
 
 ```astro
 ---
-import Layout from "../../layouts/layout.astro";
+import Layout from "../../layouts/Layout.astro";
 import Navbar from "../../components/navbar.astro";
 import HeroAreaIndividual from "../../components/components-areas/hero-area-individual.astro";
 import AreaDirectorProfile from "../../components/components-areas/area-director-profile.astro";
@@ -275,4 +275,4 @@ import AreaDirectorProfile from "../../components/components-areas/area-director
 ```
 
 ### Paso 4: Validar el despliegue local
-Abra el navegador en `http://localhost:4321/areas/tecnologias-de-la-informacion` y compruebe que la página renderice el tema oscuro con el color de acento correcto. Compruebe la apertura del modal y la presencia del nuevo campo de selección.
+Abra el navegador en `http://localhost:4321/areas/information-technologies` y compruebe que la página renderice el tema oscuro con el color de acento correcto. Compruebe la apertura del modal y la presencia del nuevo campo de selección.

@@ -12,7 +12,7 @@ export interface Project {
   id: string;
   name: string;
   description: string;
-  status: 'activo' | 'pasado';
+  status: 'active' | 'inactive';
   tag: string;
   area_id?: string;
   created_at?: string;
@@ -25,7 +25,7 @@ export interface Event {
   date: string;
   type: string;
   imageUrl?: string;
-  status: 'proximo' | 'realizado';
+  status: 'upcoming' | 'completed';
   created_at?: string;
 }
 

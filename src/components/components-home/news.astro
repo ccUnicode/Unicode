@@ -5,8 +5,8 @@
  * Novelties are dynamically assembled from events.ts and projects.ts data
  * to ensure synchronization.
  */
-import NovedadCard from "./novedad-card.astro";
-import { eventosRealizados } from "../../data/events";
+import NewsCard from "./news-card.astro";
+import { completedEvents } from "../../data/events";
 import { projects } from "../../data/projects";
 
 interface Novedad {
@@ -17,7 +17,7 @@ interface Novedad {
 }
 
 const projectNews: Novedad[] = projects
-  .filter((p) => p.status === "Activo")
+  .filter((p) => p.status === "Active")
   .map((p) => ({
     title: p.title,
     description: p.description,
@@ -25,11 +25,11 @@ const projectNews: Novedad[] = projects
     href: p.link && p.link !== "https://unicode.vercel.app" ? p.link : `/proyectos`,
   }));
 
-const eventNews: Novedad[] = eventosRealizados.map((e) => ({
-  title: e.titulo,
-  description: e.descripcion,
-  image: e.imagen,
-  href: e.link ?? "/eventos",
+const eventNews: Novedad[] = completedEvents.map((e) => ({
+  title: e.title,
+  description: e.description,
+  image: e.image,
+  href: e.link ?? "/events",
 }));
 
 // Interleave lists for greater variety, limited to a max of 5
@@ -60,7 +60,7 @@ const novedades = combined.slice(0, 5);
         {
           novedades.map((novedad) => (
             <div class="novedad-item flex-none w-[88vw] md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1.33rem)] transition-all duration-700 ease-out transform scale-95 opacity-50">
-              <NovedadCard
+              <NewsCard
                 title={novedad.title}
                 description={novedad.description}
                 image={novedad.image}

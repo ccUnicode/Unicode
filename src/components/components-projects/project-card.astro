@@ -7,7 +7,7 @@ const { project = {} } = Astro.props;
 const {
   title = "Untitled",
   description = "Sin descripción",
-  status = "Activo",
+  status = "Active",
   faculty = "DCC",
   image,
   imagePosition = "center",
@@ -53,10 +53,10 @@ const {
     }
     <div class="absolute top-4 right-4">
       <div
-        class={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-zinc-950/80 backdrop-blur-sm ${status === "Activo" ? "text-unicode" : "text-rose-500"}`}
+        class={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-zinc-950/80 backdrop-blur-sm ${status === "Active" ? "text-unicode" : "text-rose-500"}`}
       >
         <span
-          class={`w-2 h-2 rounded-full ${status === "Activo" ? "bg-unicode shadow-[0_0_8px_#75D32D]" : "bg-rose-500 animate-pulse"}`}
+          class={`w-2 h-2 rounded-full ${status === "Active" ? "bg-unicode shadow-[0_0_8px_#75D32D]" : "bg-rose-500 animate-pulse"}`}
         ></span>
         {status}
       </div>

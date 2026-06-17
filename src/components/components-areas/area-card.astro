@@ -11,6 +11,7 @@ interface Props {
     directors: Director[];
     imageSrc?: string;
     reverse?: boolean;
+    slug: string;
 }
 
 const {
@@ -19,6 +20,7 @@ const {
     directors,
     imageSrc = "https://placehold.co/600x600/18181b/75D32D?text=Imágen",
     reverse = false,
+    slug,
 } = Astro.props;
 ---
 
@@ -95,7 +97,7 @@ const {
                 }
             </div>
             <a
-                href={`/areas/${title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, "-")}`}
+                href={`/areas/${slug}`}
                 class={`bg-unicode text-black font-bold px-8 py-3 rounded-full hover:bg-unicode-light transition-all w-fit text-sm md:text-base shadow-unicode hover:shadow-unicode-lg ${reverse ? "self-end" : ""}`}
                 >Conoce más</a
             >
@@ -144,7 +146,7 @@ const {
             }
         </div>
         <a
-            href={`/areas/${title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, "-")}`}
+            href={`/areas/${slug}`}
             class="bg-unicode text-black font-bold px-6 py-2.5 rounded-full hover:bg-unicode-light transition-all w-fit text-[13px] shadow-unicode"
             >Conoce más</a
         >

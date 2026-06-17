@@ -27,14 +27,14 @@ El sistema está diseñado bajo una arquitectura de **Frontend en el cliente int
 
 El sistema se estructura en tres capas principales:
 
-1. **Frontend UI:** Componentes como `registro-modal.astro` y la página `admin.astro` que interactúan directamente con el usuario.
-2. **Capa de validación y control:** Funciones de validación implementadas en los scripts del cliente y endpoints de API en Astro (`/api/postular` y `/api/admin-postulantes`) que actúan como middleware de validación dura, sanitización contra XSS y control de acceso.
+1. **Frontend UI:** Componentes como `register-modal.astro` y la página `admin.astro` que interactúan directamente con el usuario.
+2. **Capa de validación y control:** Funciones de validación implementadas en los scripts del cliente y endpoints de API en Astro (`/api/apply` y `/api/admin-applicants`) que actúan como middleware de validación dura, sanitización contra XSS y control de acceso.
 3. **Persistencia (Base de Datos):** La capa de datos implementada en Supabase que expone la tabla `applicants`.
 
 ### Flujo de datos para Postulación:
 * El postulante completa los datos solicitados en el formulario de la interfaz gráfica.
 * Los scripts del frontend ejecutan validaciones previas de longitud, formato de correo y obligatoriedad.
-* Se realiza una petición HTTP `POST` hacia la ruta `/api/postular`.
+* Se realiza una petición HTTP `POST` hacia la ruta `/api/apply`.
 * El endpoint de la API recibe la petición, sanitiza los campos en inglés e invoca al SDK de Supabase con permisos administrativos (`supabaseAdmin`) para realizar la inserción segura en la tabla `applicants`.
 
 ---
@@ -46,18 +46,18 @@ El siguiente diagrama detalla los flujos de comunicación y persistencia entre l
 ```mermaid
 graph TD
     subgraph client ["Cliente (Navegador)"]
-        User([Usuario / Postulante]) -->|Completa datos| Form[registro-modal.astro]
+        User([Usuario / Postulante]) -->|Completa datos| Form[register-modal.astro]
         Form -->|Validaciones de Formato| ClientVal[Script de Validación]
         Admin([Administrador]) -->|Accede| AdminUI[admin.astro]
     end
 
     subgraph server ["Servidor (Astro Endpoints)"]
-        ClientVal -->|POST /api/postular| API_Postular[postular.ts]
-        AdminUI -->|GET /api/admin-postulantes| API_Admin[admin-postulantes.ts]
+        ClientVal -->|POST /api/apply| API_Apply[apply.ts]
+        AdminUI -->|GET /api/admin-applicants| API_Admin[admin-applicants.ts]
     end
 
     subgraph db ["Persistencia (Supabase BaaS)"]
-        API_Postular -->|Insert con supabaseAdmin| Supabase[(Supabase Engine)]
+        API_Apply -->|Insert con supabaseAdmin| Supabase[(Supabase Engine)]
         API_Admin -->|Select con supabaseAdmin| Supabase
         Supabase -->|Estructura física| Table[(applicants Table)]
     end

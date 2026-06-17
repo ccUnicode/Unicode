@@ -1,6 +1,6 @@
 /**
- * API Endpoint: GET /api/admin-postulantes
- * Returns postulantes data from Supabase.
+ * API Endpoint: GET /api/admin-applicants
+ * Returns applicants data from Supabase.
  * Requires a valid session token in the Authorization header.
  */
 
@@ -22,7 +22,7 @@ export async function GET({ request }: { request: Request }) {
   const authHeader = request.headers.get('Authorization') || '';
   const token = authHeader.replace('Bearer ', '');
 
-  console.log('API /admin-postulantes HIT');
+  console.log('API /api/admin-applicants HIT');
   console.log('PUBLIC_SUPABASE_URL:', import.meta.env.PUBLIC_SUPABASE_URL ? 'OK' : 'MISSING');
   console.log('SUPABASE_SERVICE_ROLE_KEY:', import.meta.env.SUPABASE_SERVICE_ROLE_KEY ? 'OK' : 'MISSING');
   if (!token || !(await sessionStore.isValid(token))) {
@@ -36,8 +36,8 @@ export async function GET({ request }: { request: Request }) {
   // Parse query params for filtering
   const url = new URL(request.url);
   const area = url.searchParams.get('area') || '';
-  const opcion = url.searchParams.get('opcion') || 'todas'; // 'todas', '1ra', '2da'
-  const orden = url.searchParams.get('orden') || 'reciente'; // 'reciente', '1ra-2da'
+  const option = url.searchParams.get('option') || 'all'; // 'all', 'first', 'second'
+  const order = url.searchParams.get('order') || 'recent'; // 'recent', 'priority'
 
   try {
     const { data: test, error: testErr } = await supabaseAdmin.from('applicants').select('count');
@@ -49,7 +49,7 @@ export async function GET({ request }: { request: Request }) {
       .select('*');
 
     if (error) {
-      console.error('Error Supabase en /api/admin-postulantes:', error);
+      console.error('Error Supabase en /api/admin-applicants:', error);
       return new Response(
         JSON.stringify({ error: 'Error al obtener datos de Supabase.' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
@@ -61,8 +61,8 @@ export async function GET({ request }: { request: Request }) {
     // Filter by area
     if (area) {
       filteredData = filteredData.filter((p: any) => {
-        if (opcion === '1ra') return p.first_choice_area === area;
-        if (opcion === '2da') return p.second_choice_area === area;
+        if (option === 'first') return p.first_choice_area === area;
+        if (option === 'second') return p.second_choice_area === area;
         return p.first_choice_area === area || p.second_choice_area === area;
       });
     }
@@ -70,7 +70,7 @@ export async function GET({ request }: { request: Request }) {
     // Sort and Order
     filteredData = filteredData.sort((a: any, b: any) => {
       // 1) Sort by option priority if specified
-      if (area && orden === '1ra-2da') {
+      if (area && order === 'priority') {
         const aIs1ra = a.first_choice_area === area;
         const bIs1ra = b.first_choice_area === area;
         if (aIs1ra && !bIs1ra) return -1;

@@ -6,7 +6,7 @@
  * - Dashboard with filters by area, option type, and sorting.
  * - Export to Excel (CSV).
  */
-import Layout from "../layouts/layout.astro";
+import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout title="Admin">
@@ -159,20 +159,20 @@ import Layout from "../layouts/layout.astro";
           </button>
 
           <select
-            id="filter-opcion"
+            id="filter-option"
             class="bg-zinc-900 border border-zinc-700 text-zinc-300 text-xs rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 outline-none focus:border-unicode cursor-pointer appearance-none admin-select"
           >
-            <option value="todas">Todas las opciones</option>
-            <option value="1ra">Solo 1ra opción</option>
-            <option value="2da">Solo 2da opción</option>
+            <option value="all">Todas las opciones</option>
+            <option value="first">Solo 1ra opción</option>
+            <option value="second">Solo 2da opción</option>
           </select>
 
           <select
-            id="filter-orden"
+            id="filter-order"
             class="bg-zinc-900 border border-zinc-700 text-zinc-300 text-xs rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 outline-none focus:border-unicode cursor-pointer appearance-none admin-select"
           >
-            <option value="reciente">Más recientes</option>
-            <option value="1ra-2da">Prioridad (1ra → 2da)</option>
+            <option value="recent">Más recientes</option>
+            <option value="priority">Prioridad (1ra → 2da)</option>
           </select>
         </div>
       </div>
@@ -223,7 +223,7 @@ import Layout from "../layouts/layout.astro";
         </button>
       </div>
 
-      <div id="postulantes-list" class="hidden space-y-3 sm:space-y-4"></div>
+      <div id="applicants-list" class="hidden space-y-3 sm:space-y-4"></div>
     </main>
   </div>
 </Layout>
@@ -253,7 +253,7 @@ import Layout from "../layouts/layout.astro";
     padding-right: 2rem;
   }
 
-  .postulante-card {
+  .applicant-card {
     animation: fadeInUp 0.3s ease-out forwards;
     opacity: 0;
   }
@@ -277,9 +277,9 @@ import Layout from "../layouts/layout.astro";
 <script>
   let sessionToken = "";
   let currentArea = "GTH";
-  let currentOpcion = "todas";
-  let currentOrden = "reciente";
-  let postulantesCache: any[] = [];
+  let currentOption = "all";
+  let currentOrder = "recent";
+  let applicantsCache: any[] = [];
 
   const areaNames: Record<string, string> = {
     GTH: "Área de GTH",
@@ -334,7 +334,7 @@ import Layout from "../layouts/layout.astro";
       sessionStorage.setItem("admin_token", sessionToken);
       loginScreen.classList.add("hidden");
       dashboardScreen.classList.remove("hidden");
-      loadPostulantes();
+      loadApplicants();
     } catch (err) {
       loginError.textContent = "Error de conexión. Intenta de nuevo.";
       loginError.classList.remove("hidden");
@@ -351,7 +351,7 @@ import Layout from "../layouts/layout.astro";
     sessionToken = savedToken;
     loginScreen.classList.add("hidden");
     dashboardScreen.classList.remove("hidden");
-    loadPostulantes();
+    loadApplicants();
   }
 
   document.getElementById("logout-btn")?.addEventListener("click", async () => {
@@ -381,25 +381,25 @@ import Layout from "../layouts/layout.astro";
       currentArea = (tab as HTMLElement).dataset.area || "GTH";
       document.getElementById("area-label")!.textContent =
         areaNames[currentArea] || currentArea;
-      loadPostulantes();
+      loadApplicants();
     });
   });
 
-  document.getElementById("filter-opcion")?.addEventListener("change", (e) => {
-    currentOpcion = (e.target as HTMLSelectElement).value;
-    loadPostulantes();
+  document.getElementById("filter-option")?.addEventListener("change", (e) => {
+    currentOption = (e.target as HTMLSelectElement).value;
+    loadApplicants();
   });
 
-  document.getElementById("filter-orden")?.addEventListener("change", (e) => {
-    currentOrden = (e.target as HTMLSelectElement).value;
-    loadPostulantes();
+  document.getElementById("filter-order")?.addEventListener("change", (e) => {
+    currentOrder = (e.target as HTMLSelectElement).value;
+    loadApplicants();
   });
 
-  async function loadPostulantes() {
+  async function loadApplicants() {
     const loadingEl = document.getElementById("loading-indicator")!;
     const emptyEl = document.getElementById("empty-state")!;
     const errorEl = document.getElementById("error-state")!;
-    const listEl = document.getElementById("postulantes-list")!;
+    const listEl = document.getElementById("applicants-list")!;
 
     loadingEl.classList.remove("hidden");
     emptyEl.classList.add("hidden");
@@ -409,11 +409,11 @@ import Layout from "../layouts/layout.astro";
     try {
       const params = new URLSearchParams({
         area: currentArea,
-        opcion: currentOpcion,
-        orden: currentOrden,
+        option: currentOption,
+        order: currentOrder,
       });
 
-      const res = await fetch(`/api/admin-postulantes?${params}`, {
+      const res = await fetch(`/api/admin-applicants?${params}`, {
         headers: { Authorization: `Bearer ${sessionToken}` },
       });
 
@@ -438,23 +438,25 @@ import Layout from "../layouts/layout.astro";
           // If not JSON, it's likely an HTML error page (500, 404, etc.)
           const text = await res.text();
           console.error("HTML Error Response:", text);
-          throw new Error(`Error del servidor (${res.status}). Revisa la consola o los registros.`);
+          throw new Error(
+            `Error del servidor (${res.status}). Revisa la consola o los registros.`,
+          );
         }
       }
 
       const result = await res.json();
 
-      postulantesCache = result.data || [];
+      applicantsCache = result.data || [];
       document.getElementById("count")!.textContent = String(result.total || 0);
 
       loadingEl.classList.add("hidden");
 
-      if (postulantesCache.length === 0) {
+      if (applicantsCache.length === 0) {
         emptyEl.classList.remove("hidden");
         return;
       }
 
-      renderPostulantes(postulantesCache);
+      renderApplicants(applicantsCache);
       listEl.classList.remove("hidden");
     } catch (err: any) {
       loadingEl.classList.add("hidden");
@@ -464,39 +466,39 @@ import Layout from "../layouts/layout.astro";
     }
   }
 
-  function renderPostulantes(postulantes: any[]) {
-    const listEl = document.getElementById("postulantes-list")!;
+  function renderApplicants(applicants: any[]) {
+    const listEl = document.getElementById("applicants-list")!;
     listEl.innerHTML = "";
 
-    postulantes.forEach((p, index) => {
-      const is1ra = p.first_choice_area === currentArea;
-      const opcionBadge = is1ra
+    applicants.forEach((p, index) => {
+      const isFirst = p.first_choice_area === currentArea;
+      const optionBadge = isFirst
         ? '<span class="bg-unicode/20 text-unicode text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-md border border-unicode/30">1RA OPCIÓN</span>'
         : '<span class="bg-amber-500/20 text-amber-400 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-md border border-amber-500/30">2DA OPCIÓN</span>';
 
-      let opcionExtraDisplay = "";
-      if (is1ra && p.second_choice_area) {
-        opcionExtraDisplay = `<span class="text-zinc-500 text-[10px] sm:text-xs ml-2">(2da: ${p.second_choice_area})</span>`;
-      } else if (!is1ra && p.first_choice_area) {
-        opcionExtraDisplay = `<span class="text-zinc-500 text-[10px] sm:text-xs ml-2">(1ra: ${p.first_choice_area})</span>`;
+      let optionExtraDisplay = "";
+      if (isFirst && p.second_choice_area) {
+        optionExtraDisplay = `<span class="text-zinc-500 text-[10px] sm:text-xs ml-2">(2da: ${p.second_choice_area})</span>`;
+      } else if (!isFirst && p.first_choice_area) {
+        optionExtraDisplay = `<span class="text-zinc-500 text-[10px] sm:text-xs ml-2">(1ra: ${p.first_choice_area})</span>`;
       }
 
-      const fechaObj = new Date(p.created_at);
-      const fecha = fechaObj.toLocaleDateString("es-PE", {
+      const dateObj = new Date(p.created_at);
+      const date = dateObj.toLocaleDateString("es-PE", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
       });
-      const hora = fechaObj.toLocaleTimeString("es-PE", {
+      const time = dateObj.toLocaleTimeString("es-PE", {
         hour: "2-digit",
         minute: "2-digit",
-        hour12: true
+        hour12: true,
       });
-      const fechaCompleta = `${fecha} ${hora}`;
+      const fullDate = `${date} ${time}`;
 
       const card = document.createElement("article");
       card.className =
-        "postulante-card bg-zinc-900/40 border border-zinc-800/50 rounded-2xl p-4 sm:p-6 hover:border-unicode/20 transition-all duration-300";
+        "applicant-card bg-zinc-900/40 border border-zinc-800/50 rounded-2xl p-4 sm:p-6 hover:border-unicode/20 transition-all duration-300";
       card.style.animationDelay = `${index * 50}ms`;
 
       card.innerHTML = `
@@ -510,10 +512,10 @@ import Layout from "../layouts/layout.astro";
                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
-                ${fechaCompleta}
+                ${fullDate}
               </span>
-              ${opcionBadge}
-              ${opcionExtraDisplay}
+              ${optionBadge}
+              ${optionExtraDisplay}
             </div>
 
             <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-zinc-500 text-[10px] sm:text-xs mb-3">
@@ -521,7 +523,7 @@ import Layout from "../layouts/layout.astro";
               <span class="text-zinc-700">•</span>
               <span>${p.career || "N/A"}</span>
               <span class="text-zinc-700">•</span>
-              <span>${(p.university_semester === 0 || p.university_semester === "0") ? "Egresado" : (p.university_semester ? p.university_semester + "° Ciclo" : "N/A")}</span>
+              <span>${p.university_semester === 0 || p.university_semester === "0" ? "Egresado" : p.university_semester ? p.university_semester + "° Ciclo" : "N/A"}</span>
             </div>
 
             <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-xs sm:text-sm text-zinc-400">
@@ -556,12 +558,12 @@ import Layout from "../layouts/layout.astro";
   }
 
   document.getElementById("retry-btn")?.addEventListener("click", () => {
-    loadPostulantes();
+    loadApplicants();
   });
 
   // ===== EXPORT EXCEL (PRETTY) =====
   document.getElementById("export-btn")?.addEventListener("click", () => {
-    if (postulantesCache.length === 0) {
+    if (applicantsCache.length === 0) {
       alert("No hay datos para exportar.");
       return;
     }
@@ -592,9 +594,9 @@ import Layout from "../layouts/layout.astro";
       </style>
     `;
 
-    const rowsHtml = postulantesCache
+    const rowsHtml = applicantsCache
       .map((p, index) => {
-        const is1ra = p.first_choice_area === currentArea;
+        const isFirst = p.first_choice_area === currentArea;
         const rowClass = index % 2 === 0 ? "" : 'class="row-alt"';
         return `
         <tr ${rowClass}>
@@ -604,8 +606,8 @@ import Layout from "../layouts/layout.astro";
           <td class="data-cell" style="vnd.ms-excel.numberformat:@; vertical-align: middle;">${p.phone}</td>
           <td class="data-cell" style="vertical-align: middle;">${p.university || ""}</td>
           <td class="data-cell" style="vertical-align: middle;">${p.career || ""}</td>
-          <td class="data-cell" style="text-align: center; vertical-align: middle;">${(p.university_semester === 0 || p.university_semester === "0") ? "Egresado" : (p.university_semester || "")}</td>
-          <td class="data-cell ${is1ra ? "opcion-1" : ""}" style="text-align: center; vertical-align: middle;">${p.first_choice_area}</td>
+          <td class="data-cell" style="text-align: center; vertical-align: middle;">${p.university_semester === 0 || p.university_semester === "0" ? "Egresado" : p.university_semester || ""}</td>
+          <td class="data-cell ${isFirst ? "opcion-1" : ""}" style="text-align: center; vertical-align: middle;">${p.first_choice_area}</td>
           <td class="data-cell" style="text-align: center; vertical-align: middle;">${p.second_choice_area || ""}</td>
           <td class="data-cell" style="font-size: 9pt; width: 350px; vertical-align: middle;">${String(p.application_reason || "").replace(/\n/g, "<br>")}</td>
           <td class="data-cell" style="text-align: right; vertical-align: middle;">${new Date(p.created_at).toLocaleString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true })}</td>
@@ -620,7 +622,7 @@ import Layout from "../layouts/layout.astro";
         <meta charset="utf-8">
         <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
          <x:Name>Postulantes ${currentArea}</x:Name>
-        <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+         <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
         </x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
         ${style}
       </head>

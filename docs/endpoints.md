@@ -4,7 +4,7 @@ Este documento contiene la especificación técnica de los endpoints de la API l
 
 ---
 
-## 1. `POST /api/postular`
+## 1. `POST /api/apply`
 
 Registra la postulación de un candidato para el proceso de convocatoria actual.
 
@@ -115,7 +115,7 @@ Invalida la sesión activa en el cliente.
 
 ---
 
-## 4. `GET /api/admin-postulantes`
+## 4. `GET /api/admin-applicants`
 
 Retorna la lista de postulantes registrados con opciones de filtrado y ordenamiento.
 
@@ -123,8 +123,8 @@ Retorna la lista de postulantes registrados con opciones de filtrado y ordenamie
 *   **Cabeceras Requeridas**: `Authorization: Bearer <token>`
 *   **Parámetros de Consulta (Query Params)**:
     *   `area` (GTH|ACD|RRPP|DCC|ID) - Filtra por área de interés.
-    *   `opcion` (todas|1ra|2da) - Filtra por prioridad de opción seleccionada.
-    *   `orden` (reciente|1ra-2da) - Criterio de ordenamiento (por fecha de registro o por prioridad de opción).
+    *   `option` (all|first|second) - Filtra por prioridad de opción seleccionada.
+    *   `order` (recent|priority) - Criterio de ordenamiento (por fecha de registro o por prioridad de opción).
 
 ### Respuestas:
 *   **200 OK**: Retorna el listado estructurado de postulantes.
