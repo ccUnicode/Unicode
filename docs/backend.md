@@ -17,7 +17,7 @@ El empaquetado y la ejecución del servidor se realizan sobre el entorno de **Ve
 El acceso administrativo al panel de `/admin` está protegido por un sistema de sesión sin estado (*stateless*), lo cual es ideal para evitar lecturas constantes de base de datos en entornos serverless:
 
 *   **Generación del Token**: Al ingresar la contraseña válida en `/api/admin-login`, el backend calcula una fecha de expiración (4 horas a futuro) y la codifica en Base64. A partir de esa cadena de Base64, utiliza la **Web Crypto API** nativa del runtime para firmar criptográficamente el token usando una clave secreta (`ADMIN_PASSWORD`) con el algoritmo de hash **HMAC-SHA-256**. El token retornado al cliente tiene la estructura: `PayloadBase64.FirmaHexadecimal`.
-*   **Validación de Sesiones**: En cada consulta a `/api/admin-postulantes`, el servidor intercepta la cabecera `Authorization: Bearer <token>`, extrae el payload y la firma, recalcula la firma HMAC con la clave del servidor y valida si coinciden. Si la firma es correcta y la fecha de expiración es válida, la petición es aprobada.
+*   **Validación de Sesiones**: En cada consulta a `/api/admin-applicants`, el servidor intercepta la cabecera `Authorization: Bearer <token>`, extrae el payload y la firma, recalcula la firma HMAC con la clave del servidor y valida si coinciden. Si la firma es correcta y la fecha de expiración es válida, la petición es aprobada.
 
 ---
 
@@ -25,11 +25,11 @@ El acceso administrativo al panel de `/admin` está protegido por un sistema de 
 
 Para mitigar intentos de intrusión y denegación de servicio, los endpoints críticos implementan controles de tasas:
 
-*   **Formulario de Postulación (`/api/postular`)**: Limita a un máximo de 3 postulaciones exitosas por dirección IP en una ventana de 10 minutos.
+*   **Formulario de Postulación (`/api/apply`)**: Limita a un máximo de 3 postulaciones exitosas por dirección IP en una ventana de 10 minutos.
 *   **Inicio de Sesión (`/api/admin-login`)**: Limita a un máximo de 5 intentos fallidos por dirección IP en una ventana de 15 minutos, bloqueando automáticamente la IP por otros 15 minutos si se excede el límite.
 
 ### ⚠️ Limitación en Producción Serverless
-Los limitadores de tasa actuales están implementados en memoria del servidor mediante una estructura `Map` de JavaScript (`loginAttempts` y `postulacionAttempts`). 
+Los limitadores de tasa actuales están implementados en memoria del servidor mediante una estructura `Map` de JavaScript (`loginAttempts` y `applicationAttempts`). 
 Debido a que Vercel ejecuta las solicitudes de forma distribuida en múltiples contenedores serverless efímeros, la memoria RAM local **no se comparte** entre las instancias. Por lo tanto, un atacante distribuido podría evadir parcialmente el límite.
 
 *   *Recomendación para Producción*: Para una protección de grado empresarial, se debe sustituir la estructura `Map` por un almacenamiento centralizado persistente de baja latencia como **Vercel KV (Redis)** o una tabla dedicada de auditoría en **Supabase**.
@@ -51,8 +51,8 @@ La lógica de backend y rutas API se encuentra centralizada en la ruta `/src/pag
 
 *   **`admin-login.ts`**: Validador de contraseña y generador de firmas HMAC.
 *   **`admin-logout.ts`**: Invalidador lógico de la cookie de sesión del administrador.
-*   **`admin-postulantes.ts`**: Recuperación filtrada y ordenada de datos de la base de datos de Supabase.
-*   **`postular.ts`**: Validación rígida de campos, control de tasa (rate limit), sanitización y persistencia segura de candidatos.
+*   **`admin-applicants.ts`**: Recuperación filtrada y ordenada de datos de la base de datos de Supabase.
+*   **`apply.ts`**: Validación rígida de campos, control de tasa (rate limit), sanitización y persistencia segura de candidatos.
 
 Para conocer la estructura formal de los payloads JSON, parámetros de consulta y respuestas HTTP de estos endpoints, consulte:
 *   [Especificación de Endpoints (API)](endpoints.md)

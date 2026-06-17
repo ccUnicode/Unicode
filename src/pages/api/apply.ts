@@ -1,5 +1,5 @@
 /**
- * API Endpoint: POST /api/postular
+ * API Endpoint: POST /api/apply
  * Endpoint to receive recruitment applications.
  * 
  * Security measures:
@@ -15,8 +15,8 @@ export const prerender = false;
 import { supabaseAdmin } from '../../lib/supabase';
 
 // --- Rate Limiter ---
-const postulacionAttempts = new Map<string, { count: number; firstAttempt: number }>();
-const MAX_POSTULACIONES = 3;
+const applicationAttempts = new Map<string, { count: number; firstAttempt: number }>();
+const MAX_APPLICATIONS = 3;
 const WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 
 /**
@@ -50,8 +50,8 @@ function sanitize(input: string): string {
 }
 
 // --- Validations ---
-const AREAS_VALIDAS = ['GTH', 'ACD', 'RRPP', 'DCC', 'ID'];
-const CICLOS_VALIDOS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '0'];
+const VALID_AREAS = ['GTH', 'ACD', 'RRPP', 'DCC', 'ID'];
+const VALID_SEMESTERS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '0'];
 
 /**
  * Validates the email format.
@@ -59,7 +59,7 @@ const CICLOS_VALIDOS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '0'];
  * @param {string} email - Email address to check.
  * @returns {boolean} True if the email format is valid.
  */
-function validarEmail(email: string): boolean {
+function validateEmail(email: string): boolean {
   // Strict regex: requires @, a valid domain, and a TLD (e.g., .com, .pe) of at least 2 letters
   return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
 }
@@ -70,7 +70,7 @@ function validarEmail(email: string): boolean {
  * @param {string} tel - Phone number to check.
  * @returns {boolean} True if the phone format contains exactly 9 digits.
  */
-function validarTelefono(tel: string): boolean {
+function validatePhone(tel: string): boolean {
   const limpio = tel.replace(/[\s\-().+]/g, '');
   return /^\d{9}$/.test(limpio);
 }
@@ -96,15 +96,15 @@ export async function POST({ request }: { request: Request }) {
   // 2. Rate limiting check
   const ip = getClientIP(request);
   const now = Date.now();
-  let record = postulacionAttempts.get(ip);
+  let record = applicationAttempts.get(ip);
 
   if (record) {
     if (now - record.firstAttempt > WINDOW_MS) {
       record = { count: 0, firstAttempt: now };
-      postulacionAttempts.set(ip, record);
+      applicationAttempts.set(ip, record);
     }
 
-    if (record.count >= MAX_POSTULACIONES) {
+    if (record.count >= MAX_APPLICATIONS) {
       return new Response(
         JSON.stringify({ error: 'Has enviado demasiadas postulaciones. Intenta de nuevo en unos minutos.' }),
         { status: 429, headers: { 'Content-Type': 'application/json' } }
@@ -112,7 +112,7 @@ export async function POST({ request }: { request: Request }) {
     }
   } else {
     record = { count: 0, firstAttempt: now };
-    postulacionAttempts.set(ip, record);
+    applicationAttempts.set(ip, record);
   }
 
   // 3. Parse request body
@@ -150,11 +150,11 @@ export async function POST({ request }: { request: Request }) {
   }
 
   // 6. Validate types (all fields must be strings)
-  const campos = { first_name, last_name, email, phone, university, career, university_semester, first_choice_area, application_reason };
-  for (const [campo, valor] of Object.entries(campos)) {
-    if (typeof valor !== 'string') {
+  const fields = { first_name, last_name, email, phone, university, career, university_semester, first_choice_area, application_reason };
+  for (const [field, value] of Object.entries(fields)) {
+    if (typeof value !== 'string') {
       return new Response(
-        JSON.stringify({ error: `El campo '${campo}' debe ser texto.` }),
+        JSON.stringify({ error: `El campo '${field}' debe ser texto.` }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -181,19 +181,19 @@ export async function POST({ request }: { request: Request }) {
   }
 
   // 8. Validate specific formats
-  if (!validarEmail(email)) {
+  if (!validateEmail(email)) {
     return new Response(
       JSON.stringify({ error: 'El formato del correo electrónico no es válido.' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
   }
-  if (!validarTelefono(phone)) {
+  if (!validatePhone(phone)) {
     return new Response(
       JSON.stringify({ error: 'El formato del teléfono no es válido (debe tener exactamente 9 dígitos).' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
   }
-  if (!CICLOS_VALIDOS.includes(university_semester)) {
+  if (!VALID_SEMESTERS.includes(university_semester)) {
     return new Response(
       JSON.stringify({ error: 'Ciclo universitario no válido.' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
@@ -207,7 +207,7 @@ export async function POST({ request }: { request: Request }) {
   }
 
   // 9. Sanitize all fields (prevents stored XSS)
-  const dataSanitizada = {
+  const sanitizedData = {
     first_name: sanitize(first_name),
     last_name: sanitize(last_name),
     email: sanitize(email),
@@ -224,7 +224,7 @@ export async function POST({ request }: { request: Request }) {
   try {
     const { error: dbError } = await supabaseAdmin
       .from('applicants')
-      .insert([dataSanitizada]);
+      .insert([sanitizedData]);
 
     if (dbError) {
       if (dbError.code === '23505') {

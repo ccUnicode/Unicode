@@ -66,8 +66,8 @@ Buscamos seguir una convención clara basada en el tipo de cambio: `tipo(ámbito
 
 * **Componentes (Astro, React, etc.):** kebab-case. Ejemplo: area-card.astro, area-director-profile.astro. (Confirmado en el uso real de componentes en src/components).
 * **Organización de Componentes:** Los componentes se agrupan en subcarpetas dentro de `src/components` usando la convención `components-<tema>` (ej. `components-areas`, `components-home`, `components-events`).
-* **Páginas y Rutas:** `kebab-case`. Se permiten tildes en nombres de archivos que definen rutas de áreas específicas del centro (ej. `academica.astro`, `direccion-de-comunicacion-y-contenido.astro`).
-* **Variables y Funciones:** `camelCase`. Ejemplo: `obtenerPostulantes()`, `isModalOpen`, `setupMobileMenu`, `validarEmail`. (Confirmado en el código).
+* **Páginas y Rutas:** `kebab-case`. Todos los nombres de archivos y rutas deben estar estrictamente en inglés y sin caracteres especiales (ej. `academic.astro`, `communication-and-content.astro`).
+* **Variables y Funciones:** `camelCase`. Ejemplo: `validateEmail()`, `isModalOpen`, `setupMobileMenu`, `validatePhone()`. (Confirmado en el código).
 * **Constantes:** `UPPER_SNAKE_CASE`. Ejemplo: `MAX_POSTULACIONES`, `WINDOW_MS`. (Confirmado en el código).
 * **Campos de Base de Datos y APIs:** `snake_case`. Los campos que interactúan directamente con la base de datos o endpoints usan esta nomenclatura (ej. `first_name`, `first_choice_area`). (Confirmado en el código).
 * **Interfaces y Tipos:** `PascalCase` sin prefijos. Ejemplo: `Area`, `Project` (no `IArea`). (Confirmado en `types/index.ts`).
@@ -78,10 +78,10 @@ Buscamos seguir una convención clara basada en el tipo de cambio: `tipo(ámbito
 
 Requerimos colocar un bloque descriptivo `/** ... */` al inicio de los archivos principales de la API o del sistema para detallar su propósito, funcionamiento y medidas de seguridad aplicadas.
 
-**Ejemplo real (POST /api/postular):**
+**Ejemplo real (POST /api/apply):**
 ```typescript
 /**
- * API Endpoint: POST /api/postular
+ * API Endpoint: POST /api/apply
  * Endpoint para recibir postulaciones de la convocatoria.
  * 
  * Medidas de seguridad:

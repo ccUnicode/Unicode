@@ -1,28 +1,28 @@
 ---
 /**
- * eventos-realizados.astro
+ * completed-events.astro
  * Past Events gallery section with responsive visualization:
  * - Mobile/Tablet: Interactive horizontal carousel.
  * - PC (Desktop): Traditional 3-column grid (original design).
  */
 
-import { eventosRealizados, categoriaBadge } from "../../data/events";
+import { completedEvents, categoryBadge } from "../../data/events";
 
-const totalEventos = eventosRealizados.length;
-const totalAsistentes = eventosRealizados.reduce(
-    (sum, e) => sum + e.asistentes,
+const totalEventos = completedEvents.length;
+const totalAsistentes = completedEvents.reduce(
+    (sum, e) => sum + e.attendees,
     0,
 );
-const categorias = [...new Set(eventosRealizados.map((e) => e.categoria))];
+const categorias = [...new Set(completedEvents.map((e) => e.category))];
 
 const chunks6 = [];
-for (let i = 0; i < eventosRealizados.length; i += 6) {
-    chunks6.push(eventosRealizados.slice(i, i + 6));
+for (let i = 0; i < completedEvents.length; i += 6) {
+    chunks6.push(completedEvents.slice(i, i + 6));
 }
 ---
 
 <section
-    id="eventos-realizados"
+    id="completed-events"
     class="w-full py-20 md:py-28 bg-[#050505] relative overflow-hidden"
 >
     <div
@@ -132,26 +132,26 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                 class="flex gap-6 overflow-x-auto overflow-y-hidden pb-4 snap-x snap-mandatory scrollbar-hide scroll-smooth px-2"
             >
                 {
-                    eventosRealizados.map((evento, index) => (
+                    completedEvents.map((evento, index) => (
                         <article class="event-item flex-none w-[85vw] relative rounded-3xl overflow-hidden border border-zinc-800/50 bg-zinc-900/30 snap-center">
                             <div class="relative h-44 overflow-hidden">
                                 <img
-                                    src={evento.imagen}
-                                    alt={evento.titulo}
+                                    src={evento.image}
+                                    alt={evento.title}
                                     class="w-full h-full object-cover"
                                 />
                                 <div class="absolute inset-0 bg-linear-to-t from-zinc-900 to-transparent" />
                                 <div class="absolute top-4 left-4">
                                     <span
-                                        class={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase border ${categoriaBadge[evento.categoria]}`}
+                                        class={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase border ${categoryBadge[evento.category]}`}
                                     >
-                                        {evento.categoria}
+                                        {evento.category}
                                     </span>
                                 </div>
                             </div>
                             <div class="p-6">
                                 <h3 class="text-lg font-bold text-white mb-2 line-clamp-1">
-                                    {evento.titulo}
+                                    {evento.title}
                                 </h3>
                                 <div class="flex items-center gap-3 text-[10px] text-zinc-500 mb-3">
                                     <span class="flex items-center gap-1">
@@ -166,7 +166,7 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                                                 <circle cx="12" cy="7" r="4" />
                                             </>
                                         </svg>
-                                        {evento.ponente}
+                                        {evento.speaker}
                                     </span>
                                     <span class="flex items-center gap-1">
                                         <svg
@@ -180,11 +180,11 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                                                 <circle cx="12" cy="10" r="3" />
                                             </>
                                         </svg>
-                                        {evento.lugar}
+                                        {evento.location}
                                     </span>
                                 </div>
                                 <p class="text-zinc-400 text-xs leading-relaxed line-clamp-2 mb-4">
-                                    {evento.descripcion}
+                                    {evento.description}
                                 </p>
                                 {evento.link != null && evento.link !== "" && (
                                     <a
@@ -227,7 +227,7 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                     class="flex justify-center items-center gap-2"
                 >
                     {
-                        eventosRealizados.map((_, i) => (
+                        completedEvents.map((_, i) => (
                             <button
                                 class={`h-2 rounded-full transition-all duration-300 ${i === 0 ? "bg-unicode w-6" : "bg-zinc-800 w-2"}`}
                                 data-index={i}
@@ -270,27 +270,27 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                                 <article class="event-item relative rounded-3xl overflow-hidden border border-zinc-800/50 bg-zinc-900/30 hover:border-unicode/30 transition-all duration-300 group flex flex-col">
                                     <div class="relative h-48 overflow-hidden">
                                         <img
-                                            src={evento.imagen}
-                                            alt={evento.titulo}
+                                            src={evento.image}
+                                            alt={evento.title}
                                             class="w-full h-full object-cover"
                                         />
                                         <div class="absolute inset-0 bg-linear-to-t from-zinc-900 via-zinc-900/40 to-transparent" />
                                         <div class="absolute top-4 left-4">
                                             <span
-                                                class={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider border ${categoriaBadge[evento.categoria]}`}
+                                                class={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider border ${categoryBadge[evento.category]}`}
                                             >
-                                                {evento.categoria}
+                                                {evento.category}
                                             </span>
                                         </div>
                                         <div class="absolute bottom-4 right-4">
                                             <span class="inline-flex items-center gap-1.5 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] text-gray-300 border border-zinc-700/50">
-                                                {evento.fecha}
+                                                {evento.date}
                                             </span>
                                         </div>
                                     </div>
                                     <div class="p-6 flex flex-col flex-1">
                                         <h3 class="text-xl font-bold text-white mb-3 group-hover:text-unicode transition-colors">
-                                            {evento.titulo}
+                                            {evento.title}
                                         </h3>
                                         <div class="flex items-center gap-4 text-xs text-zinc-500 mb-4">
                                             <span class="flex items-center gap-1.5">
@@ -308,7 +308,7 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                                                         r="4"
                                                     />
                                                 </svg>
-                                                {evento.ponente}
+                                                {evento.speaker}
                                             </span>
                                             <span class="flex items-center gap-1.5">
                                                 <svg
@@ -325,11 +325,11 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                                                         r="3"
                                                     />
                                                 </svg>
-                                                {evento.lugar}
+                                                {evento.location}
                                             </span>
                                         </div>
                                         <p class="text-zinc-400 text-sm leading-relaxed line-clamp-3 mb-4 flex-1">
-                                            {evento.descripcion}
+                                            {evento.description}
                                         </p>
                                         <div class="flex flex-wrap items-center gap-2 mt-auto">
                                             {evento.highlights.map((h) => (
@@ -452,7 +452,7 @@ for (let i = 0; i < eventosRealizados.length; i += 6) {
                 { threshold: 0.3 },
             );
 
-            const section = document.querySelector("#eventos-realizados");
+            const section = document.querySelector("#completed-events");
             if (section) statsObs.observe(section);
 
             const carousels = [

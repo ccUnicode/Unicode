@@ -7,10 +7,10 @@
  *
  * @component
  */
-import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
+import { IS_CALL_OPEN } from "../../data/siteConfig";
 ---
 
-{CONVOCATORIA_ABIERTA && (
+{IS_CALL_OPEN && (
 <dialog
   id="registroModal"
   class="m-auto fixed inset-0 backdrop:bg-black/80 bg-zinc-950 border border-zinc-800 rounded-3xl p-0 w-[95%] max-w-2xl shadow-unicode-lg text-white open:animate-in open:fade-in open:zoom-in-95 backdrop:backdrop-blur-sm"
@@ -370,7 +370,7 @@ import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
 
-        const res = await fetch("/api/postular", {
+        const res = await fetch("/api/apply", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

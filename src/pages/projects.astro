@@ -1,5 +1,5 @@
 ---
-import Layout from "../layouts/layout.astro";
+import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/navbar.astro";
 import ProjectFilters from "../components/components-projects/project-filters.astro";
 import ProjectModal from "../components/components-projects/project-modal.astro";
@@ -8,8 +8,8 @@ import ProjectHero from "../components/components-projects/project-hero.astro";
 import FeaturedSection from "../components/components-projects/featured-section.astro";
 import { projects, featuredProjects } from "../data/projects";
 
-const activeProjects = projects.filter((p) => p.status === "Activo");
-const activeFeatured = featuredProjects.filter((p) => p.status === "Activo");
+const activeProjects = projects.filter((p) => p.status === "Active");
+const activeFeatured = featuredProjects.filter((p) => p.status === "Active");
 ---
 
 <Layout title="Proyectos">

@@ -9,7 +9,7 @@ export interface Project {
   title: string;
   description: string;
   longDescription: string;
-  status: "Activo" | "Inactivo";
+  status: "Active" | "Inactive";
   faculty: string;
   category?: string;
   image: string;
@@ -32,7 +32,7 @@ export const projects: Project[] = [
     title: "UniOpenCourse",
     description: "Plataforma web diseñada para la difusión del contenido de las clases presenciales de la FIIS grabadas por Unicode.",
     longDescription: "El proyecto UNIOpenCourse 25-2, impulsado por Unicode, es una plataforma digital que democratiza el acceso al conocimiento mediante la centralización y organización de las clases grabadas en la Facultad de Ingeniería Industrial y de Sistemas. Inspirada en modelos de educación abierta como el MIT OpenCourseWare, la herramienta ofrece una experiencia de aprendizaje estructurada que incluye el acceso a evaluaciones, recomendaciones personalizadas basadas en el perfil del usuario y funcionalidades colaborativas para la donación de materiales y reportes de contenido. Al integrar la producción académica con un entorno interactivo y herramientas de gestión interna, la plataforma no solo actúa como un repositorio eficiente, sino que consolida una iniciativa innovadora que beneficia tanto a la comunidad universitaria como al público externo interesado en fortalecer su formación académica.",
-    status: "Activo",
+    status: "Active",
     faculty: "ID",
     category: "Destacado",
     image: "/projects/thumbnails/uniopencourse-platform-thumbnail.webp",
@@ -54,7 +54,7 @@ export const projects: Project[] = [
     title: "Unicore",
     description: "Unicore es un sistema interno para organizar miembros, áreas, proyectos y tareas dentro de UNICODE.",
     longDescription: "Unicore nace como una solución para centralizar la gestión interna de UNICODE, ya que el seguimiento de miembros, proyectos y tareas puede dispersarse entre distintas herramientas y procesos manuales. La propuesta busca ordenar esa operación en una sola plataforma, permitiendo gestionar áreas, registrar miembros, crear proyectos, asignar equipos y dar seguimiento al trabajo mediante tareas y fases. En su primera versión, el enfoque está en cubrir la base operativa mínima para que la organización funcione con mayor claridad, trazabilidad y control. A largo plazo, Unicore apunta a mejorar la coordinación interna, la visibilidad del avance y la toma de decisiones.",
-    status: "Activo",
+    status: "Active",
     faculty: "ID",
     image: "/projects/thumbnails/unicore-thumbnail.jpg",
     screenshots: [
@@ -75,7 +75,7 @@ export const projects: Project[] = [
     title: "EducaTech",
     description: "Ejecución de una estrategia de contenidos 'Edu-Tech' en redes sociales.",
     longDescription: "EducaTech es una iniciativa enfocada en la creación y difusión de contenido educativo tecnológico a través de redes sociales, buscando acercar la tecnología a toda la comunidad estudiantil de forma dinámica.",
-    status: "Inactivo",
+    status: "Inactive",
     faculty: "DCC",
     image: "/projects/thumbnails/edutech.webp",
     screenshots: ["/areasmoment.webp"],
@@ -94,7 +94,7 @@ export const projects: Project[] = [
     title: "Unicode on Air",
     description: "Producción de contenido audiovisual basado en la interacción presencial en el campus.",
     longDescription: "Proyecto dedicado a capturar la esencia de la vida universitaria y la tecnología mediante entrevistas e interacciones en vivo con los estudiantes dentro del campus de la UNI.",
-    status: "Inactivo",
+    status: "Inactive",
     faculty: "DCC",
     image: "/projects/thumbnails/unicode-on-air.webp",
     screenshots: ["/areasmoment.webp"],
@@ -113,7 +113,7 @@ export const projects: Project[] = [
     title: "Backstage FIIS",
     description: "Serie de vlogs documentales que narran la 'experiencia del estudiante' en la facultad.",
     longDescription: "Una mirada íntima a lo que sucede detrás de cámaras en la FIIS, mostrando el día a día, los retos académicos y la cultura estudiantil a través de vlogs documentales.",
-    status: "Inactivo",
+    status: "Inactive",
     faculty: "DCC",
     image: "/projects/thumbnails/backstage-fiis.webp",
     screenshots: ["/areasmoment.webp"],
@@ -132,7 +132,7 @@ export const projects: Project[] = [
     title: "Unicode Quizzes",
     description: "Estrategia de gamificación digital utilizando principalmente redes sociales.",
     longDescription: "Fomentamos el aprendizaje y la interacción mediante trivias y retos tecnológicos gamificados, aprovechando las plataformas digitales para crear una comunidad más participativa.",
-    status: "Inactivo",
+    status: "Inactive",
     faculty: "DCC",
     image: "/projects/thumbnails/unicode-quizzes.webp",
     screenshots: ["/areasmoment.webp"],
@@ -151,7 +151,7 @@ export const projects: Project[] = [
     title: "Unicode Podcast",
     description: "Producción de contenido long-form para YouTube con clips para redes sociales.",
     longDescription: "Espacio de conversación profunda sobre tecnología, carrera profesional y vida universitaria, distribuido en episodios completos en YouTube y condensado en clips de alto impacto.",
-    status: "Inactivo",
+    status: "Inactive",
     faculty: "DCC",
     image: "/projects/thumbnails/unicode-podcast-thumbnail.jpg",
     screenshots: ["/areasmoment.webp"],
@@ -175,7 +175,7 @@ export const projects: Project[] = [
     title: "Editorial Unicode",
     description: "Producción enfocada en la transcripción y formateo de material académico a LaTeX.",
     longDescription: "Digitalización y estandarización de material de estudio, solucionarios y guías académicas utilizando LaTeX para garantizar la máxima calidad editorial para los estudiantes.",
-    status: "Inactivo",
+    status: "Inactive",
     faculty: "DCC",
     image: "/projects/thumbnails/editorial-unicode.webp",
     screenshots: ["/areasmoment.webp"],
@@ -193,7 +193,7 @@ export const projects: Project[] = [
     title: "Revista Unicode",
     description: "Difusión de noticias tecnológicas y actualizaciones de la comunidad.",
     longDescription: "Publicación periódica que recopila lo último en innovación, eventos de la comunidad y artículos técnicos de interés para el ecosistema tecnológico de la facultad.",
-    status: "Inactivo",
+    status: "Inactive",
     faculty: "DCC",
     image: "/projects/thumbnails/revista-unicode-thumbnail.jpg",
     screenshots: ["/areasmoment.webp"],
@@ -212,7 +212,7 @@ export const projects: Project[] = [
     title: "TrikaWeb",
     description: "Web que centraliza solucionarios y exámenes pasados de la Facultad de Ingeniería Industrial y Sistemas de la UNI",
     longDescription: "TrikaWeb es una página web integral diseñada para optimizar el rendimiento académico de los estudiantes de la Facultad de Ingeniería Industrial y de Sistemas (FIIS) de la UNI. El proyecto surge como una solución a la dispersión de recursos educativos, centralizando en un solo lugar material indispensable como prácticas calificadas, parciales, finales y exámenes sustitutorios",
-    status: "Activo",
+    status: "Active",
     faculty: "ID",
     category: "Destacado",
     image: "/projects/thumbnails/trikaweb-thumbnail-correct.webp",
@@ -235,7 +235,7 @@ export const projects: Project[] = [
     title: "UNIOpenCourse 26-1",
     description: "Grabación de las clases dictadas presencialmente en la FIIS para ponerlas a disposición de la comunidad universitaria.",
     longDescription: "El proyecto UNIOpenCourse 26-1 es una iniciativa impulsada por Unicode que nace con el propósito de democratizar el acceso al conocimiento universitario, tomando como referencia el modelo de cursos abiertos promovido por instituciones como MIT OpenCourseWare. \nEn un contexto donde muchos estudiantes enfrentan limitaciones de acceso a recursos académicos de calidad, UNIOpenCourse busca reducir brechas educativas mediante la grabación sistemática de clases presenciales y su posterior publicación como material de libre consulta.\nLa metodología del proyecto se basa en la planificación coordinada con docentes, la grabación estructurada de sesiones completas en aula y su difusión estratégica a través de plataformas digitales como Youtube. \nEn cuanto a su alcance, UNIOpenCourse beneficia no solo a estudiantes de la universidad, sino también a la comunidad externa interesada en fortalecer sus conocimientos en cursos fundamentales como Cálculo Integral, Álgebra Lineal y Sistemas Operativos. Así, el proyecto contribuye activamente a promover educación abierta, accesible y de calidad, consolidándose como una propuesta innovadora con impacto académico y social.",
-    status: "Activo",
+    status: "Active",
     faculty: "ACD",
     image: "/projects/thumbnails/uniopencourse-thumbnail.webp",
     screenshots: [
@@ -260,7 +260,7 @@ export const projects: Project[] = [
     title: "Landing Page Unicode",
     description: "Web que concentra toda la información y alma de unicode",
     longDescription: "El presente proyecto consiste en la creación de una landing page para el centro cultural Unicode, concebido como un espacio que promueve la integración entre arte, cultura y tecnología. La página tiene como finalidad principal servir como una vitrina digital que permita dar a conocer las actividades, eventos, talleres y la identidad del centro cultural, generando una conexión directa con el público y fomentando su participación.En cuanto a las tecnologías utilizadas, se emplea HTML, TypeScript y Astro.",
-    status: "Activo",
+    status: "Active",
     faculty: "ID",
     category: "Destacado",
     image: "/projects/thumbnails/landingpage-thumbnail.webp",

@@ -6,7 +6,7 @@
  *
  * @component
  */
-import { CONVOCATORIA_ABIERTA } from "../../data/siteConfig";
+import { IS_CALL_OPEN } from "../../data/siteConfig";
 
 interface Area {
   icon: string;
@@ -45,7 +45,7 @@ const areas: Area[] = [
       CONVOCATORIA
     </p>
 
-    {CONVOCATORIA_ABIERTA ? (
+    {IS_CALL_OPEN ? (
       <h1
         class="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-unicode text-glow tracking-tight leading-none mb-4"
       >
@@ -63,7 +63,7 @@ const areas: Area[] = [
       Dirección de Creación y Contenido
     </p>
 
-    {CONVOCATORIA_ABIERTA ? (
+    {IS_CALL_OPEN ? (
       <p
         class="text-zinc-300 text-sm md:text-base max-w-xl mx-auto mb-12 leading-relaxed"
       >
@@ -173,7 +173,7 @@ const areas: Area[] = [
       }
     </div>
 
-    {CONVOCATORIA_ABIERTA ? (
+    {IS_CALL_OPEN ? (
       <a
         href="#postular"
         class="inline-block px-10 py-3.5 bg-unicode hover:bg-unicode-light text-black font-bold rounded-full transition-all duration-300 text-base shadow-unicode hover:shadow-unicode-lg transform hover:-translate-y-1"

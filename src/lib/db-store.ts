@@ -31,14 +31,14 @@ class TemporaryDatabase {
 
   // Method to save a new record from the form
   async insert(data: Omit<Applicant, "id" | "created_at">) {
-    const nuevoRegistro: Applicant = {
+    const newRecord: Applicant = {
       ...data,
       id: crypto.randomUUID(), // Generates a temporary mock ID
       created_at: new Date().toISOString(), // Real current date
     };
 
-    this.applicants.push(nuevoRegistro);
-    return { data: nuevoRegistro, error: null };
+    this.applicants.push(newRecord);
+    return { data: newRecord, error: null };
   }
 
   // Method to read data from the admin dashboard
@@ -50,4 +50,4 @@ class TemporaryDatabase {
 }
 
 // Exported global instance
-export const dbLocal = new TemporaryDatabase();
+export const localDb = new TemporaryDatabase();
