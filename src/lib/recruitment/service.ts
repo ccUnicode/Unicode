@@ -85,7 +85,7 @@ export async function technicalFailure(id: string, token: string, input: unknown
   if (typeof body.code !== 'string' || !/^[a-zA-Z0-9_.-]{1,80}$/.test(body.code) || typeof body.message !== 'string' || body.message.length > 500) throw new RecruitmentError('invalid_failure', 'Describe la falla técnica con un código y un mensaje breve.');
   return recruitmentRpc<ApplicationResponse>('recruitment_technical_failure', { p_id: id, p_token_hash: await hash(token), p_code: body.code, p_message: body.message });
 }
-export async function videoSession(id: string, token: string, input: unknown) {
+export async function videoSession(id: string, token: string, input: unknown, origin?: string) {
   const body = record(input);
   if (!['recording', 'upload'].includes(String(body.mode)) || typeof body.contentType !== 'string' || !Number.isInteger(body.bytes) || Number(body.bytes) < 1) throw new RecruitmentError('invalid_video', 'La carga requiere formato, tamaño y modalidad válidos.');
   const config = await recruitmentRpc<ConfigResponse>('recruitment_admin_config');
@@ -94,7 +94,7 @@ export async function videoSession(id: string, token: string, input: unknown) {
   const tokenHash = await hash(token);
   const { upload } = await recruitmentRpc<{ upload: RecruitmentUpload }>('recruitment_begin_upload', { p_id: id, p_token_hash: tokenHash, p_upload_id: crypto.randomUUID(), p_mode: body.mode, p_content_type: contentType, p_bytes: body.bytes });
   if (upload.authorization && (!upload.authorization.expiresAt || Date.parse(upload.authorization.expiresAt) > Date.now() + 30_000)) return { uploadId: upload.id, ...upload.authorization };
-  const authorization = await createVideoUpload({ applicationId: id, uploadId: upload.id, mode: upload.mode, provider: upload.provider, expectedBytes: upload.expectedBytes, maxBytes: upload.maxBytes, maxSeconds: upload.maxSeconds, contentType: upload.contentType, ...(upload.fileId ? { existingFileId: upload.fileId } : {}) });
+  const authorization = await createVideoUpload({ applicationId: id, uploadId: upload.id, mode: upload.mode, provider: upload.provider, expectedBytes: upload.expectedBytes, maxBytes: upload.maxBytes, maxSeconds: upload.maxSeconds, contentType: upload.contentType, origin, ...(upload.fileId ? { existingFileId: upload.fileId } : {}) });
   await recruitmentRpc<null>('recruitment_attach_upload', { p_id: id, p_token_hash: tokenHash, p_upload_id: upload.id, p_provider: authorization.provider, p_file_id: authorization.fileId, p_authorization: authorization });
   return { uploadId: upload.id, ...authorization };
 }

@@ -6,9 +6,15 @@
  *
  * @component
  */
-interface Props { recruitment: { available: boolean; reason?: string | null; config: { title: string; areas: { id: string; enabled: boolean }[] } } }
+interface Props { recruitment: { available: boolean; reason?: string | null; deploymentReady?: boolean; config: { title: string; enabled: boolean; opensAt: string | null; areas: { id: string; enabled: boolean }[] } } }
 const { recruitment } = Astro.props;
 const IS_CALL_OPEN = recruitment.available;
+// Enabled in the admin panel with a future opening date: count down instead of "Próximamente".
+const opensAt = recruitment.config.opensAt ? Date.parse(recruitment.config.opensAt) : NaN;
+const IS_UPCOMING = !IS_CALL_OPEN && recruitment.config.enabled && recruitment.deploymentReady !== false && opensAt > Date.now();
+const SHOW_AREAS = IS_CALL_OPEN || IS_UPCOMING;
+const opensTime = IS_UPCOMING ? new Intl.DateTimeFormat("es-PE", { timeZone: "America/Lima", hour: "numeric", minute: "2-digit" }).format(opensAt) : "";
+const opensLabel = IS_UPCOMING ? `${new Intl.DateTimeFormat("es-PE", { timeZone: "America/Lima", weekday: "long", day: "numeric", month: "long" }).format(opensAt).replace(",", "")} a las ${opensTime}` : "";
 
 interface Area {
   icon: string;
@@ -22,11 +28,11 @@ const areas: Area[] = [
   { icon: "dcc", label: "DCC" },
   { icon: "id", label: "ID" },
   { icon: "lge", label: "LGE" },
-].filter((area) => !IS_CALL_OPEN || recruitment.config.areas.some((configured) => configured.id === area.label.toUpperCase() && configured.enabled));
+].filter((area) => !SHOW_AREAS || recruitment.config.areas.some((configured) => configured.id === area.label.toUpperCase() && configured.enabled));
 ---
 
 <section
-  class="relative w-full min-h-screen flex items-center justify-center overflow-hidden"
+  class="relative w-full min-h-screen flex items-center justify-center overflow-hidden pt-28 pb-16"
 >
   <div class="absolute inset-0 z-0">
     <img
@@ -48,7 +54,7 @@ const areas: Area[] = [
       CONVOCATORIA
     </p>
 
-    {IS_CALL_OPEN ? (
+    {SHOW_AREAS ? (
       <h1
         class="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-unicode text-glow tracking-tight leading-none mb-4"
       >
@@ -63,7 +69,7 @@ const areas: Area[] = [
     )}
     
     <p class="text-zinc-400 text-xs md:text-sm font-semibold tracking-widest uppercase mb-8">
-      {IS_CALL_OPEN ? recruitment.config.title : "Proceso de Selección UNICODE"}
+      {SHOW_AREAS ? recruitment.config.title : "Proceso de Selección UNICODE"}
     </p>
 
     {IS_CALL_OPEN ? (
@@ -73,6 +79,21 @@ const areas: Area[] = [
         Encuentra el área donde puedes aportar a UNICODE. Completa tus datos y responde
         cuatro preguntas en un video de hasta un minuto.
       </p>
+    ) : IS_UPCOMING ? (
+      <div id="call-countdown" data-opens-at={new Date(opensAt).toISOString()} class="mb-10 w-full">
+        <p class="text-zinc-300 text-sm md:text-base max-w-xl mx-auto mb-6 leading-relaxed">
+          Las postulaciones abren el <strong class="text-white">{opensLabel}</strong> (hora de Lima).
+          Ten listos tus datos y piensa en tus respuestas para el video de un minuto.
+        </p>
+        <div class="grid grid-cols-4 gap-2 sm:gap-4 max-w-md mx-auto" role="timer" aria-live="off" aria-label="Tiempo para la apertura">
+          {[["days", "Días"], ["hours", "Horas"], ["minutes", "Min"], ["seconds", "Seg"]].map(([unit, label]) => (
+            <div class="rounded-2xl border border-unicode/40 bg-unicode/10 px-1 py-3 sm:py-4 backdrop-blur-sm">
+              <span data-unit={unit} class="block text-3xl sm:text-5xl font-extrabold text-unicode text-glow tabular-nums leading-none">--</span>
+              <span class="mt-2 block text-[0.65rem] sm:text-xs font-semibold uppercase tracking-widest text-zinc-400">{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     ) : (
       <p
         class="text-zinc-400 text-sm md:text-base max-w-xl mx-auto mb-12 leading-relaxed"
@@ -85,11 +106,11 @@ const areas: Area[] = [
       {
         areas.map((area) => (
           <div
-            class={`flex flex-col items-center gap-2 ${IS_CALL_OPEN ? "" : "opacity-30 cursor-not-allowed"}`}
+            class={`flex flex-col items-center gap-2 ${SHOW_AREAS ? "" : "opacity-30 cursor-not-allowed"}`}
           >
             <div
               class={`w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center backdrop-blur-sm transition-all duration-300 border ${
-                IS_CALL_OPEN
+                SHOW_AREAS
                   ? "border-white/10 bg-white/5 text-zinc-400 hover:border-unicode/40 hover:text-unicode"
                   : "border-white/5 bg-white/5 text-zinc-500"
               }`}
@@ -190,6 +211,13 @@ const areas: Area[] = [
       >
         Postula a UNICODE
       </a>
+    ) : IS_UPCOMING ? (
+      <span
+        id="countdown-cta"
+        class="inline-block px-10 py-3.5 rounded-full text-base font-bold border border-unicode/60 text-unicode bg-unicode/10 cursor-not-allowed"
+      >
+        Abre a las {opensTime}
+      </span>
     ) : (
       <span
         class="inline-block px-10 py-3.5 bg-zinc-900 text-zinc-400 font-bold rounded-full text-base cursor-not-allowed border border-zinc-800"
@@ -199,3 +227,28 @@ const areas: Area[] = [
     )}
   </div>
 </section>
+
+<script>
+  const countdown = document.getElementById("call-countdown");
+  if (countdown) {
+    const opensAt = Date.parse(countdown.dataset.opensAt || "");
+    const pad = (value: number) => String(value).padStart(2, "0");
+    const tick = () => {
+      const left = Math.max(0, opensAt - Date.now());
+      const total = Math.floor(left / 1000);
+      const values = { days: Math.floor(total / 86400), hours: Math.floor(total / 3600) % 24, minutes: Math.floor(total / 60) % 60, seconds: total % 60 };
+      for (const [unit, value] of Object.entries(values)) {
+        const cell = countdown.querySelector(`[data-unit="${unit}"]`);
+        if (cell) cell.textContent = pad(value);
+      }
+      if (left > 0) return;
+      clearInterval(timer);
+      const cta = document.getElementById("countdown-cta");
+      if (cta) cta.textContent = "¡Abrimos! Cargando…";
+      // A short delay absorbs small clock differences with the server.
+      setTimeout(() => location.reload(), 1500);
+    };
+    const timer = setInterval(tick, 1000);
+    tick();
+  }
+</script>
