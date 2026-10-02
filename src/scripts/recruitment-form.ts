@@ -1,5 +1,5 @@
 import type { ApplicationData, RecruitmentApplication, RecruitmentConfig } from "../lib/recruitment/types";
-import { attachUniversityCombobox } from "./university-combobox.ts";
+import { attachCombobox, careerSuggestions, facultySuggestions, knownPlace, matchUniversities } from "./study-combobox.ts";
 import { forgetAnswer, forgetEverything, loadAnswer, loadForm, loadSession, saveAnswer, saveForm, saveSession } from "./recruitment-local.ts";
 
 type UploadSession = {
@@ -34,7 +34,10 @@ function initializeRecruitment() {
     return item as T;
   };
   const form = element<HTMLFormElement>("recruitment-data-form");
-  attachUniversityCombobox(element<HTMLInputElement>("university"), element<HTMLUListElement>("university-options"));
+  const studyField = (id: string) => element<HTMLInputElement>(id).value;
+  attachCombobox(element<HTMLInputElement>("university"), element<HTMLUListElement>("university-options"), () => matchUniversities(studyField("university"), 8));
+  attachCombobox(element<HTMLInputElement>("faculty"), element<HTMLUListElement>("faculty-options"), () => facultySuggestions(studyField("university")), () => true);
+  attachCombobox(element<HTMLInputElement>("career"), element<HTMLUListElement>("career-options"), () => careerSuggestions(studyField("university"), studyField("faculty")), () => knownPlace(studyField("university")));
   const camera = element<HTMLVideoElement>("camera-preview");
   const preview = element<HTMLVideoElement>("answer-preview");
   const rehearsalPreview = element<HTMLVideoElement>("rehearsal-preview");

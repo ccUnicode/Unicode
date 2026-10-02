@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { chooseRecordingMime, isAllowedUploadUrl } from '../src/scripts/recruitment-form.ts';
-import { matchUniversities } from '../src/scripts/university-combobox.ts';
+import { careerSuggestions, facultySuggestions, matchUniversities } from '../src/scripts/study-combobox.ts';
 
 test('candidate upload capability only accepts the Google resumable upload endpoint', () => {
   assert.equal(isAllowedUploadUrl('https://www.googleapis.com/upload/drive/v3/files/file-id?upload_id=session-token', 'drive'), true);
@@ -36,7 +36,16 @@ test('recording format detection selects supported WebM and reports unavailable 
 
 test('university suggestions match acronyms, accents and partial words', () => {
   assert.equal(matchUniversities('UNI')[0].name, 'Universidad Nacional de Ingeniería');
-  assert.equal(matchUniversities('san marcos')[0].acronym, 'UNMSM');
-  assert.equal(matchUniversities('catolica del peru')[0].acronym, 'PUCP');
+  assert.equal(matchUniversities('san marcos')[0].hint, 'UNMSM');
+  assert.equal(matchUniversities('catolica del peru')[0].hint, 'PUCP');
   assert.deepEqual(matchUniversities('zzz'), []);
+});
+
+test('faculty and career suggestions follow the chosen place of study and never block other values', () => {
+  assert.ok(facultySuggestions('UNI').some(f => f.hint === 'FIIS'));
+  assert.ok(facultySuggestions('Universidad Nacional de Ingeniería').length >= 11);
+  assert.deepEqual(facultySuggestions('Instituto que no conocemos'), []);
+  assert.ok(careerSuggestions('UNI', 'FIIS').some(c => c.name === 'Ingeniería de Software'));
+  assert.ok(careerSuggestions('Universidad del Pacífico', '').some(c => c.name === 'Ingeniería de la Información'));
+  assert.ok(careerSuggestions('Otro lugar', '').length > 100);
 });

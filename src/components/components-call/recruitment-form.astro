@@ -37,11 +37,11 @@
           <div class="field-grid">
             <div class="field"><label for="firstName">Nombres <span class="req" aria-hidden="true">*</span></label><input id="firstName" name="firstName" required maxlength="150" autocomplete="given-name" placeholder="Ej. Ana Lucía" /></div>
             <div class="field"><label for="lastName">Apellidos <span class="req" aria-hidden="true">*</span></label><input id="lastName" name="lastName" required maxlength="150" autocomplete="family-name" placeholder="Ej. Quispe Rojas" /></div>
-            <div class="field"><label for="email">Correo electrónico <span class="req" aria-hidden="true">*</span></label><input id="email" name="email" type="email" required maxlength="254" autocomplete="email" placeholder="Ej. ana.quispe@uni.pe" /><p class="hint">Usa uno que revises seguido. No podrás cambiarlo después.</p></div>
+            <div class="field"><label for="email">Correo electrónico <span class="req" aria-hidden="true">*</span></label><input id="email" name="email" type="email" required maxlength="254" autocomplete="email" placeholder="Ej. ana.quispe@uni.pe" /></div>
             <div class="field"><label for="phone">Celular <span class="req" aria-hidden="true">*</span></label><input id="phone" name="phone" type="tel" required pattern="[0-9]{9}" minlength="9" maxlength="9" inputmode="numeric" autocomplete="tel-national" placeholder="Ej. 987654321" title="Ingresa los 9 dígitos de tu celular, sin espacios." /></div>
-            <div class="field"><label for="university">Universidad <span class="req" aria-hidden="true">*</span></label><div class="combobox"><input id="university" name="university" required maxlength="150" placeholder="Ej. Universidad Nacional de Ingeniería" /><ul id="university-options" class="combobox-list" role="listbox" aria-label="Universidades sugeridas" hidden></ul></div></div>
-            <div class="field"><label for="faculty">Facultad <span class="req" aria-hidden="true">*</span></label><input id="faculty" name="faculty" required maxlength="150" placeholder="Ej. Ingeniería Industrial y de Sistemas" /></div>
-            <div class="field"><label for="career">Carrera <span class="req" aria-hidden="true">*</span></label><input id="career" name="career" required maxlength="150" placeholder="Ej. Ingeniería de Sistemas" /></div>
+            <div class="field"><label for="university">Centro de estudios <span class="req" aria-hidden="true">*</span></label><div class="combobox"><input id="university" name="university" required maxlength="150" placeholder="Ej. Universidad Nacional de Ingeniería, SENATI" /><ul id="university-options" class="combobox-list" role="listbox" aria-label="Centros de estudio sugeridos" hidden></ul></div></div>
+            <div class="field"><label for="faculty">Facultad <span class="optional">(si aplica)</span></label><div class="combobox"><input id="faculty" name="faculty" maxlength="150" placeholder="Ej. Facultad de Ingeniería Industrial y de Sistemas" /><ul id="faculty-options" class="combobox-list" role="listbox" aria-label="Facultades sugeridas" hidden></ul></div></div>
+            <div class="field"><label for="career">Carrera <span class="req" aria-hidden="true">*</span></label><div class="combobox"><input id="career" name="career" required maxlength="150" placeholder="Ej. Ingeniería de Sistemas" /><ul id="career-options" class="combobox-list" role="listbox" aria-label="Carreras sugeridas" hidden></ul></div></div>
             <div class="field"><label for="admissionTerm">Periodo de ingreso <span class="req" aria-hidden="true">*</span></label><input id="admissionTerm" name="admissionTerm" required maxlength="6" pattern="[0-9]{4}-[12]" placeholder="Ej. 2024-2" title="Escribe el año y semestre de ingreso, por ejemplo 2024-2." /></div>
             <div class="field"><label for="semester">Ciclo actual <span class="req" aria-hidden="true">*</span></label><select id="semester" name="semester" required><option value="">Selecciona tu ciclo</option>{Array.from({length:10}, (_, i) => <option value={String(i+1)}>{i+1}.º ciclo</option>)}<option value="0">Egresado/a</option></select></div>
             <div class="field"><label for="availabilityHours">Horas disponibles por semana (aprox.) <span class="req" aria-hidden="true">*</span></label><input id="availabilityHours" name="availabilityHours" type="number" required min="0" max="168" step="0.5" inputmode="decimal" placeholder="Ej. 6" /><p id="availability-hint" class="hint">Considera el tiempo que puedes dedicar a las actividades de UNICODE.</p></div>
@@ -56,7 +56,7 @@
     </section>
 
     <section id="video-phase" class="panel" aria-labelledby="video-heading" hidden>
-      <div class="section-heading"><div><p class="eyebrow">Paso 2</p><h2 id="video-heading" tabindex="-1">Cuatro preguntas. Un solo video.</h2></div><button id="edit-data" type="button" class="button secondary compact">Revisar mis datos</button></div>
+      <div class="section-heading"><div><p class="eyebrow">Paso 2</p><h2 id="video-heading" tabindex="-1">Cuatro preguntas. Un solo video.</h2></div><button id="edit-data" type="button" class="button secondary compact">Volver a mis datos</button></div>
       <p id="video-instructions">Responde las 4 preguntas en un solo video de hasta 60 segundos.</p>
       <div id="active-capture-banner" class="active-capture-banner" hidden><span>Grabando tu respuesta</span><strong id="capture-banner-timer">00:00 / 01:00</strong><button id="finish-capture" type="button" class="button danger compact">Terminar</button></div>
       <div id="assigned-questions" class="questions"></div>
@@ -93,7 +93,7 @@
 </script>
 
 <style>
-  .recruitment { --green: #75d32d; --muted: #a1a1aa; }
+  .recruitment { --green: #75d32d; --muted: #a1a1aa; color-scheme: dark; }
   .recruitment [hidden] { display: none !important; }
   .intro { margin-bottom: 2rem; }
   .eyebrow { color: var(--green); font-size: .75rem; font-weight: 650; letter-spacing: .12em; text-transform: uppercase; }
@@ -131,6 +131,8 @@
   input:focus,select:focus,textarea:focus { outline: 2px solid var(--green); outline-offset: 2px; }
   input::placeholder,textarea::placeholder { color: #71717a; }
   .req { color: #f87171; font-weight: 700; }
+  .optional { color: #71717a; font-weight: 400; }
+  select option { background: #171719; color: #f4f4f5; }
   .combobox { position: relative; }
   .combobox-list { position: absolute; z-index: 20; top: calc(100% + .35rem); left: 0; right: 0; max-height: 16rem; overflow-y: auto; margin: 0; padding: .35rem; list-style: none; background: #171719; border: 1px solid #3f3f46; border-radius: .7rem; box-shadow: 0 12px 30px #000a; }
   .combobox-list :global(li) { display: flex; justify-content: space-between; align-items: center; gap: .8rem; padding: .6rem .7rem; border-radius: .5rem; font-size: .85rem; color: #e4e4e7; cursor: pointer; }

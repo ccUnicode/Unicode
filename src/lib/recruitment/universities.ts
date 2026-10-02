@@ -1,4 +1,4 @@
-/** Peruvian universities offered as suggestions in the application form; applicants can still type any other name. */
+/** Peruvian universities and institutes suggested in the application form; applicants can still type any other name. */
 export const UNIVERSITIES: readonly (readonly [name: string, acronym: string])[] = [
   ['Universidad Nacional de Ingeniería', 'UNI'],
   ['Universidad Nacional Mayor de San Marcos', 'UNMSM'],
@@ -93,4 +93,13 @@ export const UNIVERSITIES: readonly (readonly [name: string, acronym: string])[]
   ['Universidad Científica del Perú', 'UCP'],
   ['Universidad Privada de Huancayo Franklin Roosevelt', 'UROOSEVELT'],
   ['Universidad Tecnológica de los Andes', 'UTEA'],
+  ['Servicio Nacional de Adiestramiento en Trabajo Industrial', 'SENATI'],
+  ['Tecsup', 'TECSUP'],
+  ['Instituto Cibertec', 'CIBERTEC'],
+  ['Instituto IDAT', 'IDAT'],
+  ['Toulouse Lautrec', 'TLS'],
+  ['Instituto San Ignacio de Loyola', 'ISIL'],
+  ['Instituto Certus', 'CERTUS'],
+  ['Instituto Zegel', 'ZEGEL'],
+  ['Instituto SISE', 'SISE'],
 ];
