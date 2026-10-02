@@ -46,6 +46,7 @@ test('faculty and career suggestions follow the chosen place of study and never 
   assert.ok(facultySuggestions('Universidad Nacional de Ingeniería').length >= 11);
   assert.deepEqual(facultySuggestions('Instituto que no conocemos'), []);
   assert.ok(careerSuggestions('UNI', 'FIIS').some(c => c.name === 'Ingeniería de Software'));
+  assert.ok(careerSuggestions('UNI', 'FIIS').some(c => c.name === 'Ingeniería de Inteligencia Artificial'));
   assert.ok(careerSuggestions('Universidad del Pacífico', '').some(c => c.name === 'Ingeniería de la Información'));
   assert.ok(careerSuggestions('Otro lugar', '').length > 100);
 });

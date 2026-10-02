@@ -1,6 +1,7 @@
 /**
  * Faculties and careers of the best-known universities, keyed by the acronym used in universities.ts.
  * They only feed the form's suggestions: any other faculty or career can still be typed.
+ * UNI matches the official vacancy table for admission 2026-2 (34 careers, 11 faculties).
  */
 type Faculty = readonly [name: string, acronym: string, careers: readonly string[]];
 
@@ -13,7 +14,7 @@ export const FACULTIES: Readonly<Record<string, readonly Faculty[]>> = {
     ['Facultad de Ingeniería Económica, Estadística y Ciencias Sociales', 'FIEECS', ['Ingeniería Económica', 'Ingeniería Estadística']],
     ['Facultad de Ingeniería Eléctrica y Electrónica', 'FIEE', ['Ingeniería Eléctrica', 'Ingeniería Electrónica', 'Ingeniería de Telecomunicaciones', 'Ingeniería de Ciberseguridad', 'Ingeniería Biomédica']],
     ['Facultad de Ingeniería Geológica, Minera y Metalúrgica', 'FIGMM', ['Ingeniería Geológica', 'Ingeniería Metalúrgica', 'Ingeniería de Minas']],
-    ['Facultad de Ingeniería Industrial y de Sistemas', 'FIIS', ['Ingeniería Industrial', 'Ingeniería de Sistemas', 'Ingeniería de Software']],
+    ['Facultad de Ingeniería Industrial y de Sistemas', 'FIIS', ['Ingeniería Industrial', 'Ingeniería de Sistemas', 'Ingeniería de Software', 'Ingeniería de Inteligencia Artificial']],
     ['Facultad de Ingeniería Mecánica', 'FIM', ['Ingeniería Mecánica', 'Ingeniería Mecánica Eléctrica', 'Ingeniería Naval', 'Ingeniería Mecatrónica', 'Ingeniería Aeroespacial']],
     ['Facultad de Ingeniería de Petróleo, Gas Natural y Petroquímica', 'FIP', ['Ingeniería de Petróleo y Gas Natural', 'Ingeniería Petroquímica']],
     ['Facultad de Ingeniería Química y Textil', 'FIQT', ['Ingeniería Química', 'Ingeniería Textil']],
