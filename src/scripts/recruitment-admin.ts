@@ -558,7 +558,8 @@ function renderDetail(application: RecruitmentApplication): void {
   });
   const answers = element("detail-answers");
   answers.replaceChildren();
-  for (const [label, answer] of [["Motivación", data.motivation], ["Caso corto", data.shortCase]]) {
+  // The short case question was removed; only applications that answered it still show it.
+  for (const [label, answer] of [["Motivación", data.motivation], ...(data.shortCase ? [["Caso corto", data.shortCase]] : [])]) {
     const box = node("div");
     box.append(node("h3", label), node("p", answer || "Pendiente de respuesta", "answer-text"));
     answers.append(box);

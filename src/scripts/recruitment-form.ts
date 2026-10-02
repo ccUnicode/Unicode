@@ -7,7 +7,7 @@ type UploadSession = {
 };
 type CameraState = "idle" | "ready" | "rehearsal" | "preparation" | "recording" | "answer" | "uploading" | "saved";
 type DraftResponse = { application: RecruitmentApplication; resumeToken?: string };
-const FORM_FIELDS = ["firstName", "lastName", "email", "phone", "university", "faculty", "career", "admissionTerm", "semester", "firstChoiceArea", "secondChoiceArea", "availabilityHours", "motivation", "shortCase", "consent"] as const;
+const FORM_FIELDS = ["firstName", "lastName", "email", "phone", "university", "faculty", "career", "admissionTerm", "semester", "firstChoiceArea", "secondChoiceArea", "availabilityHours", "motivation", "consent"] as const;
 
 /** Only storage URLs issued by our API may receive a candidate video. */
 export function isAllowedUploadUrl(raw: string, provider: UploadSession["provider"]): boolean {
@@ -562,7 +562,6 @@ function initializeRecruitment() {
         element<HTMLInputElement>("availabilityHours").min = String(config.minAvailabilityHours);
         element("availability-hint").textContent = `Esta convocatoria requiere al menos ${config.minAvailabilityHours} horas por semana.`;
       }
-      element("short-case-prompt").textContent = config.shortCasePrompt;
       element("video-instructions").textContent = `Responde las cuatro preguntas en un solo video de hasta ${config.maxVideoSeconds} segundos en total. Las preguntas se mantienen al volver a entrar.`;
       element("preparation-instructions").textContent = `Tendrás ${config.preparationSeconds} segundos de preparación al iniciar. El contador de tu respuesta comenzará después.`;
       element("alternate-limit").textContent = `MP4 o WebM. Hasta ${config.maxVideoSeconds} segundos y ${(config.maxVideoBytes / 1048576).toFixed(0)} MB.`;

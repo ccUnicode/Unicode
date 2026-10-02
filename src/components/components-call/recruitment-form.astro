@@ -49,7 +49,6 @@
             <div class="field"><label for="secondChoiceArea">Segunda opción de área</label><select id="secondChoiceArea" name="secondChoiceArea"><option value="">Sin segunda opción</option></select></div>
           </div>
           <div class="field"><label for="motivation">¿Por qué quieres unirte a UNICODE? *</label><textarea id="motivation" name="motivation" rows="4" required maxlength="2000"></textarea><p class="hint">Hasta 2000 caracteres.</p></div>
-          <div class="field"><label id="short-case-label" for="shortCase">Responde este caso breve *</label><p id="short-case-prompt" class="case-prompt"></p><textarea id="shortCase" name="shortCase" rows="4" required maxlength="3000" aria-describedby="short-case-prompt"></textarea><p class="hint">Hasta 3000 caracteres.</p></div>
           <div class="consent"><input id="consent" name="consent" type="checkbox" required /><label for="consent">Autorizo el uso de mis datos y mi video para evaluar esta postulación y contactarme durante el proceso. El acceso estará limitado al equipo autorizado de selección. Lee la <a href="/privacidad" target="_blank" rel="noopener" class="privacy-link">política de privacidad</a>. *</label></div>
         </fieldset>
         <div class="actions"><button id="continue-video" type="submit" class="button primary">Continuar al video →</button></div>
@@ -130,7 +129,6 @@
   select { min-height: 3rem; }
   textarea { resize: vertical; }
   .hint { font-size: .75rem; }
-  .case-prompt { font-size: .9rem; color: #d4d4d8; }
   .consent { display: flex; align-items: flex-start; gap: .7rem; margin: .5rem 0 1.6rem; }
   .consent input { width: 1.15rem; height: 1.15rem; accent-color: var(--green); margin-top: .2rem; flex-shrink: 0; }
   .consent label { font-weight: 400; font-size: .8rem; line-height: 1.6; }
