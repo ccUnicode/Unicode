@@ -1,0 +1,57 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/navbar.astro";
+
+const sections = [
+  {
+    title: "Quiénes somos",
+    body: ["UNICODE es una comunidad estudiantil de la Facultad de Ingeniería Industrial y de Sistemas de la Universidad Nacional de Ingeniería. Esta política explica cómo tratamos los datos que nos entregas al postular a una convocatoria desde ccunicode.org."],
+  },
+  {
+    title: "Qué datos recogemos",
+    body: [
+      "Al postular nos das tus nombres, apellidos, correo electrónico, celular, universidad, facultad, carrera, periodo de ingreso, ciclo, áreas de interés, horas disponibles y tus respuestas escritas.",
+      "También nos envías un video de hasta un minuto con tus respuestas a cuatro preguntas. El ensayo de diez segundos no se guarda ni se envía.",
+      "Mientras completas el formulario, tu avance y tu video sin subir se guardan en tu propio navegador para que no los pierdas. Se borran de ahí cuando confirmas el envío, o antes si pulsas «No es mi dispositivo: olvidar aquí».",
+    ],
+  },
+  {
+    title: "Para qué los usamos",
+    body: ["Solo para evaluar tu postulación, comunicarnos contigo durante el proceso de selección y, si eres seleccionado/a, para tu incorporación. No vendemos ni cedemos tus datos, y no los usamos con fines publicitarios."],
+  },
+  {
+    title: "Dónde se guardan y quién accede",
+    body: [
+      "Tus datos se guardan en una base de datos privada (Supabase) y tu video en una carpeta privada de Google Drive de la cuenta institucional de UNICODE. Los correos del proceso se envían desde esa misma cuenta mediante Gmail.",
+      "Solo el equipo autorizado de Gestión del Talento Humano y las personas que evalúan la convocatoria pueden ver tu postulación y tu video. Los archivos no se publican ni se comparten mediante enlaces públicos.",
+    ],
+  },
+  {
+    title: "Uso de datos de Google",
+    body: ["La aplicación de convocatoria solo accede a la cuenta de Google de UNICODE, con permiso para crear y leer los archivos que ella misma crea en Drive y para enviar correos. No accede a tu cuenta de Google ni te pide iniciar sesión con ella. Los datos obtenidos de las APIs de Google se usan únicamente para guardar los videos de las postulaciones y enviar los correos del proceso, de acuerdo con la Política de Datos de Usuario de los Servicios de API de Google, incluidos sus requisitos de uso limitado."],
+  },
+  {
+    title: "Cuánto tiempo los conservamos",
+    body: ["Conservamos tus datos y tu video mientras dure el proceso de selección y el plazo de conservación que defina Gestión del Talento Humano para esa convocatoria. Después se eliminan, salvo los de las personas que se incorporan a UNICODE."],
+  },
+  {
+    title: "Tus derechos",
+    body: ["De acuerdo con la Ley N.° 29733, Ley de Protección de Datos Personales del Perú, puedes pedir acceder a tus datos, rectificarlos, cancelarlos u oponerte a su tratamiento, y retirar tu postulación en cualquier momento. Escríbenos a ccunicode@gmail.com desde el correo con el que postulaste."],
+  },
+];
+---
+
+<Layout title="Política de privacidad" description="Cómo UNICODE trata los datos y videos de las postulaciones a sus convocatorias.">
+  <Navbar />
+  <main class="mx-auto w-full max-w-3xl px-4 pb-24 pt-32 md:px-8 md:pt-40">
+    <p class="text-unicode text-xs font-semibold uppercase tracking-widest">UNICODE</p>
+    <h1 class="mt-3 mb-4 text-3xl font-bold text-white sm:text-4xl">Política de privacidad</h1>
+    <p class="mb-10 text-sm text-zinc-500">Última actualización: 2 de octubre de 2026</p>
+    {sections.map((section) => (
+      <section class="mb-8">
+        <h2 class="mb-3 text-lg font-semibold text-white">{section.title}</h2>
+        {section.body.map((paragraph) => <p class="mb-3 leading-relaxed text-zinc-400">{paragraph}</p>)}
+      </section>
+    ))}
+  </main>
+</Layout>
