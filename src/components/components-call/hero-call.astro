@@ -14,7 +14,6 @@ const opensAt = recruitment.config.opensAt ? Date.parse(recruitment.config.opens
 const IS_UPCOMING = !IS_CALL_OPEN && recruitment.config.enabled && recruitment.deploymentReady !== false && opensAt > Date.now();
 const SHOW_AREAS = IS_CALL_OPEN || IS_UPCOMING;
 const opensTime = IS_UPCOMING ? new Intl.DateTimeFormat("es-PE", { timeZone: "America/Lima", hour: "numeric", minute: "2-digit" }).format(opensAt) : "";
-const opensLabel = IS_UPCOMING ? `${new Intl.DateTimeFormat("es-PE", { timeZone: "America/Lima", weekday: "long", day: "numeric", month: "long" }).format(opensAt).replace(",", "")} a las ${opensTime}` : "";
 
 interface Area {
   icon: string;
@@ -32,7 +31,7 @@ const areas: Area[] = [
 ---
 
 <section
-  class="relative w-full min-h-screen flex items-center justify-center overflow-hidden pt-28 pb-16"
+  class="relative w-full min-h-[100svh] flex items-center justify-center overflow-hidden pt-24 pb-10"
 >
   <div class="absolute inset-0 z-0">
     <img
@@ -68,7 +67,7 @@ const areas: Area[] = [
       </h1>
     )}
     
-    <p class="text-zinc-400 text-xs md:text-sm font-semibold tracking-widest uppercase mb-8">
+    <p class="text-zinc-400 text-xs md:text-sm font-semibold tracking-widest uppercase mb-6 md:mb-8">
       {SHOW_AREAS ? recruitment.config.title : "Proceso de Selección UNICODE"}
     </p>
 
@@ -80,11 +79,7 @@ const areas: Area[] = [
         cuatro preguntas en un video de hasta un minuto.
       </p>
     ) : IS_UPCOMING ? (
-      <div id="call-countdown" data-opens-at={new Date(opensAt).toISOString()} class="mb-10 w-full">
-        <p class="text-zinc-300 text-sm md:text-base max-w-xl mx-auto mb-6 leading-relaxed">
-          Las postulaciones abren el <strong class="text-white">{opensLabel}</strong> (hora de Lima).
-          Ten listos tus datos y piensa en tus respuestas para el video de un minuto.
-        </p>
+      <div id="call-countdown" data-opens-at={new Date(opensAt).toISOString()} class="mb-8 w-full">
         <div class="grid grid-cols-4 gap-2 sm:gap-4 max-w-md mx-auto" role="timer" aria-live="off" aria-label="Tiempo para la apertura">
           {[["days", "Días"], ["hours", "Horas"], ["minutes", "Min"], ["seconds", "Seg"]].map(([unit, label]) => (
             <div class="rounded-2xl border border-unicode/40 bg-unicode/10 px-1 py-3 sm:py-4 backdrop-blur-sm">
@@ -102,7 +97,7 @@ const areas: Area[] = [
       </p>
     )}
 
-    <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-5 sm:gap-10 mb-10 max-w-xs sm:max-w-none mx-auto">
+    <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-5 sm:gap-10 mb-8 max-w-xs sm:max-w-none mx-auto">
       {
         areas.map((area) => (
           <div

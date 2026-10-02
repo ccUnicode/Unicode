@@ -1,16 +1,18 @@
 /**
  * API Endpoint: GET /api/admin-applicants
- * Returns applicants data from Supabase.
+ * Returns the submitted recruitment applications in the shape the /admin panel uses.
  * Requires a valid session token in the Authorization header.
  */
 
 export const prerender = false;
 
 import { sessionStore } from '../../lib/session-store';
-import { supabaseAdmin } from '../../lib/supabase';
+import { adminApplications } from '../../lib/recruitment/service';
+
+const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 
 /**
- * GET handler to fetch applicant details from Supabase with search/filter options.
+ * GET handler: submitted, non-test applications filtered by area and choice, newest first.
  *
  * @async
  * @param {Object} context - Request context containing the request object.
@@ -18,76 +20,48 @@ import { supabaseAdmin } from '../../lib/supabase';
  * @returns {Promise<Response>} API Response with applicants dataset.
  */
 export async function GET({ request }: { request: Request }) {
-  // Validate session token
-  const authHeader = request.headers.get('Authorization') || '';
-  const token = authHeader.replace('Bearer ', '');
+  const token = (request.headers.get('Authorization') || '').replace('Bearer ', '');
+  if (!token || !(await sessionStore.isValid(token))) return json({ error: 'No autorizado. Inicia sesión nuevamente.' }, 401);
 
-  console.log('API /api/admin-applicants HIT');
-  console.log('PUBLIC_SUPABASE_URL:', import.meta.env.PUBLIC_SUPABASE_URL ? 'OK' : 'MISSING');
-  console.log('SUPABASE_SERVICE_ROLE_KEY:', import.meta.env.SUPABASE_SERVICE_ROLE_KEY ? 'OK' : 'MISSING');
-  if (!token || !(await sessionStore.isValid(token))) {
-    console.warn('Unauthorized attempt or invalid token');
-    return new Response(
-      JSON.stringify({ error: 'No autorizado. Inicia sesión nuevamente.' }),
-      { status: 401, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
-
-  // Parse query params for filtering
   const url = new URL(request.url);
   const area = url.searchParams.get('area') || '';
   const option = url.searchParams.get('option') || 'all'; // 'all', 'first', 'second'
   const order = url.searchParams.get('order') || 'recent'; // 'recent', 'priority'
 
   try {
-    const { data: test, error: testErr } = await supabaseAdmin.from('applicants').select('count');
-    console.log('Supabase check:', { test, testErr });
-
-    // Call real Supabase table using the admin client credentials
-    const { data, error } = await supabaseAdmin
-      .from('applicants')
-      .select('*');
-
-    if (error) {
-      console.error('Error Supabase en /api/admin-applicants:', error);
-      return new Response(
-        JSON.stringify({ error: 'Error al obtener datos de Supabase.' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    let filteredData = data || [];
-
-    // Filter by area
-    if (area) {
-      filteredData = filteredData.filter((p: any) => {
-        if (option === 'first') return p.first_choice_area === area;
-        if (option === 'second') return p.second_choice_area === area;
-        return p.first_choice_area === area || p.second_choice_area === area;
+    const { applications = [] } = await adminApplications();
+    let data = applications
+      .filter((application) => application.submittedAt && !application.isTest)
+      .map((application) => {
+        const d = application.data;
+        return {
+          id: application.id, status: application.status,
+          first_name: d.firstName, last_name: d.lastName, email: d.email, phone: d.phone,
+          university: d.university, faculty: d.faculty, career: d.career, admission_term: d.admissionTerm,
+          university_semester: d.semester, availability_hours: d.availabilityHours,
+          first_choice_area: d.firstChoiceArea, second_choice_area: d.secondChoiceArea || null,
+          application_reason: d.motivation, short_case: d.shortCase,
+          questions: application.questions.map((question) => question.text),
+          video_url: application.video?.provider === 'drive' ? `https://drive.google.com/file/d/${application.video.fileId}/view` : null,
+          has_video: Boolean(application.video),
+          created_at: application.submittedAt,
+        };
       });
+
+    if (area) {
+      data = data.filter((p) => option === 'first' ? p.first_choice_area === area
+        : option === 'second' ? p.second_choice_area === area
+        : p.first_choice_area === area || p.second_choice_area === area);
     }
-
-    // Sort and Order
-    filteredData = filteredData.sort((a: any, b: any) => {
-      // 1) Sort by option priority if specified
+    data.sort((a, b) => {
       if (area && order === 'priority') {
-        const aIs1ra = a.first_choice_area === area;
-        const bIs1ra = b.first_choice_area === area;
-        if (aIs1ra && !bIs1ra) return -1;
-        if (!aIs1ra && bIs1ra) return 1;
+        const aFirst = a.first_choice_area === area; const bFirst = b.first_choice_area === area;
+        if (aFirst !== bFirst) return aFirst ? -1 : 1;
       }
-      // 2) Default sorting: most recent first (based on date)
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      return new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime();
     });
-
-    return new Response(
-      JSON.stringify({ data: filteredData, total: filteredData.length }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
-  } catch (err: any) {
-    return new Response(
-      JSON.stringify({ error: 'Error del servidor: ' + err.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return json({ data, total: data.length });
+  } catch {
+    return json({ error: 'No se pudieron obtener las postulaciones.' }, 500);
   }
 }
