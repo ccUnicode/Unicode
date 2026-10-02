@@ -11,7 +11,9 @@ export default defineConfig({
     enabled: false
   },
   adapter: vercel({
-    webAnalytics: { enabled: true }
+    webAnalytics: { enabled: true },
+    includeFiles: ['node_modules/mediainfo.js/dist/MediaInfoModule.wasm'],
+    excludeFiles: ['node_modules/@electric-sql/pglite/**/*', '.recruitment-local/**/*']
   }),
 
   server: {
