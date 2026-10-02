@@ -16,7 +16,6 @@
   <noscript><p class="notice error">Activa JavaScript para guardar tu postulación y grabar el video.</p></noscript>
 
   <div id="recruitment-flow" hidden>
-    <p id="save-status" class="save-indicator" role="status" aria-live="polite" hidden><span aria-hidden="true"></span><span id="save-status-text"></span></p>
     <ol class="steps" aria-label="Pasos de tu postulación">
       <li id="step-data" aria-current="step"><span>1</span> Tus datos</li>
       <li id="step-video"><span>2</span> Tu video</li>
@@ -30,7 +29,7 @@
 
     <section id="data-phase" class="panel" aria-labelledby="data-heading">
       <h2 id="data-heading" tabindex="-1">Primero, vamos a conocerte</h2>
-      <p>Los campos con <span class="req">*</span> son obligatorios. Tu avance se guarda automáticamente mientras escribes.</p>
+      <p>Los campos con <span class="req">*</span> son obligatorios. Tu avance se guarda solo mientras escribes.</p>
       <form id="recruitment-data-form" novalidate>
         <fieldset id="data-fields">
           <legend class="sr-only">Datos de la postulación</legend>
@@ -51,7 +50,7 @@
           <div class="field"><label for="motivation">¿Por qué quieres unirte a UNICODE? <span class="req" aria-hidden="true">*</span></label><textarea id="motivation" name="motivation" rows="4" required maxlength="2000" placeholder="Ej. Quiero aprender a trabajar en proyectos reales con otros estudiantes y aportar en…"></textarea><p class="hint">Hasta 2000 caracteres.</p></div>
           <div class="consent"><input id="consent" name="consent" type="checkbox" required /><label for="consent">Autorizo el uso de mis datos y mi video para evaluar esta postulación y contactarme durante el proceso. El acceso estará limitado al equipo autorizado de selección. Lee la <a href="/privacidad" target="_blank" rel="noopener" class="privacy-link">política de privacidad</a>. <span class="req" aria-hidden="true">*</span></label></div>
         </fieldset>
-        <div class="actions"><button id="continue-video" type="submit" class="button primary">Continuar al video</button></div>
+        <div class="actions form-actions"><button id="continue-video" type="submit" class="button primary">Continuar al video</button><p id="save-status" class="save-indicator" role="status" aria-live="polite" hidden><span class="save-icon" aria-hidden="true"></span><span id="save-status-text"></span></p></div>
       </form>
     </section>
 
@@ -187,15 +186,18 @@
   progress { width: 100%; height: 1rem; accent-color: var(--green); margin: .7rem 0; }
   #upload-progress-panel { margin-top: 1.2rem; }
   .final-action { border-top: 1px solid #27272a; padding-top: 1.2rem; }
-  .save-indicator { position: fixed; z-index: 40; left: 50%; bottom: 1rem; transform: translateX(-50%); display: flex; align-items: center; gap: .55rem; width: max-content; max-width: calc(100vw - 2rem); padding: .55rem .95rem; border: 1px solid #3f3f46; border-radius: 999px; background: #18181bf2; color: #e4e4e7; font-size: .78rem; line-height: 1.35; box-shadow: 0 8px 24px #0008; backdrop-filter: blur(6px); }
-  .save-indicator > span:first-child { flex-shrink: 0; width: .55rem; height: .55rem; border-radius: 50%; background: #a1a1aa; }
-  .save-indicator[data-state=saving] > span:first-child { background: #facc15; animation: pulse 1s ease-in-out infinite; }
-  .save-indicator[data-state=saved] > span:first-child { background: var(--green); }
-  .save-indicator[data-state=offline] > span:first-child { background: #fb923c; }
-  .save-indicator[data-state=error] { border-color: #f8717180; color: #fecaca; }
-  .save-indicator[data-state=error] > span:first-child { background: #f87171; }
+  .form-actions { align-items: center; gap: .9rem 1.2rem; }
+  .save-indicator { display: inline-flex; align-items: center; gap: .45rem; font-size: .78rem; color: #a1a1aa; }
+  .save-icon { flex-shrink: 0; width: .8rem; height: .8rem; border-radius: 50%; border: 1.5px solid #52525b; }
+  .save-indicator[data-state=saving] .save-icon { border-color: #52525b; border-top-color: var(--green); animation: spin .8s linear infinite; }
+  .save-indicator[data-state=saved] .save-icon { width: .45rem; height: .75rem; border: solid var(--green); border-width: 0 2px 2px 0; border-radius: 0; transform: rotate(45deg) translate(-1px,-2px); }
+  .save-indicator[data-state=offline] { color: #fdba74; }
+  .save-indicator[data-state=offline] .save-icon { border-color: #fb923c; }
+  .save-indicator[data-state=error] { color: #fca5a5; }
+  .save-indicator[data-state=error] .save-icon { border-color: #f87171; background: #f87171; }
+  @keyframes spin { to { transform: rotate(360deg); } }
   @keyframes pulse { 50% { opacity: .35; } }
-  @media (prefers-reduced-motion: reduce) { .save-indicator > span:first-child { animation: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .save-icon { animation: none !important; } }
   .complete { text-align: center; }
   #application-reference { overflow-wrap: anywhere; }
   .complete-icon { display: grid; place-items: center; width: 4rem; height: 4rem; margin: 0 auto 1.5rem; border: 1px solid #75d32d60; background: #75d32d15; border-radius: 50%; color: var(--green); font-size: 2rem; }

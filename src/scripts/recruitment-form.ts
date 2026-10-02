@@ -211,7 +211,7 @@ function initializeRecruitment() {
       dirty = dataVersion !== version;
       rememberForm();
       retryDelay = 0;
-      if (dirty) scheduleAutosave(); else saveIndicator("saved", "Guardado");
+      if (dirty) scheduleAutosave(); else saveIndicator("saved", "Cambios guardados");
     })();
     try { await savePromise; }
     finally { savePromise = null; }
@@ -240,7 +240,7 @@ function initializeRecruitment() {
         // fetch rejects with TypeError when there is no connection: keep retrying.
         if (error instanceof TypeError || !navigator.onLine) {
           retryDelay = Math.min(retryDelay ? retryDelay * 2 : 3000, 30000);
-          saveIndicator("offline", "Sin conexión · guardado en este dispositivo, reintentando…");
+          saveIndicator("offline", "Sin conexión. Lo guardamos aquí y reintentamos.");
           autosaveTimer = setTimeout(scheduleAutosave, retryDelay);
         } else saveIndicator("error", `No se pudo guardar: ${errorMessage(error)}`);
       });
