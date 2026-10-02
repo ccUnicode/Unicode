@@ -149,16 +149,13 @@ function initializeRecruitment() {
   function renderQuestions() {
     const target = element("assigned-questions");
     target.replaceChildren();
-    const categories = { motivation: "Motivación y calce cultural", collaboration: "Colaboración y resolución de problemas" };
-    for (const [category, title] of Object.entries(categories)) {
-      const group = document.createElement("div"); group.className = "question-group";
-      const heading = document.createElement("h3"); heading.textContent = title;
-      const list = document.createElement("ol");
+    const list = document.createElement("ol");
+    for (const category of ["motivation", "collaboration"]) {
       for (const question of application?.questions.filter(item => item.category === category) ?? []) {
         const item = document.createElement("li"); item.textContent = question.text; list.append(item);
       }
-      group.append(heading, list); target.append(group);
     }
+    target.append(list);
   }
 
   function acceptApplication(next: RecruitmentApplication, populate = false) {
@@ -539,6 +536,7 @@ function initializeRecruitment() {
     else if (!application.technicalFailureCount) {
       element<HTMLSelectElement>("failure-reason").value = "interrupted";
       message("Tu grabación anterior no llegó a guardarse. Registra la falla técnica para habilitar un nuevo intento.");
+      element<HTMLDetailsElement>("technical-help").open = true;
       element("technical-help").scrollIntoView({ block: "center" });
     } else message("Ya utilizaste el reintento disponible y no encontramos tu video en este navegador. Escribe al equipo de convocatoria para revisar tu caso.");
   }
@@ -564,8 +562,8 @@ function initializeRecruitment() {
         element<HTMLInputElement>("availabilityHours").min = String(config.minAvailabilityHours);
         element("availability-hint").textContent = `Esta convocatoria requiere al menos ${config.minAvailabilityHours} horas por semana.`;
       }
-      element("video-instructions").textContent = `Responde las cuatro preguntas en un solo video de hasta ${config.maxVideoSeconds} segundos en total. Las preguntas se mantienen al volver a entrar.`;
-      element("preparation-instructions").textContent = `Tendrás ${config.preparationSeconds} segundos de preparación al iniciar. El contador de tu respuesta comenzará después.`;
+      element("video-instructions").textContent = `Responde las 4 preguntas en un solo video de hasta ${config.maxVideoSeconds} segundos.`;
+      element("preparation-instructions").textContent = `Antes de grabar tendrás ${config.preparationSeconds} segundos para prepararte. El ensayo no se envía.`;
       element("alternate-limit").textContent = `MP4 o WebM. Hasta ${config.maxVideoSeconds} segundos y ${(config.maxVideoBytes / 1048576).toFixed(0)} MB.`;
       if (stored?.id && stored.token && /^[a-zA-Z0-9_-]{10,100}$/.test(stored.id) && stored.token.length <= 512) {
         resumeToken = stored.token;
@@ -618,11 +616,47 @@ function initializeRecruitment() {
     const first = element<HTMLSelectElement>("firstChoiceArea"); const second = element<HTMLSelectElement>("secondChoiceArea");
     second.setCustomValidity(second.value && first.value === second.value ? "Elige una segunda área diferente de tu primera opción." : "");
   }
+  /** Friendly inline errors instead of the browser's validation bubbles. */
+  type Control = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+  function fieldMessage(control: Control): string {
+    const v = control.validity;
+    if (control.type === "checkbox") return "Marca esta casilla para continuar.";
+    if (v.valueMissing) return control instanceof HTMLSelectElement ? "Elige una opción." : "Completa este campo.";
+    if (v.customError) return control.validationMessage;
+    if (control.id === "email") return "Revisa tu correo, parece incompleto.";
+    if (control.id === "phone") return "Escribe los 9 dígitos de tu celular.";
+    if (control.id === "admissionTerm") return "Usa el formato año-semestre, por ejemplo 2024-2.";
+    if (control.id === "availabilityHours") return "Escribe un número de horas válido.";
+    return "Revisa este campo.";
+  }
+  function setFieldError(control: Control, text: string) {
+    const holder = control.closest<HTMLElement>(".field, .consent");
+    if (!holder) return;
+    let note = holder.querySelector<HTMLElement>(".field-error");
+    if (!text) { control.removeAttribute("aria-invalid"); control.removeAttribute("aria-errormessage"); holder.classList.remove("invalid"); note?.remove(); return; }
+    if (!note) { note = document.createElement("p"); note.className = "field-error"; note.id = `${control.id}-error`; holder.append(note); }
+    note.textContent = text;
+    control.setAttribute("aria-invalid", "true"); control.setAttribute("aria-errormessage", note.id); holder.classList.add("invalid");
+  }
+  function showFieldErrors(): boolean {
+    const controls = [...form.querySelectorAll<Control>("input, select, textarea")].filter(control => control.id);
+    const invalid = controls.filter(control => !control.checkValidity());
+    for (const control of controls) setFieldError(control, invalid.includes(control) ? fieldMessage(control) : "");
+    if (!invalid.length) return true;
+    invalid[0].focus({ preventScroll: true });
+    invalid[0].closest(".field, .consent")?.scrollIntoView({ block: "center", behavior: "smooth" });
+    message(invalid.length === 1 ? "Falta completar un campo." : `Faltan completar ${invalid.length} campos.`);
+    return false;
+  }
+  for (const type of ["input", "change"]) form.addEventListener(type, event => {
+    const control = event.target as Control;
+    if (control.getAttribute("aria-invalid") === "true" && control.checkValidity()) setFieldError(control, "");
+  });
   element("email").addEventListener("blur", scheduleAutosave);
   window.addEventListener("online", scheduleAutosave);
   form.addEventListener("submit", event => {
-    event.preventDefault(); validateAreas(); if (!form.reportValidity()) return;
-    void runAction(async () => { clearTimeout(autosaveTimer); await saveDraft(); if (dirty) await saveDraft(); setPhase("video"); rememberForm(); message("Tus preguntas ya están asignadas. Responde las cuatro en un solo video."); });
+    event.preventDefault(); validateAreas(); if (!showFieldErrors()) return;
+    void runAction(async () => { clearTimeout(autosaveTimer); await saveDraft(); if (dirty) await saveDraft(); setPhase("video"); rememberForm(); message(""); });
   });
   button("edit-data").addEventListener("click", () => { stopCamera(); setPhase("data"); rememberForm(); cameraState = application?.video ? "saved" : recordedBlob ? "answer" : "idle"; updateControls(); });
   button("forget-device").addEventListener("click", () => {
