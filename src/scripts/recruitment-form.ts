@@ -420,10 +420,11 @@ function initializeRecruitment() {
     await setAnswer(file, "upload", duration);
   }
 
-  function uploadPut(session: UploadSession, body: Blob | null, contentRange?: string, onProgress?: (loaded: number) => void): Promise<{ status: number; range: string | null }> {
+  function uploadPut(session: UploadSession, body: Blob | null, contentRange?: string, onProgress?: (loaded: number) => void): Promise<{ status: number }> {
     if (!isAllowedUploadUrl(session.uploadUrl, session.provider)) return Promise.reject(new Error("La dirección de carga no es válida. Conserva tu video y contacta al equipo de convocatoria."));
     return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest(); xhr.open("PUT", session.uploadUrl); xhr.timeout = 120000;
+      // Up to 20 MB in one request: allow slow mobile connections ten minutes.
+      const xhr = new XMLHttpRequest(); xhr.open("PUT", session.uploadUrl); xhr.timeout = 600000;
       for (const [key, value] of Object.entries(session.headers ?? {})) {
         if (!["authorization", "cookie", "host", "content-type"].includes(key.toLowerCase())) xhr.setRequestHeader(key, value);
       }
@@ -433,7 +434,7 @@ function initializeRecruitment() {
       xhr.onerror = () => reject(new Error("La conexión se interrumpió. Tu video sigue en esta pestaña; vuelve a intentar guardarlo."));
       xhr.ontimeout = () => reject(new Error("La subida tardó demasiado. Conserva esta pestaña abierta y vuelve a intentarlo."));
       xhr.onload = () => {
-        if ((xhr.status >= 200 && xhr.status < 300) || xhr.status === 308) resolve({ status: xhr.status, range: xhr.getResponseHeader("Range") });
+        if ((xhr.status >= 200 && xhr.status < 300) || xhr.status === 308) resolve({ status: xhr.status });
         else reject(new Error(`No pudimos guardar el video (${xhr.status}). Conserva esta pestaña abierta y vuelve a intentarlo.`));
       };
       xhr.send(body);
@@ -455,29 +456,17 @@ function initializeRecruitment() {
       if (!uploadSession) uploadSession = await request<UploadSession>(`/drafts/${application.id}/video-session`, "POST", { mode: videoMode, contentType: blob.type.split(";")[0], bytes: blob.size });
       if (!isAllowedUploadUrl(uploadSession.uploadUrl, uploadSession.provider)) throw new Error("No pudimos preparar una carga segura. Tu video sigue disponible en esta pestaña.");
       if (uploadSession.provider === "drive") {
-        const state = await uploadPut(uploadSession, null, `bytes */${blob.size}`);
-        let offset = state.status === 308 ? Number(state.range?.match(/bytes=0-(\d+)/)?.[1] ?? -1) + 1 : blob.size;
-        const chunkSize = 4 * 1024 * 1024;
-        let retries = 0;
-        while (offset < blob.size) {
-          const end = Math.min(offset + chunkSize, blob.size);
-          const chunk = blob.slice(offset, end, blob.type);
-          try {
-            const response = await uploadPut(uploadSession, chunk, `bytes ${offset}-${end - 1}/${blob.size}`, loaded => updateProgress(offset + loaded));
-            const nextOffset = response.status === 308 ? Number(response.range?.match(/bytes=0-(\d+)/)?.[1] ?? -1) + 1 : blob.size;
-            if (nextOffset <= offset || nextOffset > blob.size) throw new Error("No pudimos confirmar la parte subida del video. Conserva esta pestaña y vuelve a intentarlo.");
-            offset = nextOffset; retries = 0;
-          } catch (error) {
-            retries++;
-            if (retries > 3) throw error;
-            element("upload-status").textContent = `Reconectando para continuar la subida (${retries}/3)…`;
-            await new Promise(resolve => setTimeout(resolve, retries * 700));
-            const resumed = await uploadPut(uploadSession, null, `bytes */${blob.size}`);
-            const nextOffset = resumed.status === 308 ? Number(resumed.range?.match(/bytes=0-(\d+)/)?.[1] ?? -1) + 1 : blob.size;
-            if (nextOffset < offset || nextOffset > blob.size) throw new Error("No pudimos confirmar el avance de la carga. Conserva esta pestaña y vuelve a intentarlo.");
-            offset = nextOffset;
+        // Google hides the resumable Range header from browsers (CORS), so the page cannot
+        // continue mid-file. Videos are at most 20 MB: send the whole file, and before each
+        // retry ask Google whether it already holds it (200/201) or still waits for it (308).
+        const complete = async () => [200, 201].includes((await uploadPut(uploadSession!, null, `bytes */${blob.size}`)).status);
+        for (let attempt = 0; !(await complete()); attempt++) {
+          try { await uploadPut(uploadSession, blob, `bytes 0-${blob.size - 1}/${blob.size}`, updateProgress); break; }
+          catch (error) {
+            if (attempt >= 2) throw error;
+            element("upload-status").textContent = `Reconectando para volver a enviar tu video (${attempt + 1}/2)…`;
+            await new Promise(resolve => setTimeout(resolve, (attempt + 1) * 1500));
           }
-          updateProgress(offset);
         }
       } else await uploadPut(uploadSession, blob, undefined, updateProgress);
       element("upload-status").textContent = "Video subido. Estamos comprobando que el archivo esté completo y cumpla el tiempo permitido…";

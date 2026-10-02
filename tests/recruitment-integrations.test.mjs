@@ -34,6 +34,12 @@ test('actual MP4 and WebM bytes yield trusted duration, size and container', asy
   const audioOverhang = await media.inspectVideoBytes(await fixture('recruitment-audio-overhang.mp4'));
   assert.ok(audioOverhang.durationSeconds > 60, 'An overlong audio track must not bypass the limit through a short video track.');
 });
+test('Chrome MediaRecorder WebM without any Duration element is measured from its frame timestamps', async () => {
+  const result = await media.inspectVideoBytes(await fixture('recruitment-chrome-recorder.webm'));
+  assert.equal(result.contentType, 'video/webm');
+  assert.ok(result.durationSeconds > 2 && result.durationSeconds < 3.2, `duration ${result.durationSeconds}`);
+});
+
 test('invalid bytes and audio-only files cannot masquerade as video', async () => {
   await assert.rejects(media.inspectVideoBytes(new TextEncoder().encode('not a video')), /verificar/);
   await assert.rejects(media.inspectVideoBytes(await fixture('recruitment-audio.m4a')), /verificar/);
