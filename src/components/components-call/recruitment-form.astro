@@ -50,7 +50,7 @@
           </div>
           <div class="field"><label for="motivation">¿Por qué quieres unirte a UNICODE? *</label><textarea id="motivation" name="motivation" rows="4" required maxlength="2000"></textarea><p class="hint">Hasta 2000 caracteres.</p></div>
           <div class="field"><label id="short-case-label" for="shortCase">Responde este caso breve *</label><p id="short-case-prompt" class="case-prompt"></p><textarea id="shortCase" name="shortCase" rows="4" required maxlength="3000" aria-describedby="short-case-prompt"></textarea><p class="hint">Hasta 3000 caracteres.</p></div>
-          <div class="consent"><input id="consent" name="consent" type="checkbox" required /><label for="consent">Autorizo el uso de mis datos y mi video para evaluar esta postulación y contactarme durante el proceso. El acceso estará limitado al equipo autorizado de selección. *</label></div>
+          <div class="consent"><input id="consent" name="consent" type="checkbox" required /><label for="consent">Autorizo el uso de mis datos y mi video para evaluar esta postulación y contactarme durante el proceso. El acceso estará limitado al equipo autorizado de selección. Lee la <a href="/privacidad" target="_blank" rel="noopener" class="privacy-link">política de privacidad</a>. *</label></div>
         </fieldset>
         <div class="actions"><button id="continue-video" type="submit" class="button primary">Continuar al video →</button></div>
       </form>
@@ -134,6 +134,7 @@
   .consent { display: flex; align-items: flex-start; gap: .7rem; margin: .5rem 0 1.6rem; }
   .consent input { width: 1.15rem; height: 1.15rem; accent-color: var(--green); margin-top: .2rem; flex-shrink: 0; }
   .consent label { font-weight: 400; font-size: .8rem; line-height: 1.6; }
+  .privacy-link { color: var(--green); text-decoration: underline; }
   .actions { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1rem; }
   .button { display: inline-flex; align-items: center; justify-content: center; text-align: center; border-radius: .75rem; min-height: 3rem; padding: .8rem 1.1rem; font-size: .85rem; font-weight: 650; cursor: pointer; transition: background .2s, border-color .2s; border: 1px solid transparent; }
   .button:focus-visible { outline: 2px solid white; outline-offset: 3px; }
