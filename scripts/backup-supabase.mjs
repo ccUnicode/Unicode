@@ -4,7 +4,8 @@
  *
  *   node --env-file=.env scripts/backup-supabase.mjs
  *
- * Needs PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY. When SUPABASE_DB_URL is set
+ * Needs PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (secret sb_secret_… or legacy
+ * service_role key). When SUPABASE_DB_URL is set
  * (Supabase → Project Settings → Database → connection string) and pg_dump is installed,
  * it also writes a complete pg_dump (schema + data + functions) for a faithful restore.
  * Nothing is modified or deleted. Output goes to backups/<timestamp>/ (git-ignored).
@@ -20,7 +21,8 @@ if (!url || !key) {
   console.error('Faltan PUBLIC_SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY (usa --env-file=.env).');
   process.exit(1);
 }
-const headers = { apikey: key, Authorization: `Bearer ${key}` };
+// New sb_secret_ keys go only in the apikey header; legacy service_role JWTs also as Bearer.
+const headers = key.startsWith('eyJ') ? { apikey: key, Authorization: `Bearer ${key}` } : { apikey: key };
 const directory = join('backups', new Date().toISOString().replace(/[:.]/g, '-'));
 await mkdir(directory, { recursive: true });
 
