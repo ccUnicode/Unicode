@@ -105,6 +105,13 @@ Antes de abrir la convocatoria real:
 
 Las pruebas locales y los archivos de medios incluidos comprueban lógica y formatos; no certifican conectividad de producción, permisos reales de la carpeta, entrega del correo ni compatibilidad de cada dispositivo. Hasta completar esas comprobaciones, la integración externa queda pendiente de activación.
 
+## Modo de prueba (probar en la web publicada sin abrir la convocatoria)
+
+1. Ejecutar una vez `supabase/migrations/20261003_recruitment_preview.sql` en el SQL Editor de Supabase.
+2. En `/admin/recruitment` → Postulaciones → **Generar enlace de prueba**. El enlace (`/postular?prueba=…`) se muestra una sola vez; compartirlo solo con quienes prueban. Generar otro invalida el anterior.
+3. Con ese enlace el formulario funciona completo (datos, video en Drive, correos) aunque la convocatoria esté cerrada o en cuenta regresiva. El público sin enlace sigue viendo la convocatoria cerrada. Un aviso ámbar indica que es una postulación de prueba.
+4. Las postulaciones así creadas aparecen con la etiqueta «Prueba». Mientras existan ocupan cupo y bloquean su correo; al terminar, **Borrar postulaciones de prueba** las elimina con su historial, correos pendientes y videos, y **Desactivar enlace** corta el acceso.
+
 ## Respaldo antes de limpiar la base
 
 Antes de cualquier limpieza o de aplicar la migración, respaldar todo el proyecto, incluida la tabla histórica `public.applicants`:

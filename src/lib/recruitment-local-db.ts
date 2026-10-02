@@ -27,7 +27,7 @@ async function openDatabase(): Promise<PGlite> {
   return database;
 }
 
-export async function localRpc<T>(name: string, args: Record<string, unknown> = {}): Promise<RpcResponse<T>> {
+export async function localRpc<T>(name: string, args: Record<string, unknown> = {}, previewKey?: string): Promise<RpcResponse<T>> {
   try {
     if (!/^recruitment_[a-z_]+$/.test(name)) throw new Error('Función local no permitida.');
     const entries = Object.entries(args);
@@ -36,7 +36,11 @@ export async function localRpc<T>(name: string, args: Record<string, unknown> = 
     const database = await connection;
     const parameters = entries.map(([key], index) => `${key} => $${index + 1}`).join(',');
     const values = entries.map(([, value]) => value !== null && typeof value === 'object' ? JSON.stringify(value) : value);
-    const result = await database.query<{ data: T }>(`SELECT public.${name}(${parameters}) AS data`, values);
+    // Mirror PostgREST, which exposes the request headers to SQL for the transaction.
+    const result = await database.transaction(async (transaction) => {
+      await transaction.query(`SELECT set_config('request.headers', $1, true)`, [JSON.stringify(previewKey ? { 'x-recruitment-preview': previewKey } : {})]);
+      return transaction.query<{ data: T }>(`SELECT public.${name}(${parameters}) AS data`, values);
+    });
     return { data: result.rows[0]?.data ?? null, error: null };
   } catch (error) {
     return { data: null, error: { message: error instanceof Error ? error.message : 'Error de base de datos local.' } };

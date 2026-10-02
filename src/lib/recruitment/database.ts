@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { RecruitmentError } from './validation';
 
@@ -9,6 +10,11 @@ interface RecruitmentDatabase {
 }
 const env = (name: string): string | undefined => import.meta.env[name] || process.env[name];
 let client: SupabaseClient<RecruitmentDatabase> | undefined;
+/** Test-link key of the current request; SQL compares its hash, so it is never trusted here. */
+const previewKey = new AsyncLocalStorage<string | undefined>();
+export function withPreviewKey<T>(key: string | null | undefined, run: () => Promise<T>): Promise<T> {
+  return previewKey.run(key && /^[A-Za-z0-9_-]{20,100}$/.test(key) ? key : undefined, run);
+}
 export function localDevelopmentDatabase(): boolean { return import.meta.env.DEV && Boolean(env('RECRUITMENT_LOCAL_DB_PATH')); }
 export function databaseConfigured(): boolean { return localDevelopmentDatabase() || Boolean(env('PUBLIC_SUPABASE_URL') && env('SUPABASE_SERVICE_ROLE_KEY')); }
 
@@ -25,12 +31,14 @@ export async function recruitmentRpc<T>(name: string, args: Record<string, unkno
   let data: unknown; let error: { message: string; code?: string } | null;
   if (localDevelopmentDatabase()) {
     const { localRpc } = await import('../recruitment-local-db');
-    ({ data, error } = await localRpc<T>(name, args));
+    ({ data, error } = await localRpc<T>(name, args, previewKey.getStore()));
   } else {
     const url = env('PUBLIC_SUPABASE_URL'); const key = env('SUPABASE_SERVICE_ROLE_KEY');
     if (!url || !key) throw new RecruitmentError('setup_required', 'La convocatoria aún está pendiente de conexión a su base de datos.', 503);
     client ||= createClient<RecruitmentDatabase>(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-    const response = await client.rpc(name, args as Record<string, Json>);
+    const call = client.rpc(name, args as Record<string, Json>);
+    const preview = previewKey.getStore();
+    const response = await (preview ? call.setHeader('x-recruitment-preview', preview) : call);
     data = response.data; error = response.error;
   }
   if (error) {

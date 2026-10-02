@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { sessionStore } from '../../../lib/session-store';
 import * as recruitment from '../../../lib/recruitment/service';
+import { withPreviewKey } from '../../../lib/recruitment/database';
 import { RecruitmentError } from '../../../lib/recruitment/validation';
 
 export const prerender = false;
@@ -49,9 +50,10 @@ function sameOrigin(request: Request): string {
   if (origin && !allowed.has(origin)) throw new RecruitmentError('origin_not_allowed', 'Origen de solicitud no autorizado.', 403);
   return origin || [...allowed][allowed.size - 1];
 }
-export const ALL: APIRoute = async ({ request, params }) => {
+export const ALL: APIRoute = ({ request, params }) => withPreviewKey(request.headers.get('x-recruitment-preview'), () => handle(request, params.path));
+async function handle(request: Request, rawPath: string | undefined): Promise<Response> {
   try {
-    const path = (params.path || '').split('/'); const method = request.method;
+    const path = (rawPath || '').split('/'); const method = request.method;
     if (!['GET', 'POST', 'PUT', 'PATCH'].includes(method)) return json({ error: 'Método no permitido.', code: 'method_not_allowed' }, 405);
     const origin = method !== 'GET' ? sameOrigin(request) : undefined;
     if (path.join('/') === 'config' && method === 'GET') return json(await recruitment.publicConfig());
@@ -88,10 +90,13 @@ export const ALL: APIRoute = async ({ request, params }) => {
       if (action === 'templates' && method === 'PUT') return json(await recruitment.saveTemplates(await body(request)));
       if (action === 'queue' && method === 'GET') return json(await recruitment.getQueue());
       if (action === 'process-emails' && method === 'POST') return json(await recruitment.processEmails());
+      if (action === 'preview-link' && method === 'POST') return json(await recruitment.createPreviewLink(origin!));
+      if (action === 'preview-link/disable' && method === 'POST') return json(await recruitment.disablePreviewLink());
+      if (action === 'purge-tests' && method === 'POST') return json(await recruitment.purgeTestApplications());
     }
     return json({ error: 'Ruta no encontrada.', code: 'not_found' }, 404);
   } catch (error) {
     if (error instanceof RecruitmentError) return json({ error: error.message, code: error.code }, error.status);
     return json({ error: 'No se pudo completar la solicitud. Intenta nuevamente.', code: 'server_error' }, 503);
   }
-};
+}

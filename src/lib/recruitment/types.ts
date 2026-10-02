@@ -51,7 +51,7 @@ export interface ApplicationEvent {
 }
 export interface RecruitmentApplication {
   id: string; data: ApplicationData; questions: RecruitmentQuestion[]; status: ApplicationStatus;
-  video: ApplicationVideo | null; technicalFailureCount: number; alternateAllowed: boolean; recordingAttempts: number;
+  video: ApplicationVideo | null; technicalFailureCount: number; alternateAllowed: boolean; recordingAttempts: number; isTest?: boolean;
   createdAt: string; updatedAt: string; submittedAt: string | null; history?: ApplicationEvent[];
 }
 export interface EmailTemplate { key: string; subject: string; body: string; enabled: boolean }

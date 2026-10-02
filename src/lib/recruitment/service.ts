@@ -1,4 +1,4 @@
-import { createVideoUpload, inspectVideo, getVideoPlayback, videoStorageConfigured } from '../recruitment-storage';
+import { createVideoUpload, deleteVideo, inspectVideo, getVideoPlayback, videoStorageConfigured } from '../recruitment-storage';
 import { sendRecruitmentEmail, recruitmentEmailConfigured } from '../recruitment-email';
 import { databaseConfigured, localDevelopmentDatabase, recruitmentRpc } from './database';
 import { record, RecruitmentError, validateApplicationData, validateConfig, validateTemplates, withAllAreas } from './validation';
@@ -60,6 +60,21 @@ export async function adminConfig() {
   const response = await recruitmentRpc<ConfigResponse>('recruitment_admin_config');
   response.config = withAllAreas(response.config);
   return { ...response, readiness: { database: databaseConfigured(), localDevelopment: localDevelopmentDatabase(), video: videoStorageConfigured(response.config.storageProvider), email: recruitmentEmailConfigured(), resumeEncryption: resumeEncryptionConfigured(), canonicalBase: canonicalBaseConfigured(), individualStaffIdentity: false } };
+}
+/** One secret test link at a time: generating a new one invalidates the previous link. */
+export async function createPreviewLink(origin: string) {
+  const key = Buffer.from(crypto.getRandomValues(new Uint8Array(24))).toString('base64url');
+  await recruitmentRpc('recruitment_set_preview_key', { p_hash: await hash(key), p_actor: 'administracion-compartida' });
+  const url = new URL('/postular', env('RECRUITMENT_BASE_URL') || origin); url.searchParams.set('prueba', key);
+  return { url: url.toString() };
+}
+export function disablePreviewLink() { return recruitmentRpc('recruitment_set_preview_key', { p_hash: null, p_actor: 'administracion-compartida' }); }
+/** Deletes test applications and, best effort, their videos from Drive or Supabase Storage. */
+export async function purgeTestApplications() {
+  const result = await recruitmentRpc<{ removed: number; files: { applicationId: string; uploadId: string; provider: 'drive' | 'supabase'; fileId: string }[] }>('recruitment_purge_tests');
+  let videosDeleted = 0;
+  for (const file of result.files) { try { await deleteVideo(file); videosDeleted++; } catch { /* Already gone or not uploaded. */ } }
+  return { removed: result.removed, videosDeleted, videosPending: result.files.length - videosDeleted };
 }
 export async function saveConfig(input: unknown) { return recruitmentRpc<ConfigResponse>('recruitment_update_config', { p_config: validateConfig(input), p_actor: 'administracion-compartida' }); }
 

@@ -381,3 +381,40 @@ test('inactive drafts receive one reminder and incomplete drafts expire at the f
   assert.equal((await db.query("SELECT count(*)::integer AS count FROM recruitment_email_outbox WHERE application_id=$1 AND template_key='expired'", [application.id])).rows[0].count, 1);
   await assert.rejects(() => rpc(db, 'recruitment_patch_draft', application.id, application.owner, applicant(application.id)), /call_expired/);
 });
+
+async function previewRpc(db, key, name, ...values) {
+  return db.transaction(async tx => {
+    await tx.query(`SELECT set_config('request.headers', $1, true)`, [JSON.stringify({ 'x-recruitment-preview': key })]);
+    const placeholders = values.map((_, index) => `$${index + 1}`).join(',');
+    return (await tx.query(`SELECT public.${name}(${placeholders}) AS result`, values.map(value => value !== null && typeof value === 'object' ? JSON.stringify(value) : value))).rows[0]?.result;
+  });
+}
+
+test('a secret test link applies while the call is closed, flags the drafts and purges only them', async t => {
+  const db = await database(t);
+  const key = 'test-link-key-abcdefghijklmnop';
+  const keyHash = (await db.query(`SELECT encode(sha256(convert_to($1,'UTF8')),'hex') AS h`, [key])).rows[0].h;
+  await rpc(db, 'recruitment_set_preview_key', keyHash, 'prueba');
+  const id = randomUUID();
+  await assert.rejects(() => rpc(db, 'recruitment_create_draft', id, `hashed-${id}`, applicant(id), 'rate', 'secret'), /call_closed/);
+  await assert.rejects(() => previewRpc(db, 'wrong-key-abcdefghijklmnopqr', 'recruitment_create_draft', id, `hashed-${id}`, applicant(id), 'rate', 'secret'), /call_closed/);
+  assert.equal((await rpc(db, 'recruitment_public_config')).available, false);
+  const shown = await previewRpc(db, key, 'recruitment_public_config');
+  assert.equal(shown.available, true); assert.equal(shown.preview, true); assert.equal(shown.config.previewKeyHash, undefined);
+  const created = await previewRpc(db, key, 'recruitment_create_draft', id, `hashed-${id}`, applicant(id), 'rate', 'secret');
+  assert.equal(created.application.isTest, true);
+  await previewRpc(db, key, 'recruitment_recording_attempt', id, `hashed-${id}`);
+  // Saving the configuration from the panel keeps the link working.
+  const config = await currentConfig(db);
+  assert.equal(config.previewKeyHash, undefined);
+  await rpc(db, 'recruitment_update_config', config, 'panel');
+  assert.equal((await previewRpc(db, key, 'recruitment_public_config')).preview, true);
+  await openCall(db);
+  const real = await draft(db);
+  assert.equal(real.application.isTest, false);
+  const purged = await rpc(db, 'recruitment_purge_tests');
+  assert.equal(purged.removed, 1);
+  assert.equal((await db.query('SELECT count(*)::int AS n FROM recruitment_applications')).rows[0].n, 1);
+  await rpc(db, 'recruitment_set_preview_key', null, 'prueba');
+  assert.equal((await previewRpc(db, key, 'recruitment_public_config')).preview, false);
+});

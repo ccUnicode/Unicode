@@ -39,6 +39,15 @@ function initializeRecruitment() {
   let config: RecruitmentConfig;
   let application: RecruitmentApplication | null = null;
   let resumeToken = "";
+  const PREVIEW_KEY = "unicode-recruitment-preview";
+  /** Secret test link (?prueba=…): lets the team apply on the deployed site while it is closed. */
+  let previewKey = (() => {
+    const fromLink = new URLSearchParams(location.search).get("prueba");
+    try {
+      if (fromLink) { localStorage.setItem(PREVIEW_KEY, fromLink); history.replaceState(null, "", location.pathname + location.hash); }
+      return fromLink || localStorage.getItem(PREVIEW_KEY) || "";
+    } catch { return fromLink || ""; }
+  })();
   let stream: MediaStream | null = null;
   let recorder: MediaRecorder | null = null;
   let cameraState: CameraState = "idle";
@@ -76,7 +85,7 @@ function initializeRecruitment() {
   async function request<T>(path: string, method = "GET", body?: unknown, authenticated = true, keepalive = false): Promise<T> {
     const response = await fetch(`/api/recruitment${path}`, {
       method, cache: "no-store", credentials: "same-origin", keepalive,
-      headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest", ...(authenticated && resumeToken ? { Authorization: `Bearer ${resumeToken}` } : {}) },
+      headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest", ...(previewKey ? { "X-Recruitment-Preview": previewKey } : {}), ...(authenticated && resumeToken ? { Authorization: `Bearer ${resumeToken}` } : {}) },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
     const result = await response.json().catch(() => ({ error: "No pudimos leer la respuesta. Conserva tu video e intenta nuevamente." }));
@@ -540,8 +549,10 @@ function initializeRecruitment() {
       if (fragmentToken) history.replaceState(null, "", location.pathname + location.search);
       if (fragmentId && fragmentToken) stored = { id: fragmentId, token: fragmentToken };
       else stored = loadSession();
-      const result = await request<{ config: RecruitmentConfig; available: boolean; reason: string | null; developmentMode?: boolean; deploymentReady?: boolean }>("/config", "GET", undefined, false);
-      show("development-notice", result.developmentMode === true);
+      const result = await request<{ config: RecruitmentConfig; available: boolean; reason: string | null; developmentMode?: boolean; deploymentReady?: boolean; preview?: boolean }>("/config", "GET", undefined, false);
+      show("development-notice", result.developmentMode === true || result.preview === true);
+      if (result.preview) element("development-notice").textContent = "Modo de prueba: esta postulación es solo para probar y el equipo la borrará. No uses este enlace para tu postulación real.";
+      else if (previewKey) { previewKey = ""; try { localStorage.removeItem(PREVIEW_KEY); } catch { /* Storage blocked. */ } }
       config = result.config;
       for (const id of ["firstChoiceArea", "secondChoiceArea"]) {
         const select = element<HTMLSelectElement>(id);
