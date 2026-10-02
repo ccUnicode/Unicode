@@ -157,9 +157,9 @@ export const projects: Project[] = [
     screenshots: ["/areasmoment.webp"],
     team: [
       { name: "Diego Larico", linkedin: "diego-larico-cruz", image: "/areas/areas-images/diego-larico.webp" },
-      { name: "Andhlé Campos", linkedin: "andhle-campos-castillo-081a47311", image: "/areas/areas-images/andhle-campos.webp" },
+      { name: "Jorge Adriano Navarro Guevara", linkedin: "jorge-adriano-navarro-guevara", image: "/areas/areas-images/jorge-navarro.webp" },
       { name: "Jeanpier Alexander Robles Fabían", linkedin: "jeanpier-robles", image: "/areas/areas-images/jeanpier-robles.webp" },
-      { name: "Rafael Olivos", linkedin: "rafael-olivos-g", image: "/areas/areas-images/rafael-olivos.webp" },
+      { name: "Diego López Moreno", linkedin: "diegolopezmoreno", image: "/areas/areas-images/diego-lopez.webp" },
       { name: "Franz Nuñez", linkedin: "franz-pool-nuñez-villazana", image: "/areas/areas-images/franz-nunez.webp" },
       { name: "Marco Gomez", linkedin: "marco-sebastian-gomez-felix-00a974361", image: "/areas/areas-images/marco-gomez.webp" },
       { name: "Renato Gutierrez", linkedin: "renato-gutierrez", image: "/areas/areas-images/renato-gutierrez.webp" },
