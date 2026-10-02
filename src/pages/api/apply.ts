@@ -13,6 +13,7 @@
 export const prerender = false;
 
 import { supabaseAdmin } from '../../lib/supabase';
+import { IS_CALL_OPEN } from '../../data/siteConfig';
 
 // --- Rate Limiter ---
 const applicationAttempts = new Map<string, { count: number; firstAttempt: number }>();
@@ -84,6 +85,12 @@ function validatePhone(tel: string): boolean {
  * @returns {Promise<Response>} API Response indicating success or error status.
  */
 export async function POST({ request }: { request: Request }) {
+  if (!IS_CALL_OPEN) {
+    return new Response(
+      JSON.stringify({ error: 'La convocatoria se encuentra cerrada por el momento.' }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
   // 1. CSRF Protection: validate request originates from our frontend
   const xRequestedWith = request.headers.get('X-Requested-With');
   if (xRequestedWith !== 'XMLHttpRequest') {

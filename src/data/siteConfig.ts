@@ -7,4 +7,4 @@
  *  - true:  Shows the application form and the "Apply here" button.
  *  - false: Shows a message indicating applications are closed and disables the button.
  */
-export const IS_CALL_OPEN = true;
+export const IS_CALL_OPEN = false;
