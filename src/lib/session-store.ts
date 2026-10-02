@@ -4,9 +4,10 @@
  * Uses Web Crypto API to sign and verify a token so it survives serverless restarts.
  */
 
-const SECRET_KEY = import.meta.env.ADMIN_PASSWORD || 'default_fallback_secret_123!';
+const SECRET_KEY = import.meta.env.ADMIN_PASSWORD;
 
 async function getHmacKey(): Promise<CryptoKey> {
+  if (!SECRET_KEY) throw new Error('La autenticación administrativa no está configurada.');
   const enc = new TextEncoder();
   return await crypto.subtle.importKey(
     "raw",
@@ -49,19 +50,14 @@ export const sessionStore = {
 
     try {
       const key = await getHmacKey();
-      const expectedSignatureBuffer = await crypto.subtle.sign(
-        "HMAC",
-        key,
-        new TextEncoder().encode(payloadB64)
-      );
-      const expectedSignatureHex = bufferToHex(expectedSignatureBuffer);
-
-      if (signatureHex !== expectedSignatureHex) return false;
+      if (!/^[a-f0-9]{64}$/.test(signatureHex)) return false;
+      const signature = new Uint8Array(signatureHex.match(/.{2}/g)!.map(value => parseInt(value, 16)));
+      if (!(await crypto.subtle.verify('HMAC', key, signature, new TextEncoder().encode(payloadB64)))) return false;
 
       const payloadStr = atob(payloadB64);
       const payload = JSON.parse(payloadStr);
       
-      if (payload.expiresAt < Date.now()) return false;
+      if (!Number.isFinite(payload.expiresAt) || payload.expiresAt <= Date.now()) return false;
       return true;
     } catch {
       return false;

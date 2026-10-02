@@ -1,0 +1,62 @@
+export const AREA_IDS = ['ID', 'RRPP', 'GTH', 'ACD', 'DCC', 'LGE'] as const;
+export type AreaId = typeof AREA_IDS[number];
+export type QuestionCategory = 'motivation' | 'collaboration';
+export interface RecruitmentQuestion { id: string; category: QuestionCategory; text: string; enabled?: boolean }
+export interface RecruitmentArea { id: AreaId; name: string; enabled: boolean; quota: number | null }
+export interface VideoRubricCriterion { id: string; label: string; low: string; medium: string; high: string; maxScore: number }
+export interface RecruitmentConfig {
+  enabled: boolean; title: string; opensAt: string | null; closesAt: string | null; extensionAt: string | null;
+  maxApplicants: number; areas: RecruitmentArea[]; minAvailabilityHours: number | null;
+  maxVideoSeconds: number; maxVideoBytes: number; questionsPerCategory: number; preparationSeconds: number;
+  inactivityHours: number; shortCasePrompt: string; storageProvider: 'drive' | 'supabase';
+  thresholds: { affinity: number | null; written: number | null; video: number | null };
+  questions: RecruitmentQuestion[]; videoRubric: VideoRubricCriterion[]; revision: number;
+}
+export interface ApplicationData {
+  firstName: string; lastName: string; email: string; phone: string; university: string; faculty: string; career: string; admissionTerm: string;
+  semester: string; firstChoiceArea: AreaId | ''; secondChoiceArea: AreaId | '';
+  availabilityHours: number | null; motivation: string; shortCase: string; consent: boolean;
+}
+export type ApplicationStatus = 'draft' | 'incomplete' | 'expired' | 'submitted' | 'profile_validated' | 'profile_rejected'
+  | 'test_sent' | 'test_completed' | 'awaiting_second_review' | 'interview_eligible' | 'interview_ineligible' | 'interview_scheduled'
+  | 'interviewed' | 'group_eligible' | 'group_scheduled' | 'group_completed' | 'selected' | 'conditional_selected'
+  | 'waitlisted' | 'not_selected' | 'onboarding_sent' | 'buddy_assigned' | 'integrated' | 'discarded' | 'withdrawn';
+export const allowedApplicationTransitions: Record<ApplicationStatus, readonly ApplicationStatus[]> = {
+  draft: ['withdrawn'], incomplete: ['withdrawn'], expired: [],
+  submitted: ['profile_validated', 'profile_rejected', 'withdrawn'],
+  profile_validated: ['test_sent', 'discarded', 'withdrawn'], profile_rejected: [],
+  test_sent: ['test_completed', 'discarded', 'withdrawn'],
+  test_completed: ['awaiting_second_review', 'interview_eligible', 'interview_ineligible', 'discarded', 'withdrawn'],
+  awaiting_second_review: ['interview_eligible', 'interview_ineligible', 'discarded', 'withdrawn'],
+  interview_eligible: ['interview_scheduled', 'discarded', 'withdrawn'], interview_ineligible: [],
+  interview_scheduled: ['interviewed', 'discarded', 'withdrawn'], interviewed: ['group_eligible', 'discarded', 'withdrawn'],
+  group_eligible: ['group_scheduled', 'discarded', 'withdrawn'], group_scheduled: ['group_completed', 'discarded', 'withdrawn'],
+  group_completed: ['selected', 'conditional_selected', 'waitlisted', 'not_selected', 'withdrawn'],
+  selected: ['onboarding_sent', 'withdrawn'], conditional_selected: ['selected', 'onboarding_sent', 'withdrawn'],
+  waitlisted: ['selected', 'conditional_selected', 'not_selected', 'withdrawn'], not_selected: [],
+  onboarding_sent: ['buddy_assigned', 'withdrawn'], buddy_assigned: ['integrated', 'withdrawn'], integrated: [],
+  discarded: [], withdrawn: [],
+};
+export interface ApplicationVideo {
+  provider: 'drive' | 'supabase'; fileId: string; uploadId: string; bytes: number; durationSeconds: number;
+  contentType: string; verifiedAt: string; mode: 'recording' | 'upload';
+}
+export interface ApplicationEvent {
+  id: string; fromStatus: ApplicationStatus | null; toStatus: ApplicationStatus; actor: string; reason: string; createdAt: string;
+}
+export interface RecruitmentApplication {
+  id: string; data: ApplicationData; questions: RecruitmentQuestion[]; status: ApplicationStatus;
+  video: ApplicationVideo | null; technicalFailureCount: number; alternateAllowed: boolean; recordingAttempts: number;
+  createdAt: string; updatedAt: string; submittedAt: string | null; history?: ApplicationEvent[];
+}
+export interface EmailTemplate { key: string; subject: string; body: string; enabled: boolean }
+export interface RecruitmentUpload {
+  id: string; provider: 'drive' | 'supabase'; fileId: string | null; mode: 'recording' | 'upload';
+  contentType: string; expectedBytes: number; maxBytes: number; maxSeconds: number; status: string;
+  authorization?: { provider: 'drive' | 'supabase'; fileId: string; uploadUrl: string; method: 'PUT'; headers?: Record<string, string>; expiresAt?: string; resumable?: boolean; chunkBytes?: number } | null;
+}
+export interface EmailQueueItem {
+  id: string; applicationId: string; templateKey: string; to: string; subject: string; body: string;
+  payload: Record<string, string>; attempts: number; leaseToken: string;
+}
+export interface RpcResponse<T> { data: T | null; error: { message: string; code?: string } | null }

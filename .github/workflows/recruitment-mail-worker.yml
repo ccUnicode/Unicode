@@ -1,0 +1,34 @@
+name: Recruitment mail worker
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/5 * * * *'
+
+permissions: {}
+concurrency:
+  group: recruitment-mail-worker
+  cancel-in-progress: false
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Process durable outbox and inactive drafts
+        env:
+          RECRUITMENT_BASE_URL: ${{ vars.RECRUITMENT_BASE_URL }}
+          CRON_SECRET: ${{ secrets.RECRUITMENT_CRON_SECRET }}
+        run: |
+          if [ -z "$RECRUITMENT_BASE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "Recruitment worker is inactive: deployment settings are pending."
+            exit 0
+          fi
+          case "$RECRUITMENT_BASE_URL" in
+            https://*) ;;
+            *) echo "The configured deployment URL must use HTTPS."; exit 1 ;;
+          esac
+          curl --fail --silent --show-error --max-time 90 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "${RECRUITMENT_BASE_URL%/}/api/recruitment/admin/process-emails" \
+            --output /dev/null

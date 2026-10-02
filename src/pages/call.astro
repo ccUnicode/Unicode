@@ -3,12 +3,14 @@ import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/navbar.astro";
 import HeroCall from "../components/components-call/hero-call.astro";
 import WhyUnicode from "../components/components-call/why-unicode.astro";
-import RegisterModal from "../components/components-call/register-modal.astro";
+import { publicConfig } from "../lib/recruitment/service";
+const recruitment = await publicConfig();
+Astro.response.headers.set("Cache-Control", "no-store");
 ---
 
 <Layout title="Convocatoria">
   <Navbar />
-  <HeroCall />
+  <HeroCall recruitment={recruitment} />
 
   <main class="w-full">
     <div
@@ -17,6 +19,5 @@ import RegisterModal from "../components/components-call/register-modal.astro";
     </div>
 
     <WhyUnicode />
-    <RegisterModal />
   </main>
 </Layout>
