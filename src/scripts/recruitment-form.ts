@@ -524,6 +524,17 @@ function initializeRecruitment() {
     if (answer && !usable) void forgetAnswer(application.id);
     const startedVideo = !!application.video || application.recordingAttempts > 0 || application.technicalFailureCount > 0;
     if (!startedVideo && !usable && cached?.phase !== "video") return;
+    // Stay on the data step if the applicant went back to edit it or left a required field empty.
+    validateAreas();
+    const complete = form.checkValidity();
+    if (!complete || (cached?.id === application.id && cached.phase === "data")) {
+      if (usable) {
+        try { await setAnswer(usable.blob, usable.mode, usable.duration); }
+        catch (error) { void forgetAnswer(application.id); showError(error); }
+      }
+      if (!complete) { showFieldErrors(); message("Completa los campos que faltan para volver a tu video."); }
+      return;
+    }
     setPhase("video", false);
     if (usable) {
       try {
