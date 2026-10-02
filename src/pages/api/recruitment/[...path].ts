@@ -55,7 +55,7 @@ export const ALL: APIRoute = async ({ request, params }) => {
       if (method === 'POST') {
         if (action === 'recording-attempt') return json(await recruitment.recordingAttempt(id, token));
         if (action === 'technical-failure') return json(await recruitment.technicalFailure(id, token, await body(request)));
-        if (action === 'video-session') return json(await recruitment.videoSession(id, token, await body(request)));
+        if (action === 'video-session') return json(await recruitment.videoSession(id, token, await body(request), new URL(request.url).origin));
         if (action === 'video-complete') return json(await recruitment.videoComplete(id, token, await body(request)));
         if (action === 'submit') return json(await recruitment.submitDraft(id, token));
       }

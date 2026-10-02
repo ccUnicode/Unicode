@@ -5,7 +5,7 @@ import { boundedVideoDownload, inspectVideoBytes } from './recruitment-media';
 
 type Provider = 'drive' | 'supabase';
 interface Identity { provider: Provider; fileId: string; applicationId: string; uploadId: string }
-interface UploadInput { provider: Provider; applicationId: string; uploadId: string; mode: string; contentType: string; expectedBytes: number; maxBytes: number; maxSeconds: number; existingFileId?: string | null }
+interface UploadInput { provider: Provider; applicationId: string; uploadId: string; mode: string; contentType: string; expectedBytes: number; maxBytes: number; maxSeconds: number; existingFileId?: string | null; origin?: string }
 const env = (name: string) => import.meta.env[name] || process.env[name];
 const folder = () => env('DRIVE_VIDEO_FOLDER_ID');
 const bucket = () => env('RECRUITMENT_VIDEO_BUCKET') || 'recruitment-videos';
@@ -59,7 +59,9 @@ export async function createVideoUpload(input: UploadInput) {
     id = result.id;
   }
   const session = await googleRequest(`https://www.googleapis.com/upload/drive/v3/files/${encodeURIComponent(id)}?uploadType=resumable`, {
-    method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-Upload-Content-Type': contentType, 'X-Upload-Content-Length': String(input.expectedBytes) }, body: '{}',
+    // The browser uploads the bytes: Google only answers its CORS requests when the session
+    // was opened with the page's Origin.
+    method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-Upload-Content-Type': contentType, 'X-Upload-Content-Length': String(input.expectedBytes), ...(input.origin ? { Origin: input.origin } : {}) }, body: '{}',
   });
   const uploadUrl = session.headers.get('location');
   if (!session.ok || !uploadUrl || new URL(uploadUrl).hostname !== 'www.googleapis.com') {

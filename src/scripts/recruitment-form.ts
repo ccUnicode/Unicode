@@ -551,7 +551,7 @@ function initializeRecruitment() {
       if (fragmentToken) history.replaceState(null, "", location.pathname + location.search);
       if (fragmentId && fragmentToken) stored = { id: fragmentId, token: fragmentToken };
       else stored = loadSession();
-      const result = await request<{ config: RecruitmentConfig; available: boolean; reason: string | null; developmentMode?: boolean }>("/config", "GET", undefined, false);
+      const result = await request<{ config: RecruitmentConfig; available: boolean; reason: string | null; developmentMode?: boolean; deploymentReady?: boolean }>("/config", "GET", undefined, false);
       show("development-notice", result.developmentMode === true);
       config = result.config;
       for (const id of ["firstChoiceArea", "secondChoiceArea"]) {
@@ -588,6 +588,15 @@ function initializeRecruitment() {
         message("Tu postulación no está confirmada.");
       } else if (!result.available && !alreadySubmitted) {
         element("closed-reason").textContent = result.reason || "Te avisaremos cuando comience la siguiente convocatoria.";
+        const opensIn = config.enabled && config.opensAt ? Date.parse(config.opensAt) - Date.now() : NaN;
+        if (opensIn > 0 && result.deploymentReady !== false) {
+          const opens = Date.parse(config.opensAt!);
+          const when = `${new Intl.DateTimeFormat("es-PE", { timeZone: "America/Lima", weekday: "long", day: "numeric", month: "long" }).format(opens).replace(",", "")} a las ${new Intl.DateTimeFormat("es-PE", { timeZone: "America/Lima", hour: "numeric", minute: "2-digit" }).format(opens)}`;
+          element("closed-heading").textContent = "La convocatoria abre pronto";
+          element("closed-reason").textContent = `Las postulaciones abren el ${when} (hora de Lima). Deja esta página abierta: se habilitará sola.`;
+          // setTimeout cannot wait longer than ~24.8 days; nobody keeps a tab open that long.
+          if (opensIn < 2 ** 31 - 1) setTimeout(() => location.reload(), opensIn + 1500);
+        }
         message(application ? "Tu borrador sigue guardado, pero la convocatoria no permite nuevos envíos por ahora." : "Consulta las próximas novedades en la página de convocatoria.");
       } else if (!alreadySubmitted) message(application ? "Retomaste tu borrador. Revisa tus datos antes de continuar." : "Empieza con tus datos. Puedes guardar y continuar después.");
       callOpen = result.available && !endedDraft;
