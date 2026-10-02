@@ -1,0 +1,62 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/navbar.astro";
+import HeroAreaIndividual from "../../components/components-areas/hero-area-individual.astro";
+
+const whatWeLookForData = [
+    "Estudiantes con ganas de organizar y ser parte activa de la ejecución de los eventos de UNICODE.",
+    "Personas interesadas en apoyar actividades de recaudación de fondos, como rifas y otras iniciativas.",
+    "Estudiantes motivados en gestionar la logística de eventos: banners, coffee break, merch y demás recursos.",
+    "Personas creativas, interesadas en idear dinámicas que mantengan al público animado y participativo.",
+    "Estudiantes con disposición para formar parte del staff designado de los eventos, que proviene principalmente de nuestra área.",
+];
+
+const weValueData = [
+    "Actitud de servicio y disposición para apoyar.",
+    "Responsabilidad y compromiso con las tareas asumidas.",
+    "Organización y capacidad para resolver imprevistos.",
+    "Capacidad para trabajar en equipo y adaptarse a diferentes situaciones.",
+    "Iniciativa, creatividad y ganas de aprender.",
+];
+
+const whatYouWinData = [
+    "Un espacio para desarrollarte a nivel personal y organizacional.",
+    "Experiencia en logística, gestión de eventos y recaudación de fondos.",
+    "Oportunidad de interactuar con distintas áreas y ampliar tu red de contactos.",
+    "Participación en primera línea de los eventos de UNICODE como parte del staff.",
+    "Formación práctica en organización, coordinación y trabajo bajo presión.",
+];
+
+import { projects } from "../../data/projects";
+
+const projectsData = projects.filter((p) => p.area === "lge");
+
+const directorsData = [
+    {
+        name: "Ludwing Wily Vilca Torres",
+        linkedin:
+            "https://www.linkedin.com/in/ludwing-vilca-torres-569409328/",
+        imageSrc: "/areas/areas-images/ludwing-vilca.webp",
+    },
+    {
+        name: "Maria Gabriela Jorge Quispe",
+        linkedin:
+            "https://www.linkedin.com/in/maria-gabriela-trinidad-jorge-quispe",
+        imageSrc: "/areas/areas-images/maria-gabriela-jorge.webp",
+    },
+];
+---
+
+<Layout title="Logística y Gestión de Eventos | Áreas UNICODE">
+    <Navbar />
+
+    <HeroAreaIndividual
+        title="Logística y Gestión de Eventos"
+        description="El área de Logística y Gestión de Eventos (LGE) en UNICODE no se limita a coordinar detalles operativos; es el motor que hace posible que cada actividad se realice de forma ordenada, eficiente y sostenible. Su labor fundamental es asegurar que cada evento luzca profesional y salga tal como se planificó, desde la recaudación de fondos hasta la ejecución el día del evento. A través de la gestión de recursos, la reducción de gastos y la creación de dinámicas, el área transforma la planificación en experiencias memorables para toda la comunidad."
+        whatWeLookFor={whatWeLookForData}
+        weValue={weValueData}
+        whatYouWin={whatYouWinData}
+        projects={projectsData}
+        directors={directorsData}
+    />
+</Layout>
