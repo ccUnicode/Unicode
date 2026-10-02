@@ -232,6 +232,37 @@ test('video identity reservation cap cannot be bypassed through the technical-fa
   assert.equal((await db.query('SELECT count(*)::integer AS count FROM recruitment_applications WHERE recording_attempts>0')).rows[0].count, 2);
 });
 
+test('an expired upload of a recovered video is renewed for the same attempt instead of consuming the retry', async t => {
+  const db = await database(t);
+  await openCall(db);
+  const application = await draft(db);
+  await rpc(db, 'recruitment_recording_attempt', application.id, application.owner);
+  const pending = await upload(db, application);
+  await db.query(`UPDATE recruitment_uploads SET expires_at=now()-interval '1 minute' WHERE id=$1`, [pending.id]);
+  const renewed = await rpc(db, 'recruitment_begin_upload', application.id, application.owner, randomUUID(), 'recording', 'video/mp4', 100);
+  assert.equal(renewed.upload.id, pending.id);
+  const stored = (await db.query('SELECT file_id FROM recruitment_uploads WHERE id=$1', [pending.id])).rows[0].file_id;
+  assert.equal(renewed.upload.fileId, stored);
+  assert.equal(renewed.upload.authorization, null);
+  const state = await rpc(db, 'recruitment_get_draft', application.id, application.owner);
+  assert.equal(state.application.recordingAttempts, 1);
+  assert.equal(state.application.technicalFailureCount, 0);
+  const verified = await rpc(db, 'recruitment_complete_upload', application.id, application.owner, pending.id, videoMetadata());
+  assert.equal(verified.application.video.uploadId, pending.id);
+});
+
+test('applicants sharing a campus network can each create a draft', async t => {
+  const db = await database(t);
+  await openCall(db);
+  for (let index = 0; index < 20; index++) {
+    const id = randomUUID();
+    await rpc(db, 'recruitment_create_draft', id, `hashed-${id}`, applicant(id), 'shared-campus-ip', 'encrypted-local-test-secret');
+  }
+  await openCall(db, { draftsPerIpPerHour: 2 });
+  const id = randomUUID();
+  await assert.rejects(() => rpc(db, 'recruitment_create_draft', id, `hashed-${id}`, applicant(id), 'shared-campus-ip', 'encrypted-local-test-secret'), /rate_limited/);
+});
+
 test('video metadata must prove content, byte size and at most 60 seconds', async t => {
   const db = await database(t);
   await openCall(db);

@@ -1,4 +1,5 @@
 import type { ApplicationData, RecruitmentApplication, RecruitmentConfig } from "../lib/recruitment/types";
+import { forgetAnswer, forgetEverything, loadAnswer, loadForm, loadSession, saveAnswer, saveForm, saveSession } from "./recruitment-local.ts";
 
 type UploadSession = {
   uploadId: string; provider: "drive" | "supabase"; fileId: string;
@@ -6,7 +7,6 @@ type UploadSession = {
 };
 type CameraState = "idle" | "ready" | "rehearsal" | "preparation" | "recording" | "answer" | "uploading" | "saved";
 type DraftResponse = { application: RecruitmentApplication; resumeToken?: string };
-const SESSION_KEY = "unicode-recruitment-session";
 const FORM_FIELDS = ["firstName", "lastName", "email", "phone", "university", "faculty", "career", "admissionTerm", "semester", "firstChoiceArea", "secondChoiceArea", "availabilityHours", "motivation", "shortCase", "consent"] as const;
 
 /** Only storage URLs issued by our API may receive a candidate video. */
@@ -58,6 +58,8 @@ function initializeRecruitment() {
   let phase: "data" | "video" | "complete" = "data";
   let pendingAction = false;
   let currentAttemptFailed = false;
+  let answerPersisted = false;
+  let restored = false;
 
   const show = (id: string, visible = true) => { element(id).hidden = !visible; };
   const clock = (seconds: number) => `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
@@ -70,9 +72,9 @@ function initializeRecruitment() {
     show("recruitment-error");
   };
 
-  async function request<T>(path: string, method = "GET", body?: unknown, authenticated = true): Promise<T> {
+  async function request<T>(path: string, method = "GET", body?: unknown, authenticated = true, keepalive = false): Promise<T> {
     const response = await fetch(`/api/recruitment${path}`, {
-      method, cache: "no-store", credentials: "same-origin",
+      method, cache: "no-store", credentials: "same-origin", keepalive,
       headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest", ...(authenticated && resumeToken ? { Authorization: `Bearer ${resumeToken}` } : {}) },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
@@ -154,7 +156,7 @@ function initializeRecruitment() {
     if (populate) populateData(next.data);
     renderQuestions();
     show("resume-panel", !!resumeToken && ["draft", "incomplete"].includes(next.status));
-    if (next.video) { cameraState = "saved"; releaseAnswer(); show("video-result", false); }
+    if (next.video) { cameraState = "saved"; releaseAnswer(); show("video-result", false); void forgetAnswer(next.id); }
     if (next.submittedAt) {
       element("application-reference").textContent = `Referencia: ${next.id}`;
       setPhase("complete", populate);
@@ -164,8 +166,14 @@ function initializeRecruitment() {
   }
 
   function rememberSession() {
-    if (!application || !resumeToken) return;
-    try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ id: application.id, token: resumeToken })); } catch { /* Personal resume link still works if browser storage is disabled. */ }
+    if (application && resumeToken) saveSession({ id: application.id, token: resumeToken });
+  }
+
+  /** Keeps what the applicant typed in this browser, even before the first server save. */
+  function rememberForm() {
+    // Before boot finishes the form is still empty; saving it would erase the cache.
+    if (!restored || phase === "complete") return;
+    saveForm({ id: application?.id ?? null, data: collectData(), phase: phase === "video" ? "video" : "data", pending: dirty });
   }
 
   async function saveDraft() {
@@ -182,6 +190,7 @@ function initializeRecruitment() {
       acceptApplication(result.application);
       rememberSession();
       dirty = dataVersion !== version;
+      rememberForm();
       element("save-status").textContent = dirty ? "Cambios recientes pendientes de guardar." : "Tu avance está guardado. Puedes conservar tu enlace personal.";
       if (dirty) scheduleAutosave();
     })();
@@ -261,6 +270,12 @@ function initializeRecruitment() {
     show("video-result"); show("unuploaded-warning");
     element("camera-status").textContent = "Revisa tu video y guárdalo. La postulación se enviará cuando confirmes al final.";
     stopCamera(); updateControls();
+    // The attempt is already counted by the server: keep the video in this browser so
+    // closing the tab before it is uploaded does not lose it.
+    answerPersisted = !!application && await saveAnswer({ applicationId: application.id, blob, mode, duration, failureCount: application.technicalFailureCount, savedAt: Date.now() });
+    element("unuploaded-warning").textContent = answerPersisted
+      ? "Tu video quedó guardado en este navegador. Si se cierra antes de subirlo, vuelve a esta página desde el mismo navegador para continuar sin grabar de nuevo."
+      : "Conserva esta pestaña abierta hasta que termine la subida. Si la conexión falla, tu video seguirá aquí para volver a intentar.";
   }
 
   function capture(rehearsal: boolean) {
@@ -291,19 +306,24 @@ function initializeRecruitment() {
     element("capture-banner-timer").textContent = `00:00 / ${clock(config.maxVideoSeconds)}`;
     recorder.start(1000);
     const limit = rehearsal ? 10 : config.maxVideoSeconds;
+    // The server accepts limit + 0.25 s of real media. Stop early so stop latency and
+    // the audio tail never cost the applicant their only attempt.
+    const activeRecorder = recorder;
+    const hardStop = setTimeout(() => { if (activeRecorder.state === "recording") activeRecorder.stop(); }, (limit - 0.75) * 1000);
+    activeRecorder.addEventListener("stop", () => clearTimeout(hardStop), { once: true });
     timer = setInterval(() => {
       const seconds = Math.floor((performance.now() - recordingStartedAt) / 1000);
       element("recording-timer").textContent = clock(Math.min(seconds, limit));
       element("capture-banner-timer").textContent = `${clock(Math.min(seconds, limit))} / ${clock(config.maxVideoSeconds)}`;
-      if (seconds >= limit && recorder?.state === "recording") recorder.stop();
     }, 100);
     element("camera-status").textContent = rehearsal ? "Ensayo en curso. Se detendrá a los 10 segundos." : `Responde tus cuatro preguntas. La grabación se detendrá a los ${limit} segundos.`;
     updateControls();
   }
 
-  async function registerFailure(code: string, detail: string) {
+  async function registerFailure(code: string, detail: string, keepalive = false) {
     if (!application) throw new Error("Guarda tus datos antes de registrar un problema técnico.");
-    const result = await request<DraftResponse>(`/drafts/${application.id}/technical-failure`, "POST", { code, message: detail.slice(0, 500) });
+    const result = await request<DraftResponse>(`/drafts/${application.id}/technical-failure`, "POST", { code, message: detail.slice(0, 500) }, true, keepalive);
+    void forgetAnswer(application.id);
     // A registered technical failure retires the failed answer and its upload
     // capability. The one remaining attempt can now be a recording or a file.
     uploadSession = null; releaseAnswer(); show("video-result", false); show("upload-progress-panel", false);
@@ -320,7 +340,8 @@ function initializeRecruitment() {
     stopCamera(); cameraState = "idle";
     element("camera-status").textContent = detail;
     if (evaluating) {
-      try { await registerFailure(code, detail); }
+      // keepalive lets the report reach the server even when the tab is being closed.
+      try { await registerFailure(code, detail, true); }
       catch (error) { showError(error); }
     }
     updateControls();
@@ -404,6 +425,8 @@ function initializeRecruitment() {
       element("upload-status").textContent = `Subiendo: ${progress.value} %. Mantén esta pestaña abierta.`;
     };
     try {
+      // The server hands back the same live authorization for this attempt (or renews an
+      // expired one), so a Drive upload resumes from its last confirmed byte.
       if (!uploadSession) uploadSession = await request<UploadSession>(`/drafts/${application.id}/video-session`, "POST", { mode: videoMode, contentType: blob.type.split(";")[0], bytes: blob.size });
       if (!isAllowedUploadUrl(uploadSession.uploadUrl, uploadSession.provider)) throw new Error("No pudimos preparar una carga segura. Tu video sigue disponible en esta pestaña.");
       if (uploadSession.provider === "drive") {
@@ -451,10 +474,49 @@ function initializeRecruitment() {
             show("unuploaded-warning", false); uploadSession = null; dirty = false;
             message("Ya puedes confirmar el envío de tu postulación."); return;
           }
-        } catch { /* Keep the original file and session for a later retry. */ }
+        } catch { /* Keep the original file for a later retry. */ }
       }
+      // Ask the server again on retry: a stale capability is replaced, a live one is reused.
+      uploadSession = null;
       throw error;
     } finally { if (!application.video) cameraState = "answer"; updateControls(); }
+  }
+
+  /** Brings the applicant back to where they left off after closing the browser. */
+  async function restoreProgress(open: boolean) {
+    const cached = loadForm();
+    if (!application) {
+      if (cached && cached.id === null) { populateData(cached.data as ApplicationData); message("Recuperamos lo que escribiste en este navegador. Guarda tu avance para no perderlo."); }
+      return;
+    }
+    if (cached?.id === application.id && cached.pending) {
+      // Changes typed just before the browser closed that did not reach the server.
+      populateData({ ...application.data, ...cached.data, email: application.data.email } as ApplicationData);
+      dirty = true; dataVersion++;
+      if (open) void saveDraft().catch(() => { element("save-status").textContent = "Tienes cambios sin guardar. Pulsa «Guardar avance»."; });
+    }
+    const answer = application.video ? null : await loadAnswer(application.id);
+    const usable = answer && answer.failureCount === application.technicalFailureCount ? answer : null;
+    if (answer && !usable) void forgetAnswer(application.id);
+    const startedVideo = !!application.video || application.recordingAttempts > 0 || application.technicalFailureCount > 0;
+    if (!startedVideo && !usable && cached?.phase !== "video") return;
+    setPhase("video", false);
+    if (usable) {
+      try {
+        await setAnswer(usable.blob, usable.mode, usable.duration);
+        message("Recuperamos tu video guardado en este navegador. Revísalo y pulsa «Guardar este video».");
+      } catch (error) { void forgetAnswer(application.id); showError(error); }
+      return;
+    }
+    if (application.video) { message("Tu video está guardado. Solo falta confirmar el envío de tu postulación."); return; }
+    const exhausted = application.recordingAttempts >= (application.technicalFailureCount ? 2 : 1);
+    if (!exhausted && application.technicalFailureCount) message("Tu grabación anterior se interrumpió y quedó registrada como falla técnica. Tienes un nuevo intento: vuelve a grabar o sube tu video.");
+    else if (!exhausted) message("Retomaste tu postulación. Tus preguntas siguen siendo las mismas.");
+    else if (!application.technicalFailureCount) {
+      element<HTMLSelectElement>("failure-reason").value = "interrupted";
+      message("Tu grabación anterior no llegó a guardarse. Registra la falla técnica para habilitar un nuevo intento.");
+      element("technical-help").scrollIntoView({ block: "center" });
+    } else message("Ya utilizaste el reintento disponible y no encontramos tu video en este navegador. Escribe al equipo de convocatoria para revisar tu caso.");
   }
 
   async function boot() {
@@ -464,7 +526,7 @@ function initializeRecruitment() {
       let stored: { id?: string; token?: string } | null = null;
       if (fragmentToken) history.replaceState(null, "", location.pathname + location.search);
       if (fragmentId && fragmentToken) stored = { id: fragmentId, token: fragmentToken };
-      else { try { stored = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null"); } catch { /* No usable stored session. */ } }
+      else stored = loadSession();
       const result = await request<{ config: RecruitmentConfig; available: boolean; reason: string | null; developmentMode?: boolean }>("/config", "GET", undefined, false);
       show("development-notice", result.developmentMode === true);
       config = result.config;
@@ -487,7 +549,8 @@ function initializeRecruitment() {
           acceptApplication(resumed.application, true); rememberSession();
         } catch (error) {
           resumeToken = "";
-          try { sessionStorage.removeItem(SESSION_KEY); } catch { /* Storage unavailable. */ }
+          // Only forget a link the server rejected, never because of a network failure.
+          if (/inválido|no autorizado/i.test(errorMessage(error))) void forgetEverything();
           showError(error);
         }
       }
@@ -503,13 +566,14 @@ function initializeRecruitment() {
         element("closed-reason").textContent = result.reason || "Te avisaremos cuando comience la siguiente convocatoria.";
         message(application ? "Tu borrador sigue guardado, pero la convocatoria no permite nuevos envíos por ahora." : "Consulta las próximas novedades en la página de convocatoria.");
       } else if (!alreadySubmitted) message(application ? "Retomaste tu borrador. Revisa tus datos antes de continuar." : "Empieza con tus datos. Puedes guardar y continuar después.");
+      if (!alreadySubmitted && !endedDraft) await restoreProgress(result.available);
     } catch (error) {
       message("No pudimos consultar la convocatoria. Recarga la página para volver a intentar."); showError(error);
-    } finally { root!.setAttribute("aria-busy", "false"); updateControls(); }
+    } finally { restored = true; root!.setAttribute("aria-busy", "false"); updateControls(); }
   }
 
-  form.addEventListener("input", () => { dirty = true; dataVersion++; scheduleAutosave(); });
-  form.addEventListener("change", () => { dirty = true; dataVersion++; scheduleAutosave(); });
+  form.addEventListener("input", () => { dirty = true; dataVersion++; rememberForm(); scheduleAutosave(); });
+  form.addEventListener("change", () => { dirty = true; dataVersion++; rememberForm(); scheduleAutosave(); });
   element<HTMLSelectElement>("secondChoiceArea").addEventListener("change", validateAreas);
   element<HTMLSelectElement>("firstChoiceArea").addEventListener("change", validateAreas);
   function validateAreas() {
@@ -519,9 +583,13 @@ function initializeRecruitment() {
   button("save-draft").addEventListener("click", () => { if (validateDraftIdentity()) void runAction(saveDraft); });
   form.addEventListener("submit", event => {
     event.preventDefault(); validateAreas(); if (!form.reportValidity()) return;
-    void runAction(async () => { clearTimeout(autosaveTimer); await saveDraft(); if (dirty) await saveDraft(); setPhase("video"); message("Tus preguntas ya están asignadas. Responde las cuatro en un solo video."); });
+    void runAction(async () => { clearTimeout(autosaveTimer); await saveDraft(); if (dirty) await saveDraft(); setPhase("video"); rememberForm(); message("Tus preguntas ya están asignadas. Responde las cuatro en un solo video."); });
   });
-  button("edit-data").addEventListener("click", () => { stopCamera(); setPhase("data"); cameraState = application?.video ? "saved" : recordedBlob ? "answer" : "idle"; updateControls(); });
+  button("edit-data").addEventListener("click", () => { stopCamera(); setPhase("data"); rememberForm(); cameraState = application?.video ? "saved" : recordedBlob ? "answer" : "idle"; updateControls(); });
+  button("forget-device").addEventListener("click", () => {
+    if (!confirm("Se borrará de este navegador tu avance y tu video sin subir. Podrás continuar solo con tu enlace personal. ¿Continuar?")) return;
+    void forgetEverything().then(() => { location.replace("/postular"); });
+  });
   button("copy-resume").addEventListener("click", () => { void runAction(async () => {
     if (!application || !resumeToken) return;
     const url = `${location.origin}/postular#${new URLSearchParams({ id: application.id, token: resumeToken })}`;
@@ -546,12 +614,21 @@ function initializeRecruitment() {
     const result = await request<DraftResponse>(`/drafts/${application.id}/submit`, "POST", {});
     if (!result.application.submittedAt) throw new Error("Tu postulación aún no está confirmada. Intenta nuevamente.");
     acceptApplication(result.application); dirty = false; setPhase("complete"); message("Postulación enviada correctamente.");
+    await forgetEverything();
   }); });
+  /** Last chance to keep unsaved typing when the tab is closed or the phone suspends it. */
+  function flushOnExit() {
+    rememberForm();
+    if (!dirty || !application || !resumeToken || !["draft", "incomplete"].includes(application.status)) return;
+    clearTimeout(autosaveTimer);
+    void request(`/drafts/${application.id}`, "PATCH", collectData(), true, true).catch(() => undefined);
+  }
   document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flushOnExit();
     if (document.visibilityState === "hidden" && (cameraState === "recording" || cameraState === "rehearsal")) void interruptCapture("interrupted", "La grabación se interrumpió al salir de esta pestaña.");
     if (document.visibilityState === "hidden" && cameraState === "preparation") { clearInterval(preparationTimer); cameraState = "ready"; element("camera-status").textContent = "La preparación se pausó al salir de la pestaña. Vuelve a iniciarla cuando estés listo/a."; updateControls(); }
   });
-  window.addEventListener("beforeunload", event => { if (dirty || recordedBlob || cameraState === "recording") event.preventDefault(); });
-  window.addEventListener("pagehide", () => { clearInterval(timer); clearInterval(preparationTimer); stopCamera(); deleteRehearsal(); if (answerUrl) URL.revokeObjectURL(answerUrl); });
+  window.addEventListener("beforeunload", event => { if (dirty || (recordedBlob && !answerPersisted) || ["preparation", "recording", "uploading"].includes(cameraState)) event.preventDefault(); });
+  window.addEventListener("pagehide", () => { flushOnExit(); clearInterval(timer); clearInterval(preparationTimer); stopCamera(); deleteRehearsal(); if (answerUrl) URL.revokeObjectURL(answerUrl); });
   void boot();
 }

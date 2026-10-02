@@ -160,7 +160,8 @@ begin
  insert into recruitment_rate_limits(key,window_start,count) values(p_rate_key,now(),1)
  on conflict(key) do update set count=case when recruitment_rate_limits.window_start<now()-interval '1 hour' then 1 else recruitment_rate_limits.count+1 end,
  window_start=case when recruitment_rate_limits.window_start<now()-interval '1 hour' then now() else recruitment_rate_limits.window_start end returning count into rate_count;
- if rate_count>5 then raise exception 'rate_limited: Demasiados registros desde esta conexión. Intenta más tarde.';end if;
+ -- Campus networks and mobile carriers share public IPs; the unique email and global caps bound the rest.
+ if rate_count>coalesce((c->>'draftsPerIpPerHour')::integer,30) then raise exception 'rate_limited: Demasiados registros desde esta conexión. Intenta más tarde.';end if;
  if (select count(*) from recruitment_applications where status in ('draft','incomplete'))>=450 then raise exception 'capacity: No podemos recibir más borradores en este momento.';end if;
  select jsonb_agg(q order by q->>'category',q->>'id') into questions from (
    (select item-'enabled' as q from jsonb_array_elements(c->'questions') item where item->>'category'='motivation' and coalesce((item->>'enabled')::boolean,true) order by random() limit 2)
@@ -217,7 +218,11 @@ begin
  if p_mode not in ('recording','upload') or p_content_type not in ('video/mp4','video/webm') or p_bytes<1 or p_bytes>(c->>'maxVideoBytes')::bigint then raise exception 'invalid_video: El formato o tamaño del video no está permitido.';end if;
  select * into u from recruitment_uploads where application_id=p_id and status in ('reserved','pending') for update;
  if found then
-   if u.expires_at<now() then raise exception 'upload_expired: La carga venció. Registra una falla técnica para continuar.';end if;
+   -- An applicant who closed the browser keeps the same attempt and file: renew the
+   -- reservation and drop the stale capability so the server issues a new one.
+   if u.expires_at<now() then
+     update recruitment_uploads set expires_at=now()+interval '2 hours',upload_authorization=null where id=u.id returning * into u;
+   end if;
    if u.mode<>p_mode or u.content_type<>p_content_type or u.expected_bytes<>p_bytes then raise exception 'upload_pending: Ya existe una carga pendiente para otro archivo.';end if;
    if u.status='reserved' and u.created_at>now()-interval '30 seconds' then raise exception 'upload_in_progress: La autorización de carga aún se está preparando. Vuelve a intentar en unos segundos.';end if;
    return jsonb_build_object('upload',jsonb_build_object('id',u.id,'provider',u.provider,'fileId',u.file_id,'mode',u.mode,'contentType',u.content_type,'expectedBytes',u.expected_bytes,'maxBytes',u.max_bytes,'maxSeconds',u.max_seconds,'status',u.status,'authorization',u.upload_authorization));

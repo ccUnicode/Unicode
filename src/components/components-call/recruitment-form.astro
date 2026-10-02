@@ -23,8 +23,8 @@
     </ol>
 
     <aside id="resume-panel" class="resume-panel" hidden>
-      <div><strong>Tu borrador está guardado</strong><p>Conserva tu enlace personal para continuar en otro momento. No lo compartas: permite acceder a tu postulación.</p></div>
-      <button id="copy-resume" type="button" class="button secondary">Copiar enlace personal</button>
+      <div><strong>Tu borrador está guardado</strong><p>Este navegador recordará tu avance aunque lo cierres. Para continuar en otro dispositivo usa tu enlace personal (también te lo enviamos por correo). No lo compartas: permite acceder a tu postulación.</p></div>
+      <div class="resume-actions"><button id="copy-resume" type="button" class="button secondary">Copiar enlace personal</button><button id="forget-device" type="button" class="button secondary compact">No es mi dispositivo: olvidar aquí</button></div>
     </aside>
 
     <section id="data-phase" class="panel" aria-labelledby="data-heading">
@@ -108,13 +108,14 @@
   p { color: var(--muted); line-height: 1.65; font-size: .9rem; }
   .panel { background: #0e0e10; border: 1px solid #27272a; border-radius: 1.5rem; padding: clamp(1.2rem,4vw,2.4rem); }
   .status { margin-bottom: 1rem; }
-  .steps { display: flex; gap: 1.2rem; padding: .8rem 0 1.6rem; font-size: .85rem; color: #71717a; }
+  .steps { display: flex; flex-wrap: wrap; gap: .6rem 1.2rem; padding: .8rem 0 1.6rem; font-size: .85rem; color: #71717a; }
   .steps li { display: flex; align-items: center; gap: .55rem; }
   .steps span { display: grid; place-items: center; border: 1px solid #3f3f46; border-radius: 50%; width: 1.8rem; height: 1.8rem; }
   .steps [aria-current] { color: white; }
   .steps [aria-current] span { color: #0a0a0a; background: var(--green); border-color: var(--green); }
   .resume-panel { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; padding: 1rem 1.2rem; border: 1px solid #75d32d40; border-radius: 1rem; margin-bottom: 1rem; background: #75d32d08; }
-  .resume-panel div { flex: 1 1 300px; }
+  .resume-panel > div:first-child { flex: 1 1 300px; }
+  .resume-actions { display: flex; flex-wrap: wrap; gap: .6rem; }
   .resume-panel strong { font-size: .9rem; }
   .resume-panel p { margin-top: .3rem; font-size: .8rem; }
   form { margin-top: 1.5rem; }
@@ -171,7 +172,10 @@
   #upload-progress-panel { margin-top: 1.2rem; }
   .final-action { border-top: 1px solid #27272a; padding-top: 1.2rem; }
   .complete { text-align: center; }
+  #application-reference { overflow-wrap: anywhere; }
   .complete-icon { display: grid; place-items: center; width: 4rem; height: 4rem; margin: 0 auto 1.5rem; border: 1px solid #75d32d60; background: #75d32d15; border-radius: 50%; color: var(--green); font-size: 2rem; }
   .complete .button { margin-top: 1.5rem; }
-  @media(max-width:640px) { .field-grid,.questions,.video-grid { grid-template-columns: 1fr; } .steps { gap: .7rem; font-size: .7rem; } .steps span { width: 1.5rem; height: 1.5rem; } .steps li { gap: .35rem; } .section-heading { flex-direction: column; } .actions .button { flex: 1 1 100%; } .resume-panel .button { width: 100%; } }
+  @media(max-width:640px) { .field-grid,.questions,.video-grid { grid-template-columns: 1fr; } .steps { gap: .7rem; font-size: .7rem; } .steps span { width: 1.5rem; height: 1.5rem; } .steps li { gap: .35rem; } .section-heading { flex-direction: column; } .actions .button { flex: 1 1 100%; } .resume-actions, .resume-panel .button { width: 100%; } .active-capture-banner { top: 5rem; } .active-capture-banner strong { margin-left: 0; } .active-capture-banner .button { flex: 1 1 100%; } }
+  /* iOS zooms into fields whose text is smaller than 16px. */
+  @media(max-width:768px) { input:not([type=checkbox]),select,textarea { font-size: 1rem; } }
 </style>

@@ -87,6 +87,26 @@ Antes de abrir la convocatoria real:
 
 Las pruebas locales y los archivos de medios incluidos comprueban lógica y formatos; no certifican conectividad de producción, permisos reales de la carpeta, entrega del correo ni compatibilidad de cada dispositivo. Hasta completar esas comprobaciones, la integración externa queda pendiente de activación.
 
+## Respaldo antes de limpiar la base
+
+Antes de cualquier limpieza o de aplicar la migración, respaldar todo el proyecto, incluida la tabla histórica `public.applicants`:
+
+```bash
+npm run backup   # equivale a node --env-file=.env scripts/backup-supabase.mjs
+```
+
+Requiere `PUBLIC_SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` en `.env`. El script solo lee: exporta cada tabla a JSON y CSV (abrible en Excel) en `backups/<fecha>/`, verifica que el número de filas coincida con el conteo de Supabase y deja un `manifest.json` con conteos y hashes. Si además se define `SUPABASE_DB_URL` (cadena de conexión de Project Settings → Database) y está instalado `pg_dump`, genera `full.dump`, restaurable con `pg_restore`. La carpeta `backups/` está excluida de git: contiene datos personales y debe guardarse en un lugar privado (por ejemplo, la carpeta restringida de Drive de GTH). Comprobar los conteos del manifiesto antes de borrar nada.
+
+## Persistencia del avance del postulante
+
+- El navegador recuerda la sesión en `localStorage`, por lo que cerrar el navegador no obliga a usar el enlace personal. El enlace (también enviado por correo) sirve para continuar en otro dispositivo.
+- Lo escrito se guarda localmente en cada tecla, incluso antes del primer «Guardar avance», y al ocultar o cerrar la pestaña se envía un último guardado al servidor.
+- Al volver, el formulario reabre en la etapa donde quedó: datos, video o video guardado pendiente de confirmar.
+- El video grabado o elegido se guarda en IndexedDB hasta que el servidor lo verifica. Si el navegador se cierra antes de subirlo, al volver se recupera sin consumir otro intento. Si la reserva de carga (2 horas) venció, el servidor la renueva para el mismo intento.
+- Si el navegador se cierra durante la grabación, se registra automáticamente la falla técnica y la persona recupera un nuevo intento.
+- Al confirmar el envío se borran del navegador los datos y el video. En computadoras compartidas, el botón «No es mi dispositivo: olvidar aquí» los elimina antes.
+- El límite de borradores nuevos por conexión es 30 por hora (configurable con `draftsPerIpPerHour` en la configuración SQL) para no bloquear redes de campus compartidas.
+
 ## Migrar a otro Supabase
 
 Cerrar temporalmente la convocatoria y detener el ejecutor de correos mientras se realiza el cambio. Con acceso al proyecto de origen, respaldar y restaurar configuración, postulaciones, eventos, fallas técnicas, cargas, plantillas, cola y auditoría. Conservar los UUID y hashes de enlaces personales, y mantener la misma `RECRUITMENT_RESUME_ENCRYPTION_KEY` para descifrar mensajes pendientes. Aplicar la migración solo a una base nueva vacía; una restauración completa de esquema ya incluye sus funciones/tablas.

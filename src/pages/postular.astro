@@ -14,10 +14,11 @@ Astro.response.headers.set("Referrer-Policy", "no-referrer");
       const parameters = new URLSearchParams(location.hash.slice(1));
       const id = parameters.get('id'); const token = parameters.get('token');
       if (!id || !token) return;
-      try {
-        sessionStorage.setItem('unicode-recruitment-session', JSON.stringify({ id, token }));
-        history.replaceState(null, '', location.pathname + location.search);
-      } catch { /* The form module retains the fragment when session storage is unavailable. */ }
+      // localStorage keeps the link after the browser closes; sessionStorage is the fallback.
+      const value = JSON.stringify({ id, token });
+      try { localStorage.setItem('unicode-recruitment-session', value); }
+      catch { try { sessionStorage.setItem('unicode-recruitment-session', value); } catch { return; /* The form module reads the fragment instead. */ } }
+      history.replaceState(null, '', location.pathname + location.search);
     })();
   </script>
   <Navbar />

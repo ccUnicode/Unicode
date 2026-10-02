@@ -214,8 +214,8 @@ import Layout from "../../layouts/Layout.astro";
   .recruitment-admin .secondary:hover:not(:disabled) { border-color: var(--admin-green); }
   .recruitment-admin .message { padding: 13px 16px; border-radius: 9px; border: 1px solid #436d2b; background: #15300f; font-size: .85rem; margin: 16px 0; }
   .recruitment-admin .message.error { border-color: #903e43; background: #311416; color: #ffc3c6; }
-  .recruitment-admin .admin-nav { display: flex; gap: 5px; padding: 5px; border: 1px solid var(--admin-border); border-radius: 12px; margin: 0 0 30px; background: #0b100b; }
-  .recruitment-admin .admin-nav button { flex: 1; padding: 12px; border-radius: 7px; color: var(--admin-muted); font-size: .85rem; }
+  .recruitment-admin .admin-nav { display: flex; flex-wrap: wrap; gap: 5px; padding: 5px; border: 1px solid var(--admin-border); border-radius: 12px; margin: 0 0 30px; background: #0b100b; }
+  .recruitment-admin .admin-nav button { flex: 1 1 auto; min-width: 0; padding: 12px; border-radius: 7px; color: var(--admin-muted); font-size: .85rem; }
   .recruitment-admin .admin-nav button[aria-current="page"] { color: var(--admin-green); background: #1b2b15; }
   .recruitment-admin .count { display: inline-block; margin-left: 4px; font-size: .7rem; }
   .recruitment-admin .badge { display: inline-flex; align-items: center; border: 1px solid #42593b; background: #182415; color: #b0e88e; border-radius: 999px; font-size: .7rem; padding: 5px 10px; white-space: nowrap; }

@@ -7,7 +7,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "node --test tests/recruitment*.test.mjs"
+    "test": "node --test tests/recruitment*.test.mjs",
+    "backup": "node --env-file=.env scripts/backup-supabase.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.9",

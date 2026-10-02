@@ -48,3 +48,6 @@ remove_bg.py
 
 # Local recruitment database, fixtures and screenshots
 .recruitment-local/
+
+# Database backups contain personal data
+backups/
