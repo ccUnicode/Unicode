@@ -45,3 +45,6 @@ temp.html
 *.tmp
 *.bak
 remove_bg.py
+
+# Local recruitment database, fixtures and screenshots
+.recruitment-local/
