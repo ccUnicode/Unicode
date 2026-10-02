@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { sessionStore } from '../../../lib/session-store';
 import * as recruitment from '../../../lib/recruitment/service';
+import { withPreviewKey } from '../../../lib/recruitment/database';
 import { RecruitmentError } from '../../../lib/recruitment/validation';
 
 export const prerender = false;
@@ -34,15 +35,27 @@ function bearer(request: Request): string {
 async function admin(request: Request): Promise<void> {
   if (!env('ADMIN_PASSWORD') || !(await sessionStore.isValid(bearer(request)))) throw new RecruitmentError('unauthorized', 'No autorizado. Inicia sesión nuevamente.', 401);
 }
-function sameOrigin(request: Request): void {
-  const origin = request.headers.get('origin');
-  if (origin && origin !== new URL(request.url).origin) throw new RecruitmentError('origin_not_allowed', 'Origen de solicitud no autorizado.', 403);
+/** Origins this deployment answers to. Behind Vercel, request.url can carry an internal host. */
+function allowedOrigins(request: Request): Set<string> {
+  const origins = new Set([new URL(request.url).origin]);
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
+  if (host) origins.add(`${request.headers.get('x-forwarded-proto')?.split(',')[0].trim() || 'https'}://${host.split(',')[0].trim()}`);
+  try { origins.add(new URL(env('RECRUITMENT_BASE_URL') || '').origin); } catch { /* Not configured. */ }
+  return origins;
 }
-export const ALL: APIRoute = async ({ request, params }) => {
+/** Returns the browser's origin once it is verified to be this site (used for Drive CORS). */
+function sameOrigin(request: Request): string {
+  const origin = request.headers.get('origin');
+  const allowed = allowedOrigins(request);
+  if (origin && !allowed.has(origin)) throw new RecruitmentError('origin_not_allowed', 'Origen de solicitud no autorizado.', 403);
+  return origin || [...allowed][allowed.size - 1];
+}
+export const ALL: APIRoute = ({ request, params }) => withPreviewKey(request.headers.get('x-recruitment-preview'), () => handle(request, params.path));
+async function handle(request: Request, rawPath: string | undefined): Promise<Response> {
   try {
-    const path = (params.path || '').split('/'); const method = request.method;
+    const path = (rawPath || '').split('/'); const method = request.method;
     if (!['GET', 'POST', 'PUT', 'PATCH'].includes(method)) return json({ error: 'Método no permitido.', code: 'method_not_allowed' }, 405);
-    if (method !== 'GET') sameOrigin(request);
+    const origin = method !== 'GET' ? sameOrigin(request) : undefined;
     if (path.join('/') === 'config' && method === 'GET') return json(await recruitment.publicConfig());
     if (path.join('/') === 'drafts' && method === 'POST') {
       const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || request.headers.get('x-real-ip') || 'unknown';
@@ -55,7 +68,7 @@ export const ALL: APIRoute = async ({ request, params }) => {
       if (method === 'POST') {
         if (action === 'recording-attempt') return json(await recruitment.recordingAttempt(id, token));
         if (action === 'technical-failure') return json(await recruitment.technicalFailure(id, token, await body(request)));
-        if (action === 'video-session') return json(await recruitment.videoSession(id, token, await body(request), new URL(request.url).origin));
+        if (action === 'video-session') return json(await recruitment.videoSession(id, token, await body(request), origin));
         if (action === 'video-complete') return json(await recruitment.videoComplete(id, token, await body(request)));
         if (action === 'submit') return json(await recruitment.submitDraft(id, token));
       }
@@ -77,10 +90,13 @@ export const ALL: APIRoute = async ({ request, params }) => {
       if (action === 'templates' && method === 'PUT') return json(await recruitment.saveTemplates(await body(request)));
       if (action === 'queue' && method === 'GET') return json(await recruitment.getQueue());
       if (action === 'process-emails' && method === 'POST') return json(await recruitment.processEmails());
+      if (action === 'preview-link' && method === 'POST') return json(await recruitment.createPreviewLink(origin!));
+      if (action === 'preview-link/disable' && method === 'POST') return json(await recruitment.disablePreviewLink());
+      if (action === 'purge-tests' && method === 'POST') return json(await recruitment.purgeTestApplications());
     }
     return json({ error: 'Ruta no encontrada.', code: 'not_found' }, 404);
   } catch (error) {
     if (error instanceof RecruitmentError) return json({ error: error.message, code: error.code }, error.status);
     return json({ error: 'No se pudo completar la solicitud. Intenta nuevamente.', code: 'server_error' }, 503);
   }
-};
+}

@@ -230,7 +230,6 @@ function renderConfig(value: RecruitmentConfig): void {
   field("title").value = value.title;
   for (const dateName of ["opensAt", "closesAt", "extensionAt"] as const) field(dateName).value = limaDateInput(value[dateName]);
   field("maxApplicants").value = String(value.maxApplicants);
-  field("minAvailabilityHours").value = value.minAvailabilityHours === null ? "" : String(value.minAvailabilityHours);
   field("inactivityHours").value = String(value.inactivityHours);
   field("shortCasePrompt").value = value.shortCasePrompt;
   field("preparationSeconds").value = String(value.preparationSeconds);
@@ -349,10 +348,11 @@ function updateAreaPercentages(): void {
 
 async function loadConfig(): Promise<void> {
   lockForm(configForm, true);
-  const response = await request<{ config: RecruitmentConfig; readiness?: Readiness }>("/config");
+  const response = await request<{ config: RecruitmentConfig; readiness?: Readiness; previewEnabled?: boolean }>("/config");
   config = response.config;
   renderConfig(config);
   renderReadiness(response.readiness);
+  renderPreview(response.previewEnabled === true);
   lockForm(configForm, false);
 }
 
@@ -380,7 +380,7 @@ configForm.addEventListener("submit", async (event) => {
     closesAt: fromLimaInput(field("closesAt").value),
     extensionAt: fromLimaInput(field("extensionAt").value),
     maxApplicants: Number(field("maxApplicants").value),
-    minAvailabilityHours: optionalNumber("minAvailabilityHours"),
+    minAvailabilityHours: 0,
     inactivityHours: Number(field("inactivityHours").value),
     shortCasePrompt: field("shortCasePrompt").value.trim(),
     preparationSeconds: Number(field("preparationSeconds").value),
@@ -408,8 +408,8 @@ configForm.addEventListener("submit", async (event) => {
       maxScore: 5,
     })),
   };
-  if (updated.enabled && (!updated.opensAt || !updated.closesAt || updated.minAvailabilityHours === null)) {
-    showMessage("Define apertura, cierre y disponibilidad mínima antes de habilitar la convocatoria.", true);
+  if (updated.enabled && (!updated.opensAt || !updated.closesAt)) {
+    showMessage("Define apertura y cierre antes de habilitar la convocatoria.", true);
     return;
   }
   if (updated.enabled && !updated.areas.some((area) => area.enabled)) {
@@ -460,6 +460,7 @@ async function loadApplications(): Promise<void> {
   try {
     const result = await request<{ applications: RecruitmentApplication[] }>("/applications");
     applications = result.applications;
+    renderPreview();
     element("application-count").textContent = String(applications.length);
     renderApplications();
   } catch (error) {
@@ -494,6 +495,7 @@ function renderApplications(): void {
     info.append(node("h3", `${application.data.firstName} ${application.data.lastName}`.trim() || "Borrador sin nombre"));
     info.append(node("p", application.data.email || "Sin correo", "muted"));
     const meta = node("div", undefined, "app-meta");
+    if (application.isTest) meta.append(node("span", "Prueba", "badge test"));
     meta.append(node("span", statusNames[application.status] || application.status, "badge"));
     if (application.data.firstChoiceArea) meta.append(node("span", `1. ${areaName(application.data.firstChoiceArea)}`, "muted"));
     if (application.data.secondChoiceArea) meta.append(node("span", `2. ${areaName(application.data.secondChoiceArea)}`, "muted"));
@@ -793,6 +795,45 @@ element("process-emails").addEventListener("click", async () => {
   } finally {
     button.disabled = false;
   }
+});
+
+let previewActive = false;
+function renderPreview(enabled = previewActive): void {
+  previewActive = enabled;
+  const tests = applications.filter((application) => application.isTest).length;
+  element("preview-state").textContent = `${enabled ? "Hay un enlace de prueba activo." : "No hay enlace de prueba activo."} Postulaciones de prueba: ${tests}.`;
+  element<HTMLButtonElement>("preview-disable").disabled = !enabled;
+}
+
+element("preview-create").addEventListener("click", async () => {
+  if (!confirm("Se generará un enlace nuevo y el anterior dejará de funcionar. ¿Continuar?")) return;
+  try {
+    const { url } = await request<{ url: string }>("/preview-link", { method: "POST", body: "{}" });
+    element<HTMLInputElement>("preview-link").value = url;
+    element("preview-link-box").hidden = false;
+    element<HTMLInputElement>("preview-link").select();
+    await navigator.clipboard?.writeText(url).catch(() => undefined);
+    showMessage("Enlace de prueba generado y copiado. Compártelo solo con quienes van a probar.");
+    renderPreview(true);
+  } catch (error) { showMessage(messageOf(error), true); }
+});
+
+element("preview-disable").addEventListener("click", async () => {
+  try {
+    await request("/preview-link/disable", { method: "POST", body: "{}" });
+    element("preview-link-box").hidden = true;
+    showMessage("El enlace de prueba quedó desactivado.");
+    renderPreview(false);
+  } catch (error) { showMessage(messageOf(error), true); }
+});
+
+element("purge-tests").addEventListener("click", async () => {
+  if (!confirm("Se borrarán todas las postulaciones marcadas como «Prueba», con su historial, correos pendientes y videos. No se puede deshacer. ¿Continuar?")) return;
+  try {
+    const result = await request<{ removed: number; videosDeleted: number; videosPending: number }>("/purge-tests", { method: "POST", body: "{}" });
+    showMessage(`Se borraron ${result.removed} postulación(es) de prueba y ${result.videosDeleted} video(s).${result.videosPending ? ` ${result.videosPending} video(s) no se pudieron borrar: revisa la carpeta de Drive.` : ""}`);
+    await loadApplications();
+  } catch (error) { showMessage(messageOf(error), true); }
 });
 
 async function initialize(): Promise<void> {

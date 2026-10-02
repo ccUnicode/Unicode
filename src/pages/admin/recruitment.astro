@@ -49,12 +49,11 @@ import Layout from "../../layouts/Layout.astro";
               <label>Cierre<input name="closesAt" type="datetime-local" /></label>
               <label>Prórroga <span class="optional">Opcional</span><input name="extensionAt" type="datetime-local" /></label>
               <label>Máximo de postulantes<input name="maxApplicants" type="number" min="1" max="150" step="1" required /><small>Hasta 150 postulaciones completas.</small></label>
-              <label>Disponibilidad mínima por semana<input name="minAvailabilityHours" type="number" min="0" max="168" step="0.5" /><small>Define este criterio antes de abrir.</small></label>
               <label>Horas de inactividad para recordar<input name="inactivityHours" type="number" min="1" max="720" step="1" required /></label>
               <label class="wide">Caso corto<textarea name="shortCasePrompt" rows="3" maxlength="2000" required></textarea></label>
             </div>
             <label class="check-line"><input name="enabled" type="checkbox" /> Habilitar convocatoria dentro del plazo configurado</label>
-            <p class="muted note">Para abrir, configura fechas, disponibilidad mínima, al menos un área y dos preguntas activas por categoría.</p>
+            <p class="muted note">Para abrir, configura fechas, al menos un área y dos preguntas activas por categoría.</p>
           </fieldset>
 
           <fieldset class="panel">
@@ -108,6 +107,12 @@ import Layout from "../../layouts/Layout.astro";
         <div class="section-heading">
           <div><h2 id="applications-title">Postulaciones</h2><p class="muted">Datos, preguntas, video y cambios de estado.</p></div>
           <button id="refresh-applications" type="button" class="secondary">Actualizar</button>
+        </div>
+        <div class="panel stack compact preview-panel">
+          <div><h3>Modo de prueba</h3><p class="muted">Genera un enlace secreto para que el equipo postule en la web publicada aunque la convocatoria esté cerrada al público. Esas postulaciones aparecen como «Prueba» y se borran con sus videos cuando termines.</p></div>
+          <p id="preview-state" class="muted" role="status"></p>
+          <div class="button-row"><button id="preview-create" type="button" class="primary">Generar enlace de prueba</button><button id="preview-disable" type="button" class="secondary">Desactivar enlace</button><button id="purge-tests" type="button" class="secondary">Borrar postulaciones de prueba</button></div>
+          <label id="preview-link-box" hidden>Enlace de prueba: cópialo ahora, no se volverá a mostrar<input id="preview-link" readonly /></label>
         </div>
         <div class="filters panel">
           <label>Estado<select id="filter-status"><option value="">Todos los estados</option></select></label>
@@ -255,6 +260,8 @@ import Layout from "../../layouts/Layout.astro";
   .recruitment-admin .email-row { display: flex; justify-content: space-between; align-items: start; gap: 12px; border-top: 1px solid var(--admin-border); padding-top: 12px; font-size: .8rem; }
   .recruitment-admin .email-row p { overflow-wrap: anywhere; }
   .recruitment-admin .template-card { display: grid; gap: 16px; }
+  .recruitment-admin .preview-panel { margin-bottom: 18px; }
+  .recruitment-admin .badge.test { border-color: #a16207; background: #422006; color: #fde68a; }
   .recruitment-admin .template-card .check-line { margin: 0; }
   @media (max-width: 720px) {
     .recruitment-admin { padding: 20px 14px 48px; }

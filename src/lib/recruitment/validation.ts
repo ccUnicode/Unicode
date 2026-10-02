@@ -1,4 +1,4 @@
-import { AREA_IDS, type ApplicationData, type EmailTemplate, type RecruitmentConfig, type RecruitmentQuestion } from './types';
+import { AREA_IDS, AREA_NAMES, type ApplicationData, type EmailTemplate, type RecruitmentConfig, type RecruitmentQuestion } from './types';
 
 export class RecruitmentError extends Error {
   constructor(public code: string, message: string, public status = 400) { super(message); }
@@ -57,13 +57,13 @@ export function validateApplicationData(input: unknown, existing: ApplicationDat
 }
 export function validateConfig(input: unknown): RecruitmentConfig {
   const source = record(input);
-  if (!Array.isArray(source.areas) || source.areas.length !== 6) throw new RecruitmentError('configuration', 'Configura las seis áreas.');
+  if (!Array.isArray(source.areas) || source.areas.length !== AREA_IDS.length) throw new RecruitmentError('configuration', `Configura las ${AREA_IDS.length} áreas.`);
   const areas = source.areas.map((value) => {
     const area = record(value); const id = string(area.id, 'área', 10) as typeof AREA_IDS[number];
     if (!(AREA_IDS as readonly string[]).includes(id)) throw new RecruitmentError('configuration', 'Área desconocida.');
     return { id, name: string(area.name, 'nombre del área', 150, false), enabled: boolean(area.enabled, 'área habilitada'), quota: area.quota === null ? null : number(area.quota, 'cupos de integrantes', 0, 150, true) };
   });
-  if (new Set(areas.map((area) => area.id)).size !== 6) throw new RecruitmentError('configuration', 'Las áreas no pueden repetirse.');
+  if (new Set(areas.map((area) => area.id)).size !== AREA_IDS.length) throw new RecruitmentError('configuration', 'Las áreas no pueden repetirse.');
   if (!Array.isArray(source.questions) || source.questions.length > 100) throw new RecruitmentError('configuration', 'Revisa el banco de preguntas.');
   const questions: RecruitmentQuestion[] = source.questions.map((value) => {
     const question = record(value); const category = string(question.category, 'categoría', 20);
@@ -87,7 +87,8 @@ export function validateConfig(input: unknown): RecruitmentConfig {
     enabled: boolean(source.enabled, 'convocatoria habilitada'), title: string(source.title, 'título', 150, false),
     opensAt: date(source.opensAt, 'apertura'), closesAt: date(source.closesAt, 'cierre'), extensionAt: date(source.extensionAt, 'prórroga'),
     maxApplicants: number(source.maxApplicants, 'máximo de postulantes', 1, 150, true), areas,
-    minAvailabilityHours: source.minAvailabilityHours === null ? null : number(source.minAvailabilityHours, 'disponibilidad mínima', 0, 168),
+    // No minimum by default: 0 keeps the database rule satisfied without filtering anyone.
+    minAvailabilityHours: source.minAvailabilityHours === null || source.minAvailabilityHours === undefined ? 0 : number(source.minAvailabilityHours, 'disponibilidad mínima', 0, 168),
     maxVideoSeconds: number(source.maxVideoSeconds, 'duración del video', 60, 60, true),
     maxVideoBytes: number(source.maxVideoBytes, 'tamaño del video', 1024 * 1024, 20 * 1024 * 1024, true),
     questionsPerCategory: number(source.questionsPerCategory, 'preguntas por categoría', 2, 2, true),
@@ -99,7 +100,7 @@ export function validateConfig(input: unknown): RecruitmentConfig {
   };
   if (result.opensAt && result.closesAt && result.opensAt >= result.closesAt) throw new RecruitmentError('configuration', 'El cierre debe ser posterior a la apertura.');
   if (result.extensionAt && (!result.closesAt || result.extensionAt < result.closesAt)) throw new RecruitmentError('configuration', 'La prórroga debe ser igual o posterior al cierre.');
-  if (result.enabled && (!result.opensAt || !result.closesAt || result.minAvailabilityHours === null || !areas.some((area) => area.enabled))) throw new RecruitmentError('configuration', 'Define fechas, disponibilidad mínima y áreas antes de abrir.');
+  if (result.enabled && (!result.opensAt || !result.closesAt || !areas.some((area) => area.enabled))) throw new RecruitmentError('configuration', 'Define fechas y al menos un área antes de abrir.');
   return result;
 }
 export function validateTemplates(input: unknown): EmailTemplate[] {
@@ -116,4 +117,10 @@ export function validateTemplates(input: unknown): EmailTemplate[] {
     }
     return result;
   });
+}
+
+/** Configs saved before an area existed (e.g. FIN) get it appended, enabled, with the default name. */
+export function withAllAreas<T extends { areas: { id: string; name: string; enabled: boolean; quota: number | null }[] }>(config: T): T {
+  const missing = AREA_IDS.filter((id) => !config.areas.some((area) => area.id === id));
+  return missing.length ? { ...config, areas: [...config.areas, ...missing.map((id) => ({ id, name: AREA_NAMES[id], enabled: true, quota: null }))] } : config;
 }
