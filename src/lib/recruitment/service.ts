@@ -1,5 +1,6 @@
 import { createVideoUpload, deleteVideo, inspectVideo, getVideoPlayback, videoStorageConfigured } from '../recruitment-storage';
 import { sendRecruitmentEmail, recruitmentEmailConfigured } from '../recruitment-email';
+import { renderRecruitmentEmailHtml } from '../recruitment-email-layout';
 import { databaseConfigured, localDevelopmentDatabase, recruitmentRpc } from './database';
 import { record, RecruitmentError, validateApplicationData, validateConfig, validateTemplates, withAllAreas } from './validation';
 import { AREA_IDS, AREA_NAMES, allowedApplicationTransitions, type ApplicationStatus, type EmailQueueItem, type RecruitmentApplication, type RecruitmentConfig, type RecruitmentUpload } from './types';
@@ -151,7 +152,6 @@ export async function adminVideo(id: string) {
 export function getTemplates() { return recruitmentRpc('recruitment_templates'); }
 export function saveTemplates(input: unknown) { return recruitmentRpc('recruitment_templates', { p_templates: validateTemplates(input), p_actor: 'administracion-compartida' }); }
 export function getQueue() { return recruitmentRpc('recruitment_queue'); }
-const escapeHtml = (text: string): string => text.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]!);
 function interpolate(template: string, payload: Record<string, string>): string { return template.replace(/{{\s*(firstName|lastName|title|status|resumeUrl)\s*}}/g, (_, name: string) => payload[name] || ''); }
 export async function processEmails(limit = 10) {
   await recruitmentRpc<number>('recruitment_expire_drafts');
@@ -164,7 +164,7 @@ export async function processEmails(limit = 10) {
       const payload = { ...item.payload };
       if (payload.resumeSecret && ['resume', 'incomplete'].includes(item.templateKey)) payload.resumeUrl = await decryptResume(payload.resumeSecret);
       const text = interpolate(item.body, payload); const subject = interpolate(item.subject, payload).replace(/[\r\n]/g, ' ');
-      const result = await sendRecruitmentEmail({ to: item.to, subject, text, html: `<p>${escapeHtml(text).replace(/\n/g, '<br>')}</p>`, idempotencyKey: `recruitment-${item.id}` });
+      const result = await sendRecruitmentEmail({ to: item.to, subject, text, html: renderRecruitmentEmailHtml({ subject, text, actionUrl: payload.resumeUrl, siteUrl: env('RECRUITMENT_BASE_URL') || 'https://www.ccunicode.org' }), idempotencyKey: `recruitment-${item.id}` });
       await recruitmentRpc<null>('recruitment_finish_email', { p_id: item.id, p_lease_token: leaseToken, p_message_id: result.messageId, p_error: null });
       sent++;
     } catch {

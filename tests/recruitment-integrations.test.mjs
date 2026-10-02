@@ -12,6 +12,7 @@ const storage = await server.ssrLoadModule('/src/lib/recruitment-storage.ts');
 const email = await server.ssrLoadModule('/src/lib/recruitment-email.ts');
 const google = await server.ssrLoadModule('/src/lib/recruitment-google.ts');
 const { sessionStore } = await server.ssrLoadModule('/src/lib/session-store.ts');
+const layout = await server.ssrLoadModule('/src/lib/recruitment-email-layout.ts');
 const fixture = async (name) => new Uint8Array(await readFile(new URL(`./fixtures/${name}`, import.meta.url)));
 const applicationId = '11111111-1111-4111-8111-111111111111';
 const uploadId = '22222222-2222-4222-8222-222222222222';
@@ -92,4 +93,14 @@ test('email retry uses a stable provider idempotency key and needs a delivery id
     globalThis.fetch = async () => Response.json({}); await assert.rejects(email.sendRecruitmentEmail(request), /no confirmó/);
     await assert.rejects(email.sendRecruitmentEmail({ ...request, subject: 'bad\r\nBcc: other@example.invalid' }), /inválido/);
   } finally { globalThis.fetch = originalFetch; }
+});
+
+test('emails turn the personal link into a button and escape template text', () => {
+  const url = 'https://www.ccunicode.org/postular#id=1&token=a_b';
+  const html = layout.renderRecruitmentEmailHtml({ subject: 'Continúa', text: `Hola <Ana>, guarda este enlace personal para continuar tu postulación: ${url}. No lo compartas.`, actionUrl: url, siteUrl: 'https://www.ccunicode.org/' });
+  assert.match(html, /Hola &lt;Ana&gt;, guarda este enlace personal para continuar tu postulación\.<\/p>/);
+  assert.match(html, /<a href="https:\/\/www\.ccunicode\.org\/postular#id=1&amp;token=a_b"[^>]*>Continuar mi postulación<\/a>/);
+  assert.match(html, />No lo compartas\.<\/p>/);
+  assert.match(html, /src="https:\/\/www\.ccunicode\.org\/email\/logo\.png"/);
+  assert.doesNotMatch(layout.renderRecruitmentEmailHtml({ subject: 's', text: 'Sin enlace', siteUrl: 'https://x.test' }), /Continuar mi postulación/);
 });
