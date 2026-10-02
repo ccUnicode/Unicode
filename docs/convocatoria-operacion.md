@@ -4,6 +4,24 @@ La implementación cubre A (configuración), B (postulación y video) y F (estad
 
 El código se puede completar y probar sin acceso al Supabase anterior. Su activación requiere aplicar la migración en un proyecto bajo control del equipo, autorizar Drive y configurar el proveedor de correo. Una sesión iniciada en el navegador no sustituye las credenciales de servidor.
 
+## Activación paso a paso
+
+Todo se ejecuta desde la raíz del repositorio. Los valores se guardan en `.env` (excluido de git) y el script nunca los imprime completos.
+
+1. **Supabase.** En `.env`: `PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (clave secreta `sb_secret_…`), `PUBLIC_SUPABASE_ANON_KEY` (clave publicable, solo para comprobar el bloqueo) y `ADMIN_PASSWORD` (la misma del panel actual). Abrir Supabase → SQL Editor, pegar `supabase/migrations/20261002_recruitment.sql` completo y ejecutar **una sola vez**.
+2. **Claves propias.** `npm run recruitment -- secrets` genera la clave de cifrado de enlaces, `CRON_SECRET` y `RECRUITMENT_BASE_URL=https://www.ccunicode.org/`. No regenerarlas después de abrir: invalidaría enlaces ya enviados.
+3. **Google (videos y correo con una sola autorización).** Con la cuenta `ccunicode.desarrollo@gmail.com` en [Google Cloud Console](https://console.cloud.google.com/):
+   1. Crear un proyecto, por ejemplo «UNICODE Convocatoria».
+   2. APIs y servicios → Biblioteca: habilitar **Google Drive API** y **Gmail API**.
+   3. Pantalla de consentimiento OAuth: tipo Externo, nombre de la app y correo de soporte. Después pulsar **Publicar aplicación** (estado «En producción»); en modo «Prueba» la autorización caduca a los 7 días.
+   4. Credenciales → Crear ID de cliente OAuth → tipo **App de escritorio**. Copiar ID y secreto a `.env` como `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`.
+   5. `npm run recruitment -- google`: abre Google en el navegador; elegir la cuenta de UNICODE. Si aparece «Google no verificó esta app», usar Configuración avanzada → Ir a la app (es la propia app del equipo). El script guarda el refresh token, crea la carpeta privada de videos desde la app (requisito de `drive.file`) y configura el correo por Gmail, sin necesidad de Resend ni de verificar dominio.
+   6. Compartir la carpeta creada solo con los evaluadores de GTH, como Lector.
+4. **Comprobar.** `npm run recruitment -- check --send-test=tu-correo@…` verifica migración, bloqueo de la clave pública, Google, carpeta y correo, y envía un correo de prueba. Repetir hasta que no haya pendientes salvo «Despliegue».
+5. **Vercel.** `npm run recruitment -- vercel` inicia sesión en Vercel, vincula el proyecto `unicode-landing-page` y copia las variables a Producción. Luego fusionar el PR (o «Redeploy») y volver a ejecutar `check`: «Despliegue» debe quedar en ✔.
+6. **Cola de correos.** `npm run recruitment -- github` guarda `RECRUITMENT_CRON_SECRET` y `RECRUITMENT_BASE_URL` en GitHub para el ejecutor cada 5 minutos. Hacerlo después del paso 5, o el ejecutor fallará mientras producción no tenga la clave.
+7. **Prueba real (smoke test)** en `https://www.ccunicode.org`, con la convocatoria habilitada temporalmente desde `/admin/recruitment` y un correo propio: crear borrador (llega el correo con enlace), cerrar el navegador y retomar, grabar desde un celular y una computadora, registrar una falla y usar la carga alternativa, enviar (llega el correo de confirmación), reproducir el video desde el panel y revisar historial y cola. Después, marcar la postulación de prueba como retirada y cerrar la convocatoria hasta la fecha real.
+
 ## Base de datos y despliegue
 
 1. Acceder al proyecto autorizado de Supabase. Si se usa otro proyecto, conservar el anterior hasta recuperar las postulaciones históricas.
