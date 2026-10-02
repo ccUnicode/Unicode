@@ -139,6 +139,14 @@ test('closed calls, future opening, deadline, extension and minimum availability
   await assert.rejects(() => rpc(db, 'recruitment_submit', missingField.id, missingField.owner), /incomplete/);
 });
 
+test('applications submit without the removed short case answer', async t => {
+  const db = await database(t);
+  await openCall(db);
+  const application = await verifiedDraft(db, { shortCase: '' });
+  const result = await rpc(db, 'recruitment_submit', application.id, application.owner);
+  assert.equal(result.application.status, 'submitted');
+});
+
 test('ownership and stable two-plus-two question snapshots survive bank edits and form resume', async t => {
   const db = await database(t);
   await openCall(db);
