@@ -7,6 +7,8 @@
  * - Export to Excel (CSV).
  */
 import Layout from "../layouts/Layout.astro";
+// The legacy panel read public.applicants, which no longer exists; applications now live in /admin/recruitment.
+return Astro.redirect("/admin/recruitment", 302);
 ---
 
 <Layout title="Admin">
