@@ -49,12 +49,11 @@ import Layout from "../../layouts/Layout.astro";
               <label>Cierre<input name="closesAt" type="datetime-local" /></label>
               <label>Prórroga <span class="optional">Opcional</span><input name="extensionAt" type="datetime-local" /></label>
               <label>Máximo de postulantes<input name="maxApplicants" type="number" min="1" max="150" step="1" required /><small>Hasta 150 postulaciones completas.</small></label>
-              <label>Disponibilidad mínima por semana<input name="minAvailabilityHours" type="number" min="0" max="168" step="0.5" /><small>Define este criterio antes de abrir.</small></label>
               <label>Horas de inactividad para recordar<input name="inactivityHours" type="number" min="1" max="720" step="1" required /></label>
               <label class="wide">Caso corto<textarea name="shortCasePrompt" rows="3" maxlength="2000" required></textarea></label>
             </div>
             <label class="check-line"><input name="enabled" type="checkbox" /> Habilitar convocatoria dentro del plazo configurado</label>
-            <p class="muted note">Para abrir, configura fechas, disponibilidad mínima, al menos un área y dos preguntas activas por categoría.</p>
+            <p class="muted note">Para abrir, configura fechas, al menos un área y dos preguntas activas por categoría.</p>
           </fieldset>
 
           <fieldset class="panel">

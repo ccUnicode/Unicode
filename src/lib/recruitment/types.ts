@@ -1,4 +1,9 @@
-export const AREA_IDS = ['ID', 'RRPP', 'GTH', 'ACD', 'DCC', 'LGE'] as const;
+export const AREA_IDS = ['ID', 'RRPP', 'GTH', 'ACD', 'DCC', 'LGE', 'FIN'] as const;
+/** Default names; FIN only appears in the application form, not in the landing page icons. */
+export const AREA_NAMES: Record<string, string> = {
+  ID: 'Investigación y Desarrollo', RRPP: 'Relaciones Públicas', GTH: 'Gestión del Talento Humano', ACD: 'Académica',
+  DCC: 'Dirección de Comunicación y Contenido', LGE: 'Logística y Gestión de Eventos', FIN: 'Finanzas',
+};
 export type AreaId = typeof AREA_IDS[number];
 export type QuestionCategory = 'motivation' | 'collaboration';
 export interface RecruitmentQuestion { id: string; category: QuestionCategory; text: string; enabled?: boolean }

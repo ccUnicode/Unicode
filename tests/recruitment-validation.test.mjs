@@ -42,7 +42,7 @@ const configuration = () => ({
   maxApplicants: 150, minAvailabilityHours: null, maxVideoSeconds: 60, maxVideoBytes: 20 * 1024 * 1024,
   questionsPerCategory: 2, preparationSeconds: 30, inactivityHours: 24, shortCasePrompt: 'Describe cómo abordarías el caso.',
   storageProvider: 'drive', revision: 1, thresholds: { affinity: null, written: null, video: null },
-  areas: ['ID', 'RRPP', 'GTH', 'ACD', 'DCC', 'LGE'].map(id => ({ id, name: id, enabled: false, quota: null })),
+  areas: ['ID', 'RRPP', 'GTH', 'ACD', 'DCC', 'LGE', 'FIN'].map(id => ({ id, name: id, enabled: false, quota: null })),
   questions: ['motivation', 'collaboration'].flatMap(category => [1, 2].map(number => ({ id: `${category}-${number}`, category, text: `Pregunta ${number}`, enabled: true }))),
   videoRubric: ['clarity', 'motivation', 'collaboration'].map(id => ({ id, label: id, low: 'Bajo', medium: 'Medio', high: 'Alto', maxScore: 5 })),
 });
@@ -58,11 +58,12 @@ test('administration cannot weaken the agreed 60 seconds, two questions or 150 a
   assert.throws(() => validation.validateConfig(missingCategory));
 });
 
-test('opening requires explicit dates, enabled area and availability; dates need timezone', () => {
+test('opening requires explicit dates and an enabled area, not a minimum availability; dates need timezone', () => {
   assert.throws(() => validation.validateConfig({ ...configuration(), enabled: true }));
-  const opening = { ...configuration(), enabled: true, opensAt: '2026-10-01T00:00:00-05:00', closesAt: '2026-10-31T23:59:59-05:00', minAvailabilityHours: 4 };
+  const opening = { ...configuration(), enabled: true, opensAt: '2026-10-01T00:00:00-05:00', closesAt: '2026-10-31T23:59:59-05:00', minAvailabilityHours: null };
   opening.areas[0].enabled = true;
   assert.equal(validation.validateConfig(opening).opensAt, '2026-10-01T05:00:00.000Z');
+  assert.equal(validation.validateConfig(opening).minAvailabilityHours, 0);
   for (const change of [{ opensAt: '2026-10-01T00:00:00' }, { closesAt: '2026-09-01T00:00:00-05:00' }, { extensionAt: '2026-10-02T00:00:00-05:00' }]) {
     assert.throws(() => validation.validateConfig({ ...opening, ...change }));
   }
@@ -74,4 +75,12 @@ test('email templates reject header injection and personal links outside draft m
   assert.throws(() => validation.validateTemplates({ templates: [{ ...template, subject: 'Mensaje\r\nBcc: other@example.invalid' }] }));
   assert.throws(() => validation.validateTemplates({ templates: [{ ...template, body: '{{resumeUrl}}' }] }));
   assert.throws(() => validation.validateTemplates({ templates: [{ ...template, body: '{{secret}}' }] }));
+});
+
+test('Finanzas is a valid application area and is added to configs saved before it existed', () => {
+  const saved = configuration(); saved.areas = saved.areas.filter(area => area.id !== 'FIN');
+  const completed = validation.withAllAreas(saved);
+  assert.deepEqual(completed.areas.at(-1), { id: 'FIN', name: 'Finanzas', enabled: true, quota: null });
+  validation.validateConfig(completed);
+  assert.equal(validation.validateApplicationData({ firstName: 'A', lastName: 'B', email: 'a@b.pe', consent: true, firstChoiceArea: 'FIN' }, undefined, true).firstChoiceArea, 'FIN');
 });

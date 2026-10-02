@@ -1,8 +1,8 @@
 import { createVideoUpload, inspectVideo, getVideoPlayback, videoStorageConfigured } from '../recruitment-storage';
 import { sendRecruitmentEmail, recruitmentEmailConfigured } from '../recruitment-email';
 import { databaseConfigured, localDevelopmentDatabase, recruitmentRpc } from './database';
-import { record, RecruitmentError, validateApplicationData, validateConfig, validateTemplates } from './validation';
-import { allowedApplicationTransitions, type ApplicationStatus, type EmailQueueItem, type RecruitmentApplication, type RecruitmentConfig, type RecruitmentUpload } from './types';
+import { record, RecruitmentError, validateApplicationData, validateConfig, validateTemplates, withAllAreas } from './validation';
+import { AREA_IDS, AREA_NAMES, allowedApplicationTransitions, type ApplicationStatus, type EmailQueueItem, type RecruitmentApplication, type RecruitmentConfig, type RecruitmentUpload } from './types';
 
 const env = (name: string): string | undefined => import.meta.env[name] || process.env[name];
 type ApplicationResponse = { application: RecruitmentApplication };
@@ -12,7 +12,7 @@ const fallbackConfig = {
   maxApplicants: 150, minAvailabilityHours: null, maxVideoSeconds: 60, maxVideoBytes: 20 * 1024 * 1024,
   questionsPerCategory: 2, preparationSeconds: 30, inactivityHours: 24,
   shortCasePrompt: 'Describe cómo abordarías un problema habitual del área a la que postulas.',
-  areas: [{ id: 'ID', name: 'Investigación y Desarrollo' }, { id: 'RRPP', name: 'Relaciones Públicas' }, { id: 'GTH', name: 'Gestión del Talento Humano' }, { id: 'ACD', name: 'Académica' }, { id: 'DCC', name: 'Dirección de Comunicación y Contenido' }, { id: 'LGE', name: 'Logística y Gestión de Eventos' }].map((area) => ({ ...area, enabled: false, quota: null })),
+  areas: AREA_IDS.map((id) => ({ id, name: AREA_NAMES[id], enabled: false, quota: null })),
 };
 export async function hash(value: string): Promise<string> {
   return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)))).map((byte) => byte.toString(16).padStart(2, '0')).join('');
@@ -46,6 +46,7 @@ export async function publicConfig() {
   if (!databaseConfigured()) return { config: fallbackConfig, available: false, reason: 'La convocatoria aún está pendiente de configuración.', deploymentReady: false };
   try {
     const response = await recruitmentRpc<{ config: RecruitmentConfig; available: boolean; reason: string | null }>('recruitment_public_config');
+    response.config = withAllAreas(response.config);
     const full = await recruitmentRpc<ConfigResponse>('recruitment_admin_config');
     const ready = videoStorageConfigured(full.config.storageProvider) && recruitmentEmailConfigured() && resumeEncryptionConfigured() && canonicalBaseConfigured();
     if (!import.meta.env.DEV && !ready) return { ...response, available: false, reason: 'La convocatoria aún está pendiente de configuración.', deploymentReady: false };
@@ -57,6 +58,7 @@ export async function publicConfig() {
 }
 export async function adminConfig() {
   const response = await recruitmentRpc<ConfigResponse>('recruitment_admin_config');
+  response.config = withAllAreas(response.config);
   return { ...response, readiness: { database: databaseConfigured(), localDevelopment: localDevelopmentDatabase(), video: videoStorageConfigured(response.config.storageProvider), email: recruitmentEmailConfigured(), resumeEncryption: resumeEncryptionConfigured(), canonicalBase: canonicalBaseConfigured(), individualStaffIdentity: false } };
 }
 export async function saveConfig(input: unknown) { return recruitmentRpc<ConfigResponse>('recruitment_update_config', { p_config: validateConfig(input), p_actor: 'administracion-compartida' }); }

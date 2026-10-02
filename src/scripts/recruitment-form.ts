@@ -547,7 +547,7 @@ function initializeRecruitment() {
         const select = element<HTMLSelectElement>(id);
         for (const area of config.areas.filter(item => item.enabled)) { const option = document.createElement("option"); option.value = area.id; option.textContent = area.name; select.append(option); }
       }
-      if (config.minAvailabilityHours !== null) {
+      if (config.minAvailabilityHours) {
         element<HTMLInputElement>("availabilityHours").min = String(config.minAvailabilityHours);
         element("availability-hint").textContent = `Esta convocatoria requiere al menos ${config.minAvailabilityHours} horas por semana.`;
       }

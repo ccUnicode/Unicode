@@ -230,7 +230,6 @@ function renderConfig(value: RecruitmentConfig): void {
   field("title").value = value.title;
   for (const dateName of ["opensAt", "closesAt", "extensionAt"] as const) field(dateName).value = limaDateInput(value[dateName]);
   field("maxApplicants").value = String(value.maxApplicants);
-  field("minAvailabilityHours").value = value.minAvailabilityHours === null ? "" : String(value.minAvailabilityHours);
   field("inactivityHours").value = String(value.inactivityHours);
   field("shortCasePrompt").value = value.shortCasePrompt;
   field("preparationSeconds").value = String(value.preparationSeconds);
@@ -380,7 +379,7 @@ configForm.addEventListener("submit", async (event) => {
     closesAt: fromLimaInput(field("closesAt").value),
     extensionAt: fromLimaInput(field("extensionAt").value),
     maxApplicants: Number(field("maxApplicants").value),
-    minAvailabilityHours: optionalNumber("minAvailabilityHours"),
+    minAvailabilityHours: 0,
     inactivityHours: Number(field("inactivityHours").value),
     shortCasePrompt: field("shortCasePrompt").value.trim(),
     preparationSeconds: Number(field("preparationSeconds").value),
@@ -408,8 +407,8 @@ configForm.addEventListener("submit", async (event) => {
       maxScore: 5,
     })),
   };
-  if (updated.enabled && (!updated.opensAt || !updated.closesAt || updated.minAvailabilityHours === null)) {
-    showMessage("Define apertura, cierre y disponibilidad mínima antes de habilitar la convocatoria.", true);
+  if (updated.enabled && (!updated.opensAt || !updated.closesAt)) {
+    showMessage("Define apertura y cierre antes de habilitar la convocatoria.", true);
     return;
   }
   if (updated.enabled && !updated.areas.some((area) => area.enabled)) {
