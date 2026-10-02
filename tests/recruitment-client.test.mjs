@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { chooseRecordingMime, isAllowedUploadUrl } from '../src/scripts/recruitment-form.ts';
+import { matchUniversities } from '../src/scripts/university-combobox.ts';
 
 test('candidate upload capability only accepts the Google resumable upload endpoint', () => {
   assert.equal(isAllowedUploadUrl('https://www.googleapis.com/upload/drive/v3/files/file-id?upload_id=session-token', 'drive'), true);
@@ -31,4 +32,11 @@ test('recording format detection supports browsers that only record MP4', () => 
 test('recording format detection selects supported WebM and reports unavailable recording', () => {
   assert.equal(chooseRecordingMime({ isTypeSupported: type => type === 'video/webm;codecs=vp8,opus' }), 'video/webm;codecs=vp8,opus');
   assert.equal(chooseRecordingMime({ isTypeSupported: () => false }), null);
+});
+
+test('university suggestions match acronyms, accents and partial words', () => {
+  assert.equal(matchUniversities('UNI')[0].name, 'Universidad Nacional de Ingeniería');
+  assert.equal(matchUniversities('san marcos')[0].acronym, 'UNMSM');
+  assert.equal(matchUniversities('catolica del peru')[0].acronym, 'PUCP');
+  assert.deepEqual(matchUniversities('zzz'), []);
 });
