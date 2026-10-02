@@ -1,0 +1,28 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/navbar.astro";
+import RecruitmentForm from "../components/components-call/recruitment-form.astro";
+export const prerender = false;
+Astro.response.headers.set("Cache-Control", "no-store");
+Astro.response.headers.set("Referrer-Policy", "no-referrer");
+---
+
+<Layout title="Postula a UNICODE" description="Completa tus datos y responde las preguntas de tu postulación en un video de un minuto.">
+  <script slot="head" is:inline>
+    // Remove personal links before deferred scripts or analytics can observe the URL.
+    (() => {
+      const parameters = new URLSearchParams(location.hash.slice(1));
+      const id = parameters.get('id'); const token = parameters.get('token');
+      if (!id || !token) return;
+      try {
+        sessionStorage.setItem('unicode-recruitment-session', JSON.stringify({ id, token }));
+        history.replaceState(null, '', location.pathname + location.search);
+      } catch { /* The form module retains the fragment when session storage is unavailable. */ }
+    })();
+  </script>
+  <Navbar />
+  <main class="mx-auto w-full max-w-5xl px-4 pb-24 pt-32 md:px-8 md:pt-40">
+    <a href="/call" class="mb-6 inline-flex text-sm text-zinc-400 hover:text-unicode">← Volver a la convocatoria</a>
+    <RecruitmentForm />
+  </main>
+</Layout>

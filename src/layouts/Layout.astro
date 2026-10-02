@@ -48,6 +48,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || "https://ccunicod
 		<!-- Extra SEO -->
 		<meta name="robots" content="index, follow" />
 		<meta name="theme-color" content="#75D32D" />
+		<slot name="head" />
 
 		<!-- Fonts -->
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
