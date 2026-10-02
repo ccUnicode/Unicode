@@ -121,10 +121,10 @@ import Layout from "../../layouts/Layout.astro";
         </div>
         <p id="applications-info" class="muted" role="status"></p>
         <div id="applications-list" class="app-list"></div>
-        <section id="application-detail" class="panel detail-panel" aria-labelledby="detail-title" tabindex="-1" hidden>
+        <dialog id="application-detail" class="detail-panel" aria-labelledby="detail-title">
           <div class="section-heading">
             <div><p class="eyebrow">Detalle de postulación</p><h2 id="detail-title"></h2></div>
-            <button id="close-detail" type="button" class="secondary">Cerrar detalle</button>
+            <button id="close-detail" type="button" class="secondary">Cerrar</button>
           </div>
           <div id="detail-personal" class="detail-grid"></div>
           <div id="detail-answers" class="stack compact"></div>
@@ -146,7 +146,7 @@ import Layout from "../../layouts/Layout.astro";
           </form>
           <h3>Historial</h3>
           <ol id="detail-history" class="history"></ol>
-        </section>
+        </dialog>
       </section>
 
       <section id="panel-communications" aria-labelledby="communications-title" hidden>
@@ -176,7 +176,7 @@ import Layout from "../../layouts/Layout.astro";
 </script>
 
 <style is:global>
-  .recruitment-admin { --admin-green: #75d32d; --admin-border: #293029; --admin-muted: #a7b0a7; width: min(1160px, 100%); margin-inline: auto; padding: 28px 20px 64px; }
+  .recruitment-admin { --admin-green: #75d32d; --admin-border: #27272a; --admin-muted: #a1a1aa; width: min(1160px, 100%); margin-inline: auto; padding: 28px 20px 64px; }
   .recruitment-admin [hidden] { display: none !important; }
   .recruitment-admin .login-panel { max-width: 460px; margin: max(40px, 12vh) auto; }
   .recruitment-admin h1 { font-size: clamp(1.65rem, 3vw, 2.1rem); font-weight: 700; line-height: 1.3; }
@@ -193,11 +193,11 @@ import Layout from "../../layouts/Layout.astro";
   .recruitment-admin .section-heading { margin-bottom: 20px; }
   .recruitment-admin .stack { display: grid; gap: 24px; }
   .recruitment-admin .compact { gap: 14px; }
-  .recruitment-admin .panel { background: #101510; border: 1px solid var(--admin-border); border-radius: 16px; padding: 24px; min-width: 0; }
+  .recruitment-admin .panel { background: #111113; border: 1px solid var(--admin-border); border-radius: 16px; padding: 24px; min-width: 0; }
   .recruitment-admin fieldset { margin: 0; }
   .recruitment-admin legend { color: #fff; font-size: 1rem; font-weight: 600; padding: 0 7px; }
-  .recruitment-admin label { display: flex; flex-direction: column; gap: 8px; font-size: .8rem; color: #e1e7e1; }
-  .recruitment-admin input:not([type="checkbox"]), .recruitment-admin select, .recruitment-admin textarea { width: 100%; min-width: 0; background: #080c08; border: 1px solid #3a433a; border-radius: 9px; padding: 11px 12px; font: inherit; color: #fff; color-scheme: dark; }
+  .recruitment-admin label { display: flex; flex-direction: column; gap: 8px; font-size: .8rem; color: #e4e4e7; }
+  .recruitment-admin input:not([type="checkbox"]), .recruitment-admin select, .recruitment-admin textarea { width: 100%; min-width: 0; background: #09090b; border: 1px solid #3f3f46; border-radius: 9px; padding: 11px 12px; font: inherit; color: #fff; color-scheme: dark; }
   .recruitment-admin textarea { resize: vertical; line-height: 1.6; }
   .recruitment-admin input:disabled { color: var(--admin-muted); opacity: .85; }
   .recruitment-admin small, .recruitment-admin .optional { color: var(--admin-muted); font-size: .72rem; }
@@ -213,47 +213,54 @@ import Layout from "../../layouts/Layout.astro";
   .recruitment-admin button:disabled { opacity: .5; cursor: wait; }
   .recruitment-admin :is(button, a, input, select, textarea):focus-visible { outline: 2px solid var(--admin-green); outline-offset: 3px; }
   .recruitment-admin .primary, .recruitment-admin .secondary { border-radius: 9px; padding: 11px 16px; font-size: .8rem; font-weight: 600; line-height: 1.4; }
-  .recruitment-admin .primary { background: var(--admin-green); color: #101510; border: 1px solid var(--admin-green); }
+  .recruitment-admin .primary { background: var(--admin-green); color: #0a0a0a; border: 1px solid var(--admin-green); }
   .recruitment-admin .primary:hover:not(:disabled) { background: #94e65a; }
-  .recruitment-admin .secondary { border: 1px solid #3a433a; color: #e1e7e1; background: #141b14; }
-  .recruitment-admin .secondary:hover:not(:disabled) { border-color: var(--admin-green); }
-  .recruitment-admin .message { padding: 13px 16px; border-radius: 9px; border: 1px solid #436d2b; background: #15300f; font-size: .85rem; margin: 16px 0; }
-  .recruitment-admin .message.error { border-color: #903e43; background: #311416; color: #ffc3c6; }
-  .recruitment-admin .admin-nav { display: flex; flex-wrap: wrap; gap: 5px; padding: 5px; border: 1px solid var(--admin-border); border-radius: 12px; margin: 0 0 30px; background: #0b100b; }
+  .recruitment-admin .secondary { border: 1px solid #3f3f46; color: #e4e4e7; background: #18181b; }
+  .recruitment-admin .secondary:hover:not(:disabled) { border-color: #71717a; background: #27272a; }
+  .recruitment-admin .message { padding: 13px 16px; border-radius: 9px; border: 1px solid #3f3f46; border-left: 3px solid var(--admin-green); background: #18181b; color: #f4f4f5; font-size: .85rem; margin: 16px 0; }
+  .recruitment-admin .message.error { border-color: #7f1d1d; border-left-color: #f87171; background: #1c1214; color: #fecaca; }
+  .recruitment-admin .admin-nav { display: flex; flex-wrap: wrap; gap: 5px; padding: 5px; border: 1px solid var(--admin-border); border-radius: 12px; margin: 0 0 30px; background: #0c0c0e; }
   .recruitment-admin .admin-nav button { flex: 1 1 auto; min-width: 0; padding: 12px; border-radius: 7px; color: var(--admin-muted); font-size: .85rem; }
-  .recruitment-admin .admin-nav button[aria-current="page"] { color: var(--admin-green); background: #1b2b15; }
+  .recruitment-admin .admin-nav button[aria-current="page"] { color: #fff; background: #27272a; box-shadow: inset 0 -2px 0 var(--admin-green); }
+  .recruitment-admin .admin-nav button[aria-current="page"] .count { color: var(--admin-green); }
   .recruitment-admin .count { display: inline-block; margin-left: 4px; font-size: .7rem; }
-  .recruitment-admin .badge { display: inline-flex; align-items: center; border: 1px solid #42593b; background: #182415; color: #b0e88e; border-radius: 999px; font-size: .7rem; padding: 5px 10px; white-space: nowrap; }
+  .recruitment-admin .badge { display: inline-flex; align-items: center; border: 1px solid #3f3f46; background: #18181b; color: #d4d4d8; border-radius: 999px; font-size: .7rem; padding: 5px 10px; white-space: nowrap; }
   .recruitment-admin .area-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
   .recruitment-admin .area-card { border: 1px solid var(--admin-border); border-radius: 10px; padding: 16px; }
   .recruitment-admin .area-card .check-line { margin: 0 0 14px; font-weight: 600; }
   .recruitment-admin .question-group { display: grid; align-content: start; gap: 16px; }
   .recruitment-admin .question-item { border-bottom: 1px solid var(--admin-border); padding-bottom: 16px; }
   .recruitment-admin .question-item .check-line { margin-top: 10px; font-size: .75rem; }
-  .recruitment-admin .save-bar { position: sticky; bottom: 16px; background: #101510f5; border: 1px solid var(--admin-border); border-radius: 12px; padding: 16px 20px; z-index: 5; backdrop-filter: blur(8px); }
+  .recruitment-admin .save-bar { position: sticky; bottom: 16px; background: #111113f5; border: 1px solid var(--admin-border); border-radius: 12px; padding: 16px 20px; z-index: 5; backdrop-filter: blur(8px); }
   .recruitment-admin .filters { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 16px; margin-bottom: 18px; }
   .recruitment-admin .app-list { display: grid; gap: 12px; margin-top: 18px; }
-  .recruitment-admin .app-card { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px; background: #101510; border: 1px solid var(--admin-border); border-radius: 12px; }
+  .recruitment-admin .app-card { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px; background: #111113; transition: border-color .15s; border: 1px solid var(--admin-border); border-radius: 12px; }
   .recruitment-admin .app-card h3 { margin-bottom: 3px; }
   .recruitment-admin .app-card p { overflow-wrap: anywhere; }
   .recruitment-admin .app-card .app-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-  .recruitment-admin .detail-panel { margin-top: 24px; display: grid; gap: 24px; }
+  .recruitment-admin .app-card:hover { border-color: #3f3f46; }
+  .recruitment-admin .detail-panel { position: fixed; inset: 0 0 0 auto; width: min(760px, 100vw); max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; padding: 28px; overflow-y: auto; overscroll-behavior: contain; background: #0c0c0e; color: inherit; border: 0; border-left: 1px solid var(--admin-border); }
+  .recruitment-admin .detail-panel[open] { display: grid; align-content: start; gap: 24px; animation: detail-in .2s ease-out; }
+  .recruitment-admin .detail-panel::backdrop { background: #000a; backdrop-filter: blur(2px); }
+  .recruitment-admin .detail-panel > .section-heading { position: sticky; top: -28px; z-index: 1; margin: -28px -28px 0; padding: 20px 28px; background: #0c0c0ef2; border-bottom: 1px solid var(--admin-border); backdrop-filter: blur(8px); }
+  .recruitment-admin .detail-panel .eyebrow { margin-top: 0; }
+  @keyframes detail-in { from { transform: translateX(24px); opacity: 0; } }
   .recruitment-admin .detail-panel .section-heading { margin-bottom: 0; }
   .recruitment-admin .detail-grid > div { min-width: 0; overflow-wrap: anywhere; }
   .recruitment-admin .detail-grid dt { color: var(--admin-muted); font-size: .72rem; margin-bottom: 5px; }
   .recruitment-admin .detail-grid dd { font-size: .85rem; }
-  .recruitment-admin .answer-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85rem; color: #e1e7e1; margin-top: 6px; }
-  .recruitment-admin .assigned-questions { margin: 8px 0 0; padding-left: 20px; list-style: decimal; font-size: .85rem; color: #e1e7e1; }
+  .recruitment-admin .answer-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85rem; color: #e4e4e7; margin-top: 6px; }
+  .recruitment-admin .assigned-questions { margin: 8px 0 0; padding-left: 20px; list-style: decimal; font-size: .85rem; color: #e4e4e7; }
   .recruitment-admin .assigned-questions li { margin-bottom: 12px; line-height: 1.6; }
   .recruitment-admin .transition-box { display: grid; gap: 16px; border-block: 1px solid var(--admin-border); padding-block: 24px; }
   .recruitment-admin .transition-box .note { margin: 0; }
   .recruitment-admin .transition-box > button { justify-self: start; }
   .recruitment-admin .history { display: grid; gap: 16px; list-style: none; }
-  .recruitment-admin .history li { border-left: 2px solid #48673a; padding-left: 16px; }
+  .recruitment-admin .history li { border-left: 2px solid #3f3f46; padding-left: 16px; }
   .recruitment-admin .history .muted { font-size: .72rem; }
   .recruitment-admin .button-row { display: flex; flex-wrap: wrap; gap: 10px; }
   .recruitment-admin .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-  .recruitment-admin .stat { background: #080c08; border: 1px solid var(--admin-border); border-radius: 10px; padding: 14px; }
+  .recruitment-admin .stat { background: #09090b; border: 1px solid var(--admin-border); border-radius: 10px; padding: 14px; }
   .recruitment-admin .stat strong { display: block; color: var(--admin-green); font-size: 1.4rem; }
   .recruitment-admin .stat span { color: var(--admin-muted); font-size: .72rem; }
   .recruitment-admin .email-list { display: grid; gap: 10px; }
@@ -274,7 +281,9 @@ import Layout from "../../layouts/Layout.astro";
     .recruitment-admin .save-bar { bottom: 8px; gap: 8px; }
     .recruitment-admin .save-bar .primary { width: 100%; }
     .recruitment-admin .detail-grid { gap: 16px; }
+    .recruitment-admin .detail-panel { padding: 20px 16px; border-left: 0; }
+    .recruitment-admin .detail-panel > .section-heading { top: -20px; margin: -20px -16px 0; padding: 14px 16px; flex-direction: row; align-items: center; }
     .recruitment-admin .email-row { flex-direction: column; }
   }
-  @media (prefers-reduced-motion: reduce) { .recruitment-admin * { transition: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .recruitment-admin * { transition: none !important; animation: none !important; } }
 </style>

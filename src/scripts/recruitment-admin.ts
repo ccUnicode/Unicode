@@ -131,7 +131,8 @@ function clearSession(): void {
   element("recruitment-login").hidden = false;
   // Remove protected data from the DOM after expiration or logout.
   ["applications-list", "detail-title", "detail-personal", "detail-answers", "detail-questions", "detail-history", "detail-video-info", "video-access-message", "template-list", "email-list", "email-summary"].forEach((id) => element(id).replaceChildren());
-  element("application-detail").hidden = true;
+  const detail = element<HTMLDialogElement>("application-detail");
+  if (detail.open) detail.close();
   element<HTMLInputElement>("recruitment-password").value = "";
 }
 
@@ -518,20 +519,27 @@ async function loadDetail(id: string): Promise<void> {
     if (currentRequest !== detailRequest || !token) return;
     selectedApplication = result.application;
     renderDetail(result.application);
-    const detail = element("application-detail");
-    detail.hidden = false;
-    detail.focus({ preventScroll: true });
-    detail.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    // A side panel over the list: the list keeps its scroll position.
+    const detail = element<HTMLDialogElement>("application-detail");
+    if (!detail.open) { detail.showModal(); document.documentElement.style.overflow = "hidden"; }
+    detail.scrollTop = 0;
+    element("close-detail").focus({ preventScroll: true });
   } catch (error) {
     showMessage(messageOf(error), true);
   }
 }
 
-element("close-detail").addEventListener("click", () => {
+element("close-detail").addEventListener("click", () => element<HTMLDialogElement>("application-detail").close());
+// Esc, the close button and a click outside the panel all end here.
+element("application-detail").addEventListener("close", () => {
   detailRequest++;
   selectedApplication = null;
-  element("application-detail").hidden = true;
-  lastDetailButton?.focus();
+  document.documentElement.style.overflow = "";
+  lastDetailButton?.focus({ preventScroll: true });
+});
+element("application-detail").addEventListener("click", (event) => {
+  const box = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  if (event.target === event.currentTarget && event.clientX < box.left) element<HTMLDialogElement>("application-detail").close();
 });
 
 function renderDetail(application: RecruitmentApplication): void {
