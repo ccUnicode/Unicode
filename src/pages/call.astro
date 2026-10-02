@@ -2,7 +2,6 @@
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/navbar.astro";
 import HeroCall from "../components/components-call/hero-call.astro";
-import WhyUnicode from "../components/components-call/why-unicode.astro";
 import { publicConfig } from "../lib/recruitment/service";
 const recruitment = await publicConfig();
 Astro.response.headers.set("Cache-Control", "no-store");
@@ -11,13 +10,4 @@ Astro.response.headers.set("Cache-Control", "no-store");
 <Layout title="Convocatoria">
   <Navbar />
   <HeroCall recruitment={recruitment} />
-
-  <main class="w-full">
-    <div
-      class="w-full h-px bg-linear-to-r from-transparent via-zinc-800 to-transparent"
-    >
-    </div>
-
-    <WhyUnicode />
-  </main>
 </Layout>
