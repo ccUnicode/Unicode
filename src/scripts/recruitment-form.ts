@@ -60,6 +60,7 @@ function initializeRecruitment() {
   let currentAttemptFailed = false;
   let answerPersisted = false;
   let restored = false;
+  let callOpen = false;
 
   const show = (id: string, visible = true) => { element(id).hidden = !visible; };
   const clock = (seconds: number) => `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
@@ -111,7 +112,7 @@ function initializeRecruitment() {
       if (name === next) element(`step-${name}`).setAttribute("aria-current", "step");
       else element(`step-${name}`).removeAttribute("aria-current");
     }
-    if (next !== "data") clearTimeout(autosaveTimer);
+    if (next !== "data") { clearTimeout(autosaveTimer); show("save-status", false); }
     if (next === "complete") { show("resume-panel", false); stopCamera(); }
     if (focus) element(`${next}-heading`).focus();
   }
@@ -176,13 +177,20 @@ function initializeRecruitment() {
     saveForm({ id: application?.id ?? null, data: collectData(), phase: phase === "video" ? "video" : "data", pending: dirty });
   }
 
+  type SaveState = "local" | "saving" | "saved" | "offline" | "error";
+  /** Always-visible autosave indicator: the applicant never has to press a save button. */
+  function saveIndicator(state: SaveState, text: string) {
+    const indicator = element("save-status");
+    indicator.dataset.state = state; element("save-status-text").textContent = text;
+    show("save-status", phase === "data");
+  }
+
   async function saveDraft() {
     if (savePromise) { await savePromise; if (!dirty) return; }
     const version = dataVersion;
     const data = collectData();
     savePromise = (async () => {
-      button("save-draft").disabled = true; button("continue-video").disabled = true;
-      element("save-status").textContent = "Guardando tu avance…";
+      saveIndicator("saving", "Guardando…");
       const result = application
         ? await request<DraftResponse>(`/drafts/${application.id}`, "PATCH", data)
         : await request<DraftResponse>("/drafts", "POST", data, false);
@@ -191,24 +199,41 @@ function initializeRecruitment() {
       rememberSession();
       dirty = dataVersion !== version;
       rememberForm();
-      element("save-status").textContent = dirty ? "Cambios recientes pendientes de guardar." : "Tu avance está guardado. Puedes conservar tu enlace personal.";
-      if (dirty) scheduleAutosave();
+      retryDelay = 0;
+      if (dirty) scheduleAutosave(); else saveIndicator("saved", "Guardado");
     })();
     try { await savePromise; }
-    finally { savePromise = null; button("save-draft").disabled = false; button("continue-video").disabled = false; }
+    finally { savePromise = null; }
   }
 
-  function validateDraftIdentity() {
-    for (const id of ["firstName", "lastName", "email", "consent"]) {
-      if (!element<HTMLInputElement>(id).reportValidity()) return false;
-    }
-    return true;
+  /** The email cannot change once the draft exists, so wait until the applicant leaves that field. */
+  function canCreateDraft() {
+    const email = element<HTMLInputElement>("email");
+    return document.activeElement !== email && email.checkValidity() && !!email.value.trim()
+      && ["firstName", "lastName"].every(id => !!element<HTMLInputElement>(id).value.trim())
+      && element<HTMLInputElement>("consent").checked;
   }
 
+  let retryDelay = 0;
   function scheduleAutosave() {
     clearTimeout(autosaveTimer);
-    if (!application || phase !== "data") return;
-    autosaveTimer = setTimeout(() => { void saveDraft().catch(error => { element("save-status").textContent = `No pudimos guardar el último cambio. ${errorMessage(error)}`; }); }, 1200);
+    if (phase !== "data" || !restored) return;
+    if (!application && !canCreateDraft()) {
+      if (dirty) saveIndicator("local", "Guardado en este dispositivo");
+      return;
+    }
+    if (!dirty) return;
+    saveIndicator("saving", "Guardando…");
+    autosaveTimer = setTimeout(() => {
+      void saveDraft().catch(error => {
+        // fetch rejects with TypeError when there is no connection: keep retrying.
+        if (error instanceof TypeError || !navigator.onLine) {
+          retryDelay = Math.min(retryDelay ? retryDelay * 2 : 3000, 30000);
+          saveIndicator("offline", "Sin conexión · guardado en este dispositivo, reintentando…");
+          autosaveTimer = setTimeout(scheduleAutosave, retryDelay);
+        } else saveIndicator("error", `No se pudo guardar: ${errorMessage(error)}`);
+      });
+    }, application ? 1000 : 400);
   }
 
   async function runAction(action: () => Promise<void>) {
@@ -486,14 +511,14 @@ function initializeRecruitment() {
   async function restoreProgress(open: boolean) {
     const cached = loadForm();
     if (!application) {
-      if (cached && cached.id === null) { populateData(cached.data as ApplicationData); message("Recuperamos lo que escribiste en este navegador. Guarda tu avance para no perderlo."); }
+      if (cached && cached.id === null) { populateData(cached.data as ApplicationData); message("Recuperamos lo que escribiste en este navegador."); dirty = true; }
       return;
     }
     if (cached?.id === application.id && cached.pending) {
       // Changes typed just before the browser closed that did not reach the server.
       populateData({ ...application.data, ...cached.data, email: application.data.email } as ApplicationData);
       dirty = true; dataVersion++;
-      if (open) void saveDraft().catch(() => { element("save-status").textContent = "Tienes cambios sin guardar. Pulsa «Guardar avance»."; });
+      if (open) scheduleAutosave();
     }
     const answer = application.video ? null : await loadAnswer(application.id);
     const usable = answer && answer.failureCount === application.technicalFailureCount ? answer : null;
@@ -566,10 +591,14 @@ function initializeRecruitment() {
         element("closed-reason").textContent = result.reason || "Te avisaremos cuando comience la siguiente convocatoria.";
         message(application ? "Tu borrador sigue guardado, pero la convocatoria no permite nuevos envíos por ahora." : "Consulta las próximas novedades en la página de convocatoria.");
       } else if (!alreadySubmitted) message(application ? "Retomaste tu borrador. Revisa tus datos antes de continuar." : "Empieza con tus datos. Puedes guardar y continuar después.");
+      callOpen = result.available && !endedDraft;
       if (!alreadySubmitted && !endedDraft) await restoreProgress(result.available);
     } catch (error) {
       message("No pudimos consultar la convocatoria. Recarga la página para volver a intentar."); showError(error);
-    } finally { restored = true; root!.setAttribute("aria-busy", "false"); updateControls(); }
+    } finally {
+      restored = true; root!.setAttribute("aria-busy", "false"); updateControls();
+      if (dirty && callOpen) scheduleAutosave();
+    }
   }
 
   form.addEventListener("input", () => { dirty = true; dataVersion++; rememberForm(); scheduleAutosave(); });
@@ -580,7 +609,8 @@ function initializeRecruitment() {
     const first = element<HTMLSelectElement>("firstChoiceArea"); const second = element<HTMLSelectElement>("secondChoiceArea");
     second.setCustomValidity(second.value && first.value === second.value ? "Elige una segunda área diferente de tu primera opción." : "");
   }
-  button("save-draft").addEventListener("click", () => { if (validateDraftIdentity()) void runAction(saveDraft); });
+  element("email").addEventListener("blur", scheduleAutosave);
+  window.addEventListener("online", scheduleAutosave);
   form.addEventListener("submit", event => {
     event.preventDefault(); validateAreas(); if (!form.reportValidity()) return;
     void runAction(async () => { clearTimeout(autosaveTimer); await saveDraft(); if (dirty) await saveDraft(); setPhase("video"); rememberForm(); message("Tus preguntas ya están asignadas. Responde las cuatro en un solo video."); });

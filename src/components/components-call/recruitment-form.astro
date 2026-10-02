@@ -16,6 +16,7 @@
   <noscript><p class="notice error">Activa JavaScript para guardar tu postulación y grabar el video.</p></noscript>
 
   <div id="recruitment-flow" hidden>
+    <p id="save-status" class="save-indicator" role="status" aria-live="polite" hidden><span aria-hidden="true"></span><span id="save-status-text"></span></p>
     <ol class="steps" aria-label="Pasos de tu postulación">
       <li id="step-data" aria-current="step"><span>1</span> Tus datos</li>
       <li id="step-video"><span>2</span> Tu video</li>
@@ -29,14 +30,14 @@
 
     <section id="data-phase" class="panel" aria-labelledby="data-heading">
       <h2 id="data-heading" tabindex="-1">Primero, vamos a conocerte</h2>
-      <p>Los campos con * son obligatorios. Puedes guardar tu avance después de ingresar tu nombre, correo y consentimiento.</p>
+      <p>Los campos con * son obligatorios. Tu avance se guarda automáticamente mientras escribes.</p>
       <form id="recruitment-data-form">
         <fieldset id="data-fields">
           <legend class="sr-only">Datos de la postulación</legend>
           <div class="field-grid">
             <div class="field"><label for="firstName">Nombres *</label><input id="firstName" name="firstName" required maxlength="150" autocomplete="given-name" /></div>
             <div class="field"><label for="lastName">Apellidos *</label><input id="lastName" name="lastName" required maxlength="150" autocomplete="family-name" /></div>
-            <div class="field"><label for="email">Correo electrónico *</label><input id="email" name="email" type="email" required maxlength="254" autocomplete="email" /><p class="hint">Revisa el correo antes de guardar: estará asociado a tu enlace personal y no se podrá cambiar después.</p></div>
+            <div class="field"><label for="email">Correo electrónico *</label><input id="email" name="email" type="email" required maxlength="254" autocomplete="email" /><p class="hint">Revísalo bien: al guardarse tu borrador quedará asociado a tu enlace personal y no se podrá cambiar después.</p></div>
             <div class="field"><label for="phone">Celular *</label><input id="phone" name="phone" type="tel" required pattern="[0-9]{9}" minlength="9" maxlength="9" inputmode="numeric" autocomplete="tel-national" placeholder="999999999" title="Ingresa los 9 dígitos de tu celular, sin espacios." /></div>
             <div class="field"><label for="university">Universidad *</label><input id="university" name="university" required maxlength="150" autocomplete="organization" /></div>
             <div class="field"><label for="faculty">Facultad *</label><input id="faculty" name="faculty" required maxlength="150" /></div>
@@ -51,8 +52,7 @@
           <div class="field"><label id="short-case-label" for="shortCase">Responde este caso breve *</label><p id="short-case-prompt" class="case-prompt"></p><textarea id="shortCase" name="shortCase" rows="4" required maxlength="3000" aria-describedby="short-case-prompt"></textarea><p class="hint">Hasta 3000 caracteres.</p></div>
           <div class="consent"><input id="consent" name="consent" type="checkbox" required /><label for="consent">Autorizo el uso de mis datos y mi video para evaluar esta postulación y contactarme durante el proceso. El acceso estará limitado al equipo autorizado de selección. *</label></div>
         </fieldset>
-        <div class="actions"><button id="save-draft" type="button" class="button secondary">Guardar avance</button><button id="continue-video" type="submit" class="button primary">Guardar y continuar al video →</button></div>
-        <p id="save-status" class="hint" role="status" aria-live="polite"></p>
+        <div class="actions"><button id="continue-video" type="submit" class="button primary">Continuar al video →</button></div>
       </form>
     </section>
 
@@ -171,6 +171,15 @@
   progress { width: 100%; height: 1rem; accent-color: var(--green); margin: .7rem 0; }
   #upload-progress-panel { margin-top: 1.2rem; }
   .final-action { border-top: 1px solid #27272a; padding-top: 1.2rem; }
+  .save-indicator { position: fixed; z-index: 40; left: 50%; bottom: 1rem; transform: translateX(-50%); display: flex; align-items: center; gap: .55rem; width: max-content; max-width: calc(100vw - 2rem); padding: .55rem .95rem; border: 1px solid #3f3f46; border-radius: 999px; background: #18181bf2; color: #e4e4e7; font-size: .78rem; line-height: 1.35; box-shadow: 0 8px 24px #0008; backdrop-filter: blur(6px); }
+  .save-indicator > span:first-child { flex-shrink: 0; width: .55rem; height: .55rem; border-radius: 50%; background: #a1a1aa; }
+  .save-indicator[data-state=saving] > span:first-child { background: #facc15; animation: pulse 1s ease-in-out infinite; }
+  .save-indicator[data-state=saved] > span:first-child { background: var(--green); }
+  .save-indicator[data-state=offline] > span:first-child { background: #fb923c; }
+  .save-indicator[data-state=error] { border-color: #f8717180; color: #fecaca; }
+  .save-indicator[data-state=error] > span:first-child { background: #f87171; }
+  @keyframes pulse { 50% { opacity: .35; } }
+  @media (prefers-reduced-motion: reduce) { .save-indicator > span:first-child { animation: none !important; } }
   .complete { text-align: center; }
   #application-reference { overflow-wrap: anywhere; }
   .complete-icon { display: grid; place-items: center; width: 4rem; height: 4rem; margin: 0 auto 1.5rem; border: 1px solid #75d32d60; background: #75d32d15; border-radius: 50%; color: var(--green); font-size: 2rem; }

@@ -100,7 +100,7 @@ Requiere `PUBLIC_SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` en `.env`. El scrip
 ## Persistencia del avance del postulante
 
 - El navegador recuerda la sesión en `localStorage`, por lo que cerrar el navegador no obliga a usar el enlace personal. El enlace (también enviado por correo) sirve para continuar en otro dispositivo.
-- Lo escrito se guarda localmente en cada tecla, incluso antes del primer «Guardar avance», y al ocultar o cerrar la pestaña se envía un último guardado al servidor.
+- No hay botón de guardar: lo escrito se guarda en el dispositivo en cada tecla y en el servidor un segundo después de dejar de escribir. El borrador en línea se crea solo cuando hay nombres, apellidos, un correo válido (al salir de ese campo, porque luego no se puede cambiar) y consentimiento. Un indicador fijo muestra «Guardando…», «Guardado» o «Sin conexión», y sin conexión reintenta solo. Al ocultar o cerrar la pestaña se envía un último guardado.
 - Al volver, el formulario reabre en la etapa donde quedó: datos, video o video guardado pendiente de confirmar.
 - El video grabado o elegido se guarda en IndexedDB hasta que el servidor lo verifica. Si el navegador se cierra antes de subirlo, al volver se recupera sin consumir otro intento. Si la reserva de carga (2 horas) venció, el servidor la renueva para el mismo intento.
 - Si el navegador se cierra durante la grabación, se registra automáticamente la falla técnica y la persona recupera un nuevo intento.
