@@ -517,8 +517,7 @@ function initializeRecruitment() {
     if (cached?.id === application.id && cached.pending) {
       // Changes typed just before the browser closed that did not reach the server.
       populateData({ ...application.data, ...cached.data, email: application.data.email } as ApplicationData);
-      dirty = true; dataVersion++;
-      if (open) scheduleAutosave();
+      dirty = true; dataVersion++; // boot's finally block syncs it once restoring is done
     }
     const answer = application.video ? null : await loadAnswer(application.id);
     const usable = answer && answer.failureCount === application.technicalFailureCount ? answer : null;
@@ -618,7 +617,10 @@ function initializeRecruitment() {
   button("edit-data").addEventListener("click", () => { stopCamera(); setPhase("data"); rememberForm(); cameraState = application?.video ? "saved" : recordedBlob ? "answer" : "idle"; updateControls(); });
   button("forget-device").addEventListener("click", () => {
     if (!confirm("Se borrará de este navegador tu avance y tu video sin subir. Podrás continuar solo con tu enlace personal. ¿Continuar?")) return;
-    void forgetEverything().then(() => { location.replace("/postular"); });
+    void forgetEverything().then(cleared => {
+      if (cleared) location.replace("/postular");
+      else alert("No pudimos borrar todo de este navegador. Borra los datos del sitio desde la configuración del navegador.");
+    });
   });
   button("copy-resume").addEventListener("click", () => { void runAction(async () => {
     if (!application || !resumeToken) return;

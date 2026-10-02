@@ -15,7 +15,7 @@ Astro.response.headers.set("Referrer-Policy", "no-referrer");
       const id = parameters.get('id'); const token = parameters.get('token');
       if (!id || !token) return;
       // localStorage keeps the link after the browser closes; sessionStorage is the fallback.
-      const value = JSON.stringify({ id, token });
+      const value = JSON.stringify({ id, token, savedAt: Date.now() });
       try { localStorage.setItem('unicode-recruitment-session', value); }
       catch { try { sessionStorage.setItem('unicode-recruitment-session', value); } catch { return; /* The form module reads the fragment instead. */ } }
       history.replaceState(null, '', location.pathname + location.search);

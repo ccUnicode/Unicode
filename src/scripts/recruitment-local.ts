@@ -9,7 +9,10 @@ const FORM_KEY = "unicode-recruitment-form";
 const DATABASE = "unicode-recruitment";
 const STORE = "answers";
 
-export type StoredSession = { id: string; token: string };
+export type StoredSession = { id: string; token: string; savedAt?: number };
+/** Shared computers: forget a session or draft nobody touched for two weeks. */
+const MAX_AGE = 14 * 24 * 60 * 60 * 1000;
+const fresh = (savedAt: unknown) => typeof savedAt === "number" && Date.now() - savedAt < MAX_AGE;
 export type StoredForm = { id: string | null; data: Partial<ApplicationData>; phase: "data" | "video"; pending: boolean; savedAt: number };
 /** A recorded or selected answer that has not been verified by the server yet. */
 export type StoredAnswer = {
@@ -26,19 +29,25 @@ export function loadSession(): StoredSession | null {
   for (const storage of [() => localStorage, () => sessionStorage]) {
     try {
       const value = readJson<StoredSession>(storage(), SESSION_KEY);
-      if (value?.id && value.token) return value;
+      if (value?.id && value.token && fresh(value.savedAt)) return value;
+      if (value) storage().removeItem(SESSION_KEY);
     } catch { /* Storage blocked by the browser. */ }
   }
   return null;
 }
 
 export function saveSession(session: StoredSession): void {
-  const value = JSON.stringify(session);
+  const value = JSON.stringify({ ...session, savedAt: Date.now() });
   try { localStorage.setItem(SESSION_KEY, value); } catch { try { sessionStorage.setItem(SESSION_KEY, value); } catch { /* The personal link still works. */ } }
 }
 
 export function loadForm(): StoredForm | null {
-  try { return readJson<StoredForm>(localStorage, FORM_KEY); } catch { return null; }
+  try {
+    const form = readJson<StoredForm>(localStorage, FORM_KEY);
+    if (form && fresh(form.savedAt)) return form;
+    localStorage.removeItem(FORM_KEY);
+  } catch { /* Storage blocked by the browser. */ }
+  return null;
 }
 
 export function saveForm(form: Omit<StoredForm, "savedAt">): void {
@@ -75,17 +84,24 @@ export async function saveAnswer(answer: StoredAnswer): Promise<boolean> {
 }
 
 export async function loadAnswer(applicationId: string): Promise<StoredAnswer | null> {
-  try { return (await transaction<StoredAnswer>("readonly", store => store.get(applicationId))) ?? null; } catch { return null; }
+  try {
+    const answer = await transaction<StoredAnswer>("readonly", store => store.get(applicationId));
+    if (answer && fresh(answer.savedAt)) return answer;
+    if (answer) await forgetAnswer(applicationId);
+  } catch { /* IndexedDB unavailable. */ }
+  return null;
 }
 
-export async function forgetAnswer(applicationId?: string): Promise<void> {
-  try { await transaction("readwrite", store => { if (applicationId) store.delete(applicationId); else store.clear(); }); } catch { /* Nothing stored. */ }
+export async function forgetAnswer(applicationId?: string): Promise<boolean> {
+  if (typeof indexedDB === "undefined") return true;
+  try { await transaction("readwrite", store => { if (applicationId) store.delete(applicationId); else store.clear(); }); return true; } catch { return false; }
 }
 
-/** Removes every trace of the application from this browser (shared computers, after submitting). */
-export async function forgetEverything(): Promise<void> {
+/** Removes every trace of the application from this browser; false if something could not be deleted. */
+export async function forgetEverything(): Promise<boolean> {
+  let cleared = true;
   for (const storage of [() => localStorage, () => sessionStorage]) {
-    try { storage().removeItem(SESSION_KEY); storage().removeItem(FORM_KEY); } catch { /* Storage blocked. */ }
+    try { storage().removeItem(SESSION_KEY); storage().removeItem(FORM_KEY); } catch { cleared = false; }
   }
-  await forgetAnswer();
+  return await forgetAnswer() && cleared;
 }

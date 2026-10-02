@@ -17,7 +17,7 @@ import { spawn, spawnSync } from 'node:child_process';
 
 const ENV_FILE = '.env';
 const SERVER_VARIABLES = [
-  'PUBLIC_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'ADMIN_PASSWORD', 'RECRUITMENT_BASE_URL', 'RECRUITMENT_RESUME_ENCRYPTION_KEY',
+  'PUBLIC_SUPABASE_URL', 'PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY', 'ADMIN_PASSWORD', 'RECRUITMENT_BASE_URL', 'RECRUITMENT_RESUME_ENCRYPTION_KEY',
   'CRON_SECRET', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REFRESH_TOKEN', 'DRIVE_VIDEO_FOLDER_ID',
   'RECRUITMENT_EMAIL_PROVIDER', 'RECRUITMENT_EMAIL_FROM', 'RESEND_API_KEY', 'RECRUITMENT_VIDEO_BUCKET',
 ];
@@ -38,7 +38,7 @@ function writeEnv(changes) {
     const pattern = new RegExp(`^\\s*${name}\\s*=.*$`, 'm');
     text = pattern.test(text) ? text.replace(pattern, line) : `${text.replace(/\s*$/, '')}\n${line}\n`;
   }
-  writeFileSync(ENV_FILE, text.replace(/^\n/, ''));
+  writeFileSync(ENV_FILE, text.replace(/^\n/, ''), { mode: 0o600 });
 }
 const env = readEnv();
 const mask = (value) => (value ? `${value.slice(0, 6)}…(${value.length})` : '(vacío)');
@@ -129,7 +129,8 @@ async function googleToken() {
 }
 
 async function check() {
-  const sendTo = process.argv.find((arg) => arg.startsWith('--send-test='))?.split('=')[1];
+  // PowerShell drops npm's `--`, so the address is also accepted as a plain argument.
+  const sendTo = process.argv.find((arg) => arg.startsWith('--send-test='))?.split('=')[1] || process.argv.slice(3).find((arg) => /^[^\s@-][^\s@]*@[^\s@]+\.[^\s@]+$/.test(arg));
   console.log('\nVariables');
   for (const name of ['PUBLIC_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'ADMIN_PASSWORD']) env[name] ? ok(name) : fail(`Falta ${name}`);
   (env.RECRUITMENT_RESUME_ENCRYPTION_KEY || '').length >= 32 ? ok('RECRUITMENT_RESUME_ENCRYPTION_KEY') : fail('Clave de cifrado ausente o corta', 'npm run recruitment -- secrets');
@@ -191,7 +192,7 @@ async function check() {
       const mime = [`To: ${sendTo}`, `Subject: =?UTF-8?B?${Buffer.from('Prueba de correo de la convocatoria UNICODE').toString('base64')}?=`, 'MIME-Version: 1.0', 'Content-Type: text/plain; charset=UTF-8', '', 'Si recibes este mensaje, los correos de la convocatoria funcionan.'].join('\r\n');
       const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', { method: 'POST', headers: { Authorization: `Bearer ${token.access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ raw: Buffer.from(mime).toString('base64url') }) });
       response.ok ? ok(`Correo de prueba enviado a ${sendTo}`) : fail(`Gmail rechazó el envío (${response.status})`);
-    } else warn('--send-test solo está disponible con Gmail desde este script.');
+    } else fail('No se pudo enviar el correo de prueba: este script solo prueba Gmail.');
   }
 
   console.log('\nDespliegue');
@@ -211,11 +212,13 @@ async function vercel() {
   console.log('Se usará la CLI de Vercel (pide iniciar sesión y vincular el proyecto si hace falta).');
   if (spawnSync('npx', ['--yes', 'vercel', 'link'], { stdio: 'inherit', shell: true }).status !== 0) process.exit(1);
   for (const name of names) {
-    spawnSync('npx', ['vercel', 'env', 'rm', name, 'production', '--yes'], { stdio: 'ignore', shell: true });
-    const result = spawnSync('npx', ['vercel', 'env', 'add', name, 'production'], { input: env[name], stdio: ['pipe', 'ignore', 'pipe'], shell: true });
+    // Update in place; never remove a working production value before its replacement exists.
+    const update = spawnSync('npx', ['vercel', 'env', 'update', name, 'production', '--yes'], { input: env[name], stdio: ['pipe', 'ignore', 'pipe'], shell: true });
+    const result = update.status === 0 ? update : spawnSync('npx', ['vercel', 'env', 'add', name, 'production'], { input: env[name], stdio: ['pipe', 'ignore', 'pipe'], shell: true });
     result.status === 0 ? ok(name) : fail(`${name}: ${result.stderr.toString().trim().split('\n').pop()}`);
   }
-  console.log('\nRedespliega producción para que tome los valores: npx vercel --prod (o «Redeploy» en el panel de Vercel).');
+  if (failures) { console.log(`\n${failures} variable(s) sin actualizar; las demás quedaron intactas.`); process.exit(1); }
+  console.log('\nRedespliega producción para que tome los valores (fusionar el PR también lo hace).');
 }
 
 async function github() {

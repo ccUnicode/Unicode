@@ -17,6 +17,10 @@ import { join } from 'node:path';
 
 const url = process.env.PUBLIC_SUPABASE_URL?.replace(/\/$/, '');
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (url && !url.startsWith('https://') && !/^http:\/\/(127\.0\.0\.1|localhost)[:/]/.test(url)) {
+  console.error('PUBLIC_SUPABASE_URL debe usar https://.');
+  process.exit(1);
+}
 if (!url || !key) {
   console.error('Faltan PUBLIC_SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY (usa --env-file=.env).');
   process.exit(1);
@@ -29,7 +33,9 @@ await mkdir(directory, { recursive: true });
 const sha256 = (text) => createHash('sha256').update(text).digest('hex');
 const csvCell = (value) => {
   if (value === null || value === undefined) return '';
-  const text = typeof value === 'object' ? JSON.stringify(value) : String(value);
+  let text = typeof value === 'object' ? JSON.stringify(value) : String(value);
+  // Spreadsheet apps execute cells that start with these characters as formulas.
+  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
   return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 };
 function toCsv(rows) {
@@ -39,7 +45,7 @@ function toCsv(rows) {
 }
 
 // PostgREST publishes every table in its OpenAPI description.
-const spec = await fetch(`${url}/rest/v1/`, { headers }).then((response) => {
+const spec = await fetch(`${url}/rest/v1/`, { headers, redirect: 'error' }).then((response) => {
   if (!response.ok) throw new Error(`No se pudo listar las tablas (${response.status}). Revisa la URL y la clave de servicio.`);
   return response.json();
 });
@@ -51,7 +57,7 @@ for (const table of tables) {
   const rows = []; const page = 1000; let total = null;
   for (let offset = 0; total === null || offset < total; offset += page) {
     const response = await fetch(`${url}/rest/v1/${encodeURIComponent(table)}?select=*`, {
-      headers: { ...headers, Prefer: 'count=exact', 'Range-Unit': 'items', Range: `${offset}-${offset + page - 1}` },
+      headers: { ...headers, Prefer: 'count=exact', 'Range-Unit': 'items', Range: `${offset}-${offset + page - 1}` }, redirect: 'error',
     });
     if (!response.ok) throw new Error(`Error al leer ${table} (${response.status}): ${await response.text()}`);
     total = Number(response.headers.get('content-range')?.split('/')[1] ?? 0);
