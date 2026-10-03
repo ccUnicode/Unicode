@@ -22,7 +22,7 @@ import Layout from "../layouts/Layout.astro";
       <p id="login-intro" class="text-zinc-400 text-xs text-center mt-2 mb-6">Ingresa con tu correo UNI y te enviaremos un código.</p>
 
       <form id="email-form" class="space-y-4">
-        <input type="email" id="director-email" required autocomplete="email" placeholder="tu.correo@uni.pe" class="w-full bg-zinc-950 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-600" />
+        <input type="text" inputmode="email" autocapitalize="none" spellcheck="false" id="director-email" required autocomplete="email" placeholder="tu.correo@uni.pe" class="w-full bg-zinc-950 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-600" />
         <button type="submit" id="email-btn" class="w-full bg-unicode hover:bg-unicode-light text-black font-bold text-sm py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">Enviar código</button>
       </form>
 
@@ -76,7 +76,7 @@ import Layout from "../layouts/Layout.astro";
 
       <div id="login-error" role="alert" class="hidden mt-4 text-red-400 text-xs text-center font-medium py-2 px-3 bg-red-500/10 rounded-lg border border-red-500/20"></div>
       <p id="login-info" role="status" class="hidden mt-4 text-zinc-300 text-xs text-center"></p>
-      <button type="button" id="toggle-password" class="block mx-auto mt-6 text-zinc-500 hover:text-zinc-300 text-xs underline underline-offset-4 cursor-pointer">Entrar con contraseña de administración</button>
+      <button type="button" id="toggle-password" class="hidden mx-auto mt-6 text-zinc-500 hover:text-zinc-300 text-xs underline underline-offset-4 cursor-pointer">Entrar con contraseña de administración</button>
     </div>
   </div>
 
@@ -351,12 +351,16 @@ import Layout from "../layouts/Layout.astro";
     emailForm.classList.toggle("hidden", step !== "email");
     codeForm.classList.toggle("hidden", step !== "code");
     loginForm.classList.toggle("hidden", step !== "password");
-    document.getElementById("toggle-password")!.textContent = step === "password" ? "Entrar con mi correo UNI" : "Entrar con contraseña de administración";
-    loginIntro.textContent = step === "password" ? "Acceso con la contraseña compartida de administración." : step === "code" ? `Escribe el código que enviamos a ${emailInput.value.trim()}.` : "Ingresa con tu correo UNI y te enviaremos un código.";
+    // The shared password is reached by typing "admin" as the email; this link only leads back.
+    const back = document.getElementById("toggle-password")!;
+    back.textContent = "Entrar con mi correo UNI";
+    back.classList.toggle("hidden", step !== "password");
+    back.classList.toggle("block", step === "password");
+    loginIntro.textContent = step === "password" ? "Acceso de super admin con la contraseña de administración." : step === "code" ? `Escribe el código que enviamos a ${emailInput.value.trim()}.` : "Ingresa con tu correo UNI y te enviaremos un código.";
     loginError.classList.add("hidden");
     (step === "email" ? emailInput : step === "code" ? codeInput : passwordInput).focus();
   }
-  document.getElementById("toggle-password")!.addEventListener("click", () => showStep(loginForm.classList.contains("hidden") ? "password" : "email"));
+  document.getElementById("toggle-password")!.addEventListener("click", () => { emailInput.value = ""; showStep("email"); });
   document.getElementById("change-email")!.addEventListener("click", () => { codeInput.value = ""; showStep("email"); });
 
   /** Directors outside GTH only get their own area; GTH and the shared password see all and reach the GTH panel. */
@@ -364,7 +368,7 @@ import Layout from "../layouts/Layout.astro";
     const seesAll = session.role === "admin" || session.area === "GTH";
     document.getElementById("gth-panel-link")!.classList.toggle("hidden", !seesAll);
     const user = document.getElementById("session-user")!;
-    user.textContent = session.role === "director" ? session.email : "Administración";
+    user.textContent = session.role === "director" ? session.email : "Super admin";
     user.classList.remove("hidden");
     if (!seesAll && session.role === "director") currentArea = session.area;
     document.querySelectorAll<HTMLElement>(".area-tab").forEach((tab) => {
@@ -384,6 +388,8 @@ import Layout from "../layouts/Layout.astro";
 
   emailForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (emailInput.value.trim().toLowerCase() === "admin") { showStep("password"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())) { showError("Escribe tu correo UNI completo."); return; }
     const button = document.getElementById("email-btn") as HTMLButtonElement;
     button.disabled = true; button.textContent = "Enviando...";
     try {
