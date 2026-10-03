@@ -27,17 +27,20 @@ function normalizeEmail(value: unknown): string {
 export async function requestLoginCode(input: unknown): Promise<{ message: string }> {
   const email = normalizeEmail(record(input).email);
   const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000).padStart(6, '0');
-  const result = await recruitmentRpc<{ sent: boolean; name?: string }>('recruitment_login_request', { p_email: email, p_code_hash: await codeHash(email, code) });
+  const result = await recruitmentRpc<{ sent: boolean; limited?: boolean; name?: string }>('recruitment_login_request', { p_email: email, p_code_hash: await codeHash(email, code) });
+  // Server log only (never the code): tells a missing director apart from the hourly limit.
+  console.info(`[admin] código para ${email}: ${result.sent ? 'enviado' : result.limited ? 'límite de 5 por hora' : 'correo sin acceso'}`);
   if (result.sent) {
     if (localDevelopmentDatabase()) console.info(`[admin] Código de acceso local para ${email}: ${code}`);
     else if (recruitmentEmailConfigured()) {
-      const greeting = result.name ? `Hola ${result.name.split(' ')[0]}, tu` : 'Tu';
-      const text = `${greeting} código para entrar al panel de UNICODE es ${code}.\n\nVence en 10 minutos y solo funciona una vez. Si no lo pediste, ignora este correo.`;
-      const subject = `${code} es tu código de acceso a UNICODE`;
-      await sendRecruitmentEmail({ to: email, subject, text, html: renderRecruitmentEmailHtml({ subject, text, siteUrl: env('RECRUITMENT_BASE_URL') || 'https://www.ccunicode.org' }), idempotencyKey: `admin-login-${crypto.randomUUID()}` });
+      const greeting = result.name ? `Hola ${result.name.split(' ')[0]}, este` : 'Este';
+      const text = `${greeting} es tu código para entrar al panel de UNICODE:\n\n${code}\n\nVence en 10 minutos y solo funciona una vez. Si pides otro, este deja de servir. Si no lo pediste, ignora este correo.`;
+      // A subject that starts with digits looks like phishing to some filters.
+      const subject = 'Tu código de acceso a UNICODE';
+      await sendRecruitmentEmail({ to: email, subject, text, html: renderRecruitmentEmailHtml({ subject, text, code, siteUrl: env('RECRUITMENT_BASE_URL') || 'https://www.ccunicode.org' }), idempotencyKey: `admin-login-${crypto.randomUUID()}` });
     } else throw new RecruitmentError('setup_required', 'El envío de correos no está configurado.', 503);
   }
-  return { message: 'Si tu correo tiene acceso, te llegará un código en unos segundos. Revisa también la carpeta de spam.' };
+  return { message: 'Si tu correo tiene acceso, te llegará un código en menos de un minuto. Revisa también spam. Si pediste varios seguidos, usa el último o espera unos minutos.' };
 }
 
 export async function verifyLoginCode(input: unknown): Promise<AdminSession> {
