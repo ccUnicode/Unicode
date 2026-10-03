@@ -35,6 +35,19 @@ const statusNames: Record<ApplicationStatus, string> = {
   expired: "Plazo vencido",
   incomplete: "Incompleto",
 };
+/** One color per moment of the process, so the list can be read at a glance. */
+type StatusTone = "progress" | "complete" | "advanced" | "joined" | "negative" | "inactive";
+function statusTone(status: ApplicationStatus): StatusTone {
+  if (status === "draft" || status === "incomplete") return "progress";
+  if (status === "submitted") return "complete";
+  if (status === "selected" || status === "conditional_selected" || status === "onboarding_sent" || status === "buddy_assigned" || status === "integrated") return "joined";
+  if (status === "profile_rejected" || status === "not_selected" || status === "interview_ineligible" || status === "discarded") return "negative";
+  if (status === "expired" || status === "withdrawn") return "inactive";
+  return "advanced";
+}
+function statusBadge(status: ApplicationStatus): HTMLElement {
+  return node("span", statusNames[status] || status, `badge status status-${statusTone(status)}`);
+}
 const categoryNames: Record<QuestionCategory, string> = {
   motivation: "Motivación y calce cultural",
   collaboration: "Colaboración y resolución de problemas",
@@ -551,7 +564,8 @@ function renderApplications(): void {
     info.append(node("p", application.data.email || "Sin correo", "muted"));
     const meta = node("div", undefined, "app-meta");
     if (application.isTest) meta.append(node("span", "Prueba", "badge test"));
-    meta.append(node("span", statusNames[application.status] || application.status, "badge"));
+    meta.append(statusBadge(application.status));
+    card.classList.add(`tone-${statusTone(application.status)}`);
     if (application.data.firstChoiceArea) meta.append(node("span", `1. ${areaName(application.data.firstChoiceArea)}`, "muted"));
     if (application.data.secondChoiceArea) meta.append(node("span", `2. ${areaName(application.data.secondChoiceArea)}`, "muted"));
     info.append(meta, node("p", formattedDate(application.createdAt), "muted"));
@@ -614,7 +628,9 @@ function renderDetail(application: RecruitmentApplication): void {
   entries.forEach(([label, text]) => {
     const pair = node("div");
     const definition = node("dl");
-    definition.append(node("dt", label), node("dd", text));
+    const value = node("dd");
+    if (label === "Estado") value.append(statusBadge(application.status)); else value.textContent = text;
+    definition.append(node("dt", label), value);
     pair.append(definition);
     personal.append(pair);
   });
