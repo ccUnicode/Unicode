@@ -2,8 +2,8 @@
 /**
  * admin.astro
  * Administration panel to view application candidates.
- * - Directors sign in with a one-time code sent to their email; each sees only their area,
- *   GTH sees every area and opens the call's management panel. The shared password stays as a fallback.
+ * - Directors sign in with a one-time code sent to their email and see every area, starting on their own;
+ *   GTH also opens the call's management panel. The shared password stays as a fallback.
  * - Dashboard with filters by area, option type, and sorting.
  * - Export to Excel (CSV).
  */
@@ -363,18 +363,15 @@ import Layout from "../layouts/Layout.astro";
   document.getElementById("toggle-password")!.addEventListener("click", () => { emailInput.value = ""; showStep("email"); });
   document.getElementById("change-email")!.addEventListener("click", () => { codeInput.value = ""; showStep("email"); });
 
-  /** Directors outside GTH only get their own area; GTH and the shared password see all and reach the GTH panel. */
+  /** Every director sees all areas, starting on their own; GTH and the super admin also reach the GTH panel. */
   function applySession(session: Session) {
-    const seesAll = session.role === "admin" || session.area === "GTH";
-    document.getElementById("gth-panel-link")!.classList.toggle("hidden", !seesAll);
+    const managesCall = session.role === "admin" || session.area === "GTH";
+    document.getElementById("gth-panel-link")!.classList.toggle("hidden", !managesCall);
     const user = document.getElementById("session-user")!;
     user.textContent = session.role === "director" ? session.email : "Super admin";
     user.classList.remove("hidden");
-    if (!seesAll && session.role === "director") currentArea = session.area;
-    document.querySelectorAll<HTMLElement>(".area-tab").forEach((tab) => {
-      tab.classList.toggle("hidden", !seesAll && tab.dataset.area !== currentArea);
-      tab.classList.toggle("active-tab", tab.dataset.area === currentArea);
-    });
+    if (session.role === "director" && areaNames[session.area]) currentArea = session.area;
+    document.querySelectorAll<HTMLElement>(".area-tab").forEach((tab) => tab.classList.toggle("active-tab", tab.dataset.area === currentArea));
     document.getElementById("area-label")!.textContent = areaNames[currentArea] || currentArea;
   }
   function startSession(token: string, session: Session) {

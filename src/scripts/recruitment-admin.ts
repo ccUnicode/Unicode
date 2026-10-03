@@ -119,7 +119,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     // A director outside GTH: their session stays valid for /admin.
     element("recruitment-dashboard").hidden = true;
     element("recruitment-login").hidden = false;
-    loginMessage("Tu cuenta solo puede ver las postulaciones de tu área en /admin.");
+    loginMessage("Este panel es solo para GTH. Puedes ver todas las postulaciones en /admin.");
   }
   if (!response.ok) throw new Error(result.error || `No se pudo completar la solicitud (${response.status}).`);
   return result as T;
