@@ -132,3 +132,23 @@ test('sign-in codes get their own box in the email', () => {
   assert.match(html, /letter-spacing:8px;[^"]*">042517<\/p>/);
   assert.match(html, />Vence en 10 minutos\.<\/p>/);
 });
+
+test('when Resend hits its limit the same email goes out through Gmail, with the reply address', async () => {
+  configure({ RECRUITMENT_EMAIL_PROVIDER: 'resend', RESEND_API_KEY: 'local-key', RECRUITMENT_EMAIL_FROM: 'UNICODE <convocatoria@example.invalid>', RECRUITMENT_EMAIL_REPLY_TO: 'equipo@example.invalid',
+    GOOGLE_CLIENT_ID: 'local-client', GOOGLE_CLIENT_SECRET: 'local-secret', GOOGLE_REFRESH_TOKEN: 'local-refresh' });
+  const request = { to: 'test@example.invalid', subject: 'Prueba', text: 'hola', html: '<p>hola</p>', idempotencyKey: 'recruitment-fallback' };
+  const calls = [];
+  globalThis.fetch = async (url, init = {}) => {
+    calls.push(String(url));
+    if (String(url) === 'https://api.resend.com/emails') { assert.equal(JSON.parse(init.body).reply_to, 'equipo@example.invalid'); return new Response('{}', { status: 429 }); }
+    if (String(url).startsWith('https://oauth2.googleapis.com')) return Response.json({ access_token: 'local-access', expires_in: 3600 });
+    const raw = Buffer.from(JSON.parse(init.body).raw, 'base64url').toString();
+    assert.match(raw, /\r\nReply-To: equipo@example\.invalid\r\n/);
+    return Response.json({ id: 'gmail-message' });
+  };
+  try {
+    assert.equal((await email.sendRecruitmentEmail(request)).messageId, 'gmail-message');
+    const hosts = calls.map((u) => new URL(u).hostname);
+    assert.deepEqual([hosts[0], hosts.at(-1)], ['api.resend.com', 'gmail.googleapis.com']);
+  } finally { globalThis.fetch = originalFetch; }
+});
