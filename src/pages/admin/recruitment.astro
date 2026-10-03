@@ -147,15 +147,11 @@ import Layout from "../../layouts/Layout.astro";
             <button id="open-video" type="button" class="secondary" hidden>Abrir video privado</button>
           </div>
           <p id="video-access-message" class="muted" role="status" hidden></p>
-          <form id="transition-form" class="transition-box">
-            <h3>Actualizar estado</h3>
-            <p class="muted note">La sesión administrativa es compartida; el historial registra ese acceso, la fecha y el motivo.</p>
-            <div class="field-grid">
-              <label>Siguiente estado<select id="next-status" required></select></label>
-              <label>Motivo del cambio<textarea id="transition-reason" rows="2" maxlength="1000" required></textarea></label>
-            </div>
-            <button type="submit" class="primary" id="save-transition">Guardar cambio de estado</button>
-          </form>
+          <section class="transition-box" aria-labelledby="stage-title">
+            <h3 id="stage-title">Resultado</h3>
+            <p id="stage-hint" class="muted note"></p>
+            <div id="stage-buttons" class="button-row"></div>
+          </section>
           <h3>Historial</h3>
           <ol id="detail-history" class="history"></ol>
         </dialog>

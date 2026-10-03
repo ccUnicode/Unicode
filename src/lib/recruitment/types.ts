@@ -29,19 +29,17 @@ export type ApplicationStatus = 'draft' | 'incomplete' | 'expired' | 'submitted'
   | 'waitlisted' | 'not_selected' | 'onboarding_sent' | 'buddy_assigned' | 'integrated' | 'discarded' | 'withdrawn';
 export const allowedApplicationTransitions: Record<ApplicationStatus, readonly ApplicationStatus[]> = {
   draft: ['withdrawn'], incomplete: ['withdrawn'], expired: [],
+  // Two stages: the profile advances or not, then the applicant joins or not. Older statuses only close.
   submitted: ['profile_validated', 'profile_rejected', 'withdrawn'],
-  profile_validated: ['test_sent', 'discarded', 'withdrawn'], profile_rejected: [],
-  test_sent: ['test_completed', 'discarded', 'withdrawn'],
-  test_completed: ['awaiting_second_review', 'interview_eligible', 'interview_ineligible', 'discarded', 'withdrawn'],
-  awaiting_second_review: ['interview_eligible', 'interview_ineligible', 'discarded', 'withdrawn'],
-  interview_eligible: ['interview_scheduled', 'discarded', 'withdrawn'], interview_ineligible: [],
-  interview_scheduled: ['interviewed', 'discarded', 'withdrawn'], interviewed: ['group_eligible', 'discarded', 'withdrawn'],
-  group_eligible: ['group_scheduled', 'discarded', 'withdrawn'], group_scheduled: ['group_completed', 'discarded', 'withdrawn'],
-  group_completed: ['selected', 'conditional_selected', 'waitlisted', 'not_selected', 'withdrawn'],
-  selected: ['onboarding_sent', 'withdrawn'], conditional_selected: ['selected', 'onboarding_sent', 'withdrawn'],
-  waitlisted: ['selected', 'conditional_selected', 'not_selected', 'withdrawn'], not_selected: [],
-  onboarding_sent: ['buddy_assigned', 'withdrawn'], buddy_assigned: ['integrated', 'withdrawn'], integrated: [],
-  discarded: [], withdrawn: [],
+  profile_validated: ['selected', 'not_selected', 'withdrawn'], profile_rejected: [],
+  selected: [], not_selected: [], discarded: [], withdrawn: [],
+  test_sent: ['selected', 'not_selected', 'withdrawn'], test_completed: ['selected', 'not_selected', 'withdrawn'],
+  awaiting_second_review: ['selected', 'not_selected', 'withdrawn'], interview_eligible: ['selected', 'not_selected', 'withdrawn'],
+  interview_scheduled: ['selected', 'not_selected', 'withdrawn'], interviewed: ['selected', 'not_selected', 'withdrawn'],
+  group_eligible: ['selected', 'not_selected', 'withdrawn'], group_scheduled: ['selected', 'not_selected', 'withdrawn'],
+  group_completed: ['selected', 'not_selected', 'withdrawn'], interview_ineligible: [],
+  conditional_selected: [], waitlisted: ['selected', 'not_selected', 'withdrawn'],
+  onboarding_sent: [], buddy_assigned: [], integrated: [],
 };
 export interface ApplicationVideo {
   provider: 'drive' | 'supabase'; fileId: string; uploadId: string; bytes: number; durationSeconds: number;

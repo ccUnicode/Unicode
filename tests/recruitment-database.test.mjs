@@ -333,15 +333,42 @@ test('workflow blocks stage skipping and backwards moves and atomically records 
   assert.equal((await db.query("SELECT count(*)::integer AS count FROM recruitment_events WHERE application_id=$1 AND to_status='profile_validated'", [application.id])).rows[0].count, 1);
   assert.equal((await db.query("SELECT count(*)::integer AS count FROM recruitment_email_outbox WHERE application_id=$1 AND template_key='profile_validated'", [application.id])).rows[0].count, 1);
   await assert.rejects(() => rpc(db, 'recruitment_transition', application.id, 'submitted', 'Intento de regresar.', actor), /invalid_transition/);
-  for (const status of ['test_sent', 'test_completed', 'awaiting_second_review', 'interview_eligible', 'interview_scheduled', 'interviewed', 'group_eligible', 'group_scheduled', 'group_completed', 'waitlisted', 'conditional_selected', 'selected', 'onboarding_sent', 'buddy_assigned', 'integrated']) {
-    const result = await rpc(db, 'recruitment_transition', application.id, status, 'Etapa confirmada por el equipo responsable.', actor);
-    assert.equal(result.application.status, status);
-  }
-  await assert.rejects(() => rpc(db, 'recruitment_transition', application.id, 'selected', 'Intento después del estado final.', actor), /invalid_transition/);
+  await assert.rejects(() => rpc(db, 'recruitment_transition', application.id, 'test_sent', 'Etapa que ya no existe.', actor), /invalid_transition/);
+  const result = await rpc(db, 'recruitment_transition', application.id, 'selected', 'Etapa confirmada por el equipo responsable.', actor);
+  assert.equal(result.application.status, 'selected');
+  await assert.rejects(() => rpc(db, 'recruitment_transition', application.id, 'not_selected', 'Intento después del estado final.', actor), /invalid_transition/);
   await assert.rejects(() => rpc(db, 'recruitment_patch_draft', application.id, application.owner, applicant(application.id)), /immutable/);
   const detail = await rpc(db, 'recruitment_admin_applications', application.id);
   assert.equal(detail.application.history.at(-1).actor, actor);
   assert.equal(detail.application.history.at(-1).reason, 'Etapa confirmada por el equipo responsable.');
+});
+
+test('two stages: each result sends its own email, and only the kept emails are enabled', async t => {
+  const db = await database(t);
+  await openCall(db);
+  const enabled = (await db.query('SELECT key FROM recruitment_email_templates WHERE enabled ORDER BY key')).rows.map((row) => row.key);
+  assert.deepEqual(enabled, ['incomplete', 'not_selected', 'profile_rejected', 'profile_validated', 'resume', 'selected', 'submitted']);
+  const rejected = await submitted(db);
+  await rpc(db, 'recruitment_transition', rejected.id, 'profile_rejected', 'Resultado enviado: No avanza.', 'gth@uni.pe');
+  await assert.rejects(() => rpc(db, 'recruitment_transition', rejected.id, 'selected', 'No corresponde.', 'gth@uni.pe'), /invalid_transition/);
+  const joined = await submitted(db);
+  await rpc(db, 'recruitment_transition', joined.id, 'profile_validated', 'Resultado enviado: Avanza.', 'gth@uni.pe');
+  await rpc(db, 'recruitment_transition', joined.id, 'not_selected', 'Resultado enviado: No ingresa.', 'gth@uni.pe');
+  const mails = async (id) => (await db.query('SELECT template_key, subject FROM recruitment_email_outbox WHERE application_id=$1 ORDER BY created_at', [id])).rows.map((row) => row.template_key);
+  assert.deepEqual(await mails(rejected.id), ['resume', 'submitted', 'profile_rejected']);
+  assert.deepEqual(await mails(joined.id), ['resume', 'submitted', 'profile_validated', 'not_selected']);
+  assert.equal((await rpc(db, 'recruitment_admin_applications', joined.id)).application.history.at(-1).actor, 'gth@uni.pe');
+});
+
+test('emails queued for a template that was later disabled are not sent', async t => {
+  const db = await database(t);
+  await openCall(db);
+  const application = await draft(db);
+  await db.query("UPDATE recruitment_email_outbox SET status='sent' WHERE application_id=$1", [application.id]);
+  await db.query("INSERT INTO recruitment_email_outbox(application_id,template_key,recipient,subject,body,payload) VALUES($1,'test_sent','a@example.test','s','b','{}'),($1,'selected','a@example.test','s','b','{}')", [application.id]);
+  const leased = await rpc(db, 'recruitment_lease_emails', 10, randomUUID());
+  assert.deepEqual(leased.items.map((item) => item.templateKey), ['selected']);
+  assert.equal((await db.query("SELECT status FROM recruitment_email_outbox WHERE template_key='test_sent'")).rows[0].status, 'pending');
 });
 
 test('outbox leases are exclusive, retry with backoff and recover expired fifth leases', async t => {
@@ -411,7 +438,7 @@ test('inactive drafts receive one reminder and incomplete drafts expire at the f
   await openCall(db, { closesAt: new Date(Date.now() - 60_000).toISOString() });
   assert.equal(await rpc(db, 'recruitment_expire_drafts'), 1);
   assert.equal((await rpc(db, 'recruitment_get_draft', application.id, application.owner)).application.status, 'expired');
-  assert.equal((await db.query("SELECT count(*)::integer AS count FROM recruitment_email_outbox WHERE application_id=$1 AND template_key='expired'", [application.id])).rows[0].count, 1);
+  assert.equal((await db.query("SELECT count(*)::integer AS count FROM recruitment_email_outbox WHERE application_id=$1 AND template_key='expired'", [application.id])).rows[0].count, 0, 'the deadline email is disabled');
   await assert.rejects(() => rpc(db, 'recruitment_patch_draft', application.id, application.owner, applicant(application.id)), /call_expired/);
 });
 
