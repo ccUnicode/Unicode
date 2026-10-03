@@ -13,10 +13,14 @@ export async function sendRecruitmentEmail(email: Email): Promise<{ messageId: s
     // Gmail has no exactly-once idempotency API. The stable Message-ID identifies ambiguous retries.
     const encodedSubject = `=?UTF-8?B?${Buffer.from(email.subject).toString('base64')}?=`;
     const messageId = `${email.idempotencyKey.replace(/[^a-zA-Z0-9.-]/g, '-')}@ccunicode.org`;
+    // Plain text for clients without HTML, the branded HTML for the rest.
+    const boundary = `unicode-${crypto.randomUUID()}`;
+    const part = (type: string, content: string) => [`--${boundary}`, `Content-Type: ${type}; charset=UTF-8`, 'Content-Transfer-Encoding: base64', '',
+      Buffer.from(content).toString('base64').match(/.{1,76}/g)?.join('\r\n') || '', ''];
     const mime = [
       `To: ${email.to}`, `Subject: ${encodedSubject}`, `Message-ID: <${messageId}>`,
-      'MIME-Version: 1.0', 'Content-Type: text/plain; charset=UTF-8', 'Content-Transfer-Encoding: base64', '',
-      Buffer.from(email.text).toString('base64').match(/.{1,76}/g)?.join('\r\n') || '',
+      'MIME-Version: 1.0', `Content-Type: multipart/alternative; boundary="${boundary}"`, '',
+      ...part('text/plain', email.text), ...part('text/html', email.html), `--${boundary}--`, '',
     ].join('\r\n');
     const response = await googleRequest('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ raw: Buffer.from(mime).toString('base64url') }),
