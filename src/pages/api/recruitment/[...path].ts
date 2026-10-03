@@ -82,12 +82,8 @@ async function handle(request: Request, rawPath: string | undefined): Promise<Re
       if (action === 'process-emails' && ['GET', 'POST'].includes(method) && env('CRON_SECRET') && request.headers.get('authorization') === `Bearer ${env('CRON_SECRET')}`) return json(await recruitment.processEmails());
       const session = await admin(request);
       if (action === 'session' && method === 'GET') return json({ session, managesRecruitment: managesRecruitment(session) });
-      // Directors of other areas may only play the videos of applicants to their area.
-      if (path[1] === 'applications' && path[3] === 'video' && path.length === 4 && method === 'GET' && !managesRecruitment(session)) {
-        const { application } = await recruitment.adminApplications(recruitment.requireUuid(path[2]));
-        if (session.role !== 'director' || ![application?.data.firstChoiceArea, application?.data.secondChoiceArea].includes(session.area as never)) throw forbidden();
-        return json(await recruitment.adminVideo(application!.id));
-      }
+      // Every director can play the videos shown in /admin; managing the call stays with GTH.
+      if (path[1] === 'applications' && path[3] === 'video' && path.length === 4 && method === 'GET') return json(await recruitment.adminVideo(recruitment.requireUuid(path[2])));
       if (!managesRecruitment(session)) throw forbidden();
       const actor = session.role === 'director' ? session.email : 'contraseña de administración';
       if (action === 'directors' && method === 'GET') return json(await directors());

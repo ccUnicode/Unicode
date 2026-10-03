@@ -6,7 +6,7 @@
 
 export const prerender = false;
 
-import { managesRecruitment, sessionStore } from '../../lib/session-store';
+import { sessionStore } from '../../lib/session-store';
 import { adminApplications } from '../../lib/recruitment/service';
 
 const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
@@ -25,8 +25,7 @@ export async function GET({ request }: { request: Request }) {
   if (!session) return json({ error: 'No autorizado. Inicia sesión nuevamente.' }, 401);
 
   const url = new URL(request.url);
-  // Directors outside GTH only ever see their own area, whatever the request asks for.
-  const area = managesRecruitment(session) ? url.searchParams.get('area') || '' : session.role === 'director' ? session.area : '';
+  const area = url.searchParams.get('area') || '';
   const option = url.searchParams.get('option') || 'all'; // 'all', 'first', 'second'
   const order = url.searchParams.get('order') || 'recent'; // 'recent', 'priority'
 
