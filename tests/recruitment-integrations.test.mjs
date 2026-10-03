@@ -126,3 +126,9 @@ test('video links are bound to one application and expire', async () => {
   assert.equal(await tickets.verifyVideoTicket(id, ticket, Date.now() + 3 * 60 * 60 * 1000), false);
   assert.equal(await tickets.verifyVideoTicket(id, null), false);
 });
+
+test('sign-in codes get their own box in the email', () => {
+  const html = layout.renderRecruitmentEmailHtml({ subject: 'Tu código de acceso a UNICODE', text: 'Hola Ana, este es tu código:\n\n042517\n\nVence en 10 minutos.', code: '042517', siteUrl: 'https://www.ccunicode.org' });
+  assert.match(html, /letter-spacing:8px;[^"]*">042517<\/p>/);
+  assert.match(html, />Vence en 10 minutos\.<\/p>/);
+});
