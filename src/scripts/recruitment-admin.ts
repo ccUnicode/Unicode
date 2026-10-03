@@ -10,9 +10,9 @@ import { allowedApplicationTransitions } from "../lib/recruitment/types";
 const apiRoot = "/api/recruitment/admin";
 const statusNames: Record<ApplicationStatus, string> = {
   draft: "Borrador",
-  submitted: "Postulación enviada",
-  profile_validated: "Perfil validado",
-  profile_rejected: "Perfil no admitido",
+  submitted: "Inscripción completa",
+  profile_validated: "Avanza a la 2.ª etapa",
+  profile_rejected: "No avanza",
   test_sent: "Prueba enviada",
   test_completed: "Prueba completada",
   awaiting_second_review: "Pendiente de segunda revisión",
@@ -23,10 +23,10 @@ const statusNames: Record<ApplicationStatus, string> = {
   group_eligible: "Habilitado para dinámica grupal",
   group_scheduled: "Dinámica grupal programada",
   group_completed: "Dinámica grupal completada",
-  selected: "Seleccionado",
+  selected: "Ingresa",
   conditional_selected: "Seleccionado con condición",
   waitlisted: "Lista de espera",
-  not_selected: "No seleccionado",
+  not_selected: "No ingresa",
   onboarding_sent: "Inducción enviada",
   buddy_assigned: "Buddy asignado",
   integrated: "Integrado",
@@ -643,16 +643,7 @@ function renderDetail(application: RecruitmentApplication): void {
     : "Aún no hay un video verificado.";
   element("open-video").hidden = !video;
   element("video-access-message").hidden = true;
-  const next = element<HTMLSelectElement>("next-status");
-  next.replaceChildren();
-  // The same transition map is used by the server; prerequisites are checked there.
-  allowedApplicationTransitions[application.status].forEach((following) => next.add(new Option(statusNames[following], following)));
-  if (!next.options.length) next.add(new Option("Sin transición administrativa disponible", ""));
-  const terminal = !next.value;
-  next.disabled = terminal;
-  element<HTMLButtonElement>("save-transition").disabled = terminal;
-  element<HTMLTextAreaElement>("transition-reason").disabled = terminal;
-  element<HTMLTextAreaElement>("transition-reason").value = "";
+  renderStageButtons(application);
   const history = element("detail-history");
   history.replaceChildren();
   if (!application.history?.length) history.append(node("li", "No hay cambios registrados.", "muted"));
@@ -665,26 +656,45 @@ function renderDetail(application: RecruitmentApplication): void {
   });
 }
 
-element<HTMLFormElement>("transition-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  if (!selectedApplication) return;
-  const id = selectedApplication.id;
-  const status = element<HTMLSelectElement>("next-status").value;
-  const reason = element<HTMLTextAreaElement>("transition-reason").value.trim();
-  if (!status || !reason) return;
-  const button = element<HTMLButtonElement>("save-transition");
-  button.disabled = true;
+/** Each result is one button: it changes the status and sends that email to the applicant. */
+const stageActions: Partial<Record<ApplicationStatus, { title: string; buttons: [ApplicationStatus, string, string][] }>> = {
+  submitted: { title: "Primera etapa: revisión del perfil", buttons: [["profile_validated", "Avanza a la 2.ª etapa", "primary"], ["profile_rejected", "No avanza", "secondary"]] },
+  profile_validated: { title: "Segunda etapa: resultado final", buttons: [["selected", "Ingresa a UNICODE", "primary"], ["not_selected", "No ingresa", "secondary"]] },
+};
+
+function renderStageButtons(application: RecruitmentApplication): void {
+  const box = element("stage-buttons");
+  box.replaceChildren();
+  const stage = stageActions[application.status] ?? (allowedApplicationTransitions[application.status].includes("selected") ? stageActions.profile_validated : undefined);
+  element("stage-title").textContent = stage?.title ?? "Resultado";
+  element("stage-hint").textContent = stage
+    ? "Cada botón cambia el estado y le envía al postulante el correo de ese resultado. No se puede deshacer."
+    : ["draft", "incomplete"].includes(application.status)
+      ? "Aún no completa su inscripción. Le recordaremos terminarla si deja pasar el tiempo configurado sin avanzar."
+      : `Estado actual: ${statusNames[application.status] || application.status}. Ya no quedan resultados por enviar.`;
+  for (const [status, label, kind] of stage?.buttons ?? []) {
+    const button = node("button", label, kind);
+    button.type = "button";
+    button.addEventListener("click", () => void sendResult(application, status, label));
+    box.append(button);
+  }
+}
+
+async function sendResult(application: RecruitmentApplication, status: ApplicationStatus, label: string): Promise<void> {
+  const name = `${application.data.firstName} ${application.data.lastName}`.trim();
+  if (!confirm(`«${label}» para ${name}. Se le enviará el correo de este resultado a ${application.data.email}. ¿Continuar?`)) return;
+  const buttons = [...element("stage-buttons").querySelectorAll("button")];
+  buttons.forEach((button) => { button.disabled = true; });
   try {
-    await request(`/applications/${encodeURIComponent(id)}/transition`, { method: "POST", body: JSON.stringify({ status, reason }) });
-    showMessage("Estado actualizado y cambio registrado en el historial.");
+    await request(`/applications/${encodeURIComponent(application.id)}/transition`, { method: "POST", body: JSON.stringify({ status, reason: `Resultado enviado: ${label}.` }) });
+    showMessage(`Listo: ${label}. El correo quedó en camino a ${application.data.email}.`);
     await loadApplications();
-    await loadDetail(id);
+    await loadDetail(application.id);
   } catch (error) {
     showMessage(messageOf(error), true);
-  } finally {
-    if (selectedApplication?.id === id) button.disabled = !element<HTMLSelectElement>("next-status").value;
+    buttons.forEach((button) => { button.disabled = false; });
   }
-});
+}
 
 element("open-video").addEventListener("click", async () => {
   if (!selectedApplication?.video) return;

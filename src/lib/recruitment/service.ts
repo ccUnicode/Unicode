@@ -145,10 +145,10 @@ export function requireUuid(value: unknown): string {
   return value;
 }
 export async function adminApplications(id?: string) { return recruitmentRpc<{ applications?: RecruitmentApplication[]; application?: RecruitmentApplication }>('recruitment_admin_applications', { p_id: id || null }); }
-export async function transition(id: string, input: unknown) {
+export async function transition(id: string, input: unknown, actor = 'administracion-compartida') {
   const body = record(input); const status = body.status;
   if (typeof status !== 'string' || !Object.hasOwn(allowedApplicationTransitions, status) || typeof body.reason !== 'string' || body.reason.trim().length < 3 || body.reason.length > 2000) throw new RecruitmentError('invalid_transition', 'Elige un estado válido y registra el motivo.');
-  const result = await recruitmentRpc<ApplicationResponse>('recruitment_transition', { p_id: id, p_status: status as ApplicationStatus, p_reason: body.reason.trim(), p_actor: 'administracion-compartida' });
+  const result = await recruitmentRpc<ApplicationResponse>('recruitment_transition', { p_id: id, p_status: status as ApplicationStatus, p_reason: body.reason.trim(), p_actor: actor });
   if (recruitmentEmailConfigured()) await processEmails(2).catch(() => undefined);
   return result;
 }
