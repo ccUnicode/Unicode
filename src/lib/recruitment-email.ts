@@ -1,6 +1,6 @@
 /** Durable outbox transport. Missing credentials never count as a delivered message. */
 import { googleConfigured, googleRequest } from './recruitment-google';
-type Email = { to: string; subject: string; html: string; text: string; idempotencyKey: string };
+type Email = { to: string; subject: string; html: string; text: string; idempotencyKey: string; headers?: Record<string, string> };
 const env = (key: string) => import.meta.env[key] || process.env[key];
 const resendConfigured = () => Boolean(env('RESEND_API_KEY') && env('RECRUITMENT_EMAIL_FROM'));
 /** Where applicants' replies go; the sending address on our domain has no mailbox. */
@@ -27,11 +27,14 @@ async function sendWithResend(email: Email): Promise<{ messageId: string } | 'li
   const key = env('RESEND_API_KEY'); const from = env('RECRUITMENT_EMAIL_FROM');
   if (!key || !from) throw new Error('El servicio de correo está pendiente de configuración.');
   const reply = replyTo();
-  const response = await fetch('https://api.resend.com/emails', {
+  const send = () => fetch('https://api.resend.com/emails', {
     method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', 'Idempotency-Key': email.idempotencyKey },
-    body: JSON.stringify({ from, to: [email.to], subject: email.subject, html: email.html, text: email.text, ...(reply ? { reply_to: reply } : {}) }),
+    body: JSON.stringify({ from, to: [email.to], subject: email.subject, html: email.html, text: email.text, ...(reply ? { reply_to: reply } : {}), ...(email.headers ? { headers: email.headers } : {}) }),
     signal: AbortSignal.timeout(20_000),
   });
+  let response = await send();
+  // The free plan allows a couple of requests per second: wait once before treating it as the daily cap.
+  if (response.status === 429) { await new Promise((resolve) => setTimeout(resolve, 1200)); response = await send(); }
   if (response.status === 429) return 'limit';
   if (!response.ok) throw new Error('El proveedor de correo rechazó el envío.');
   const data = await response.json() as { id?: string };
@@ -50,6 +53,7 @@ async function sendWithGmail(email: Email): Promise<{ messageId: string }> {
   const reply = replyTo();
   const mime = [
     `To: ${email.to}`, `Subject: ${encodedSubject}`, `Message-ID: <${messageId}>`, ...(reply && !/[\r\n]/.test(reply) ? [`Reply-To: ${reply}`] : []),
+    ...Object.entries(email.headers ?? {}).filter(([name, value]) => /^[A-Za-z-]+$/.test(name) && !/[\r\n]/.test(value)).map(([name, value]) => `${name}: ${value}`),
     'MIME-Version: 1.0', `Content-Type: multipart/alternative; boundary="${boundary}"`, '',
     ...part('text/plain', email.text), ...part('text/html', email.html), `--${boundary}--`, '',
   ].join('\r\n');

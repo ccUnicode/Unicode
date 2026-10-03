@@ -3,6 +3,7 @@ import { sendRecruitmentEmail, recruitmentEmailConfigured } from '../recruitment
 import { UNIVERSITIES } from './universities';
 import { renderRecruitmentEmailHtml } from '../recruitment-email-layout';
 import { createVideoTicket } from '../video-ticket';
+import { unsubscribeUrl } from '../unsubscribe';
 import { databaseConfigured, localDevelopmentDatabase, recruitmentRpc } from './database';
 import { record, RecruitmentError, validateApplicationData, validateConfig, validateTemplates, withAllAreas } from './validation';
 import { AREA_IDS, AREA_NAMES, allowedApplicationTransitions, type ApplicationStatus, type EmailQueueItem, type RecruitmentApplication, type RecruitmentConfig, type RecruitmentUpload } from './types';
@@ -136,6 +137,13 @@ export async function discardDraft(id: string, token: string) {
   for (const file of result.files) { try { await deleteVideo(file); } catch { /* Already gone or never uploaded. */ } }
   return { discarded: true };
 }
+/** GTH reminds every unfinished application right now, then sends the first batch. */
+export async function remindAll(actor = 'administracion') {
+  const queued = await recruitmentRpc<number>('recruitment_remind_all', { p_actor: actor });
+  if (recruitmentEmailConfigured()) await processEmails(10).catch(() => undefined);
+  return { queued };
+}
+export async function unsubscribe(id: string) { return recruitmentRpc<boolean>('recruitment_unsubscribe', { p_id: id }); }
 /** GTH deletes one application (e.g. a test sent as if it were real) and its stored videos. */
 export async function deleteApplication(id: string, actor = 'administracion') {
   const result = await recruitmentRpc<{ deleted: boolean; files: { applicationId: string; uploadId: string; provider: 'drive' | 'supabase'; fileId: string }[] }>('recruitment_admin_delete', { p_id: id, p_actor: actor });
@@ -199,7 +207,12 @@ export async function processEmails(limit = 10) {
         await recruitmentRpc<null>('recruitment_finish_email', { p_id: item.id, p_lease_token: leaseToken, p_message_id: 'local-omitido', p_error: null });
         continue;
       }
-      const result = await sendRecruitmentEmail({ to: item.to, subject, text, html: renderRecruitmentEmailHtml({ subject, text, actionUrl: payload.resumeUrl, siteUrl: env('RECRUITMENT_BASE_URL') || 'https://www.ccunicode.org' }), idempotencyKey: `recruitment-${item.id}` });
+      const siteUrl = env('RECRUITMENT_BASE_URL') || 'https://www.ccunicode.org';
+      // Reminders carry a signed opt-out link, in the email and as the standard header mail apps show.
+      const optOut = item.templateKey === 'incomplete' ? await unsubscribeUrl(siteUrl, item.applicationId) : undefined;
+      const body = optOut ? `${text}\n\n¿No quieres más recordatorios? Deja de recibirlos aquí: ${optOut}` : text;
+      const headers = optOut ? { 'List-Unsubscribe': `<${optOut}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } : undefined;
+      const result = await sendRecruitmentEmail({ to: item.to, subject, text: body, html: renderRecruitmentEmailHtml({ subject, text, actionUrl: payload.resumeUrl, siteUrl, unsubscribeUrl: optOut }), idempotencyKey: `recruitment-${item.id}`, headers });
       await recruitmentRpc<null>('recruitment_finish_email', { p_id: item.id, p_lease_token: leaseToken, p_message_id: result.messageId, p_error: null });
       sent++;
     } catch {

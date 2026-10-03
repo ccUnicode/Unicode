@@ -14,6 +14,7 @@ const google = await server.ssrLoadModule('/src/lib/recruitment-google.ts');
 const { sessionStore, managesRecruitment } = await server.ssrLoadModule('/src/lib/session-store.ts');
 const layout = await server.ssrLoadModule('/src/lib/recruitment-email-layout.ts');
 const tickets = await server.ssrLoadModule('/src/lib/video-ticket.ts');
+const optOut = await server.ssrLoadModule('/src/lib/unsubscribe.ts');
 const fixture = async (name) => new Uint8Array(await readFile(new URL(`./fixtures/${name}`, import.meta.url)));
 const applicationId = '11111111-1111-4111-8111-111111111111';
 const uploadId = '22222222-2222-4222-8222-222222222222';
@@ -151,4 +152,15 @@ test('when Resend hits its limit the same email goes out through Gmail, with the
     const hosts = calls.map((u) => new URL(u).hostname);
     assert.deepEqual([hosts[0], hosts.at(-1)], ['api.resend.com', 'gmail.googleapis.com']);
   } finally { globalThis.fetch = originalFetch; }
+});
+
+test('reminder opt-out links are signed per application and shown at the bottom of the email', async () => {
+  const id = '33333333-3333-4333-8333-333333333333';
+  const url = new URL(await optOut.unsubscribeUrl('https://www.ccunicode.org', id));
+  assert.equal(url.pathname, `/api/recruitment/unsubscribe/${id}`);
+  assert.equal(await optOut.verifyUnsubscribe(id, url.searchParams.get('t')), true);
+  assert.equal(await optOut.verifyUnsubscribe('44444444-4444-4444-8444-444444444444', url.searchParams.get('t')), false);
+  assert.equal(await optOut.verifyUnsubscribe(id, 'f'.repeat(40)), false);
+  const html = layout.renderRecruitmentEmailHtml({ subject: 'Recordatorio', text: 'Hola', siteUrl: 'https://www.ccunicode.org', unsubscribeUrl: url.toString() });
+  assert.match(html, />Dejar de recibir recordatorios<\/a>/);
 });

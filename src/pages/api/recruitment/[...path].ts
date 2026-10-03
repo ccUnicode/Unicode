@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { managesRecruitment, sessionStore, type AdminSession } from '../../../lib/session-store';
 import { directors, removeDirector, saveDirector } from '../../../lib/admin-access';
 import { verifyVideoTicket } from '../../../lib/video-ticket';
+import { verifyUnsubscribe } from '../../../lib/unsubscribe';
 import { streamDriveVideo } from '../../../lib/recruitment-storage';
 import * as recruitment from '../../../lib/recruitment/service';
 import { withPreviewKey } from '../../../lib/recruitment/database';
@@ -84,11 +85,30 @@ async function playVideo(request: Request, id: string): Promise<Response> {
   if (!drive.ok || !drive.body) return new Response('No se pudo leer el video.', { status: 502, headers });
   return new Response(drive.body, { status: 206, headers: { ...headers, 'Content-Type': video.contentType, 'Accept-Ranges': 'bytes', 'Content-Range': `bytes ${start}-${end}/${size}`, 'Content-Length': String(end - start + 1) } });
 }
+/**
+ * Opt-out of reminders. GET only shows a confirmation (mail scanners open links on their own);
+ * the button, or the mail app's one-click unsubscribe, sends the POST that applies it.
+ */
+async function optOut(request: Request, id: string): Promise<Response> {
+  const page = (title: string, text: string, form = '') => new Response(`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${title}</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0a0a0a;color:#e4e4e7;font-family:system-ui,sans-serif;padding:24px}main{max-width:440px;text-align:center}h1{color:#fff;font-size:22px}p{line-height:1.6;color:#a1a1aa}button{margin-top:12px;padding:12px 22px;border:0;border-radius:999px;background:#75d32d;color:#0a0a0a;font-weight:700;font-size:15px;cursor:pointer}</style></head><body><main><h1>${title}</h1><p>${text}</p>${form}</main></body></html>`,
+    { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer', 'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'" } });
+  const url = new URL(request.url);
+  const token = url.searchParams.get('t');
+  if (!(await verifyUnsubscribe(id, token))) return page('Enlace no válido', 'Este enlace no es correcto. Usa el que viene en tu correo.');
+  if (request.method === 'POST') {
+    await recruitment.unsubscribe(id);
+    return page('Listo', 'Ya no te enviaremos recordatorios. Tu postulación sigue guardada: puedes terminarla cuando quieras con tu enlace personal.');
+  }
+  return page('¿Dejar de recibir recordatorios?', 'Dejaremos de recordarte que termines tu postulación. No se borra nada de lo que avanzaste.',
+    `<form method="post" action="${url.pathname}?t=${encodeURIComponent(token!)}"><button type="submit">Sí, dejar de recibirlos</button></form>`);
+}
 export const ALL: APIRoute = ({ request, params }) => withPreviewKey(request.headers.get('x-recruitment-preview'), () => handle(request, params.path));
 async function handle(request: Request, rawPath: string | undefined): Promise<Response> {
   try {
     const path = (rawPath || '').split('/'); const method = request.method;
     if (!['GET', 'POST', 'PUT', 'PATCH'].includes(method)) return json({ error: 'Método no permitido.', code: 'method_not_allowed' }, 405);
+    // Mail apps send the one-click unsubscribe POST without a browser origin.
+    if (path[0] === 'unsubscribe' && path[1] && path.length === 2 && ['GET', 'POST'].includes(method)) return await optOut(request, recruitment.requireUuid(path[1]));
     const origin = method !== 'GET' ? sameOrigin(request) : undefined;
     if (path.join('/') === 'config' && method === 'GET') return json(await recruitment.publicConfig());
     if (path[0] === 'video' && path[1] && path.length === 2 && method === 'GET') return await playVideo(request, recruitment.requireUuid(path[1]));
@@ -139,6 +159,7 @@ async function handle(request: Request, rawPath: string | undefined): Promise<Re
       if (action === 'preview-link' && method === 'POST') return json(await recruitment.createPreviewLink(origin!));
       if (action === 'preview-link/disable' && method === 'POST') return json(await recruitment.disablePreviewLink());
       if (action === 'purge-tests' && method === 'POST') return json(await recruitment.purgeTestApplications());
+      if (action === 'remind-all' && method === 'POST') return json(await recruitment.remindAll(actor));
     }
     return json({ error: 'Ruta no encontrada.', code: 'not_found' }, 404);
   } catch (error) {

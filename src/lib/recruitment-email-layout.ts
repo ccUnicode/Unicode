@@ -7,8 +7,8 @@ const paragraphs = (text: string): string => text.split(/\n{2,}/).map(part => pa
   .map(part => `<p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#27272a;">${escapeHtml(part).replace(/\n/g, '<br>')}</p>`).join('');
 
 /** A link inside the text becomes a button: the sentence before it, the button, then the rest. */
-export function renderRecruitmentEmailHtml({ subject, text, actionUrl, actionLabel = 'Continuar mi postulación', siteUrl, code }: {
-  subject: string; text: string; actionUrl?: string; actionLabel?: string; siteUrl: string; code?: string;
+export function renderRecruitmentEmailHtml({ subject, text, actionUrl, actionLabel = 'Continuar mi postulación', siteUrl, code, unsubscribeUrl }: {
+  subject: string; text: string; actionUrl?: string; actionLabel?: string; siteUrl: string; code?: string; unsubscribeUrl?: string;
 }): string {
   const site = siteUrl.replace(/\/+$/, '');
   let content: string;
@@ -39,6 +39,8 @@ export function renderRecruitmentEmailHtml({ subject, text, actionUrl, actionLab
     + `<tr><td style="padding:32px 28px 16px;">${content}</td></tr>`
     + `<tr><td style="padding:20px 28px 28px;border-top:1px solid #f4f4f5;font-size:12px;line-height:1.6;color:#a1a1aa;">`
     + `UNICODE · Centro Cultural Estudiantil de Ingeniería · FIIS UNI<br>`
-    + `Recibes este correo porque postulaste en <a href="${escapeHtml(site)}" style="color:#71717a;">ccunicode.org</a>.</td></tr>`
+    + `Recibes este correo porque postulaste en <a href="${escapeHtml(site)}" style="color:#71717a;">ccunicode.org</a>.`
+    + (unsubscribeUrl ? `<br><a href="${escapeHtml(unsubscribeUrl)}" style="color:#71717a;">Dejar de recibir recordatorios</a>` : '')
+    + `</td></tr>`
     + `</table></td></tr></table></body></html>`;
 }
