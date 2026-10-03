@@ -89,8 +89,8 @@ export function validateConfig(input: unknown): RecruitmentConfig {
     maxApplicants: number(source.maxApplicants, 'máximo de postulantes', 1, 150, true), areas,
     // No minimum by default: 0 keeps the database rule satisfied without filtering anyone.
     minAvailabilityHours: source.minAvailabilityHours === null || source.minAvailabilityHours === undefined ? 0 : number(source.minAvailabilityHours, 'disponibilidad mínima', 0, 168),
-    maxVideoSeconds: number(source.maxVideoSeconds, 'duración del video', 60, 60, true),
-    maxVideoBytes: number(source.maxVideoBytes, 'tamaño del video', 1024 * 1024, 20 * 1024 * 1024, true),
+    maxVideoSeconds: number(source.maxVideoSeconds, 'duración del video', 150, 150, true),
+    maxVideoBytes: number(source.maxVideoBytes, 'tamaño del video', 1024 * 1024, 50 * 1024 * 1024, true),
     questionsPerCategory: number(source.questionsPerCategory, 'preguntas por categoría', 2, 2, true),
     preparationSeconds: number(source.preparationSeconds, 'preparación', 0, 300, true), inactivityHours: number(source.inactivityHours, 'inactividad', 1, 720, true),
     shortCasePrompt: string(source.shortCasePrompt, 'caso corto', 2000, false),

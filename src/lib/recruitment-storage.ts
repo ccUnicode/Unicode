@@ -94,6 +94,15 @@ export async function inspectVideo(identity: Identity) {
   return inspectVideoBytes(new Uint8Array(await data.arrayBuffer()));
 }
 
+/**
+ * One byte range of a Drive video, read with the app's account. Ranges are capped so each
+ * response stays well under the hosting response limit; the browser asks for the next one.
+ */
+export async function streamDriveVideo(identity: Identity, start: number, end: number): Promise<Response> {
+  if (identity.provider !== 'drive') throw new Error('Solo los videos de Drive se transmiten desde el sitio.');
+  return googleRequest(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(identity.fileId)}?alt=media`, { headers: { Range: `bytes=${start}-${end}` }, signal: AbortSignal.timeout(25_000) });
+}
+
 export async function getVideoPlayback(identity: Identity): Promise<{ url: string; embedded: boolean }> {
   if (identity.provider === 'drive') {
     await driveFile(identity);

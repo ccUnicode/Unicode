@@ -66,11 +66,11 @@ import Layout from "../../layouts/Layout.astro";
           <fieldset class="panel">
             <legend>Video de presentación</legend>
             <div class="field-grid">
-              <label>Duración máxima<input type="text" value="60 segundos" disabled /></label>
+              <label>Duración máxima<input type="text" value="2 min 30 s" disabled /></label>
               <label>Preguntas por categoría<input type="text" value="2 (4 preguntas en total)" disabled /></label>
               <label>Almacenamiento<select name="storageProvider"><option value="drive">Google Drive</option><option value="supabase">Supabase Storage</option></select><small>El cambio afecta a nuevas subidas; los videos anteriores conservan su proveedor.</small></label>
               <label>Preparación en segundos<input name="preparationSeconds" type="number" min="0" max="300" step="1" required /></label>
-              <label>Tamaño máximo en MB<input name="maxVideoMB" type="number" min="1" max="20" step="1" required /></label>
+              <label>Tamaño máximo en MB<input name="maxVideoMB" type="number" min="1" max="50" step="1" required /></label>
             </div>
             <p class="muted note">Grabación en la web y carga alternativa ante falla técnica. Las preguntas asignadas se conservan durante todo el proceso.</p>
           </fieldset>

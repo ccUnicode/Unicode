@@ -98,6 +98,12 @@ function initializeRecruitment() {
     return result as T;
   }
 
+  /** 150 → "2 min 30 s", 60 → "1 min". */
+  function spokenDuration(seconds: number) {
+    const minutes = Math.floor(seconds / 60); const rest = seconds % 60;
+    return [minutes ? `${minutes} min` : "", rest ? `${rest} s` : ""].filter(Boolean).join(" ");
+  }
+
   function updateControls() {
     const active = ["rehearsal", "preparation", "recording", "uploading"].includes(cameraState);
     const finished = !!application?.video;
@@ -112,10 +118,10 @@ function initializeRecruitment() {
     element<HTMLSelectElement>("failure-reason").disabled = button("report-failure").disabled;
     button("upload-video").disabled = !recordedBlob || active || finished || pendingAction;
     button("submit-application").disabled = !finished || active || pendingAction;
-    element<HTMLInputElement>("alternate-file").disabled = active || finished || !application?.alternateAllowed || !!uploadSession || pendingAction;
+    button("restart-application").disabled = active || pendingAction;
     show("stop-recording", cameraState === "recording" || cameraState === "rehearsal");
-    show("alternate-upload", !!application?.alternateAllowed && !finished);
-    show("technical-help", !finished);
+    show("technical-help", !finished && !application?.technicalFailureCount);
+    show("restart-panel", !!application && !finished && !recordedBlob && attempts >= maxAttempts && !!application.technicalFailureCount);
     show("video-saved", finished);
   }
 
@@ -152,6 +158,11 @@ function initializeRecruitment() {
   function renderQuestions() {
     const target = element("assigned-questions");
     target.replaceChildren();
+    if (!application?.questions.length) {
+      const hint = document.createElement("p"); hint.className = "questions-hidden";
+      hint.textContent = `Tus 4 preguntas aparecerán al pulsar «Iniciar preparación y grabar». Tendrás ${config.preparationSeconds} segundos para leerlas antes de que empiece la grabación.`;
+      target.append(hint); return;
+    }
     const list = document.createElement("ol");
     for (const category of ["motivation", "collaboration"]) {
       for (const question of application?.questions.filter(item => item.category === category) ?? []) {
@@ -262,7 +273,7 @@ function initializeRecruitment() {
   async function enableCamera() {
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined" || !chooseRecordingMime(MediaRecorder)) {
       element<HTMLSelectElement>("failure-reason").value = "unsupported";
-      throw new Error("Este navegador no permite grabar aquí. Registra la falla técnica para habilitar la carga de un video.");
+      throw new Error("Este navegador no permite grabar aquí. Abre esta página en Chrome, Edge o Safari actualizados.");
     }
     stopCamera();
     element("camera-status").textContent = "Solicitando acceso a tu cámara y micrófono…";
@@ -297,7 +308,7 @@ function initializeRecruitment() {
   }
 
   async function setAnswer(blob: Blob, mode: typeof videoMode, duration: number) {
-    if (blob.size === 0) throw new Error("El video quedó vacío. Registra la falla técnica para usar la alternativa.");
+    if (blob.size === 0) throw new Error("El video quedó vacío. Registra la falla técnica para volver a intentarlo.");
     if (blob.size > config.maxVideoBytes) throw new Error(`El video supera el máximo de ${(config.maxVideoBytes / 1048576).toFixed(0)} MB. Registra la falla técnica si hubo un problema al grabar.`);
     releaseAnswer(); deleteRehearsal();
     recordedBlob = blob; videoMode = mode; uploadSession = null; answerUrl = URL.createObjectURL(blob);
@@ -352,7 +363,7 @@ function initializeRecruitment() {
       element("recording-timer").textContent = clock(Math.min(seconds, limit));
       element("capture-banner-timer").textContent = `${clock(Math.min(seconds, limit))} / ${clock(config.maxVideoSeconds)}`;
     }, 100);
-    element("camera-status").textContent = rehearsal ? "Ensayo en curso. Se detendrá a los 10 segundos." : `Responde tus cuatro preguntas. La grabación se detendrá a los ${limit} segundos.`;
+    element("camera-status").textContent = rehearsal ? "Ensayo en curso. Se detendrá a los 10 segundos." : `Responde tus cuatro preguntas. La grabación se detendrá a los ${spokenDuration(limit)}.`;
     updateControls();
   }
 
@@ -360,18 +371,18 @@ function initializeRecruitment() {
     if (!application) throw new Error("Guarda tus datos antes de registrar un problema técnico.");
     const result = await request<DraftResponse>(`/drafts/${application.id}/technical-failure`, "POST", { code, message: detail.slice(0, 500) }, true, keepalive);
     void forgetAnswer(application.id);
-    // A registered technical failure retires the failed answer and its upload
-    // capability. The one remaining attempt can now be a recording or a file.
+    // A registered technical failure retires the failed answer and its upload capability.
+    // The retry gets new questions, revealed when it starts.
     uploadSession = null; releaseAnswer(); show("video-result", false); show("upload-progress-panel", false);
     cameraState = stream ? "ready" : "idle";
     acceptApplication(result.application);
-    element("camera-status").textContent = "La falla quedó registrada. Puedes volver a grabar o usar la carga alternativa una vez.";
+    element("camera-status").textContent = "La falla quedó registrada. Tienes un nuevo intento con preguntas nuevas, que aparecerán al iniciar.";
   }
 
   async function interruptCapture(code: string, detail: string) {
     if (currentAttemptFailed) return;
-    const evaluating = cameraState === "recording";
-    currentAttemptFailed = true; discardRecording = true; clearInterval(timer);
+    const evaluating = cameraState === "recording" || cameraState === "preparation";
+    currentAttemptFailed = true; discardRecording = true; clearInterval(timer); clearInterval(preparationTimer);
     if (recorder && recorder.state !== "inactive") recorder.stop();
     stopCamera(); cameraState = "idle";
     element("camera-status").textContent = detail;
@@ -383,58 +394,35 @@ function initializeRecruitment() {
     updateControls();
   }
 
+  /** The attempt counts from the moment the questions are shown: then the preparation, then the recording. */
   async function prepareAndRecord() {
     if (!stream || !application) throw new Error("Guarda tus datos y activa tu cámara antes de grabar.");
-    deleteRehearsal(); clearError(); cameraState = "preparation"; updateControls();
+    deleteRehearsal(); clearError(); pendingAction = true; updateControls();
+    try {
+      const result = await request<DraftResponse>(`/drafts/${application.id}/recording-attempt`, "POST", {});
+      acceptApplication(result.application);
+    } finally { pendingAction = false; }
+    currentAttemptFailed = false; cameraState = "preparation"; updateControls();
+    element("assigned-questions").scrollIntoView({ block: "start", behavior: "smooth" });
     const deadline = performance.now() + config.preparationSeconds * 1000;
-    const begin = async () => {
-      clearInterval(preparationTimer);
-      if (!stream || document.visibilityState === "hidden") { cameraState = stream ? "ready" : "idle"; updateControls(); return; }
-      try {
-        const result = await request<DraftResponse>(`/drafts/${application!.id}/recording-attempt`, "POST", {});
-        acceptApplication(result.application); currentAttemptFailed = false; capture(false);
-      } catch (error) { cameraState = "ready"; showError(error); updateControls(); }
-    };
     const count = () => {
+      if (cameraState !== "preparation") { clearInterval(preparationTimer); return; }
       const seconds = Math.max(0, Math.ceil((deadline - performance.now()) / 1000));
-      element("camera-status").textContent = seconds ? `Preparación: ${seconds} segundos. Revisa las cuatro preguntas. La grabación comenzará al terminar.` : "Preparación terminada. Iniciando grabación…";
-      if (seconds === 0) void begin();
+      element("camera-status").textContent = seconds ? `Preparación: ${seconds} s. Lee tus preguntas; la grabación empezará sola.` : "Iniciando grabación…";
+      element("recording-label").textContent = "Preparación"; element("recording-timer").textContent = clock(seconds); show("recording-indicator");
+      if (seconds === 0) {
+        clearInterval(preparationTimer);
+        if (!stream) { void interruptCapture("device", "La cámara se desconectó durante la preparación."); return; }
+        try { capture(false); } catch (error) { void interruptCapture("device", errorMessage(error)); }
+      }
     };
     preparationTimer = setInterval(count, 200); count();
-  }
-
-  async function fileDuration(file: Blob): Promise<number> {
-    const video = document.createElement("video"); video.preload = "metadata"; video.muted = true;
-    const url = URL.createObjectURL(file);
-    try {
-      return await new Promise<number>((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error("No pudimos comprobar la duración del archivo. Usa un video MP4 o WebM válido.")), 15000);
-        video.onloadedmetadata = () => {
-          clearTimeout(timeout);
-          if (!Number.isFinite(video.duration) || video.duration <= 0) reject(new Error("No pudimos comprobar la duración del archivo. Prueba exportarlo como MP4."));
-          else resolve(video.duration);
-        };
-        video.onerror = () => { clearTimeout(timeout); reject(new Error("No pudimos abrir este video. Selecciona un MP4 o WebM válido.")); };
-        video.src = url;
-      });
-    } finally { video.removeAttribute("src"); video.load(); URL.revokeObjectURL(url); }
-  }
-
-  async function selectAlternate() {
-    if (!application?.alternateAllowed) throw new Error("Primero registra una falla técnica para habilitar esta alternativa.");
-    const file = element<HTMLInputElement>("alternate-file").files?.[0];
-    if (!file) return;
-    if (!["video/mp4", "video/webm"].includes(file.type)) throw new Error("Selecciona un video MP4 o WebM.");
-    if (file.size > config.maxVideoBytes) throw new Error(`El archivo supera el límite de ${(config.maxVideoBytes / 1048576).toFixed(0)} MB. Reduce la calidad o el tamaño antes de subirlo.`);
-    const duration = await fileDuration(file);
-    if (duration > config.maxVideoSeconds) throw new Error(`Tu video dura ${Math.ceil(duration)} segundos. El máximo total es ${config.maxVideoSeconds} segundos.`);
-    await setAnswer(file, "upload", duration);
   }
 
   function uploadPut(session: UploadSession, body: Blob | null, contentRange?: string, onProgress?: (loaded: number) => void): Promise<{ status: number }> {
     if (!isAllowedUploadUrl(session.uploadUrl, session.provider)) return Promise.reject(new Error("La dirección de carga no es válida. Conserva tu video y contacta al equipo de convocatoria."));
     return new Promise((resolve, reject) => {
-      // Up to 20 MB in one request: allow slow mobile connections ten minutes.
+      // Up to 40 MB in one request: allow slow mobile connections ten minutes.
       const xhr = new XMLHttpRequest(); xhr.open("PUT", session.uploadUrl); xhr.timeout = 600000;
       for (const [key, value] of Object.entries(session.headers ?? {})) {
         if (!["authorization", "cookie", "host", "content-type"].includes(key.toLowerCase())) xhr.setRequestHeader(key, value);
@@ -468,7 +456,7 @@ function initializeRecruitment() {
       if (!isAllowedUploadUrl(uploadSession.uploadUrl, uploadSession.provider)) throw new Error("No pudimos preparar una carga segura. Tu video sigue disponible en esta pestaña.");
       if (uploadSession.provider === "drive") {
         // Google hides the resumable Range header from browsers (CORS), so the page cannot
-        // continue mid-file. Videos are at most 20 MB: send the whole file, and before each
+        // continue mid-file. Videos are at most 40 MB: send the whole file, and before each
         // retry ask Google whether it already holds it (200/201) or still waits for it (308).
         const complete = async () => [200, 201].includes((await uploadPut(uploadSession!, null, `bytes */${blob.size}`)).status);
         for (let attempt = 0; !(await complete()); attempt++) {
@@ -545,14 +533,14 @@ function initializeRecruitment() {
     }
     if (application.video) { message("Tu video está guardado. Solo falta confirmar el envío de tu postulación."); return; }
     const exhausted = application.recordingAttempts >= (application.technicalFailureCount ? 2 : 1);
-    if (!exhausted && application.technicalFailureCount) message("Tu grabación anterior se interrumpió y quedó registrada como falla técnica. Tienes un nuevo intento: vuelve a grabar o sube tu video.");
-    else if (!exhausted) message("Retomaste tu postulación. Tus preguntas siguen siendo las mismas.");
+    if (!exhausted && application.technicalFailureCount) message("Tu grabación anterior se interrumpió y quedó registrada como falla técnica. Tienes un nuevo intento con preguntas nuevas.");
+    else if (!exhausted) message("Retomaste tu postulación. Cuando estés listo/a, inicia la grabación.");
     else if (!application.technicalFailureCount) {
       element<HTMLSelectElement>("failure-reason").value = "interrupted";
       message("Tu grabación anterior no llegó a guardarse. Registra la falla técnica para habilitar un nuevo intento.");
       element<HTMLDetailsElement>("technical-help").open = true;
       element("technical-help").scrollIntoView({ block: "center" });
-    } else message("Ya utilizaste el reintento disponible y no encontramos tu video en este navegador. Escribe al equipo de convocatoria para revisar tu caso.");
+    } else message("Ya usaste tu reintento y no encontramos tu video en este navegador. Puedes empezar de nuevo con el formulario.");
   }
 
   async function boot() {
@@ -576,9 +564,8 @@ function initializeRecruitment() {
         element<HTMLInputElement>("availabilityHours").min = String(config.minAvailabilityHours);
         element("availability-hint").textContent = `Esta convocatoria requiere al menos ${config.minAvailabilityHours} horas por semana.`;
       }
-      element("video-instructions").textContent = `Responde las 4 preguntas en un solo video de hasta ${config.maxVideoSeconds} segundos.`;
-      element("preparation-instructions").textContent = `Antes de grabar tendrás ${config.preparationSeconds} segundos para prepararte. El ensayo no se envía.`;
-      element("alternate-limit").textContent = `MP4 o WebM. Hasta ${config.maxVideoSeconds} segundos y ${(config.maxVideoBytes / 1048576).toFixed(0)} MB.`;
+      element("video-instructions").textContent = `Responde las 4 preguntas en un solo video de hasta ${spokenDuration(config.maxVideoSeconds)}.`;
+      element("preparation-instructions").textContent = `Al iniciar verás tus preguntas y tendrás ${config.preparationSeconds} segundos para leerlas; luego la grabación empieza sola. El ensayo de 10 segundos no se envía.`;
       if (stored?.id && stored.token && /^[a-zA-Z0-9_-]{10,100}$/.test(stored.id) && stored.token.length <= 512) {
         resumeToken = stored.token;
         try {
@@ -697,7 +684,17 @@ function initializeRecruitment() {
     if (!select.value) throw new Error("Selecciona el problema técnico que ocurrió.");
     await registerFailure(select.value, select.selectedOptions[0].textContent || "Falla técnica reportada");
   }); });
-  element<HTMLInputElement>("alternate-file").addEventListener("change", () => { void runAction(selectAlternate); });
+  button("restart-application").addEventListener("click", () => { void runAction(async () => {
+    if (!application || !resumeToken) return;
+    if (!confirm("Se eliminará este borrador y volverás al formulario con tus datos ya escritos. Te tocarán preguntas nuevas. ¿Empezar de nuevo?")) return;
+    const data = collectData();
+    await request(`/drafts/${application.id}/discard`, "POST", {});
+    await forgetEverything();
+    // Forget the discarded draft here too, or saving on page exit would overwrite this copy with its id.
+    application = null; resumeToken = ""; phase = "data";
+    saveForm({ id: null, data, phase: "data", pending: true });
+    location.replace("/postular");
+  }); });
   button("upload-video").addEventListener("click", () => { void runAction(uploadVideo); });
   button("submit-application").addEventListener("click", () => { void runAction(async () => {
     if (!application?.video) throw new Error("Guarda y verifica tu video antes de confirmar.");
@@ -716,7 +713,7 @@ function initializeRecruitment() {
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") flushOnExit();
     if (document.visibilityState === "hidden" && (cameraState === "recording" || cameraState === "rehearsal")) void interruptCapture("interrupted", "La grabación se interrumpió al salir de esta pestaña.");
-    if (document.visibilityState === "hidden" && cameraState === "preparation") { clearInterval(preparationTimer); cameraState = "ready"; element("camera-status").textContent = "La preparación se pausó al salir de la pestaña. Vuelve a iniciarla cuando estés listo/a."; updateControls(); }
+    if (document.visibilityState === "hidden" && cameraState === "preparation") void interruptCapture("interrupted", "La preparación se interrumpió al salir de esta pestaña.");
   });
   window.addEventListener("beforeunload", event => { if (dirty || (recordedBlob && !answerPersisted) || ["preparation", "recording", "uploading"].includes(cameraState)) event.preventDefault(); });
   window.addEventListener("pagehide", () => { flushOnExit(); clearInterval(timer); clearInterval(preparationTimer); stopCamera(); deleteRehearsal(); if (answerUrl) URL.revokeObjectURL(answerUrl); });

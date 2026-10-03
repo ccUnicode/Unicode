@@ -439,7 +439,7 @@ configForm.addEventListener("submit", async (event) => {
     preparationSeconds: Number(field("preparationSeconds").value),
     maxVideoBytes: Math.round(Number(field("maxVideoMB").value) * 1024 * 1024),
     storageProvider: field("storageProvider").value as RecruitmentConfig["storageProvider"],
-    maxVideoSeconds: 60,
+    maxVideoSeconds: 150,
     questionsPerCategory: 2,
     thresholds: { affinity: optionalNumber("thresholdAffinity"), written: optionalNumber("thresholdWritten"), video: optionalNumber("thresholdVideo") },
     areas: config.areas.map((area) => ({
@@ -700,7 +700,7 @@ element("open-video").addEventListener("click", async () => {
     if (url.protocol !== "https:" && url.origin !== window.location.origin) throw new Error("El servidor no devolvió un enlace seguro para el video.");
     if (viewer) {
       viewer.location.replace(url.href);
-      message.textContent = "Video abierto en una nueva pestaña. Drive puede solicitar el acceso de un evaluador autorizado.";
+      message.textContent = "Video abierto en una nueva pestaña.";
     } else {
       const link = node("a", "Abrir video en una nueva pestaña", "back-link");
       link.href = url.href;
