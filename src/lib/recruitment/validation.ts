@@ -63,7 +63,7 @@ export function validateConfig(input: unknown): RecruitmentConfig {
   const areas = source.areas.map((value) => {
     const area = record(value); const id = string(area.id, 'área', 10) as typeof AREA_IDS[number];
     if (!(AREA_IDS as readonly string[]).includes(id)) throw new RecruitmentError('configuration', 'Área desconocida.');
-    return { id, name: string(area.name, 'nombre del área', 150, false), enabled: boolean(area.enabled, 'área habilitada'), quota: area.quota === null ? null : number(area.quota, 'cupos de integrantes', 0, 150, true) };
+    return { id, name: string(area.name, 'nombre del área', 150, false), enabled: boolean(area.enabled, 'área habilitada'), quota: area.quota === null ? null : number(area.quota, 'cupos de integrantes', 0, 10_000, true) };
   });
   if (new Set(areas.map((area) => area.id)).size !== AREA_IDS.length) throw new RecruitmentError('configuration', 'Las áreas no pueden repetirse.');
   if (!Array.isArray(source.questions) || source.questions.length > 100) throw new RecruitmentError('configuration', 'Revisa el banco de preguntas.');

@@ -44,7 +44,7 @@ import Layout from "../../layouts/Layout.astro";
               <label>Apertura<input name="opensAt" type="datetime-local" /></label>
               <label>Cierre<input name="closesAt" type="datetime-local" /></label>
               <label>Prórroga <span class="optional">Opcional</span><input name="extensionAt" type="datetime-local" /></label>
-              <label>Horas de inactividad para recordar<input name="inactivityHours" type="number" min="1" max="720" step="1" required /></label>
+              <label>Recordar cada (horas)<input name="inactivityHours" type="number" min="1" max="720" step="1" required /><small>Mientras un borrador no avance, se le recuerda terminar cada este número de horas.</small></label>
             </div>
             <label class="check-line"><input name="enabled" type="checkbox" /> Habilitar convocatoria dentro del plazo configurado</label>
             <p class="muted note">Para abrir, configura fechas, al menos un área y dos preguntas activas por categoría.</p>
@@ -65,7 +65,7 @@ import Layout from "../../layouts/Layout.astro";
               <label>Preparación en segundos<input name="preparationSeconds" type="number" min="0" max="300" step="1" required /></label>
               <label>Tamaño máximo en MB<input name="maxVideoMB" type="number" min="1" max="50" step="1" required /></label>
             </div>
-            <p class="muted note">Grabación en la web y carga alternativa ante falla técnica. Las preguntas asignadas se conservan durante todo el proceso.</p>
+            <p class="muted note">Solo grabación en la web. Las preguntas aparecen al iniciar el intento; tras una falla técnica, el reintento trae preguntas nuevas.</p>
           </fieldset>
 
           <fieldset class="panel">
@@ -171,7 +171,7 @@ import Layout from "../../layouts/Layout.astro";
         <section class="panel stack" aria-labelledby="queue-title">
           <div class="section-heading">
             <div><h3 id="queue-title">Cola de correos</h3><p class="muted note">Los reintentos conservan la misma solicitud de correo.</p></div>
-            <div class="button-row"><button id="refresh-emails" type="button" class="secondary">Actualizar</button><button id="process-emails" type="button" class="primary">Procesar pendientes</button></div>
+            <div class="button-row"><button id="refresh-emails" type="button" class="secondary">Actualizar</button><button id="remind-all" type="button" class="secondary">Recordar a todos ahora</button><button id="process-emails" type="button" class="primary">Procesar pendientes</button></div>
           </div>
           <div id="email-summary" class="stats"></div>
           <div id="email-list" class="email-list"></div>
@@ -265,7 +265,14 @@ import Layout from "../../layouts/Layout.astro";
   .recruitment-admin .area-card > label { margin-top: auto; }
   .recruitment-admin .area-code { flex-shrink: 0; margin-top: 5px; padding: 3px 7px; border-radius: 7px; color: #9edf6d; background: #75d32d12; font-size: 12px; font-weight: 600; letter-spacing: .03em; }
   .recruitment-admin .question-group { display: grid; align-content: start; gap: 16px; min-width: 0; }
-  .recruitment-admin .question-group-title { min-height: 48px; padding-bottom: 12px; border-bottom: 1px solid #3f3f46; }
+  .recruitment-admin .question-group-title { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; min-height: 48px; padding-bottom: 12px; border-bottom: 1px solid #3f3f46; }
+  .recruitment-admin .question-item { display: grid; gap: 10px; }
+  .recruitment-admin .question-item.is-off { opacity: .6; }
+  .recruitment-admin .question-item-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .recruitment-admin .question-number { font-size: 14px; font-weight: 600; }
+  .recruitment-admin .question-remove { min-height: 36px; padding: 6px 12px; border: 1px solid transparent; border-radius: 999px; background: none; color: #a1a1aa; font-size: 13px; }
+  .recruitment-admin .question-remove:hover { border-color: #7f1d1d; color: #fca5a5; background: #1c1214; }
+  .recruitment-admin .question-add { justify-self: start; }
   .recruitment-admin .question-item { border: 1px solid var(--admin-border); border-radius: 13px; padding: 16px; background: #0d0d10; }
   .recruitment-admin .question-item > label:first-child { font-weight: 600; }
   .recruitment-admin .question-item textarea { min-height: 134px; font-weight: 400; }

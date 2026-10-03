@@ -456,20 +456,50 @@ test('configuration uses optimistic revisions and logs administrative changes', 
   await assert.rejects(() => rpc(db, 'recruitment_update_config', { ...result.config, maxApplicants: 1000001 }, 'sesión administrativa compartida'), /configuration/);
 });
 
-test('inactive drafts receive one reminder and incomplete drafts expire at the final deadline', async t => {
+test('unfinished drafts are reminded every few hours until they finish, opt out or the call closes', async t => {
   const db = await database(t);
-  await openCall(db, { inactivityHours: 1 });
+  await openCall(db, { inactivityHours: 8 });
   const application = await draft(db);
-  await db.query('UPDATE recruitment_applications SET updated_at=now()-interval \'2 hours\' WHERE id=$1', [application.id]);
+  const reminders = async () => (await db.query("SELECT count(*)::integer AS count FROM recruitment_email_outbox WHERE application_id=$1 AND template_key='incomplete'", [application.id])).rows[0].count;
+  assert.equal(await rpc(db, 'recruitment_expire_drafts'), 0, 'nothing before 8 hours');
+  await db.query("UPDATE recruitment_applications SET updated_at=now()-interval '9 hours' WHERE id=$1", [application.id]);
   assert.equal(await rpc(db, 'recruitment_expire_drafts'), 1);
   assert.equal((await rpc(db, 'recruitment_get_draft', application.id, application.owner)).application.status, 'incomplete');
-  assert.equal(await rpc(db, 'recruitment_expire_drafts'), 0);
-  assert.equal((await db.query("SELECT count(*)::integer AS count FROM recruitment_email_outbox WHERE application_id=$1 AND template_key='incomplete'", [application.id])).rows[0].count, 1);
+  assert.equal(await rpc(db, 'recruitment_expire_drafts'), 0, 'not again right away');
+  await db.query("UPDATE recruitment_applications SET last_reminder_at=now()-interval '9 hours' WHERE id=$1", [application.id]);
+  assert.equal(await rpc(db, 'recruitment_expire_drafts'), 1, 'again after another 8 hours');
+  assert.equal(await reminders(), 2);
+  await rpc(db, 'recruitment_unsubscribe', application.id);
+  await db.query("UPDATE recruitment_applications SET last_reminder_at=now()-interval '9 hours' WHERE id=$1", [application.id]);
+  assert.equal(await rpc(db, 'recruitment_expire_drafts'), 0, 'opted out');
+  assert.equal((await rpc(db, 'recruitment_get_draft', application.id, application.owner)).application.remindersOff, true);
   await openCall(db, { closesAt: new Date(Date.now() - 60_000).toISOString() });
   assert.equal(await rpc(db, 'recruitment_expire_drafts'), 1);
   assert.equal((await rpc(db, 'recruitment_get_draft', application.id, application.owner)).application.status, 'expired');
-  assert.equal((await db.query("SELECT count(*)::integer AS count FROM recruitment_email_outbox WHERE application_id=$1 AND template_key='expired'", [application.id])).rows[0].count, 0, 'the deadline email is disabled');
   await assert.rejects(() => rpc(db, 'recruitment_patch_draft', application.id, application.owner, applicant(application.id)), /call_expired/);
+});
+
+test('GTH reminds everyone at once, and a queued reminder is dropped once the applicant finishes', async t => {
+  const db = await database(t);
+  await openCall(db);
+  const first = await draft(db);
+  const second = await draft(db);
+  const optedOut = await draft(db);
+  await rpc(db, 'recruitment_unsubscribe', optedOut.id);
+  const done = await submitted(db);
+  assert.equal(await rpc(db, 'recruitment_remind_all', 'gth@uni.pe'), 2);
+  assert.equal(await rpc(db, 'recruitment_remind_all', 'gth@uni.pe'), 2, 'can be forced again');
+  await db.query("UPDATE recruitment_email_outbox SET status='sent' WHERE template_key<>'incomplete'");
+  const finished = await verifiedDraft(db);
+  await rpc(db, 'recruitment_queue_reminder', finished.id);
+  await rpc(db, 'recruitment_submit', finished.id, finished.owner);
+  await db.query("UPDATE recruitment_email_outbox SET status='sent' WHERE template_key='submitted'");
+  const leased = await rpc(db, 'recruitment_lease_emails', 20, randomUUID());
+  const ids = new Set(leased.items.filter((item) => item.templateKey === 'incomplete').map((item) => item.applicationId));
+  assert.equal(ids.has(finished.id), false, 'no reminder after finishing');
+  assert.equal(ids.has(optedOut.id), false);
+  assert.equal(ids.has(done.id), false);
+  assert.ok(ids.has(first.id) && ids.has(second.id));
 });
 
 async function previewRpc(db, key, name, ...values) {

@@ -316,33 +316,8 @@ function renderConfig(value: RecruitmentConfig): void {
   });
   updateAreaPercentages();
 
-  const bank = element("question-config");
-  bank.replaceChildren();
-  for (const category of ["motivation", "collaboration"] as const) {
-    const group = node("div", undefined, "question-group");
-    group.append(node("h3", categoryNames[category], "question-group-title"));
-    value.questions.filter((question) => question.category === category).forEach((question, index) => {
-      const item = node("div", undefined, "question-item");
-      item.dataset.questionId = question.id;
-      const label = node("label", `Pregunta ${index + 1}`);
-      const text = node("textarea");
-      text.rows = 3;
-      text.maxLength = 2000;
-      text.required = true;
-      text.name = `question-text-${question.id}`;
-      text.value = question.text;
-      label.append(text);
-      const enabledLabel = node("label", undefined, "check-line");
-      const enabled = node("input");
-      enabled.type = "checkbox";
-      enabled.name = `question-enabled-${question.id}`;
-      enabled.checked = question.enabled !== false;
-      enabledLabel.append(enabled, node("span", "Disponible para asignación"));
-      item.append(label, enabledLabel);
-      group.append(item);
-    });
-    bank.append(group);
-  }
+  bankQuestions = value.questions.map((question) => ({ ...question }));
+  renderBank();
   const rubric = element("video-rubric-config");
   rubric.replaceChildren();
   value.videoRubric.forEach((criterion) => {
@@ -371,6 +346,75 @@ function renderConfig(value: RecruitmentConfig): void {
     rubric.append(card);
   });
   updateAreaFilter();
+}
+
+/** The question bank is edited in place: add, change, switch off or delete each question. */
+let bankQuestions: RecruitmentConfig["questions"] = [];
+function syncBank(): void {
+  for (const question of bankQuestions) {
+    const text = configForm.elements.namedItem(`question-text-${question.id}`) as HTMLTextAreaElement | null;
+    const enabled = configForm.elements.namedItem(`question-enabled-${question.id}`) as HTMLInputElement | null;
+    if (text) question.text = text.value;
+    if (enabled) question.enabled = enabled.checked;
+  }
+}
+function renderBank(focusId?: string): void {
+  const bank = element("question-config");
+  bank.replaceChildren();
+  for (const category of ["motivation", "collaboration"] as const) {
+    const group = node("div", undefined, "question-group");
+    const inCategory = bankQuestions.filter((question) => question.category === category);
+    const active = inCategory.filter((question) => question.enabled !== false).length;
+    const title = node("div", undefined, "question-group-title");
+    title.append(node("h3", categoryNames[category]), node("span", `${inCategory.length} preguntas · ${active} activas`, "muted"));
+    group.append(title);
+    inCategory.forEach((question, index) => {
+      const item = node("div", undefined, `question-item${question.enabled === false ? " is-off" : ""}`);
+      item.dataset.questionId = question.id;
+      const head = node("div", undefined, "question-item-head");
+      head.append(node("span", `Pregunta ${index + 1}`, "question-number"));
+      const remove = node("button", "Eliminar", "question-remove");
+      remove.type = "button";
+      remove.setAttribute("aria-label", `Eliminar la pregunta ${index + 1} de ${categoryNames[category]}`);
+      remove.addEventListener("click", () => {
+        syncBank();
+        if (question.text.trim() && !confirm("¿Eliminar esta pregunta del banco? Quienes ya la recibieron la conservan en su postulación.")) return;
+        bankQuestions = bankQuestions.filter((candidate) => candidate.id !== question.id);
+        renderBank();
+        setDirty("config-save-bar", "config-save-info", true);
+      });
+      head.append(remove);
+      const text = node("textarea");
+      text.rows = 3;
+      text.maxLength = 2000;
+      text.required = true;
+      text.name = `question-text-${question.id}`;
+      text.placeholder = "Escribe la pregunta";
+      text.setAttribute("aria-label", `Pregunta ${index + 1} de ${categoryNames[category]}`);
+      text.value = question.text;
+      const enabledLabel = node("label", undefined, "check-line");
+      const enabled = node("input");
+      enabled.type = "checkbox";
+      enabled.name = `question-enabled-${question.id}`;
+      enabled.checked = question.enabled !== false;
+      enabled.addEventListener("change", () => { syncBank(); renderBank(); });
+      enabledLabel.append(enabled, node("span", "Disponible para asignación"));
+      item.append(head, text, enabledLabel);
+      group.append(item);
+    });
+    const add = node("button", "Agregar pregunta", "secondary question-add");
+    add.type = "button";
+    add.addEventListener("click", () => {
+      syncBank();
+      const id = `${category}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+      bankQuestions.push({ id, category, text: "", enabled: true });
+      renderBank(id);
+      setDirty("config-save-bar", "config-save-info", true);
+    });
+    group.append(add);
+    bank.append(group);
+  }
+  if (focusId) (configForm.elements.namedItem(`question-text-${focusId}`) as HTMLTextAreaElement | null)?.focus();
 }
 
 function updateAreaPercentages(): void {
@@ -448,11 +492,7 @@ configForm.addEventListener("submit", async (event) => {
       enabled: (field(`area-enabled-${area.id}`) as HTMLInputElement).checked,
       quota: optionalNumber(`area-quota-${area.id}`),
     })),
-    questions: config.questions.map((question) => ({
-      ...question,
-      text: field(`question-text-${question.id}`).value.trim(),
-      enabled: (field(`question-enabled-${question.id}`) as HTMLInputElement).checked,
-    })),
+    questions: (syncBank(), bankQuestions.map((question) => ({ ...question, text: question.text.trim() }))),
     videoRubric: config.videoRubric.map((criterion) => ({
       ...criterion,
       label: field(`rubric-label-${criterion.id}`).value.trim(),
@@ -609,6 +649,7 @@ function renderDetail(application: RecruitmentApplication): void {
     ["Primera opción", areaName(data.firstChoiceArea)], ["Segunda opción", data.secondChoiceArea ? areaName(data.secondChoiceArea) : "Sin segunda opción"],
     ["Disponibilidad semanal", data.availabilityHours === null ? "Pendiente" : `${data.availabilityHours} horas`],
     ["Consentimiento", data.consent ? "Aceptado" : "Pendiente"],
+    ["Recordatorios", application.remindersOff ? "Los desactivó el postulante" : application.lastReminderAt ? `Activos · último: ${formattedDate(application.lastReminderAt)}` : "Activos"],
     ["Registro", formattedDate(application.createdAt)], ["Envío completo", formattedDate(application.submittedAt)],
   ];
   entries.forEach(([label, text]) => {
@@ -898,6 +939,19 @@ element("refresh-emails").addEventListener("click", async () => {
   const button = element<HTMLButtonElement>("refresh-emails");
   button.disabled = true;
   try { await loadQueue(); } catch (error) { showMessage(messageOf(error), true); } finally { button.disabled = false; }
+});
+
+element("remind-all").addEventListener("click", async () => {
+  const pending = applications.filter((application) => ["draft", "incomplete"].includes(application.status) && !application.isTest && !application.remindersOff).length;
+  if (!confirm(`Se enviará ahora el recordatorio a ${pending} postulante(s) que no terminaron (excepto quienes los desactivaron). ¿Continuar?`)) return;
+  const button = element<HTMLButtonElement>("remind-all");
+  button.disabled = true;
+  try {
+    const { queued } = await request<{ queued: number }>("/remind-all", { method: "POST", body: "{}" });
+    showMessage(`Listo: ${queued} recordatorio(s) en camino. Los que no salgan en este momento se envían en los próximos minutos.`);
+    await loadQueue();
+  } catch (error) { showMessage(messageOf(error), true); }
+  finally { button.disabled = false; }
 });
 
 element("process-emails").addEventListener("click", async () => {
