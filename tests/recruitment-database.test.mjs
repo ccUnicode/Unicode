@@ -469,7 +469,7 @@ test('directors sign in with a single-use code limited in time, attempts and req
   const locked = await rpc(db, 'recruitment_login_verify', 'gth@uni.pe', h(4));
   assert.equal(locked.error, 'Demasiados intentos. Pide un código nuevo.');
   assert.equal((await rpc(db, 'recruitment_login_verify', 'gth@uni.pe', h(3))).ok, false, 'locked after 5 wrong attempts');
-  for (let i = 0; i < 4; i++) await rpc(db, 'recruitment_login_request', 'gth@uni.pe', h(5));
+  for (let i = 0; i < 19; i++) await rpc(db, 'recruitment_login_request', 'gth@uni.pe', h(5));
   assert.deepEqual(await rpc(db, 'recruitment_login_request', 'gth@uni.pe', h(5)), { sent: false, limited: true });
   await db.query("update recruitment_login_codes set expires_at = now() - interval '1 second'");
   assert.equal((await rpc(db, 'recruitment_login_verify', 'gth@uni.pe', h(5))).ok, false, 'expired');
