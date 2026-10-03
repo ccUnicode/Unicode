@@ -155,11 +155,13 @@ test('applications submit without a faculty, as institutes have none', async t =
   assert.equal(result.application.status, 'submitted');
 });
 
-test('ownership and stable two-plus-two question snapshots survive bank edits and form resume', async t => {
+test('questions stay hidden until the attempt starts, then keep a stable two-plus-two snapshot', async t => {
   const db = await database(t);
   await openCall(db);
   const application = await draft(db);
-  const questions = application.application.questions;
+  assert.deepEqual(application.application.questions, [], 'hidden before the attempt');
+  assert.equal((await rpc(db, 'recruitment_admin_applications', application.id)).application.questions.length, 4, 'the admin always sees them');
+  const questions = (await rpc(db, 'recruitment_recording_attempt', application.id, application.owner)).application.questions;
   assert.equal(questions.length, 4);
   assert.equal(new Set(questions.map(question => question.id)).size, 4);
   assert.equal(questions.filter(question => question.category === 'motivation').length, 2);
@@ -182,7 +184,7 @@ test('150 completed applicants is a hard limit, including concurrent submit prom
   const second = await verifiedDraft(db);
   await db.query(`INSERT INTO public.recruitment_applications(id,token_hash,data,questions,status,submitted_at)
     SELECT gen_random_uuid(),'fixture-owner',$1::jsonb || jsonb_build_object('email','historical-seed-'||g||'@example.test'),$2::jsonb,'submitted',now()
-    FROM generate_series(1,149) AS g`, [JSON.stringify(applicant()), JSON.stringify(first.application.questions)]);
+    FROM generate_series(1,149) AS g`, [JSON.stringify(applicant()), JSON.stringify((await db.query('SELECT questions FROM recruitment_applications WHERE id=$1', [first.id])).rows[0].questions)]);
   const results = await Promise.allSettled([
     rpc(db, 'recruitment_submit', first.id, first.owner),
     rpc(db, 'recruitment_submit', second.id, second.owner),
@@ -200,7 +202,7 @@ test('150 completed applicants is a hard limit, including concurrent submit prom
   assert.equal((await db.query("SELECT count(*)::integer AS count FROM recruitment_email_outbox WHERE application_id=$1 AND template_key='submitted'", [success.id])).rows[0].count, 1);
 });
 
-test('recording permits one technical retry and fallback requires a recorded failure', async t => {
+test('one technical retry with new hidden questions, no file uploads, and a fresh start once attempts run out', async t => {
   const db = await database(t);
   await openCall(db);
   const application = await draft(db);
@@ -208,28 +210,33 @@ test('recording permits one technical retry and fallback requires a recorded fai
   await assert.rejects(() => upload(db, application), /recording_required/);
   const attempt = await rpc(db, 'recruitment_recording_attempt', application.id, application.owner);
   assert.equal(attempt.application.recordingAttempts, 1);
+  assert.equal(attempt.application.questions.length, 4);
   await assert.rejects(() => rpc(db, 'recruitment_recording_attempt', application.id, application.owner), /attempts_exhausted/);
   const initialUpload = await upload(db, application);
-  await rpc(db, 'recruitment_technical_failure', application.id, application.owner, 'recording_failed', 'Falla técnica durante la grabación.');
+  const failed = await rpc(db, 'recruitment_technical_failure', application.id, application.owner, 'recording_failed', 'Falla técnica durante la grabación.');
+  assert.deepEqual(failed.application.questions, [], 'the retry questions are hidden until it starts');
+  assert.equal(failed.application.alternateAllowed, false);
   assert.equal((await db.query('SELECT status FROM recruitment_uploads WHERE id=$1', [initialUpload.id])).rows[0].status, 'failed');
   await assert.rejects(() => rpc(db, 'recruitment_technical_failure', application.id, application.owner, 'repeat', 'Otro intento.'), /attempts_exhausted/);
-  // A replacement recording requires consuming the single retry first.
   await assert.rejects(() => upload(db, application), /recording_required|attempts_exhausted|recording_attempt/);
-  await rpc(db, 'recruitment_recording_attempt', application.id, application.owner);
+  const retry = await rpc(db, 'recruitment_recording_attempt', application.id, application.owner);
+  assert.equal(retry.application.questions.length, 4);
   await assert.rejects(() => rpc(db, 'recruitment_recording_attempt', application.id, application.owner), /attempts_exhausted/);
-  const retry = await upload(db, application);
-  await rpc(db, 'recruitment_complete_upload', application.id, application.owner, retry.id, videoMetadata());
-  await assert.rejects(() => upload(db, application), /immutable/);
+  await assert.rejects(() => upload(db, application, 'upload'), /alternate_not_allowed/);
 
-  const fallback = await draft(db);
-  await rpc(db, 'recruitment_technical_failure', fallback.id, fallback.owner, 'camera_denied', 'No se pudo usar la cámara.');
-  const alternateUpload = await upload(db, fallback, 'upload');
-  const state = await rpc(db, 'recruitment_get_draft', fallback.id, fallback.owner);
-  assert.equal(state.application.recordingAttempts, 2);
-  assert.equal(state.application.alternateAllowed, false);
-  const sameUpload = await rpc(db, 'recruitment_begin_upload', fallback.id, fallback.owner, randomUUID(), 'upload', 'video/mp4', 100);
-  assert.equal(sameUpload.upload.id, alternateUpload.id);
-  await rpc(db, 'recruitment_complete_upload', fallback.id, fallback.owner, alternateUpload.id, videoMetadata());
+  // Out of attempts: discarding frees the email so the form can be filled again.
+  const email = application.application.data.email;
+  const discarded = await rpc(db, 'recruitment_discard_draft', application.id, application.owner);
+  assert.equal(discarded.discarded, true);
+  assert.equal(discarded.files.length, 1);
+  assert.equal((await db.query('SELECT count(*)::integer AS n FROM recruitment_applications WHERE id=$1', [application.id])).rows[0].n, 0);
+  const again = randomUUID();
+  const recreated = await rpc(db, 'recruitment_create_draft', again, `hashed-${again}`, applicant(again, { email }), `rate-${again}`, 'encrypted-local-test-secret');
+  assert.equal(recreated.application.data.email, email);
+
+  const finished = await verifiedDraft(db);
+  await assert.rejects(() => rpc(db, 'recruitment_discard_draft', finished.id, finished.owner), /immutable/);
+  await assert.rejects(() => rpc(db, 'recruitment_discard_draft', finished.id, 'wrong-owner'), /unauthorized/);
 });
 
 test('video identity reservation cap cannot be bypassed through the technical-failure route', async t => {
@@ -279,7 +286,7 @@ test('applicants sharing a campus network can each create a draft', async t => {
   await assert.rejects(() => rpc(db, 'recruitment_create_draft', id, `hashed-${id}`, applicant(id), 'shared-campus-ip', 'encrypted-local-test-secret'), /rate_limited/);
 });
 
-test('video metadata must prove content, byte size and at most 60 seconds', async t => {
+test('video metadata must prove content, byte size and at most 2 min 30 s', async t => {
   const db = await database(t);
   await openCall(db);
   const application = await draft(db);
@@ -287,11 +294,11 @@ test('video metadata must prove content, byte size and at most 60 seconds', asyn
   const pending = await upload(db, application);
   const malformed = [
     {}, videoMetadata(100, { hasVideo: false }), videoMetadata(101),
-    videoMetadata(100, { durationSeconds: 61 }), videoMetadata(100, { durationSeconds: 0 }),
-    videoMetadata(100, { durationSeconds: '60' }), videoMetadata(100, { contentType: 'text/plain' }),
+    videoMetadata(100, { durationSeconds: 150.5 }), videoMetadata(100, { durationSeconds: 0 }),
+    videoMetadata(100, { durationSeconds: '120' }), videoMetadata(100, { contentType: 'text/plain' }),
   ];
   for (const metadata of malformed) await assert.rejects(() => rpc(db, 'recruitment_complete_upload', application.id, application.owner, pending.id, metadata), /invalid_video/);
-  const verified = await rpc(db, 'recruitment_complete_upload', application.id, application.owner, pending.id, videoMetadata());
+  const verified = await rpc(db, 'recruitment_complete_upload', application.id, application.owner, pending.id, videoMetadata(100, { durationSeconds: 149.9 }));
   assert.equal(verified.application.video.uploadId, pending.id);
   const repeated = await rpc(db, 'recruitment_complete_upload', application.id, application.owner, pending.id, videoMetadata());
   assert.equal(repeated.application.video.uploadId, pending.id);

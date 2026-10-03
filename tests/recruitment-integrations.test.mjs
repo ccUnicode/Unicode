@@ -13,6 +13,7 @@ const email = await server.ssrLoadModule('/src/lib/recruitment-email.ts');
 const google = await server.ssrLoadModule('/src/lib/recruitment-google.ts');
 const { sessionStore, managesRecruitment } = await server.ssrLoadModule('/src/lib/session-store.ts');
 const layout = await server.ssrLoadModule('/src/lib/recruitment-email-layout.ts');
+const tickets = await server.ssrLoadModule('/src/lib/video-ticket.ts');
 const fixture = async (name) => new Uint8Array(await readFile(new URL(`./fixtures/${name}`, import.meta.url)));
 const applicationId = '11111111-1111-4111-8111-111111111111';
 const uploadId = '22222222-2222-4222-8222-222222222222';
@@ -114,4 +115,14 @@ test('sessions carry the director area; only GTH and the shared password manage 
   const [payload, signature] = (await sessionStore.createToken({ role: 'director', email: 'x@uni.pe', area: 'ID' })).split('.');
   const forged = btoa(JSON.stringify({ ...JSON.parse(atob(payload)), area: 'GTH' }));
   assert.equal(await sessionStore.verify(`${forged}.${signature}`), null);
+});
+
+test('video links are bound to one application and expire', async () => {
+  const id = '11111111-1111-4111-8111-111111111111';
+  const ticket = await tickets.createVideoTicket(id);
+  assert.equal(await tickets.verifyVideoTicket(id, ticket), true);
+  assert.equal(await tickets.verifyVideoTicket('22222222-2222-4222-8222-222222222222', ticket), false);
+  assert.equal(await tickets.verifyVideoTicket(id, ticket.replace(/.$/, (c) => (c === '0' ? '1' : '0'))), false);
+  assert.equal(await tickets.verifyVideoTicket(id, ticket, Date.now() + 3 * 60 * 60 * 1000), false);
+  assert.equal(await tickets.verifyVideoTicket(id, null), false);
 });

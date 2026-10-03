@@ -2,7 +2,7 @@
   <header class="intro">
     <p class="eyebrow">Tu siguiente paso en UNICODE</p>
     <h1 id="recruitment-heading">Tu talento. <span>Nuestra comunidad.</span></h1>
-    <p>Completa tus datos y cuéntanos quién eres en un video de un minuto.</p>
+    <p>Completa tus datos y cuéntanos quién eres en un video de hasta 2 minutos y medio.</p>
   </header>
 
   <p id="recruitment-status" class="status" role="status" aria-live="polite">Consultando la convocatoria…</p>
@@ -56,8 +56,8 @@
 
     <section id="video-phase" class="panel" aria-labelledby="video-heading" hidden>
       <div class="section-heading"><div><p class="eyebrow">Paso 2</p><h2 id="video-heading" tabindex="-1">Cuatro preguntas. Un solo video.</h2></div><button id="edit-data" type="button" class="button secondary compact">Volver a mis datos</button></div>
-      <p id="video-instructions">Responde las 4 preguntas en un solo video de hasta 60 segundos.</p>
-      <div id="active-capture-banner" class="active-capture-banner" hidden><span>Grabando tu respuesta</span><strong id="capture-banner-timer">00:00 / 01:00</strong><button id="finish-capture" type="button" class="button danger compact">Terminar</button></div>
+      <p id="video-instructions">Responde las 4 preguntas en un solo video de hasta 2 min 30 s.</p>
+      <div id="active-capture-banner" class="active-capture-banner" hidden><span>Grabando tu respuesta</span><strong id="capture-banner-timer">00:00 / 02:30</strong><button id="finish-capture" type="button" class="button danger compact">Terminar</button></div>
       <div id="assigned-questions" class="questions"></div>
       <div class="video-grid">
         <div class="camera-box">
@@ -66,16 +66,15 @@
           <div id="recording-indicator" class="recording-indicator" hidden><span></span><span id="recording-label">Grabando</span><strong id="recording-timer">00:00</strong></div>
         </div>
         <div class="video-controls">
-          <p id="preparation-instructions" class="hint">Antes de grabar tendrás 30 segundos para prepararte. El ensayo no se envía.</p>
+          <p id="preparation-instructions" class="hint">Al iniciar verás tus preguntas y tendrás 45 segundos para leerlas; luego la grabación empieza sola. El ensayo de 10 segundos no se envía.</p>
           <div class="actions stacked"><button id="test-camera" type="button" class="button secondary">Activar cámara y micrófono</button><button id="rehearse" type="button" class="button secondary" disabled>Hacer ensayo de 10 segundos</button><button id="start-recording" type="button" class="button primary" disabled>Iniciar preparación y grabar</button><button id="stop-recording" type="button" class="button danger" hidden>Terminar grabación</button></div>
           <p id="camera-status" class="hint" role="status" aria-live="polite"></p>
           <div id="rehearsal-result" hidden><h4>Revisa tu ensayo</h4><video id="rehearsal-preview" controls playsinline aria-label="Video de ensayo"></video><button id="discard-rehearsal" class="button secondary compact" type="button">Eliminar ensayo</button></div>
         </div>
       </div>
 
-      <details id="technical-help" class="technical-help"><summary>¿Problemas con la cámara o la grabación?</summary><p>Registra lo que pasó y te habilitamos una única alternativa con las mismas preguntas.</p><label for="failure-reason">Qué ocurrió</label><select id="failure-reason"><option value="">Selecciona el problema</option><option value="permission">No pude habilitar la cámara o el micrófono</option><option value="unsupported">Mi navegador no permite grabar</option><option value="interrupted">La grabación se interrumpió o se perdió</option><option value="device">El audio o la cámara fallaron durante la grabación</option></select><button id="report-failure" type="button" class="button secondary">Registrar falla técnica</button></details>
-
-      <div id="alternate-upload" class="notice" hidden><h3>Tu alternativa está habilitada</h3><p>Graba un video respondiendo las mismas cuatro preguntas y súbelo aquí. Esta alternativa se puede usar una sola vez.</p><label for="alternate-file">Seleccionar video</label><input id="alternate-file" type="file" accept="video/mp4,video/webm" /><p id="alternate-limit" class="hint"></p></div>
+      <details id="technical-help" class="technical-help"><summary>¿Problemas con la cámara o la grabación?</summary><p>Registra lo que pasó y tendrás un nuevo intento, con preguntas nuevas.</p><label for="failure-reason">Qué ocurrió</label><select id="failure-reason"><option value="">Selecciona el problema</option><option value="permission">No pude habilitar la cámara o el micrófono</option><option value="unsupported">Mi navegador no permite grabar</option><option value="interrupted">La grabación se interrumpió o se perdió</option><option value="device">El audio o la cámara fallaron durante la grabación</option></select><button id="report-failure" type="button" class="button secondary">Registrar falla y volver a intentar</button></details>
+      <div id="restart-panel" class="notice" hidden><h3>Ya no te quedan intentos</h3><p>Si la grabación volvió a fallar, puedes empezar de nuevo: este borrador se elimina y vuelves al formulario con tus datos ya escritos. Te tocarán preguntas nuevas.</p><button id="restart-application" type="button" class="button secondary">Empezar de nuevo</button></div>
 
       <div id="video-result" class="video-result" hidden><h3>Revisa tu video</h3><video id="answer-preview" controls playsinline aria-label="Video de tu postulación"></video><p id="answer-details" class="hint"></p><p id="unuploaded-warning" class="hint">Conserva esta pestaña abierta hasta que termine la subida. Si la conexión falla, tu video seguirá aquí para volver a intentar.</p><button id="upload-video" type="button" class="button primary">Guardar este video</button></div>
       <div id="upload-progress-panel" hidden><label for="upload-progress">Guardando tu video</label><progress id="upload-progress" value="0" max="100"></progress><p id="upload-status" role="status" aria-live="polite"></p></div>
@@ -162,7 +161,8 @@
   .success { border-color: #75d32d60; background: #75d32d0d; }
   #development-notice { border-color: #facc1580; background: #facc150f; color: #fde68a; font-weight: 600; }
   .section-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
-  .questions { margin: 1.2rem 0; border: 1px solid #27272a; border-radius: 1rem; padding: .4rem 1.2rem; }
+  .questions { margin: 1.2rem 0; border: 1px solid #27272a; border-radius: 1rem; padding: .4rem 1.2rem; scroll-margin-top: 6rem; }
+  .questions :global(.questions-hidden) { padding: .9rem 0; color: #a1a1aa; font-size: .9rem; line-height: 1.6; }
   .active-capture-banner { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem; position: sticky; top: 6rem; z-index: 20; background: #18181bf5; border: 1px solid #75d32d80; border-radius: .8rem; padding: .7rem 1rem; margin-top: 1rem; font-size: .8rem; }
   .active-capture-banner strong { font-variant-numeric: tabular-nums; margin-left: auto; }
   .questions :global(ol) { list-style: decimal; margin: .7rem 0 0 1.2rem; }

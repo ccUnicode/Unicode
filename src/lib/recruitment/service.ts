@@ -1,6 +1,7 @@
 import { createVideoUpload, deleteVideo, inspectVideo, getVideoPlayback, videoStorageConfigured } from '../recruitment-storage';
 import { sendRecruitmentEmail, recruitmentEmailConfigured } from '../recruitment-email';
 import { renderRecruitmentEmailHtml } from '../recruitment-email-layout';
+import { createVideoTicket } from '../video-ticket';
 import { databaseConfigured, localDevelopmentDatabase, recruitmentRpc } from './database';
 import { record, RecruitmentError, validateApplicationData, validateConfig, validateTemplates, withAllAreas } from './validation';
 import { AREA_IDS, AREA_NAMES, allowedApplicationTransitions, type ApplicationStatus, type EmailQueueItem, type RecruitmentApplication, type RecruitmentConfig, type RecruitmentUpload } from './types';
@@ -10,8 +11,8 @@ type ApplicationResponse = { application: RecruitmentApplication };
 type ConfigResponse = { config: RecruitmentConfig };
 const fallbackConfig = {
   enabled: false, title: 'Convocatoria UNICode', opensAt: null, closesAt: null, extensionAt: null,
-  maxApplicants: 150, minAvailabilityHours: null, maxVideoSeconds: 60, maxVideoBytes: 20 * 1024 * 1024,
-  questionsPerCategory: 2, preparationSeconds: 30, inactivityHours: 24,
+  maxApplicants: 150, minAvailabilityHours: null, maxVideoSeconds: 150, maxVideoBytes: 40 * 1024 * 1024,
+  questionsPerCategory: 2, preparationSeconds: 45, inactivityHours: 24,
   shortCasePrompt: 'Describe cómo abordarías un problema habitual del área a la que postulas.',
   areas: AREA_IDS.map((id) => ({ id, name: AREA_NAMES[id], enabled: false, quota: null })),
 };
@@ -66,7 +67,8 @@ export async function adminConfig() {
 export async function createPreviewLink(origin: string) {
   const key = Buffer.from(crypto.getRandomValues(new Uint8Array(24))).toString('base64url');
   await recruitmentRpc('recruitment_set_preview_key', { p_hash: await hash(key), p_actor: 'administracion-compartida' });
-  const url = new URL('/postular', env('RECRUITMENT_BASE_URL') || origin); url.searchParams.set('prueba', key);
+  // A local database must never hand out a link to the deployed site.
+  const url = new URL('/postular', localDevelopmentDatabase() ? origin : env('RECRUITMENT_BASE_URL') || origin); url.searchParams.set('prueba', key);
   return { url: url.toString() };
 }
 export function disablePreviewLink() { return recruitmentRpc('recruitment_set_preview_key', { p_hash: null, p_actor: 'administracion-compartida' }); }
@@ -127,6 +129,12 @@ export async function videoComplete(id: string, token: string, input: unknown) {
   if (!Number.isFinite(metadata.durationSeconds) || !Number.isFinite(metadata.bytes)) throw new RecruitmentError('invalid_video', 'No se pudo verificar la duración y el tamaño del archivo.');
   return recruitmentRpc<ApplicationResponse>('recruitment_complete_upload', { p_id: id, p_token_hash: tokenHash, p_upload_id: uploadId, p_metadata: metadata });
 }
+/** Deletes an unfinished draft whose attempts ran out, so the applicant can fill the form again. */
+export async function discardDraft(id: string, token: string) {
+  const result = await recruitmentRpc<{ discarded: boolean; files: { applicationId: string; uploadId: string; provider: 'drive' | 'supabase'; fileId: string }[] }>('recruitment_discard_draft', { p_id: id, p_token_hash: await hash(token) });
+  for (const file of result.files) { try { await deleteVideo(file); } catch { /* Already gone or never uploaded. */ } }
+  return { discarded: true };
+}
 export async function submitDraft(id: string, token: string) {
   const result = await recruitmentRpc<ApplicationResponse>('recruitment_submit', { p_id: id, p_token_hash: await hash(token) });
   if (recruitmentEmailConfigured()) await processEmails(2).catch(() => undefined);
@@ -147,7 +155,15 @@ export async function transition(id: string, input: unknown) {
 export async function adminVideo(id: string) {
   const response = await adminApplications(id); const video = response.application?.video;
   if (!video) throw new RecruitmentError('not_found', 'Esta postulación todavía no tiene un video validado.', 404);
+  // Drive only lets the owner account watch: play it through this site with a signed link instead.
+  if (video.provider === 'drive') return { url: `/api/recruitment/video/${id}?t=${await createVideoTicket(id)}`, embedded: false };
   return getVideoPlayback({ applicationId: id, uploadId: video.uploadId, provider: video.provider, fileId: video.fileId });
+}
+/** The stored video of an application, for the signed playback route. */
+export async function videoForPlayback(id: string) {
+  const video = (await adminApplications(id)).application?.video;
+  if (!video || video.provider !== 'drive') throw new RecruitmentError('not_found', 'Video no encontrado.', 404);
+  return video;
 }
 export function getTemplates() { return recruitmentRpc('recruitment_templates'); }
 export function saveTemplates(input: unknown) { return recruitmentRpc('recruitment_templates', { p_templates: validateTemplates(input), p_actor: 'administracion-compartida' }); }
