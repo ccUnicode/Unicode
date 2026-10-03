@@ -37,7 +37,8 @@ export const managesRecruitment = (session: AdminSession | null) => session?.rol
 
 export const sessionStore = {
   async createToken(session: AdminSession = { role: 'admin' }): Promise<string> {
-    const expiresAt = Date.now() + 4 * 60 * 60 * 1000; // 4 hours from now
+    // Two days, so directors are not asked for a new code several times a day.
+    const expiresAt = Date.now() + 2 * 24 * 60 * 60 * 1000;
     const payloadB64 = encodePayload({ ...session, expiresAt });
 
     const key = await getHmacKey();

@@ -327,12 +327,37 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   #login-form:not(.hidden),
   #applicants-list:not(.hidden),
   #empty-state:not(.hidden),
-  #error-state:not(.hidden) {
-    animation: admin-enter 160ms ease-out;
+  #error-state:not(.hidden),
+  #summary-view:not(.hidden) #summary-content:not(.hidden),
+  #area-view:not(.hidden),
+  #admin-notice:not([hidden]) {
+    animation: admin-enter 200ms ease-out;
+  }
+  #login-screen:not(.hidden) > div {
+    animation: admin-card-in 260ms ease-out;
   }
   @keyframes admin-enter {
-    from { opacity: 0.65; transform: translateY(3px); }
+    from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes admin-card-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.99); }
+    to { opacity: 1; transform: none; }
+  }
+  #dashboard-screen {
+    transition: opacity 180ms ease-in, transform 180ms ease-in;
+  }
+  #dashboard-screen.is-leaving {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  :global(#summary-content > div > div) {
+    animation: admin-enter 240ms ease-out backwards;
+  }
+  :global(#summary-content > div:nth-child(2) > div) { animation-delay: 40ms; }
+  :global(#summary-content > div:nth-child(3) > div) { animation-delay: 80ms; }
+  :global(#summary-content [style*="width"]) {
+    transition: width 500ms ease-out;
   }
   :global(#admin-page [data-admin-options]) {
     opacity: 1;
@@ -397,6 +422,12 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   const closeFilters = setupAdminSelects();
 
   let sessionToken = "";
+  /** The session survives closing the tab or the browser (it lasts two days on the server). */
+  const storedToken = {
+    get: () => { try { return localStorage.getItem("admin_token") || sessionStorage.getItem("admin_token"); } catch { return null; } },
+    set: (value: string) => { try { localStorage.setItem("admin_token", value); } catch { /* Storage blocked: this tab only. */ } },
+    clear: () => { try { localStorage.removeItem("admin_token"); sessionStorage.removeItem("admin_token"); } catch { /* Storage blocked. */ } },
+  };
   let currentArea = "GTH";
   let currentView: "summary" | "area" = "summary";
   let currentOption = "all";
@@ -536,7 +567,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   }
   function startSession(token: string, session: Session) {
     sessionToken = token;
-    sessionStorage.setItem("admin_token", token);
+    storedToken.set(token);
     loginScreen.classList.add("hidden");
     dashboardScreen.classList.remove("hidden");
     applySession(session);
@@ -626,9 +657,15 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     }
   });
 
+  /** A short fade so leaving the panel does not feel abrupt; instant with reduced motion. */
+  function fadeOut(element: HTMLElement): Promise<void> {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return Promise.resolve();
+    element.classList.add("is-leaving");
+    return new Promise((resolve) => setTimeout(() => { element.classList.remove("is-leaving"); resolve(); }, 180));
+  }
   function expireSession() {
     sessionToken = "";
-    sessionStorage.removeItem("admin_token");
+    storedToken.clear();
     dashboardScreen.classList.add("hidden");
     loginScreen.classList.remove("hidden");
     showStep("email");
@@ -639,12 +676,12 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   if (new URLSearchParams(location.search).has("expirada")) showError("Tu sesión venció. Ingresa de nuevo.");
 
   // ===== CHECK EXISTING SESSION =====
-  const savedToken = sessionStorage.getItem("admin_token");
+  const savedToken = storedToken.get();
   if (savedToken) {
     // Ask the server who this token belongs to; an expired token goes back to the sign-in.
     fetch("/api/recruitment/admin/session", { headers: { Authorization: `Bearer ${savedToken}` } })
       .then(async (res) => {
-        if (!res.ok) { sessionStorage.removeItem("admin_token"); return; }
+        if (!res.ok) { storedToken.clear(); return; }
         startSession(savedToken, (await res.json()).session);
       })
       .catch(() => showError("Error de conexión. Recarga la página."));
@@ -666,8 +703,10 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     sessionToken = "";
     applicantsCache = [];
     displayedApplicants = [];
+    await fadeOut(dashboardScreen);
     document.getElementById("applicants-list")!.replaceChildren();
-    sessionStorage.removeItem("admin_token");
+    document.getElementById("summary-content")!.replaceChildren();
+    storedToken.clear();
     dashboardScreen.classList.add("hidden");
     loginScreen.classList.remove("hidden");
     passwordInput.value = "";
@@ -689,7 +728,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
 
   // ===== SUMMARY =====
   type Metrics = {
-    capacity: number; opensAt: string | null; closesAt: string | null;
+    opensAt: string | null; closesAt: string | null;
     totals: { submitted: number; inProgress: number; recordingStarted: number; expired: number };
     stages: { pendingReview: number; advanced: number; rejected: number; joined: number; notJoined: number };
     areas: { id: string; name: string; first: number; second: number }[];
@@ -739,14 +778,13 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     return card(`<p class="text-zinc-500 text-[13px]">${label}</p><p class="mt-2 text-3xl sm:text-4xl font-bold tracking-tight tabular-nums ${accent ? "text-unicode" : "text-white"}">${value}</p><p class="mt-2 text-zinc-500 text-[13px]">${detail}</p>`);
   }
   function summaryMarkup(m: Metrics) {
-    const share = m.capacity ? Math.min(100, Math.round(m.totals.submitted / m.capacity * 100)) : 0;
     const closes = m.closesAt ? new Date(m.closesAt).toLocaleString("es-PE", { timeZone: "America/Lima", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "sin fecha";
     const maxArea = Math.max(...m.areas.map((area) => area.first + area.second), 1);
     const maxDay = Math.max(...m.daily.map((day) => day.count), 1);
     const reviewed = m.stages.advanced + m.stages.rejected;
     return `
       <div class="grid grid-cols-1 min-[520px]:grid-cols-2 xl:grid-cols-4 gap-4">
-        ${card(`<p class="text-zinc-500 text-[13px]">Inscripciones completas</p><p class="mt-2 text-3xl sm:text-4xl font-bold tracking-tight tabular-nums text-unicode">${m.totals.submitted}<span class="text-zinc-600 text-xl font-semibold"> / ${m.capacity}</span></p><div class="mt-3 h-1.5 rounded-full bg-zinc-800 overflow-hidden"><div class="h-full rounded-full bg-unicode" style="width:${share}%"></div></div><p class="mt-2 text-zinc-500 text-[13px]">${share}% del cupo · cierra el ${esc(closes)}</p>`)}
+        ${kpi("Inscripciones completas", m.totals.submitted, `La convocatoria cierra el ${esc(closes)}`, true)}
         ${kpi("En proceso", m.totals.inProgress, `${m.totals.recordingStarted} ya empezaron su video`)}
         ${kpi("Avanzan a la 2.ª etapa", m.stages.advanced, `${m.stages.pendingReview} por revisar · ${m.stages.rejected} no avanzan`)}
         ${kpi("Ingresan a UNICODE", m.stages.joined, `${m.stages.notJoined} no ingresan`, m.stages.joined > 0)}

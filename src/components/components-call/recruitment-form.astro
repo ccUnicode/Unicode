@@ -249,8 +249,13 @@
   .save-indicator[data-state=error] { color: #fca5a5; }
   .save-indicator[data-state=error] .save-icon { border-color: #f87171; background: #f87171; }
   @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes step-in { from { opacity: 0; transform: translateY(6px); } }
+  #data-phase:not([hidden]), #video-phase:not([hidden]), #complete-phase:not([hidden]), #closing-form:not([hidden]), #video-result:not([hidden]), #video-saved:not([hidden]), #restart-panel:not([hidden]), #recruitment-flow:not([hidden]), #recruitment-closed:not([hidden]) { animation: step-in 240ms ease-out; }
+  .recruitment :global(.field-error) { animation: step-in 160ms ease-out; }
+  .button { transition: background .2s, border-color .2s, transform .12s; }
+  .button:active:enabled { transform: scale(.98); }
   @keyframes pulse { 50% { opacity: .35; } }
-  @media (prefers-reduced-motion: reduce) { .save-icon { animation: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .save-icon, .recruitment *, .recruitment :global(*) { animation: none !important; transition: none !important; } }
   .complete { text-align: center; }
   #application-reference { overflow-wrap: anywhere; }
   .complete-icon { display: grid; place-items: center; width: 4rem; height: 4rem; margin: 0 auto 1.5rem; border: 1px solid #75d32d60; background: #75d32d15; border-radius: 50%; color: var(--green); font-size: 2rem; }

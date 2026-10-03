@@ -12,7 +12,7 @@ type ApplicationResponse = { application: RecruitmentApplication };
 type ConfigResponse = { config: RecruitmentConfig };
 const fallbackConfig = {
   enabled: false, title: 'Convocatoria UNICode', opensAt: null, closesAt: null, extensionAt: null,
-  maxApplicants: 150, minAvailabilityHours: null, maxVideoSeconds: 210, maxVideoBytes: 50 * 1024 * 1024,
+  maxApplicants: 1_000_000, minAvailabilityHours: null, maxVideoSeconds: 210, maxVideoBytes: 50 * 1024 * 1024,
   questionsPerCategory: 2, preparationSeconds: 45, inactivityHours: 24,
   shortCasePrompt: 'Describe cómo abordarías un problema habitual del área a la que postulas.',
   areas: AREA_IDS.map((id) => ({ id, name: AREA_NAMES[id], enabled: false, quota: null })),
@@ -136,6 +136,13 @@ export async function discardDraft(id: string, token: string) {
   for (const file of result.files) { try { await deleteVideo(file); } catch { /* Already gone or never uploaded. */ } }
   return { discarded: true };
 }
+/** GTH deletes one application (e.g. a test sent as if it were real) and its stored videos. */
+export async function deleteApplication(id: string, actor = 'administracion') {
+  const result = await recruitmentRpc<{ deleted: boolean; files: { applicationId: string; uploadId: string; provider: 'drive' | 'supabase'; fileId: string }[] }>('recruitment_admin_delete', { p_id: id, p_actor: actor });
+  let videosDeleted = 0;
+  for (const file of result.files) { try { await deleteVideo(file); videosDeleted++; } catch { /* Already gone or never uploaded. */ } }
+  return { deleted: true, videosDeleted, videosPending: result.files.length - videosDeleted };
+}
 export async function submitDraft(id: string, token: string) {
   const result = await recruitmentRpc<ApplicationResponse>('recruitment_submit', { p_id: id, p_token_hash: await hash(token) });
   if (recruitmentEmailConfigured()) await processEmails(2).catch(() => undefined);
@@ -230,7 +237,7 @@ export async function adminMetrics() {
   const hours = submitted.map((application) => application.data.availabilityHours).filter((value): value is number => typeof value === 'number');
   const status = (name: string) => real.filter((application) => application.status === name).length;
   return {
-    capacity: config.maxApplicants, opensAt: config.opensAt, closesAt: config.extensionAt || config.closesAt,
+    opensAt: config.opensAt, closesAt: config.extensionAt || config.closesAt,
     totals: {
       submitted: submitted.length, inProgress: inProgress.length,
       recordingStarted: inProgress.filter((application) => application.recordingAttempts > 0).length,

@@ -88,7 +88,7 @@ export function validateConfig(input: unknown): RecruitmentConfig {
   const result: RecruitmentConfig = {
     enabled: boolean(source.enabled, 'convocatoria habilitada'), title: string(source.title, 'título', 150, false),
     opensAt: date(source.opensAt, 'apertura'), closesAt: date(source.closesAt, 'cierre'), extensionAt: date(source.extensionAt, 'prórroga'),
-    maxApplicants: number(source.maxApplicants, 'máximo de postulantes', 1, 150, true), areas,
+    maxApplicants: number(source.maxApplicants, 'máximo de postulantes', 1, 1_000_000, true), areas,
     // No minimum by default: 0 keeps the database rule satisfied without filtering anyone.
     minAvailabilityHours: source.minAvailabilityHours === null || source.minAvailabilityHours === undefined ? 0 : number(source.minAvailabilityHours, 'disponibilidad mínima', 0, 168),
     maxVideoSeconds: number(source.maxVideoSeconds, 'duración del video', 210, 210, true),
