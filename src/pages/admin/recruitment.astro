@@ -136,6 +136,14 @@ import Layout from "../../layouts/Layout.astro";
           <label>Área<select id="filter-area"><option value="">Todas las áreas</option></select></label>
           <label class="search-field">Buscar por nombre o correo<input id="filter-search" type="search" placeholder="Nombre o correo" /></label>
         </div>
+        <ul class="status-legend" aria-label="Colores de estado">
+          <li><span class="badge status status-progress">En proceso</span></li>
+          <li><span class="badge status status-complete">Inscripción completa</span></li>
+          <li><span class="badge status status-advanced">Avanza a la 2.ª etapa</span></li>
+          <li><span class="badge status status-joined">Ingresa</span></li>
+          <li><span class="badge status status-negative">No avanza / No ingresa</span></li>
+          <li><span class="badge status status-inactive">Vencido o retirado</span></li>
+        </ul>
         <p id="applications-info" class="muted" role="status"></p>
         <div id="applications-list" class="app-list"></div>
         <dialog id="application-detail" class="detail-panel" aria-labelledby="detail-title">
@@ -363,6 +371,22 @@ import Layout from "../../layouts/Layout.astro";
   .recruitment-admin .preview-panel[open] .preview-chevron { transform: rotate(180deg); }
   .recruitment-admin .preview-content { padding-top: 18px; margin-top: 12px; border-top: 1px solid var(--admin-border); }
   .recruitment-admin .badge.test { border-color: #a16207; background: #422006; color: #fde68a; }
+  .recruitment-admin .badge.status::before { content: ""; flex-shrink: 0; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: currentColor; }
+  .recruitment-admin .status-progress { border-color: #b4530966; background: #451a0399; color: #fcd34d; }
+  .recruitment-admin .status-complete { border-color: #3b82f666; background: #17255499; color: #93c5fd; }
+  .recruitment-admin .status-advanced { border-color: #14b8a666; background: #042f2e99; color: #5eead4; }
+  .recruitment-admin .status-joined { border-color: #75d32d88; background: #75d32d1f; color: #b5f28a; }
+  .recruitment-admin .status-negative { border-color: #ef444466; background: #450a0a99; color: #fca5a5; }
+  .recruitment-admin .status-inactive { border-color: #3f3f46; background: #18181b; color: #a1a1aa; }
+  .recruitment-admin .status-legend { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0 0 14px; padding: 0; }
+  .recruitment-admin .status-legend .badge { font-size: 12px; padding: 3px 10px; }
+  .recruitment-admin .app-card { border-left-width: 3px; }
+  .recruitment-admin .app-card.tone-progress { border-left-color: #f59e0b; }
+  .recruitment-admin .app-card.tone-complete { border-left-color: #3b82f6; }
+  .recruitment-admin .app-card.tone-advanced { border-left-color: #14b8a6; }
+  .recruitment-admin .app-card.tone-joined { border-left-color: #75d32d; }
+  .recruitment-admin .app-card.tone-negative { border-left-color: #ef4444; }
+  .recruitment-admin .app-card.tone-inactive { border-left-color: #52525b; }
   .recruitment-admin .template-card .check-line { margin: 0; }
   .recruitment-admin .inline-link { color: var(--admin-green); text-decoration: underline; text-underline-offset: 3px; }
   .recruitment-admin .director-add { display: grid; gap: 18px; margin-bottom: 18px; }
