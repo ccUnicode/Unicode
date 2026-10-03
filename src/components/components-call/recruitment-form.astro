@@ -2,7 +2,7 @@
   <header class="intro">
     <p class="eyebrow">Tu siguiente paso en UNICODE</p>
     <h1 id="recruitment-heading">Tu talento. <span>Nuestra comunidad.</span></h1>
-    <p>Completa tus datos y cuéntanos quién eres en un video de hasta 2 minutos y medio.</p>
+    <p>Completa tus datos y cuéntanos quién eres en un video de hasta 3 minutos y medio.</p>
   </header>
 
   <p id="recruitment-status" class="status" role="status" aria-live="polite">Consultando la convocatoria…</p>
@@ -55,18 +55,40 @@
     </section>
 
     <section id="video-phase" class="panel" aria-labelledby="video-heading" hidden>
-      <div class="section-heading"><div><p class="eyebrow">Paso 2</p><h2 id="video-heading" tabindex="-1">Cuatro preguntas. Un solo video.</h2></div><button id="edit-data" type="button" class="button secondary compact">Volver a mis datos</button></div>
-      <p id="video-instructions">Responde las 4 preguntas en un solo video de hasta 2 min 30 s.</p>
-      <div id="active-capture-banner" class="active-capture-banner" hidden><span>Grabando tu respuesta</span><strong id="capture-banner-timer">00:00 / 02:30</strong><button id="finish-capture" type="button" class="button danger compact">Terminar</button></div>
+      <div class="section-heading"><div><p class="eyebrow">Paso 2</p><h2 id="video-heading" tabindex="-1">Tu video de presentación</h2></div><button id="edit-data" type="button" class="button secondary compact">Volver a mis datos</button></div>
+      <div id="video-guide" class="guide">
+        <p class="guide-lead">Un solo video de máximo <strong id="guide-duration">3&nbsp;min&nbsp;30&nbsp;s</strong>. Respondes todo de corrido, sin cortes.</p>
+        <div class="guide-grid">
+          <div>
+            <h3>Qué grabar, en este orden</h3>
+            <ol class="guide-steps">
+              <li><span aria-hidden="true">1</span><div><strong>Preséntate</strong><p>Tu nombre, de dónde eres, qué estudias o haces hoy, y algo que te defina.</p></div></li>
+              <li><span aria-hidden="true">2</span><div><strong>Responde las 4 preguntas</strong><p id="guide-questions">Aparecerán al iniciar, con 45 segundos para leerlas antes de grabar.</p></div></li>
+              <li><span aria-hidden="true">3</span><div><strong>Cierra diciendo</strong><p>«Quiero estar en Unicode porque…»</p></div></li>
+            </ol>
+          </div>
+          <div>
+            <h3>Antes de grabar</h3>
+            <ul class="guide-tips">
+              <li>Un solo video continuo, sin edición.</li>
+              <li>Lugar iluminado y sin ruido. Prueba el audio con el ensayo.</li>
+              <li>Habla a cámara, no leas un guion.</li>
+              <li>Al pulsar «Iniciar» se usa tu intento.</li>
+            </ul>
+          </div>
+        </div>
+        <p class="guide-note">No evaluamos tu cámara, tu acento ni si te equivocas. <strong>Evaluamos lo que dices.</strong></p>
+      </div>
+      <div id="active-capture-banner" class="active-capture-banner" hidden><span>Grabando tu respuesta</span><strong id="capture-banner-timer">00:00 / 03:30</strong><button id="finish-capture" type="button" class="button danger compact">Terminar</button></div>
       <div id="assigned-questions" class="questions"></div>
-      <div class="video-grid">
+      <div id="video-capture" class="video-grid">
         <div class="camera-box">
           <video id="camera-preview" autoplay muted playsinline aria-label="Vista previa de tu cámara"></video>
           <p id="camera-placeholder">Prueba tu cámara y micrófono antes de grabar.</p>
           <div id="recording-indicator" class="recording-indicator" hidden><span></span><span id="recording-label">Grabando</span><strong id="recording-timer">00:00</strong></div>
         </div>
         <div class="video-controls">
-          <p id="preparation-instructions" class="hint">Al iniciar verás tus preguntas y tendrás 45 segundos para leerlas; luego la grabación empieza sola. El ensayo de 10 segundos no se envía.</p>
+          <p id="preparation-instructions" class="hint">Activa tu cámara y haz el ensayo de 10 segundos para revisar tu audio. El ensayo no se envía.</p>
           <div class="actions stacked"><button id="test-camera" type="button" class="button secondary">Activar cámara y micrófono</button><button id="rehearse" type="button" class="button secondary" disabled>Hacer ensayo de 10 segundos</button><button id="start-recording" type="button" class="button primary" disabled>Iniciar preparación y grabar</button><button id="stop-recording" type="button" class="button danger" hidden>Terminar grabación</button></div>
           <p id="camera-status" class="hint" role="status" aria-live="polite"></p>
           <div id="rehearsal-result" hidden><h4>Revisa tu ensayo</h4><video id="rehearsal-preview" controls playsinline aria-label="Video de ensayo"></video><button id="discard-rehearsal" class="button secondary compact" type="button">Eliminar ensayo</button></div>
@@ -78,11 +100,22 @@
 
       <div id="video-result" class="video-result" hidden><h3>Revisa tu video</h3><video id="answer-preview" controls playsinline aria-label="Video de tu postulación"></video><p id="answer-details" class="hint"></p><p id="unuploaded-warning" class="hint">Conserva esta pestaña abierta hasta que termine la subida. Si la conexión falla, tu video seguirá aquí para volver a intentar.</p><button id="upload-video" type="button" class="button primary">Guardar este video</button></div>
       <div id="upload-progress-panel" hidden><label for="upload-progress">Guardando tu video</label><progress id="upload-progress" value="0" max="100"></progress><p id="upload-status" role="status" aria-live="polite"></p></div>
-      <div id="video-saved" class="notice success" hidden><h3>Tu video está guardado</h3><p>Solo falta confirmar el envío de tu postulación.</p></div>
+      <div id="video-saved" class="notice success" hidden><h3>Tu video está guardado</h3><p>Responde estas tres preguntas y confirma tu postulación.</p></div>
+      <form id="closing-form" class="closing" novalidate hidden>
+        <p class="eyebrow">Último paso</p>
+        <h3>Cuéntanos un poco más</h3>
+        <div class="field"><label for="showcase">Muéstranos algo que hayas hecho <span class="req" aria-hidden="true">*</span></label><p class="hint">Un proyecto, un repo, un diseño, un evento que organizaste o una idea que quieras desarrollar. Pega el enlace o descríbelo en tres líneas.</p><textarea id="showcase" name="showcase" rows="3" required maxlength="2000" placeholder="Ej. github.com/usuario/proyecto: una app para organizar los horarios del ciclo"></textarea></div>
+        <div class="field"><label for="organizations">¿Has sido parte de otra organización, club o proyecto estudiantil? <span class="req" aria-hidden="true">*</span></label><p class="hint">¿Cuál, qué hacías y por qué saliste o sigues ahí?</p><textarea id="organizations" name="organizations" rows="3" required maxlength="2000" placeholder="Ej. Estuve en el círculo de robótica de mi facultad, organizaba los talleres…"></textarea></div>
+        <div class="field-grid">
+          <div class="field"><label for="referralChoice">¿Cómo te enteraste de la convocatoria? <span class="req" aria-hidden="true">*</span></label><select id="referralChoice" required><option value="">Elige una opción</option><option>Instagram</option><option>Facebook</option><option>LinkedIn</option><option>TikTok</option><option>WhatsApp</option><option>Un amigo o compañero</option><option>Un miembro de UNICODE</option><option>Un evento o charla</option><option>Un profesor</option><option value="Otro">Otro</option></select></div>
+          <div id="referral-other-field" class="field" hidden><label for="referralOther">¿Cuál? <span class="req" aria-hidden="true">*</span></label><input id="referralOther" maxlength="250" placeholder="Ej. Un afiche en la facultad" /></div>
+        </div>
+        <p id="closing-save-status" class="save-indicator" role="status" aria-live="polite" hidden><span class="save-icon" aria-hidden="true"></span><span id="closing-save-status-text"></span></p>
+      </form>
       <div class="actions final-action"><button id="submit-application" class="button primary" type="button" disabled>Confirmar y enviar postulación</button></div>
     </section>
 
-    <section id="complete-phase" class="panel complete" aria-labelledby="complete-heading" hidden><span class="complete-icon" aria-hidden="true">✓</span><p class="eyebrow">Postulación recibida</p><h2 id="complete-heading" tabindex="-1">Gracias por dar el primer paso.</h2><p>Tus datos, preguntas asignadas y video quedaron registrados. Te informaremos sobre el proceso por el correo que proporcionaste.</p><p id="application-reference" class="hint"></p><a class="button secondary" href="/">Volver al inicio</a></section>
+    <section id="complete-phase" class="panel complete" aria-labelledby="complete-heading" hidden><span class="complete-icon" aria-hidden="true">✓</span><p class="eyebrow">Postulación recibida</p><h2 id="complete-heading" tabindex="-1">Gracias por dar el primer paso.</h2><p>Tus datos, tu video y tus respuestas quedaron registrados. Te informaremos sobre el proceso por el correo que proporcionaste.</p><p id="application-reference" class="hint"></p><a class="button secondary" href="/">Volver al inicio</a></section>
   </div>
 </section>
 
@@ -162,6 +195,26 @@
   #development-notice { border-color: #facc1580; background: #facc150f; color: #fde68a; font-weight: 600; }
   .section-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
   .questions { margin: 1.2rem 0; border: 1px solid #27272a; border-radius: 1rem; padding: .4rem 1.2rem; scroll-margin-top: 6rem; }
+  .guide { margin: 1.2rem 0; padding: clamp(1rem,3vw,1.5rem); border: 1px solid #27272a; border-radius: 1rem; background: #111113; }
+  .guide-lead { color: #e4e4e7; font-size: 1rem; }
+  .guide-lead strong { color: var(--green); }
+  .guide-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 1.5rem; margin-top: 1.2rem; }
+  .guide h3 { font-size: .75rem; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; color: #a1a1aa; margin-bottom: .8rem; }
+  .guide-steps { display: grid; gap: .9rem; }
+  .guide-steps li { display: flex; gap: .8rem; align-items: flex-start; }
+  .guide-steps li > span { flex-shrink: 0; display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: 50%; background: #75d32d1f; color: var(--green); font-size: .8rem; font-weight: 700; }
+  .guide-steps strong { color: #f4f4f5; font-size: .92rem; }
+  .guide-steps p { font-size: .85rem; margin-top: .15rem; }
+  .guide-tips { display: grid; gap: .55rem; }
+  .guide-tips li { position: relative; padding-left: 1.1rem; font-size: .85rem; }
+  .guide-tips li::before { content: ""; position: absolute; left: 0; top: .55rem; width: .4rem; height: .4rem; border-radius: 50%; background: #52525b; }
+  .guide-note { margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid #27272a; font-size: .85rem; }
+  .guide-note strong { color: #f4f4f5; }
+  .closing { margin: 1rem 0; padding: clamp(1rem,3vw,1.5rem); border: 1px solid #75d32d40; border-radius: 1rem; background: #75d32d08; }
+  .closing h3 { margin-bottom: 1rem; }
+  .closing .hint { margin-top: -.15rem; }
+  .questions :global(li.script-step) { color: #a1a1aa; }
+  .questions :global(li.script-step strong) { color: var(--green); font-weight: 650; }
   .questions :global(.questions-hidden) { padding: .9rem 0; color: #a1a1aa; font-size: .9rem; line-height: 1.6; }
   .active-capture-banner { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem; position: sticky; top: 6rem; z-index: 20; background: #18181bf5; border: 1px solid #75d32d80; border-radius: .8rem; padding: .7rem 1rem; margin-top: 1rem; font-size: .8rem; }
   .active-capture-banner strong { font-variant-numeric: tabular-nums; margin-left: auto; }
@@ -202,7 +255,7 @@
   #application-reference { overflow-wrap: anywhere; }
   .complete-icon { display: grid; place-items: center; width: 4rem; height: 4rem; margin: 0 auto 1.5rem; border: 1px solid #75d32d60; background: #75d32d15; border-radius: 50%; color: var(--green); font-size: 2rem; }
   .complete .button { margin-top: 1.5rem; }
-  @media(max-width:640px) { .field-grid,.questions,.video-grid { grid-template-columns: 1fr; } .steps { gap: .7rem; font-size: .7rem; } .steps span { width: 1.5rem; height: 1.5rem; } .steps li { gap: .35rem; } .section-heading { flex-direction: column; } .actions .button { flex: 1 1 100%; } .resume-actions, .resume-panel .button { width: 100%; } .active-capture-banner { top: 5rem; } .active-capture-banner strong { margin-left: 0; } .active-capture-banner .button { flex: 1 1 100%; } }
+  @media(max-width:640px) { .field-grid,.guide-grid,.questions,.video-grid { grid-template-columns: 1fr; } .steps { gap: .7rem; font-size: .7rem; } .steps span { width: 1.5rem; height: 1.5rem; } .steps li { gap: .35rem; } .section-heading { flex-direction: column; } .actions .button { flex: 1 1 100%; } .resume-actions, .resume-panel .button { width: 100%; } .active-capture-banner { top: 5rem; } .active-capture-banner strong { margin-left: 0; } .active-capture-banner .button { flex: 1 1 100%; } }
   /* iOS zooms into fields whose text is smaller than 16px. */
   @media(max-width:768px) { input:not([type=checkbox]),select,textarea { font-size: 1rem; } }
 </style>

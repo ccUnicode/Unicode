@@ -21,6 +21,7 @@ export interface ApplicationData {
   firstName: string; lastName: string; email: string; phone: string; university: string; faculty: string; career: string; admissionTerm: string;
   semester: string; firstChoiceArea: AreaId | ''; secondChoiceArea: AreaId | '';
   availabilityHours: number | null; motivation: string; shortCase: string; consent: boolean;
+  showcase: string; organizations: string; referralSource: string;
 }
 export type ApplicationStatus = 'draft' | 'incomplete' | 'expired' | 'submitted' | 'profile_validated' | 'profile_rejected'
   | 'test_sent' | 'test_completed' | 'awaiting_second_review' | 'interview_eligible' | 'interview_ineligible' | 'interview_scheduled'

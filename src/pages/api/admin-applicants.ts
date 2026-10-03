@@ -42,6 +42,7 @@ export async function GET({ request }: { request: Request }) {
           university_semester: d.semester, availability_hours: d.availabilityHours,
           first_choice_area: d.firstChoiceArea, second_choice_area: d.secondChoiceArea || null,
           application_reason: d.motivation, short_case: d.shortCase,
+          showcase: d.showcase || '', organizations: d.organizations || '', referral_source: d.referralSource || '',
           questions: application.questions.map((question) => question.text),
           video_url: application.video?.provider === 'drive' ? `https://drive.google.com/file/d/${application.video.fileId}/view` : null,
           has_video: Boolean(application.video),

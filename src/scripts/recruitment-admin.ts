@@ -439,7 +439,7 @@ configForm.addEventListener("submit", async (event) => {
     preparationSeconds: Number(field("preparationSeconds").value),
     maxVideoBytes: Math.round(Number(field("maxVideoMB").value) * 1024 * 1024),
     storageProvider: field("storageProvider").value as RecruitmentConfig["storageProvider"],
-    maxVideoSeconds: 150,
+    maxVideoSeconds: 210,
     questionsPerCategory: 2,
     thresholds: { affinity: optionalNumber("thresholdAffinity"), written: optionalNumber("thresholdWritten"), video: optionalNumber("thresholdVideo") },
     areas: config.areas.map((area) => ({
@@ -619,7 +619,8 @@ function renderDetail(application: RecruitmentApplication): void {
   const answers = element("detail-answers");
   answers.replaceChildren();
   // The short case question was removed; only applications that answered it still show it.
-  for (const [label, answer] of [["Motivación", data.motivation], ...(data.shortCase ? [["Caso corto", data.shortCase]] : [])]) {
+  const answered = (label: string, value: string | undefined) => (value ? [[label, value]] : []);
+  for (const [label, answer] of [["Motivación", data.motivation], ...answered("Algo que hizo", data.showcase), ...answered("Otras organizaciones", data.organizations), ...answered("Cómo se enteró", data.referralSource), ...answered("Caso corto", data.shortCase)]) {
     const box = node("div");
     box.append(node("h3", label), node("p", answer || "Pendiente de respuesta", "answer-text"));
     answers.append(box);

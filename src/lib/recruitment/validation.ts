@@ -32,7 +32,7 @@ function date(value: unknown, field: string): string | null {
 }
 export const emptyApplicationData: ApplicationData = {
   firstName: '', lastName: '', email: '', phone: '', university: '', faculty: '', career: '', admissionTerm: '', semester: '',
-  firstChoiceArea: '', secondChoiceArea: '', availabilityHours: null, motivation: '', shortCase: '', consent: false,
+  firstChoiceArea: '', secondChoiceArea: '', availabilityHours: null, motivation: '', shortCase: '', consent: false, showcase: '', organizations: '', referralSource: '',
 };
 export function validateApplicationData(input: unknown, existing: ApplicationData = emptyApplicationData, creating = false): ApplicationData {
   const source = { ...existing, ...record(input) };
@@ -45,6 +45,8 @@ export function validateApplicationData(input: unknown, existing: ApplicationDat
     secondChoiceArea: string(source.secondChoiceArea, 'segunda área', 10) as ApplicationData['secondChoiceArea'],
     availabilityHours: source.availabilityHours === null ? null : number(source.availabilityHours, 'disponibilidad semanal', 0, 168),
     motivation: string(source.motivation, 'motivación', 4000), shortCase: string(source.shortCase, 'caso corto', 4000), consent: boolean(source.consent, 'consentimiento'),
+    showcase: string(source.showcase ?? '', 'algo que hayas hecho', 2000), organizations: string(source.organizations ?? '', 'otras organizaciones', 2000),
+    referralSource: string(source.referralSource ?? '', 'cómo te enteraste', 300),
   };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(result.email)) throw new RecruitmentError('invalid_email', 'Escribe un correo electrónico válido.');
   if (result.phone && !/^\d{9}$/.test(result.phone)) throw new RecruitmentError('invalid_phone', 'El teléfono debe contener 9 dígitos.');
@@ -89,7 +91,7 @@ export function validateConfig(input: unknown): RecruitmentConfig {
     maxApplicants: number(source.maxApplicants, 'máximo de postulantes', 1, 150, true), areas,
     // No minimum by default: 0 keeps the database rule satisfied without filtering anyone.
     minAvailabilityHours: source.minAvailabilityHours === null || source.minAvailabilityHours === undefined ? 0 : number(source.minAvailabilityHours, 'disponibilidad mínima', 0, 168),
-    maxVideoSeconds: number(source.maxVideoSeconds, 'duración del video', 150, 150, true),
+    maxVideoSeconds: number(source.maxVideoSeconds, 'duración del video', 210, 210, true),
     maxVideoBytes: number(source.maxVideoBytes, 'tamaño del video', 1024 * 1024, 50 * 1024 * 1024, true),
     questionsPerCategory: number(source.questionsPerCategory, 'preguntas por categoría', 2, 2, true),
     preparationSeconds: number(source.preparationSeconds, 'preparación', 0, 300, true), inactivityHours: number(source.inactivityHours, 'inactividad', 1, 720, true),

@@ -101,7 +101,8 @@ function initializeRecruitment() {
   /** 150 → "2 min 30 s", 60 → "1 min". */
   function spokenDuration(seconds: number) {
     const minutes = Math.floor(seconds / 60); const rest = seconds % 60;
-    return [minutes ? `${minutes} min` : "", rest ? `${rest} s` : ""].filter(Boolean).join(" ");
+    // Non-breaking spaces keep "3 min 30 s" on one line.
+    return [minutes ? `${minutes} min` : "", rest ? `${rest} s` : ""].filter(Boolean).join(" ");
   }
 
   function updateControls() {
@@ -123,6 +124,11 @@ function initializeRecruitment() {
     show("technical-help", !finished && !application?.technicalFailureCount);
     show("restart-panel", !!application && !finished && !recordedBlob && attempts >= maxAttempts && !!application.technicalFailureCount);
     show("video-saved", finished);
+    show("closing-form", finished);
+    // Once the video is verified only the closing questions are left on screen.
+    show("video-capture", !finished);
+    if (finished) show("upload-progress-panel", false);
+    show("video-guide", !["preparation", "recording"].includes(cameraState) && !finished);
   }
 
   function setPhase(next: typeof phase, focus = true) {
@@ -137,7 +143,32 @@ function initializeRecruitment() {
     if (focus) element(`${next}-heading`).focus();
   }
 
+  const closingForm = element<HTMLFormElement>("closing-form");
+  function populateClosing(data: Partial<ApplicationData>) {
+    element<HTMLTextAreaElement>("showcase").value = data.showcase ?? "";
+    element<HTMLTextAreaElement>("organizations").value = data.organizations ?? "";
+    const referral = data.referralSource ?? "";
+    const choice = element<HTMLSelectElement>("referralChoice");
+    const listed = [...choice.options].some(option => option.value === referral && referral !== "Otro");
+    choice.value = listed ? referral : referral ? "Otro" : "";
+    element<HTMLInputElement>("referralOther").value = !listed && referral ? referral.replace(/^Otro:\s*/, "") : "";
+    syncReferral();
+  }
+  function syncReferral() {
+    const other = element<HTMLSelectElement>("referralChoice").value === "Otro";
+    show("referral-other-field", other); element<HTMLInputElement>("referralOther").required = other;
+  }
+  function closingData() {
+    const choice = element<HTMLSelectElement>("referralChoice").value;
+    const other = element<HTMLInputElement>("referralOther").value.trim();
+    return {
+      showcase: element<HTMLTextAreaElement>("showcase").value, organizations: element<HTMLTextAreaElement>("organizations").value,
+      referralSource: choice === "Otro" ? (other ? `Otro: ${other}` : "Otro") : choice,
+    };
+  }
+
   function populateData(data: ApplicationData) {
+    populateClosing(data);
     for (const name of FORM_FIELDS) {
       const control = form.elements.namedItem(name) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
       const value = (data as unknown as Record<string, unknown>)[name];
@@ -150,6 +181,7 @@ function initializeRecruitment() {
     const data = Object.fromEntries(new FormData(form).entries());
     return {
       ...data,
+      ...closingData(),
       availabilityHours: data.availabilityHours === "" ? null : Number(data.availabilityHours),
       consent: element<HTMLInputElement>("consent").checked,
     } as unknown as ApplicationData;
@@ -160,15 +192,22 @@ function initializeRecruitment() {
     target.replaceChildren();
     if (!application?.questions.length) {
       const hint = document.createElement("p"); hint.className = "questions-hidden";
-      hint.textContent = `Tus 4 preguntas aparecerán al pulsar «Iniciar preparación y grabar». Tendrás ${config.preparationSeconds} segundos para leerlas antes de que empiece la grabación.`;
+      hint.textContent = `Tus 4 preguntas aparecerán aquí al pulsar «Iniciar preparación y grabar», con ${config.preparationSeconds} segundos para leerlas antes de que empiece la grabación.`;
       target.append(hint); return;
     }
     const list = document.createElement("ol");
+    const step = (title: string, text: string) => {
+      const item = document.createElement("li"); item.className = "script-step";
+      const strong = document.createElement("strong"); strong.textContent = `${title}: `;
+      item.append(strong, text); return item;
+    };
+    list.append(step("Preséntate", "tu nombre, de dónde eres, qué estudias o haces hoy, y algo que te defina."));
     for (const category of ["motivation", "collaboration"]) {
       for (const question of application?.questions.filter(item => item.category === category) ?? []) {
         const item = document.createElement("li"); item.textContent = question.text; list.append(item);
       }
     }
+    list.append(step("Cierra diciendo", "«Quiero estar en Unicode porque…»"));
     target.append(list);
   }
 
@@ -205,6 +244,8 @@ function initializeRecruitment() {
     const indicator = element("save-status");
     indicator.dataset.state = state; element("save-status-text").textContent = text;
     show("save-status", phase === "data");
+    element("closing-save-status").dataset.state = state; element("closing-save-status-text").textContent = text;
+    show("closing-save-status", phase === "video" && !!application?.video);
   }
 
   async function saveDraft() {
@@ -239,7 +280,7 @@ function initializeRecruitment() {
   let retryDelay = 0;
   function scheduleAutosave() {
     clearTimeout(autosaveTimer);
-    if (phase !== "data" || !restored) return;
+    if (phase === "complete" || !restored || (phase === "video" && !application)) return;
     if (!application && !canCreateDraft()) {
       if (dirty) saveIndicator("local", "Guardado en este dispositivo");
       return;
@@ -330,7 +371,7 @@ function initializeRecruitment() {
     const mimeType = chooseRecordingMime(MediaRecorder);
     if (!mimeType) throw new Error("Tu navegador no tiene un formato de grabación compatible.");
     const chunks: BlobPart[] = [];
-    recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 1_500_000, audioBitsPerSecond: 64_000 });
+    recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 1_200_000, audioBitsPerSecond: 64_000 });
     discardRecording = false; recordingStartedAt = performance.now();
     recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
     recorder.onerror = () => { void interruptCapture("device", "La grabación presentó un error."); };
@@ -422,7 +463,7 @@ function initializeRecruitment() {
   function uploadPut(session: UploadSession, body: Blob | null, contentRange?: string, onProgress?: (loaded: number) => void): Promise<{ status: number }> {
     if (!isAllowedUploadUrl(session.uploadUrl, session.provider)) return Promise.reject(new Error("La dirección de carga no es válida. Conserva tu video y contacta al equipo de convocatoria."));
     return new Promise((resolve, reject) => {
-      // Up to 40 MB in one request: allow slow mobile connections ten minutes.
+      // Up to 50 MB in one request: allow slow mobile connections ten minutes.
       const xhr = new XMLHttpRequest(); xhr.open("PUT", session.uploadUrl); xhr.timeout = 600000;
       for (const [key, value] of Object.entries(session.headers ?? {})) {
         if (!["authorization", "cookie", "host", "content-type"].includes(key.toLowerCase())) xhr.setRequestHeader(key, value);
@@ -456,7 +497,7 @@ function initializeRecruitment() {
       if (!isAllowedUploadUrl(uploadSession.uploadUrl, uploadSession.provider)) throw new Error("No pudimos preparar una carga segura. Tu video sigue disponible en esta pestaña.");
       if (uploadSession.provider === "drive") {
         // Google hides the resumable Range header from browsers (CORS), so the page cannot
-        // continue mid-file. Videos are at most 40 MB: send the whole file, and before each
+        // continue mid-file. Videos are at most 50 MB: send the whole file, and before each
         // retry ask Google whether it already holds it (200/201) or still waits for it (308).
         const complete = async () => [200, 201].includes((await uploadPut(uploadSession!, null, `bytes */${blob.size}`)).status);
         for (let attempt = 0; !(await complete()); attempt++) {
@@ -564,8 +605,8 @@ function initializeRecruitment() {
         element<HTMLInputElement>("availabilityHours").min = String(config.minAvailabilityHours);
         element("availability-hint").textContent = `Esta convocatoria requiere al menos ${config.minAvailabilityHours} horas por semana.`;
       }
-      element("video-instructions").textContent = `Responde las 4 preguntas en un solo video de hasta ${spokenDuration(config.maxVideoSeconds)}.`;
-      element("preparation-instructions").textContent = `Al iniciar verás tus preguntas y tendrás ${config.preparationSeconds} segundos para leerlas; luego la grabación empieza sola. El ensayo de 10 segundos no se envía.`;
+      element("guide-duration").textContent = spokenDuration(config.maxVideoSeconds);
+      element("guide-questions").textContent = `Aparecerán al iniciar, con ${config.preparationSeconds} segundos para leerlas antes de grabar.`;
       if (stored?.id && stored.token && /^[a-zA-Z0-9_-]{10,100}$/.test(stored.id) && stored.token.length <= 512) {
         resumeToken = stored.token;
         try {
@@ -696,8 +737,19 @@ function initializeRecruitment() {
     location.replace("/postular");
   }); });
   button("upload-video").addEventListener("click", () => { void runAction(uploadVideo); });
+  for (const type of ["input", "change"]) closingForm.addEventListener(type, event => {
+    if ((event.target as HTMLElement).id === "referralChoice") syncReferral();
+    const control = event.target as Control;
+    if (control.getAttribute("aria-invalid") === "true" && control.checkValidity()) setFieldError(control, "");
+    dirty = true; dataVersion++; rememberForm(); scheduleAutosave();
+  });
+  closingForm.addEventListener("submit", event => event.preventDefault());
   button("submit-application").addEventListener("click", () => { void runAction(async () => {
     if (!application?.video) throw new Error("Guarda y verifica tu video antes de confirmar.");
+    const missing = [...closingForm.querySelectorAll<Control>("textarea, select, input")].filter(control => !control.closest("[hidden]") && !control.checkValidity());
+    for (const control of closingForm.querySelectorAll<Control>("textarea, select, input")) setFieldError(control, missing.includes(control) ? fieldMessage(control) : "");
+    if (missing.length) { missing[0].focus({ preventScroll: true }); missing[0].closest(".field")?.scrollIntoView({ block: "center", behavior: "smooth" }); throw new Error("Responde las tres preguntas finales antes de enviar."); }
+    clearTimeout(autosaveTimer); await saveDraft();
     const result = await request<DraftResponse>(`/drafts/${application.id}/submit`, "POST", {});
     if (!result.application.submittedAt) throw new Error("Tu postulación aún no está confirmada. Intenta nuevamente.");
     acceptApplication(result.application); dirty = false; setPhase("complete"); message("Postulación enviada correctamente.");
