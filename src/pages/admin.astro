@@ -2,7 +2,8 @@
 /**
  * admin.astro
  * Administration panel to view application candidates.
- * - Password login protected by server-side rate limiting.
+ * - Directors sign in with a one-time code sent to their email; each sees only their area,
+ *   GTH sees every area and opens the call's management panel. The shared password stays as a fallback.
  * - Dashboard with filters by area, option type, and sorting.
  * - Export to Excel (CSV).
  */
@@ -17,9 +18,21 @@ import Layout from "../layouts/Layout.astro";
     <div
       class="w-full max-w-sm bg-zinc-900/80 border border-zinc-800 rounded-2xl p-8"
     >
-      <h2 class="text-white text-xl font-bold text-center mb-6">Acceso</h2>
+      <h2 class="text-white text-xl font-bold text-center">Acceso de directores</h2>
+      <p id="login-intro" class="text-zinc-400 text-xs text-center mt-2 mb-6">Ingresa con tu correo UNI y te enviaremos un código.</p>
 
-      <form id="login-form" class="space-y-4">
+      <form id="email-form" class="space-y-4">
+        <input type="text" inputmode="email" autocapitalize="none" spellcheck="false" id="director-email" required autocomplete="email" placeholder="tu.correo@uni.pe" class="w-full bg-zinc-950 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-600" />
+        <button type="submit" id="email-btn" class="w-full bg-unicode hover:bg-unicode-light text-black font-bold text-sm py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">Enviar código</button>
+      </form>
+
+      <form id="code-form" class="hidden space-y-4">
+        <input id="director-code" required inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="Código de 6 dígitos" class="w-full bg-zinc-950 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-600 text-center tracking-[0.4em] placeholder:tracking-normal text-lg" />
+        <button type="submit" id="code-btn" class="w-full bg-unicode hover:bg-unicode-light text-black font-bold text-sm py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">Ingresar</button>
+        <button type="button" id="change-email" class="w-full text-zinc-400 hover:text-white text-xs transition-colors cursor-pointer">Usar otro correo</button>
+      </form>
+
+      <form id="login-form" class="hidden space-y-4">
         <div>
           <input
             type="password"
@@ -32,18 +45,12 @@ import Layout from "../layouts/Layout.astro";
           />
         </div>
 
-        <div
-          id="login-error"
-          class="hidden text-red-400 text-xs text-center font-medium py-2 bg-red-500/10 rounded-lg border border-red-500/20"
-        >
-        </div>
-
         <button
           type="submit"
           id="login-btn"
           class="w-full bg-unicode hover:bg-unicode-light text-black font-bold text-sm py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
         >
-          <span id="login-btn-text">Ingresar</span>
+          <span id="login-btn-text">Ingresar con contraseña</span>
           <svg
             id="login-spinner"
             class="w-4 h-4 animate-spin hidden"
@@ -66,6 +73,10 @@ import Layout from "../layouts/Layout.astro";
           </svg>
         </button>
       </form>
+
+      <div id="login-error" role="alert" class="hidden mt-4 text-red-400 text-xs text-center font-medium py-2 px-3 bg-red-500/10 rounded-lg border border-red-500/20"></div>
+      <p id="login-info" role="status" class="hidden mt-4 text-zinc-300 text-xs text-center"></p>
+      <button type="button" id="toggle-password" class="hidden mx-auto mt-6 text-zinc-500 hover:text-zinc-300 text-xs underline underline-offset-4 cursor-pointer">Entrar con contraseña de administración</button>
     </div>
   </div>
 
@@ -86,12 +97,22 @@ import Layout from "../layouts/Layout.astro";
             Admin Dashboard
           </h1>
         </div>
-        <button
-          id="logout-btn"
-          class="text-red-400 hover:text-red-300 text-xs sm:text-sm font-medium transition-colors cursor-pointer"
-        >
-          Cerrar Sesión
-        </button>
+        <div class="flex items-center gap-3 sm:gap-5 min-w-0">
+          <span id="session-user" class="hidden md:inline text-zinc-500 text-xs truncate"></span>
+          <a
+            id="gth-panel-link"
+            href="/admin/recruitment"
+            class="hidden border border-zinc-700 hover:border-zinc-500 text-white text-xs sm:text-sm font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors whitespace-nowrap"
+          >
+            Panel GTH
+          </a>
+          <button
+            id="logout-btn"
+            class="text-red-400 hover:text-red-300 text-xs sm:text-sm font-medium transition-colors cursor-pointer whitespace-nowrap"
+          >
+            Cerrar Sesión
+          </button>
+        </div>
       </div>
     </header>
 
@@ -316,6 +337,85 @@ import Layout from "../layouts/Layout.astro";
     "admin-password",
   ) as HTMLInputElement;
 
+  const emailForm = document.getElementById("email-form") as HTMLFormElement;
+  const codeForm = document.getElementById("code-form") as HTMLFormElement;
+  const emailInput = document.getElementById("director-email") as HTMLInputElement;
+  const codeInput = document.getElementById("director-code") as HTMLInputElement;
+  const loginInfo = document.getElementById("login-info")!;
+  const loginIntro = document.getElementById("login-intro")!;
+  type Session = { role: "admin" } | { role: "director"; email: string; area: string; name?: string };
+
+  const showError = (text: string) => { loginError.textContent = text; loginError.classList.remove("hidden"); loginInfo.classList.add("hidden"); };
+  const showInfo = (text: string) => { loginInfo.textContent = text; loginInfo.classList.remove("hidden"); loginError.classList.add("hidden"); };
+  function showStep(step: "email" | "code" | "password") {
+    emailForm.classList.toggle("hidden", step !== "email");
+    codeForm.classList.toggle("hidden", step !== "code");
+    loginForm.classList.toggle("hidden", step !== "password");
+    // The shared password is reached by typing "admin" as the email; this link only leads back.
+    const back = document.getElementById("toggle-password")!;
+    back.textContent = "Entrar con mi correo UNI";
+    back.classList.toggle("hidden", step !== "password");
+    back.classList.toggle("block", step === "password");
+    loginIntro.textContent = step === "password" ? "Acceso de super admin con la contraseña de administración." : step === "code" ? `Escribe el código que enviamos a ${emailInput.value.trim()}.` : "Ingresa con tu correo UNI y te enviaremos un código.";
+    loginError.classList.add("hidden");
+    (step === "email" ? emailInput : step === "code" ? codeInput : passwordInput).focus();
+  }
+  document.getElementById("toggle-password")!.addEventListener("click", () => { emailInput.value = ""; showStep("email"); });
+  document.getElementById("change-email")!.addEventListener("click", () => { codeInput.value = ""; showStep("email"); });
+
+  /** Directors outside GTH only get their own area; GTH and the shared password see all and reach the GTH panel. */
+  function applySession(session: Session) {
+    const seesAll = session.role === "admin" || session.area === "GTH";
+    document.getElementById("gth-panel-link")!.classList.toggle("hidden", !seesAll);
+    const user = document.getElementById("session-user")!;
+    user.textContent = session.role === "director" ? session.email : "Super admin";
+    user.classList.remove("hidden");
+    if (!seesAll && session.role === "director") currentArea = session.area;
+    document.querySelectorAll<HTMLElement>(".area-tab").forEach((tab) => {
+      tab.classList.toggle("hidden", !seesAll && tab.dataset.area !== currentArea);
+      tab.classList.toggle("active-tab", tab.dataset.area === currentArea);
+    });
+    document.getElementById("area-label")!.textContent = areaNames[currentArea] || currentArea;
+  }
+  function startSession(token: string, session: Session) {
+    sessionToken = token;
+    sessionStorage.setItem("admin_token", token);
+    loginScreen.classList.add("hidden");
+    dashboardScreen.classList.remove("hidden");
+    applySession(session);
+    loadApplicants();
+  }
+
+  emailForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (emailInput.value.trim().toLowerCase() === "admin") { showStep("password"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())) { showError("Escribe tu correo UNI completo."); return; }
+    const button = document.getElementById("email-btn") as HTMLButtonElement;
+    button.disabled = true; button.textContent = "Enviando...";
+    try {
+      const res = await fetch("/api/admin-code", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: emailInput.value.trim() }) });
+      const data = await res.json();
+      if (!res.ok) { showError(data.error || "No se pudo enviar el código."); return; }
+      showStep("code");
+      showInfo(data.message);
+    } catch { showError("Error de conexión. Intenta de nuevo."); }
+    finally { button.disabled = false; button.textContent = "Enviar código"; }
+  });
+
+  codeForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const button = document.getElementById("code-btn") as HTMLButtonElement;
+    button.disabled = true; button.textContent = "Verificando...";
+    try {
+      const res = await fetch("/api/admin-login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: emailInput.value.trim(), code: codeInput.value.trim() }) });
+      const data = await res.json();
+      if (!res.ok) { showError(data.error || "Código incorrecto."); codeInput.select(); return; }
+      codeInput.value = "";
+      startSession(data.token, data.session);
+    } catch { showError("Error de conexión. Intenta de nuevo."); }
+    finally { button.disabled = false; button.textContent = "Ingresar"; }
+  });
+
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const password = passwordInput.value.trim();
@@ -346,17 +446,14 @@ import Layout from "../layouts/Layout.astro";
         return;
       }
 
-      sessionToken = data.token;
-      sessionStorage.setItem("admin_token", sessionToken);
-      loginScreen.classList.add("hidden");
-      dashboardScreen.classList.remove("hidden");
-      loadApplicants();
+      passwordInput.value = "";
+      startSession(data.token, data.session || { role: "admin" });
     } catch (err) {
       loginError.textContent = "Error de conexión. Intenta de nuevo.";
       loginError.classList.remove("hidden");
     } finally {
       loginBtn.disabled = false;
-      loginBtnText.textContent = "Ingresar";
+      loginBtnText.textContent = "Ingresar con contraseña";
       loginSpinner.classList.add("hidden");
     }
   });
@@ -364,10 +461,13 @@ import Layout from "../layouts/Layout.astro";
   // ===== CHECK EXISTING SESSION =====
   const savedToken = sessionStorage.getItem("admin_token");
   if (savedToken) {
-    sessionToken = savedToken;
-    loginScreen.classList.add("hidden");
-    dashboardScreen.classList.remove("hidden");
-    loadApplicants();
+    // Ask the server who this token belongs to; an expired token goes back to the sign-in.
+    fetch("/api/recruitment/admin/session", { headers: { Authorization: `Bearer ${savedToken}` } })
+      .then(async (res) => {
+        if (!res.ok) { sessionStorage.removeItem("admin_token"); return; }
+        startSession(savedToken, (await res.json()).session);
+      })
+      .catch(() => showError("Error de conexión. Recarga la página."));
   }
 
   document.getElementById("logout-btn")?.addEventListener("click", async () => {
@@ -385,7 +485,7 @@ import Layout from "../layouts/Layout.astro";
     dashboardScreen.classList.add("hidden");
     loginScreen.classList.remove("hidden");
     passwordInput.value = "";
-    passwordInput.focus();
+    showStep("email");
   });
 
   document.querySelectorAll(".area-tab").forEach((tab) => {

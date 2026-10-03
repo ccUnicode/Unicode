@@ -5,10 +5,10 @@ import Layout from "../../layouts/Layout.astro";
 <Layout title="Gestión de convocatoria">
   <main class="recruitment-admin">
     <section id="recruitment-login" class="login-panel panel" aria-labelledby="login-title">
-      <a class="back-link" href="/">← Inicio</a>
+      <a class="back-link" href="/admin">← Postulaciones</a>
       <p class="eyebrow">UNICODE · GTH</p>
       <h1 id="login-title">Gestión de convocatoria</h1>
-      <p class="muted">Ingresa con el acceso administrativo de UNICODE.</p>
+      <p class="muted">Si diriges GTH, entra con tu correo UNI desde <a href="/admin" class="inline-link">el panel de postulaciones</a> y usa el botón «Panel GTH». También puedes usar la contraseña de administración.</p>
       <form id="recruitment-login-form" class="stack">
         <label>Contraseña<input id="recruitment-password" type="password" autocomplete="current-password" required /></label>
         <button type="submit" class="primary">Ingresar</button>
@@ -19,7 +19,7 @@ import Layout from "../../layouts/Layout.astro";
     <div id="recruitment-dashboard" hidden>
       <header class="admin-header">
         <div>
-          <a class="back-link" href="/">← Inicio</a>
+          <a class="back-link" href="/admin">← Postulaciones</a>
           <p class="eyebrow">UNICODE · GTH</p>
           <h1>Gestión de convocatoria</h1>
           <p class="muted">Configuración, seguimiento y comunicaciones.</p>
@@ -32,6 +32,7 @@ import Layout from "../../layouts/Layout.astro";
         <button type="button" data-panel="configuration" aria-current="page">Configuración</button>
         <button type="button" data-panel="applications">Postulaciones <span id="application-count" class="count">0</span></button>
         <button type="button" data-panel="communications">Comunicaciones</button>
+        <button type="button" data-panel="access">Accesos</button>
       </nav>
 
       <section id="panel-configuration" aria-labelledby="config-title">
@@ -100,6 +101,17 @@ import Layout from "../../layouts/Layout.astro";
             <p class="muted" id="config-save-info">Los cambios se aplican al guardar.</p>
             <button type="submit" class="primary" id="save-config">Guardar configuración</button>
           </div>
+        </form>
+      </section>
+
+      <section id="panel-access" aria-labelledby="access-title" hidden>
+        <div class="section-heading">
+          <div><h2 id="access-title">Accesos de directores</h2><p class="muted">Cada director entra a /admin con su correo y un código que le llega por correo. Ve solo las postulaciones de su área; los de GTH ven todas y este panel.</p></div>
+        </div>
+        <form id="directors-form" class="panel stack compact">
+          <div id="directors-list" class="director-list"></div>
+          <div class="button-row"><button id="add-director" type="button" class="secondary">Agregar director</button><button type="submit" class="primary">Guardar accesos</button></div>
+          <p id="directors-status" class="muted" role="status"></p>
         </form>
       </section>
 
@@ -270,6 +282,10 @@ import Layout from "../../layouts/Layout.astro";
   .recruitment-admin .preview-panel { margin-bottom: 18px; }
   .recruitment-admin .badge.test { border-color: #a16207; background: #422006; color: #fde68a; }
   .recruitment-admin .template-card .check-line { margin: 0; }
+  .recruitment-admin .inline-link { color: var(--admin-green); text-decoration: underline; text-underline-offset: 3px; }
+  .recruitment-admin .director-list { display: grid; gap: 10px; }
+  .recruitment-admin .director-row { display: grid; grid-template-columns: 1.4fr 1fr .9fr auto; gap: 10px; align-items: end; }
+  .recruitment-admin .director-row .remove { padding: 11px 12px; }
   @media (max-width: 720px) {
     .recruitment-admin { padding: 20px 14px 48px; }
     .recruitment-admin .panel { padding: 18px; }
@@ -284,6 +300,7 @@ import Layout from "../../layouts/Layout.astro";
     .recruitment-admin .detail-panel { padding: 20px 16px; border-left: 0; }
     .recruitment-admin .detail-panel > .section-heading { top: -20px; margin: -20px -16px 0; padding: 14px 16px; flex-direction: row; align-items: center; }
     .recruitment-admin .email-row { flex-direction: column; }
+    .recruitment-admin .director-row { grid-template-columns: 1fr; padding-bottom: 14px; border-bottom: 1px solid var(--admin-border); }
   }
   @media (prefers-reduced-motion: reduce) { .recruitment-admin * { transition: none !important; animation: none !important; } }
 </style>

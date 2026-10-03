@@ -115,6 +115,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     clearSession();
     loginMessage("La sesión venció. Ingresa nuevamente.");
   }
+  if (response.status === 403) {
+    // A director outside GTH: their session stays valid for /admin.
+    element("recruitment-dashboard").hidden = true;
+    element("recruitment-login").hidden = false;
+    loginMessage("Tu cuenta solo puede ver las postulaciones de tu área en /admin.");
+  }
   if (!response.ok) throw new Error(result.error || `No se pudo completar la solicitud (${response.status}).`);
   return result as T;
 }
@@ -175,7 +181,7 @@ element("recruitment-logout").addEventListener("click", async () => {
 });
 
 function switchPanel(panel: string): void {
-  for (const name of ["configuration", "applications", "communications"]) {
+  for (const name of ["configuration", "applications", "communications", "access"]) {
     element(`panel-${name}`).hidden = name !== panel;
   }
   document.querySelectorAll<HTMLButtonElement>("[data-panel]").forEach((button) => {
@@ -184,7 +190,53 @@ function switchPanel(panel: string): void {
   });
   if (panel === "applications") void loadApplications();
   if (panel === "communications") void loadCommunications();
+  if (panel === "access") void loadDirectors();
 }
+
+type Director = { email: string; area: string; name: string };
+const directorAreas: [string, string][] = [["GTH", "Gestión del Talento Humano"], ["ID", "Investigación y Desarrollo"], ["RRPP", "Relaciones Públicas"], ["ACD", "Académica"], ["DCC", "Comunicación y Contenido"], ["LGE", "Logística y Gestión de Eventos"], ["FIN", "Finanzas"]];
+
+function directorRow(director: Director = { email: "", area: "", name: "" }): HTMLElement {
+  const row = node("div", undefined, "director-row");
+  const email = node("label", "Correo"); const emailInput = node("input"); emailInput.type = "email"; emailInput.required = true; emailInput.name = "email"; emailInput.placeholder = "nombre.apellido@uni.pe"; emailInput.value = director.email; email.append(emailInput);
+  const name = node("label", "Nombre"); const nameInput = node("input"); nameInput.name = "name"; nameInput.maxLength = 150; nameInput.placeholder = "Opcional"; nameInput.value = director.name; name.append(nameInput);
+  const area = node("label", "Área"); const select = node("select"); select.name = "area"; select.required = true;
+  select.append(new Option("Elige un área", ""), ...directorAreas.map(([id, label]) => new Option(label, id, false, id === director.area))); area.append(select);
+  const remove = node("button", "Quitar", "secondary remove"); remove.type = "button"; remove.addEventListener("click", () => row.remove());
+  row.append(email, name, area, remove);
+  return row;
+}
+
+async function loadDirectors(): Promise<void> {
+  const list = element("directors-list");
+  element("directors-status").textContent = "Cargando…";
+  try {
+    const { directors } = await request<{ directors: Director[] }>("/directors");
+    list.replaceChildren(...(directors.length ? directors.map((director) => directorRow(director)) : [directorRow()]));
+    element("directors-status").textContent = `${directors.length} director(es) con acceso.`;
+  } catch (error) { element("directors-status").textContent = messageOf(error); }
+}
+
+element("add-director").addEventListener("click", () => {
+  const row = directorRow(); element("directors-list").append(row); row.querySelector("input")?.focus();
+});
+
+element<HTMLFormElement>("directors-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget as HTMLFormElement;
+  if (!form.reportValidity()) return;
+  const directors = [...element("directors-list").querySelectorAll(".director-row")].map((row) => ({
+    email: (row.querySelector("[name=email]") as HTMLInputElement).value.trim(),
+    name: (row.querySelector("[name=name]") as HTMLInputElement).value.trim(),
+    area: (row.querySelector("[name=area]") as HTMLSelectElement).value,
+  })).filter((director) => director.email);
+  lockForm(form, true);
+  try {
+    const result = await request<{ directors: Director[] }>("/directors", { method: "PUT", body: JSON.stringify({ directors }) });
+    element("directors-status").textContent = `Accesos guardados: ${result.directors.length} director(es).`;
+  } catch (error) { element("directors-status").textContent = messageOf(error); }
+  finally { lockForm(form, false); }
+});
 
 document.querySelectorAll<HTMLButtonElement>("[data-panel]").forEach((button) => {
   button.addEventListener("click", () => switchPanel(button.dataset.panel || "configuration"));
