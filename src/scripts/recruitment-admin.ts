@@ -85,7 +85,9 @@ function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : "No se pudo completar la solicitud.";
 }
 
-let token = sessionStorage.getItem("admin_token") || "";
+// Same session as /admin: kept for two days, also after closing the browser.
+const readToken = () => { try { return localStorage.getItem("admin_token") || sessionStorage.getItem("admin_token") || ""; } catch { return ""; } };
+let token = readToken();
 let config: RecruitmentConfig | null = null;
 let applications: RecruitmentApplication[] = [];
 let templates: EmailTemplate[] = [];
@@ -120,7 +122,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 function clearSession(): void {
   token = "";
-  sessionStorage.removeItem("admin_token");
+  try { localStorage.removeItem("admin_token"); sessionStorage.removeItem("admin_token"); } catch { /* Storage blocked. */ }
   config = null;
   applications = [];
   templates = [];
@@ -141,6 +143,8 @@ function toLogin(reason?: "expirada"): void {
 
 element("recruitment-logout").addEventListener("click", async () => {
   const currentToken = token;
+  const page = document.querySelector<HTMLElement>(".recruitment-admin")!;
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) { page.classList.add("is-leaving"); await new Promise((resolve) => setTimeout(resolve, 180)); }
   clearSession();
   await fetch("/api/admin-logout", { method: "POST", headers: { Authorization: `Bearer ${currentToken}` } }).catch(() => undefined);
   location.replace("/admin");
@@ -268,7 +272,6 @@ function areaName(id: string): string {
 function renderConfig(value: RecruitmentConfig): void {
   field("title").value = value.title;
   for (const dateName of ["opensAt", "closesAt", "extensionAt"] as const) field(dateName).value = limaDateInput(value[dateName]);
-  field("maxApplicants").value = String(value.maxApplicants);
   field("inactivityHours").value = String(value.inactivityHours);
   field("preparationSeconds").value = String(value.preparationSeconds);
   field("maxVideoMB").value = String(value.maxVideoBytes / 1024 / 1024);
@@ -298,7 +301,7 @@ function renderConfig(value: RecruitmentConfig): void {
     quota.type = "number";
     quota.name = `area-quota-${area.id}`;
     quota.min = "0";
-    quota.max = "150";
+    quota.max = "10000";
     quota.step = "1";
     quota.placeholder = "Pendiente";
     quota.value = area.quota === null ? "" : String(area.quota);
@@ -430,7 +433,7 @@ configForm.addEventListener("submit", async (event) => {
     opensAt: fromLimaInput(field("opensAt").value),
     closesAt: fromLimaInput(field("closesAt").value),
     extensionAt: fromLimaInput(field("extensionAt").value),
-    maxApplicants: Number(field("maxApplicants").value),
+    maxApplicants: config.maxApplicants,
     minAvailabilityHours: 0,
     inactivityHours: Number(field("inactivityHours").value),
     shortCasePrompt: config.shortCasePrompt,
@@ -694,6 +697,23 @@ async function sendResult(application: RecruitmentApplication, status: Applicati
     buttons.forEach((button) => { button.disabled = false; });
   }
 }
+
+element("delete-application").addEventListener("click", async () => {
+  const application = selectedApplication;
+  if (!application) return;
+  const name = `${application.data.firstName} ${application.data.lastName}`.trim() || application.data.email || "esta postulación";
+  const typed = prompt(`Se eliminará la postulación de ${name}, con su historial y su video. No se puede deshacer.\n\nEscribe ELIMINAR para confirmar.`);
+  if (typed?.trim().toUpperCase() !== "ELIMINAR") return;
+  const button = element<HTMLButtonElement>("delete-application");
+  button.disabled = true;
+  try {
+    const result = await request<{ videosDeleted: number; videosPending: number }>(`/applications/${encodeURIComponent(application.id)}/delete`, { method: "POST", body: "{}" });
+    element<HTMLDialogElement>("application-detail").close();
+    showMessage(`Se eliminó la postulación de ${name}.${result.videosPending ? " El video no se pudo borrar: revisa la carpeta de Drive." : ""}`);
+    await loadApplications();
+  } catch (error) { showMessage(messageOf(error), true); }
+  finally { button.disabled = false; }
+});
 
 element("open-video").addEventListener("click", async () => {
   if (!selectedApplication?.video) return;

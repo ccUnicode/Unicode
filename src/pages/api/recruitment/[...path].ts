@@ -129,6 +129,7 @@ async function handle(request: Request, rawPath: string | undefined): Promise<Re
         const id = recruitment.requireUuid(path[2]);
         if (path.length === 3 && method === 'GET') return json(await recruitment.adminApplications(id));
         if (path[3] === 'transition' && path.length === 4 && method === 'POST') return json(await recruitment.transition(id, await body(request), actor));
+        if (path[3] === 'delete' && path.length === 4 && method === 'POST') return json(await recruitment.deleteApplication(id, actor));
         if (path[3] === 'video' && path.length === 4 && method === 'GET') return json(await recruitment.adminVideo(id));
       }
       if (action === 'templates' && method === 'GET') return json(await recruitment.getTemplates());

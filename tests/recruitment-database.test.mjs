@@ -187,9 +187,9 @@ test('questions stay hidden until the attempt starts, then keep a stable two-plu
   await assert.rejects(() => rpc(db, 'recruitment_patch_draft', application.id, application.owner, { ...application.application.data, email: 'otro@example.test' }), /immutable/);
 });
 
-test('150 completed applicants is a hard limit, including concurrent submit promises', async t => {
+test('a configured applicant limit is a hard limit, including concurrent submit promises', async t => {
   const db = await database(t);
-  await openCall(db);
+  await openCall(db, { maxApplicants: 150 });
   const first = await verifiedDraft(db);
   const second = await verifiedDraft(db);
   await db.query(`INSERT INTO public.recruitment_applications(id,token_hash,data,questions,status,submitted_at)
@@ -386,6 +386,21 @@ test('directors are added, moved and removed one at a time, with a record of eac
   assert.equal((await db.query("SELECT count(*)::integer AS n FROM recruitment_config_events WHERE kind='director'")).rows[0].n, 3);
 });
 
+test('there is no applicant cap by default, and GTH can delete one application with its files', async t => {
+  const db = await database(t);
+  await openCall(db);
+  assert.equal((await currentConfig(db)).maxApplicants, 1000000);
+  const keep = await submitted(db);
+  const remove = await submitted(db);
+  const result = await rpc(db, 'recruitment_admin_delete', remove.id, 'gth@uni.pe');
+  assert.deepEqual([result.deleted, result.files.length], [true, 1]);
+  assert.equal((await db.query('SELECT count(*)::integer AS n FROM recruitment_applications WHERE id=$1', [remove.id])).rows[0].n, 0);
+  assert.equal((await db.query('SELECT count(*)::integer AS n FROM recruitment_email_outbox WHERE application_id=$1', [remove.id])).rows[0].n, 0);
+  assert.equal((await db.query('SELECT count(*)::integer AS n FROM recruitment_applications WHERE id=$1', [keep.id])).rows[0].n, 1);
+  assert.equal((await db.query("SELECT count(*)::integer AS n FROM recruitment_config_events WHERE kind='application_deleted'")).rows[0].n, 1);
+  await assert.rejects(() => rpc(db, 'recruitment_admin_delete', remove.id, 'gth@uni.pe'), /not_found/);
+});
+
 test('outbox leases are exclusive, retry with backoff and recover expired fifth leases', async t => {
   const db = await database(t);
   await openCall(db);
@@ -438,7 +453,7 @@ test('configuration uses optimistic revisions and logs administrative changes', 
   const events = await db.query("SELECT actor,kind,before_value->>'title' AS before,after_value->>'title' AS after FROM recruitment_config_events");
   assert.equal(events.rows.length, 1);
   assert.equal(events.rows[0].after, 'Convocatoria de prueba');
-  await assert.rejects(() => rpc(db, 'recruitment_update_config', { ...result.config, maxApplicants: 151 }, 'sesión administrativa compartida'), /configuration/);
+  await assert.rejects(() => rpc(db, 'recruitment_update_config', { ...result.config, maxApplicants: 1000001 }, 'sesión administrativa compartida'), /configuration/);
 });
 
 test('inactive drafts receive one reminder and incomplete drafts expire at the final deadline', async t => {

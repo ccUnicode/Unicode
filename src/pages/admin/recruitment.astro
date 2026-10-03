@@ -44,7 +44,6 @@ import Layout from "../../layouts/Layout.astro";
               <label>Apertura<input name="opensAt" type="datetime-local" /></label>
               <label>Cierre<input name="closesAt" type="datetime-local" /></label>
               <label>Prórroga <span class="optional">Opcional</span><input name="extensionAt" type="datetime-local" /></label>
-              <label>Máximo de postulantes<input name="maxApplicants" type="number" min="1" max="150" step="1" required /><small>Hasta 150 postulaciones completas.</small></label>
               <label>Horas de inactividad para recordar<input name="inactivityHours" type="number" min="1" max="720" step="1" required /></label>
             </div>
             <label class="check-line"><input name="enabled" type="checkbox" /> Habilitar convocatoria dentro del plazo configurado</label>
@@ -53,7 +52,7 @@ import Layout from "../../layouts/Layout.astro";
 
           <fieldset class="panel">
             <legend>Áreas y cupos</legend>
-            <p class="muted note">Los porcentajes se calculan sobre los cupos de las áreas habilitadas. El límite de registro es el máximo general.</p>
+            <p class="muted note">Los porcentajes se calculan sobre los cupos de las áreas habilitadas. Los cupos son una referencia: no limitan las inscripciones.</p>
             <div id="area-config" class="area-grid"></div>
           </fieldset>
 
@@ -160,6 +159,10 @@ import Layout from "../../layouts/Layout.astro";
           </section>
           <h3>Historial</h3>
           <ol id="detail-history" class="history"></ol>
+          <section class="danger-zone" aria-labelledby="delete-title">
+            <div><h3 id="delete-title">Eliminar postulación</h3><p class="muted">Para pruebas o envíos por error. Borra los datos, el historial y el video. No se puede deshacer.</p></div>
+            <button id="delete-application" type="button" class="danger-button">Eliminar</button>
+          </section>
         </dialog>
       </section>
 
@@ -299,6 +302,16 @@ import Layout from "../../layouts/Layout.astro";
   .recruitment-admin .detail-panel > .section-heading > button { flex-shrink: 0; }
   .recruitment-admin .detail-panel .eyebrow { margin-top: 0; }
   @keyframes detail-in { from { transform: translateX(10px); opacity: 0; } }
+  @keyframes admin-fade { from { opacity: 0; transform: translateY(4px); } }
+  .recruitment-admin > #recruitment-dashboard:not([hidden]), .recruitment-admin section[id^="panel-"]:not([hidden]), .recruitment-admin .message:not([hidden]), .recruitment-admin .login-panel { animation: admin-fade 200ms ease-out; }
+  .recruitment-admin .save-bar { transition: border-color var(--admin-motion), box-shadow var(--admin-motion), background var(--admin-motion); }
+  .recruitment-admin .save-bar.is-dirty { animation: admin-fade 180ms ease-out; }
+  .recruitment-admin .director-item, .recruitment-admin .template-card, .recruitment-admin .app-card { transition: border-color var(--admin-motion), background var(--admin-motion), opacity var(--admin-motion); }
+  .recruitment-admin.is-leaving { opacity: 0; transform: translateY(-4px); transition: opacity 180ms ease-in, transform 180ms ease-in; }
+  .recruitment-admin .danger-zone { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-top: 8px; padding: 18px; border: 1px solid #7f1d1d80; border-radius: 14px; background: #1c121480; }
+  .recruitment-admin .danger-zone h3 { color: #fecaca; }
+  .recruitment-admin .danger-button { min-height: 44px; padding: 10px 18px; border-radius: 999px; border: 1px solid #f8717166; background: transparent; color: #fca5a5; font-size: 14px; font-weight: 600; }
+  .recruitment-admin .danger-button:hover:not(:disabled) { background: #7f1d1d; border-color: #7f1d1d; color: #fff; }
   .recruitment-admin .detail-panel .section-heading { margin-bottom: 0; }
   .recruitment-admin .detail-grid > div { min-width: 0; overflow-wrap: anywhere; }
   .recruitment-admin .detail-grid dt { color: var(--admin-muted); font-size: 13px; margin-bottom: 6px; }

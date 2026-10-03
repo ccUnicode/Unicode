@@ -49,7 +49,7 @@ const configuration = () => ({
 
 test('administration cannot weaken the agreed 3 min 30 s, two questions or 150 applicants', () => {
   validation.validateConfig(configuration());
-  for (const change of [{ maxVideoSeconds: 211 }, { maxVideoSeconds: 150 }, { maxVideoBytes: 51 * 1024 * 1024 }, { questionsPerCategory: 1 }, { maxApplicants: 151 }]) {
+  for (const change of [{ maxVideoSeconds: 211 }, { maxVideoSeconds: 150 }, { maxVideoBytes: 51 * 1024 * 1024 }, { questionsPerCategory: 1 }, { maxApplicants: 1_000_001 }]) {
     assert.throws(() => validation.validateConfig({ ...configuration(), ...change }));
   }
   const duplicate = configuration(); duplicate.questions[1].id = duplicate.questions[0].id;

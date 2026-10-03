@@ -58,7 +58,7 @@ test('administrative sessions reject tampered payloads, signatures and expired t
   assert.equal(await sessionStore.isValid(`${btoa(JSON.stringify({ expiresAt: Date.now() + 99999999 }))}.${signature}`), false);
   assert.equal(await sessionStore.isValid(`${payload}.${signature.slice(0, 63)}0`), signature.endsWith('0'));
   assert.equal(await sessionStore.isValid(`${payload}.invalid`), false);
-  const originalDateNow = Date.now; try { Date.now = () => originalDateNow() + 5 * 60 * 60 * 1000; assert.equal(await sessionStore.isValid(token), false); } finally { Date.now = originalDateNow; }
+  const originalDateNow = Date.now; try { Date.now = () => originalDateNow() + 47 * 60 * 60 * 1000; assert.equal(await sessionStore.isValid(token), true, 'still valid after a day'); Date.now = () => originalDateNow() + 49 * 60 * 60 * 1000; assert.equal(await sessionStore.isValid(token), false); } finally { Date.now = originalDateNow; }
 });
 test('Drive upload capabilities contain no account token and retry the same private file', async () => {
   configure({ GOOGLE_CLIENT_ID: 'local-client', GOOGLE_CLIENT_SECRET: 'local-secret', GOOGLE_REFRESH_TOKEN: 'local-refresh', DRIVE_VIDEO_FOLDER_ID: 'private-folder' });
