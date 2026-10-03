@@ -19,7 +19,7 @@ const ENV_FILE = '.env';
 const SERVER_VARIABLES = [
   'PUBLIC_SUPABASE_URL', 'PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY', 'ADMIN_PASSWORD', 'RECRUITMENT_BASE_URL', 'RECRUITMENT_RESUME_ENCRYPTION_KEY',
   'CRON_SECRET', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REFRESH_TOKEN', 'DRIVE_VIDEO_FOLDER_ID',
-  'RECRUITMENT_EMAIL_PROVIDER', 'RECRUITMENT_EMAIL_FROM', 'RESEND_API_KEY', 'RECRUITMENT_VIDEO_BUCKET',
+  'RECRUITMENT_EMAIL_PROVIDER', 'RECRUITMENT_EMAIL_FROM', 'RECRUITMENT_EMAIL_REPLY_TO', 'RESEND_API_KEY', 'RECRUITMENT_VIDEO_BUCKET',
 ];
 
 function readEnv() {
@@ -180,7 +180,9 @@ async function check() {
   if (env.RECRUITMENT_EMAIL_PROVIDER === 'gmail') ok('Proveedor: Gmail de la cuenta autorizada');
   else if (env.RESEND_API_KEY && env.RECRUITMENT_EMAIL_FROM) {
     const response = await fetch('https://api.resend.com/domains', { headers: { Authorization: `Bearer ${env.RESEND_API_KEY}` } });
-    if (!response.ok) fail(`Resend rechazó la clave (${response.status})`);
+    // A sending-only key (the recommended kind) cannot list domains: check those in the Resend panel.
+    if (response.status === 401 && /restricted/i.test(await response.clone().text())) ok('Clave de Resend de solo envío (revisa en resend.com/domains que el dominio diga Verified)');
+    else if (!response.ok) fail(`Resend rechazó la clave (${response.status})`);
     else {
       const domain = env.RECRUITMENT_EMAIL_FROM.match(/@([^>\s]+)/)?.[1];
       const verified = (await response.json()).data?.some((item) => item.name === domain && item.status === 'verified');
@@ -192,7 +194,10 @@ async function check() {
       const mime = [`To: ${sendTo}`, `Subject: =?UTF-8?B?${Buffer.from('Prueba de correo de la convocatoria UNICODE').toString('base64')}?=`, 'MIME-Version: 1.0', 'Content-Type: text/plain; charset=UTF-8', '', 'Si recibes este mensaje, los correos de la convocatoria funcionan.'].join('\r\n');
       const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', { method: 'POST', headers: { Authorization: `Bearer ${token.access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ raw: Buffer.from(mime).toString('base64url') }) });
       response.ok ? ok(`Correo de prueba enviado a ${sendTo}`) : fail(`Gmail rechazó el envío (${response.status})`);
-    } else fail('No se pudo enviar el correo de prueba: este script solo prueba Gmail.');
+    } else if (env.RESEND_API_KEY && env.RECRUITMENT_EMAIL_FROM) {
+      const response = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: env.RECRUITMENT_EMAIL_FROM, to: [sendTo], subject: 'Prueba de correo de la convocatoria UNICODE', text: 'Si recibes este mensaje, los correos de la convocatoria salen desde el dominio propio.', ...(env.RECRUITMENT_EMAIL_REPLY_TO ? { reply_to: env.RECRUITMENT_EMAIL_REPLY_TO } : {}) }) });
+      response.ok ? ok(`Correo de prueba enviado con Resend a ${sendTo}`) : fail(`Resend rechazó el envío (${response.status}): ${(await response.text()).slice(0, 160)}`);
+    } else fail('No se pudo enviar el correo de prueba: falta configurar el proveedor.');
   }
 
   console.log('\nDespliegue');

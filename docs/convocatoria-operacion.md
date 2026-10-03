@@ -42,6 +42,7 @@ Todo se ejecuta desde la raíz del repositorio. Los valores se guardan en `.env`
 | `DRIVE_VIDEO_FOLDER_ID` | Carpeta privada de los videos. Carpeta preparada: `1dMRW6-8H5W3XcHqdL_JiPnl8SuyEEK2J`. |
 | `RESEND_API_KEY`, `RECRUITMENT_EMAIL_FROM` | Proveedor predeterminado de correo y remitente verificado. |
 | `RECRUITMENT_EMAIL_PROVIDER` | `resend` para el transporte predeterminado. No es necesario usar Gmail para guardar videos en Drive. |
+| `RECRUITMENT_EMAIL_REPLY_TO` | Opcional. Dirección a la que llegan las respuestas de los postulantes (el remitente del dominio no tiene buzón). |
 | `CRON_SECRET` | Credencial exclusiva del ejecutor de la cola de correos. |
 | `RECRUITMENT_VIDEO_BUCKET` | Bucket privado cuando se selecciona Supabase Storage; predeterminado `recruitment-videos`. |
 
@@ -143,3 +144,14 @@ Los datos históricos de `public.applicants` permanecen aparte. Sin acceso al Su
 ## Integraciones pendientes de otros bloques
 
 No se implementan algoritmos de afinidad, evaluación subjetiva, calificación automática del video, agenda de entrevistas/dinámicas ni gestión completa del onboarding de C, D, E, G, H e I. F ofrece estados manuales, historia y plantillas para conectar esos procesos. Marcar “prueba enviada”, “entrevista programada” o “buddy asignado” registra una acción ya realizada por el módulo o por GTH; no crea por sí solo una prueba, cita o asignación real.
+
+## Correos desde el dominio propio (Resend, gratis)
+
+Enviar desde una cuenta @gmail.com hace que el correo de la UNI frene los mensajes cuando hay ráfagas o rebotes. Con Resend salen desde `@ccunicode.org`, firmados por el dominio.
+
+1. En resend.com → **Domains → Add domain** → `ccunicode.org`. Si ofrece conectar Cloudflare, acéptalo y agrega los registros solo; si no, copia en Cloudflare → DNS los registros que muestra (TXT `resend._domainkey`, MX y TXT de `send`) con el proxy desactivado, y espera a que diga **Verified**.
+2. **API keys → Create** con permiso *Sending access* y el dominio `ccunicode.org`. Se muestra una sola vez.
+3. En `.env`: `RECRUITMENT_EMAIL_PROVIDER=resend`, `RESEND_API_KEY=…`, `RECRUITMENT_EMAIL_FROM="UNICODE <convocatoria@ccunicode.org>"`, `RECRUITMENT_EMAIL_REPLY_TO=ccunicode.desarrollo@gmail.com`. Conserva las variables de Google: Drive sigue usándolas y Gmail queda de respaldo.
+4. `npm run recruitment -- check tu.correo@uni.pe` (envía una prueba con Resend), luego `npm run recruitment -- vercel` y vuelve a desplegar.
+
+El plan gratis permite 100 correos al día. Si Resend responde que llegó a su límite, el mismo correo sale automáticamente por el Gmail del proyecto.
