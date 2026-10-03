@@ -169,6 +169,11 @@ export function getTemplates() { return recruitmentRpc('recruitment_templates');
 export function saveTemplates(input: unknown) { return recruitmentRpc('recruitment_templates', { p_templates: validateTemplates(input), p_actor: 'administracion-compartida' }); }
 export function getQueue() { return recruitmentRpc('recruitment_queue'); }
 function interpolate(template: string, payload: Record<string, string>): string { return template.replace(/{{\s*(firstName|lastName|title|status|resumeUrl)\s*}}/g, (_, name: string) => payload[name] || ''); }
+/** With the local database, mail only goes to the addresses listed in RECRUITMENT_LOCAL_EMAIL_TO. */
+function localRecipientAllowed(to: string): boolean {
+  if (!localDevelopmentDatabase()) return true;
+  return (env('RECRUITMENT_LOCAL_EMAIL_TO') || '').split(',').map((item) => item.trim().toLowerCase()).filter(Boolean).includes(to.toLowerCase());
+}
 export async function processEmails(limit = 10) {
   await recruitmentRpc<number>('recruitment_expire_drafts');
   if (!recruitmentEmailConfigured()) return { sent: 0, failed: 0, processed: 0, remaining: null, skipped: true, reason: 'El proveedor de correo aún no está configurado.' };
@@ -180,6 +185,12 @@ export async function processEmails(limit = 10) {
       const payload = { ...item.payload };
       if (payload.resumeSecret && ['resume', 'incomplete'].includes(item.templateKey)) payload.resumeUrl = await decryptResume(payload.resumeSecret);
       const text = interpolate(item.body, payload); const subject = interpolate(item.subject, payload).replace(/[\r\n]/g, ' ');
+      if (!localRecipientAllowed(item.to)) {
+        // Local tests use made-up addresses: never mail them from the real account.
+        console.info(`[correo local omitido] ${item.to}: ${subject}`);
+        await recruitmentRpc<null>('recruitment_finish_email', { p_id: item.id, p_lease_token: leaseToken, p_message_id: 'local-omitido', p_error: null });
+        continue;
+      }
       const result = await sendRecruitmentEmail({ to: item.to, subject, text, html: renderRecruitmentEmailHtml({ subject, text, actionUrl: payload.resumeUrl, siteUrl: env('RECRUITMENT_BASE_URL') || 'https://www.ccunicode.org' }), idempotencyKey: `recruitment-${item.id}` });
       await recruitmentRpc<null>('recruitment_finish_email', { p_id: item.id, p_lease_token: leaseToken, p_message_id: result.messageId, p_error: null });
       sent++;

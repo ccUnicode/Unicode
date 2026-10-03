@@ -92,7 +92,7 @@ Definir con GTH un plazo de conservación de videos y registros antes de la conv
 
 ## Pruebas locales y activación
 
-La opción `RECRUITMENT_LOCAL_DB_PATH` funciona únicamente con Astro en desarrollo y utiliza PGlite, un motor PostgreSQL que ejecuta la misma migración. Guarda datos en el directorio local elegido y permite comprobar configuración, borradores, preguntas, estados y cola sin acceso remoto. Requiere `ADMIN_PASSWORD` local o una clave de cifrado independiente. **No es la persistencia compartida de producción** y no sustituye la conexión ni la prueba real de OAuth y correo.
+La opción `RECRUITMENT_LOCAL_DB_PATH` funciona únicamente con Astro en desarrollo y utiliza PGlite, un motor PostgreSQL que ejecuta la misma migración. Guarda datos en el directorio local elegido y permite comprobar configuración, borradores, preguntas, estados y cola sin acceso remoto. Requiere `ADMIN_PASSWORD` local o una clave de cifrado independiente. En este modo los correos solo salen hacia las direcciones de `RECRUITMENT_LOCAL_EMAIL_TO` (separadas por comas); los demás se marcan como omitidos, para que las pruebas con correos inventados no envíen nada desde la cuenta real. **No es la persistencia compartida de producción** y no sustituye la conexión ni la prueba real de OAuth y correo.
 
 Antes de abrir la convocatoria real:
 
