@@ -11,7 +11,7 @@ type ApplicationResponse = { application: RecruitmentApplication };
 type ConfigResponse = { config: RecruitmentConfig };
 const fallbackConfig = {
   enabled: false, title: 'Convocatoria UNICode', opensAt: null, closesAt: null, extensionAt: null,
-  maxApplicants: 150, minAvailabilityHours: null, maxVideoSeconds: 150, maxVideoBytes: 40 * 1024 * 1024,
+  maxApplicants: 150, minAvailabilityHours: null, maxVideoSeconds: 210, maxVideoBytes: 50 * 1024 * 1024,
   questionsPerCategory: 2, preparationSeconds: 45, inactivityHours: 24,
   shortCasePrompt: 'Describe cómo abordarías un problema habitual del área a la que postulas.',
   areas: AREA_IDS.map((id) => ({ id, name: AREA_NAMES[id], enabled: false, quota: null })),

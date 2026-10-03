@@ -56,6 +56,7 @@ function applicant(id = randomUUID(), changes = {}) {
     university: 'UNI', faculty: 'FIIS', career: 'Ingeniería de Sistemas', admissionTerm: '2026-2', semester: '6',
     firstChoiceArea: 'ID', secondChoiceArea: 'GTH', availabilityHours: 4,
     motivation: 'Quiero participar en proyectos de la comunidad.', shortCase: 'Conversaría con el equipo y acordaría los siguientes pasos.',
+    showcase: 'github.com/prueba/proyecto', organizations: 'Fui parte del círculo de robótica.', referralSource: 'Instagram',
     consent: true, ...changes,
   };
 }
@@ -145,6 +146,15 @@ test('applications submit without the removed short case answer', async t => {
   const application = await verifiedDraft(db, { shortCase: '' });
   const result = await rpc(db, 'recruitment_submit', application.id, application.owner);
   assert.equal(result.application.status, 'submitted');
+});
+
+test('submitting requires the three closing answers given after the video', async t => {
+  const db = await database(t);
+  await openCall(db);
+  for (const field of ['showcase', 'organizations', 'referralSource']) {
+    const application = await verifiedDraft(db, { [field]: '' });
+    await assert.rejects(() => rpc(db, 'recruitment_submit', application.id, application.owner), /incomplete/, field);
+  }
 });
 
 test('applications submit without a faculty, as institutes have none', async t => {
@@ -286,7 +296,7 @@ test('applicants sharing a campus network can each create a draft', async t => {
   await assert.rejects(() => rpc(db, 'recruitment_create_draft', id, `hashed-${id}`, applicant(id), 'shared-campus-ip', 'encrypted-local-test-secret'), /rate_limited/);
 });
 
-test('video metadata must prove content, byte size and at most 2 min 30 s', async t => {
+test('video metadata must prove content, byte size and at most 3 min 30 s', async t => {
   const db = await database(t);
   await openCall(db);
   const application = await draft(db);
@@ -294,11 +304,11 @@ test('video metadata must prove content, byte size and at most 2 min 30 s', asyn
   const pending = await upload(db, application);
   const malformed = [
     {}, videoMetadata(100, { hasVideo: false }), videoMetadata(101),
-    videoMetadata(100, { durationSeconds: 150.5 }), videoMetadata(100, { durationSeconds: 0 }),
+    videoMetadata(100, { durationSeconds: 210.5 }), videoMetadata(100, { durationSeconds: 0 }),
     videoMetadata(100, { durationSeconds: '120' }), videoMetadata(100, { contentType: 'text/plain' }),
   ];
   for (const metadata of malformed) await assert.rejects(() => rpc(db, 'recruitment_complete_upload', application.id, application.owner, pending.id, metadata), /invalid_video/);
-  const verified = await rpc(db, 'recruitment_complete_upload', application.id, application.owner, pending.id, videoMetadata(100, { durationSeconds: 149.9 }));
+  const verified = await rpc(db, 'recruitment_complete_upload', application.id, application.owner, pending.id, videoMetadata(100, { durationSeconds: 209.9 }));
   assert.equal(verified.application.video.uploadId, pending.id);
   const repeated = await rpc(db, 'recruitment_complete_upload', application.id, application.owner, pending.id, videoMetadata());
   assert.equal(repeated.application.video.uploadId, pending.id);

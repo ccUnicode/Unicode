@@ -685,6 +685,9 @@ import Layout from "../layouts/Layout.astro";
               <p class="text-zinc-300 text-xs sm:text-sm leading-relaxed line-clamp-3 transition-all duration-300 whitespace-pre-line">${esc(p.application_reason) || "Sin motivo registrado."}</p>
               ${p.application_reason && p.application_reason.length > 150 ? `<button class="text-unicode text-[10px] sm:text-xs font-medium mt-1 hover:underline cursor-pointer" onclick="const textEl = this.previousElementSibling; textEl.classList.toggle('line-clamp-3'); this.innerText = textEl.classList.contains('line-clamp-3') ? 'Ver más' : 'Ver menos';">Ver más</button>` : ""}
             </div>
+            ${p.showcase ? `<div class="mb-3"><p class="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-1">Algo que hizo:</p><p class="text-zinc-300 text-xs sm:text-sm leading-relaxed line-clamp-3 whitespace-pre-line break-words">${esc(p.showcase)}</p></div>` : ""}
+            ${p.organizations ? `<div class="mb-3"><p class="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-1">Otras organizaciones:</p><p class="text-zinc-300 text-xs sm:text-sm leading-relaxed line-clamp-3 whitespace-pre-line break-words">${esc(p.organizations)}</p></div>` : ""}
+            ${p.referral_source ? `<div class="mb-3"><p class="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-1">Se enteró por:</p><p class="text-zinc-300 text-xs sm:text-sm leading-relaxed line-clamp-3 whitespace-pre-line break-words">${esc(p.referral_source)}</p></div>` : ""}
             ${p.short_case ? `<div class="mb-3"><p class="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-1">Caso breve:</p><p class="text-zinc-300 text-xs sm:text-sm leading-relaxed line-clamp-3 whitespace-pre-line">${esc(p.short_case)}</p></div>` : ""}
             ${p.has_video ? `<button type="button" class="video-button inline-flex items-center gap-2 text-black bg-unicode hover:bg-unicode-light font-bold text-xs sm:text-sm px-4 py-2 rounded-full" data-id="${esc(p.id)}">▶ Ver video</button>` : `<span class="text-zinc-500 text-xs">Sin video</span>`}
           </div>
@@ -721,6 +724,9 @@ import Layout from "../layouts/Layout.astro";
       "Opción 2",
       "Motivo",
       "Caso breve",
+      "Algo que hizo",
+      "Otras organizaciones",
+      "Se enteró por",
       "Video",
       "Fecha de Registro",
     ];
@@ -757,6 +763,9 @@ import Layout from "../layouts/Layout.astro";
           <td class="data-cell" style="text-align: center; vertical-align: middle;">${esc(p.second_choice_area)}</td>
           <td class="data-cell" style="font-size: 9pt; width: 350px; vertical-align: middle;">${esc(p.application_reason).replace(/\n/g, "<br>")}</td>
           <td class="data-cell" style="font-size: 9pt; width: 350px; vertical-align: middle;">${esc(p.short_case).replace(/\n/g, "<br>")}</td>
+          <td class="data-cell" style="font-size: 9pt; width: 350px; vertical-align: middle;">${esc(p.showcase).replace(/\n/g, "<br>")}</td>
+          <td class="data-cell" style="font-size: 9pt; width: 350px; vertical-align: middle;">${esc(p.organizations).replace(/\n/g, "<br>")}</td>
+          <td class="data-cell" style="vertical-align: middle;">${esc(p.referral_source)}</td>
           <td class="data-cell" style="vertical-align: middle;">${p.video_url ? `<a href="${esc(p.video_url)}">Ver video</a>` : ""}</td>
           <td class="data-cell" style="text-align: right; vertical-align: middle;">${new Date(p.created_at).toLocaleString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true })}</td>
         </tr>

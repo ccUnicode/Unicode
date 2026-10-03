@@ -39,7 +39,7 @@ test('draft fields are normalized and cannot override questions, attempts or a v
 
 const configuration = () => ({
   enabled: false, title: 'Local validation', opensAt: null, closesAt: null, extensionAt: null,
-  maxApplicants: 150, minAvailabilityHours: null, maxVideoSeconds: 150, maxVideoBytes: 40 * 1024 * 1024,
+  maxApplicants: 150, minAvailabilityHours: null, maxVideoSeconds: 210, maxVideoBytes: 50 * 1024 * 1024,
   questionsPerCategory: 2, preparationSeconds: 45, inactivityHours: 24, shortCasePrompt: 'Describe cómo abordarías el caso.',
   storageProvider: 'drive', revision: 1, thresholds: { affinity: null, written: null, video: null },
   areas: ['ID', 'RRPP', 'GTH', 'ACD', 'DCC', 'LGE', 'FIN'].map(id => ({ id, name: id, enabled: false, quota: null })),
@@ -47,9 +47,9 @@ const configuration = () => ({
   videoRubric: ['clarity', 'motivation', 'collaboration'].map(id => ({ id, label: id, low: 'Bajo', medium: 'Medio', high: 'Alto', maxScore: 5 })),
 });
 
-test('administration cannot weaken the agreed 2 min 30 s, two questions or 150 applicants', () => {
+test('administration cannot weaken the agreed 3 min 30 s, two questions or 150 applicants', () => {
   validation.validateConfig(configuration());
-  for (const change of [{ maxVideoSeconds: 151 }, { maxVideoSeconds: 60 }, { maxVideoBytes: 51 * 1024 * 1024 }, { questionsPerCategory: 1 }, { maxApplicants: 151 }]) {
+  for (const change of [{ maxVideoSeconds: 211 }, { maxVideoSeconds: 150 }, { maxVideoBytes: 51 * 1024 * 1024 }, { questionsPerCategory: 1 }, { maxApplicants: 151 }]) {
     assert.throws(() => validation.validateConfig({ ...configuration(), ...change }));
   }
   const duplicate = configuration(); duplicate.questions[1].id = duplicate.questions[0].id;
