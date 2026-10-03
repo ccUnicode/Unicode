@@ -52,3 +52,5 @@ remove_bg.py
 # Database backups contain personal data
 backups/
 .vercel
+.env*
+!.env.example

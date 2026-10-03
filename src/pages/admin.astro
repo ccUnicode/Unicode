@@ -8,28 +8,30 @@
  * - Export to Excel (CSV).
  */
 import Layout from "../layouts/Layout.astro";
+import AdminSelect from "../components/admin/AdminSelect.astro";
 ---
 
-<Layout title="Admin">
+<Layout title="Postulaciones · Administración">
+  <div id="admin-page">
   <div
     id="login-screen"
-    class="min-h-screen flex items-center justify-center px-4"
+    class="min-h-dvh flex items-center justify-center px-4 py-6"
   >
     <div
-      class="w-full max-w-sm bg-zinc-900/80 border border-zinc-800 rounded-2xl p-8"
+      class="w-full max-w-sm bg-zinc-900/80 border border-zinc-800 rounded-2xl p-5 sm:p-8"
     >
       <h2 class="text-white text-xl font-bold text-center">Acceso de directores</h2>
-      <p id="login-intro" class="text-zinc-400 text-xs text-center mt-2 mb-6">Ingresa con tu correo UNI y te enviaremos un código.</p>
+      <p id="login-intro" class="text-zinc-400 text-[14px] text-center [overflow-wrap:anywhere] mt-2 mb-6">Ingresa con tu correo UNI y te enviaremos un código.</p>
 
       <form id="email-form" class="space-y-4">
-        <input type="text" inputmode="email" autocapitalize="none" spellcheck="false" id="director-email" required autocomplete="email" placeholder="tu.correo@uni.pe" class="w-full bg-zinc-950 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-600" />
-        <button type="submit" id="email-btn" class="w-full bg-unicode hover:bg-unicode-light text-black font-bold text-sm py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">Enviar código</button>
+        <input type="text" inputmode="email" autocapitalize="none" spellcheck="false" id="director-email" required autocomplete="email" placeholder="tu.correo@uni.pe" class="w-full bg-zinc-950 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg px-4 py-3 text-base text-white outline-none transition-all placeholder:text-zinc-600" />
+        <button type="submit" id="email-btn" class="w-full bg-unicode hover:bg-unicode-light text-black font-bold text-[15px] py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">Enviar código</button>
       </form>
 
       <form id="code-form" class="hidden space-y-4">
-        <input id="director-code" required inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="Código de 6 dígitos" class="w-full bg-zinc-950 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-600 text-center tracking-[0.4em] placeholder:tracking-normal text-lg" />
-        <button type="submit" id="code-btn" class="w-full bg-unicode hover:bg-unicode-light text-black font-bold text-sm py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">Ingresar</button>
-        <button type="button" id="change-email" class="w-full text-zinc-400 hover:text-white text-xs transition-colors cursor-pointer">Usar otro correo</button>
+        <input id="director-code" required inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="Código de 6 dígitos" class="w-full bg-zinc-950 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg px-4 py-3 text-base text-white outline-none transition-all placeholder:text-zinc-600 text-center tracking-[0.4em] placeholder:tracking-normal text-lg" />
+        <button type="submit" id="code-btn" class="w-full bg-unicode hover:bg-unicode-light text-black font-bold text-[15px] py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">Ingresar</button>
+        <button type="button" id="change-email" class="min-h-11 w-full text-zinc-400 hover:text-white text-[14px] transition-colors cursor-pointer">Usar otro correo</button>
       </form>
 
       <form id="login-form" class="hidden space-y-4">
@@ -41,14 +43,14 @@ import Layout from "../layouts/Layout.astro";
             placeholder="Contraseña"
             required
             autocomplete="current-password"
-            class="w-full bg-zinc-950 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-600"
+            class="w-full bg-zinc-950 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-lg px-4 py-3 text-base text-white outline-none transition-all placeholder:text-zinc-600"
           />
         </div>
 
         <button
           type="submit"
           id="login-btn"
-          class="w-full bg-unicode hover:bg-unicode-light text-black font-bold text-sm py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
+          class="w-full bg-unicode hover:bg-unicode-light text-black font-bold text-[15px] py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
         >
           <span id="login-btn-text">Ingresar con contraseña</span>
           <svg
@@ -74,9 +76,9 @@ import Layout from "../layouts/Layout.astro";
         </button>
       </form>
 
-      <div id="login-error" role="alert" class="hidden mt-4 text-red-400 text-xs text-center font-medium py-2 px-3 bg-red-500/10 rounded-lg border border-red-500/20"></div>
-      <p id="login-info" role="status" class="hidden mt-4 text-zinc-300 text-xs text-center"></p>
-      <button type="button" id="toggle-password" class="hidden mx-auto mt-6 text-zinc-500 hover:text-zinc-300 text-xs underline underline-offset-4 cursor-pointer">Entrar con contraseña de administración</button>
+      <div id="login-error" role="alert" class="hidden mt-4 text-red-400 text-[14px] text-center font-medium py-2 px-3 bg-red-500/10 rounded-lg border border-red-500/20"></div>
+      <p id="login-info" role="status" class="hidden mt-4 text-zinc-300 text-[14px] text-center [overflow-wrap:anywhere]"></p>
+      <button type="button" id="toggle-password" class="hidden min-h-11 mx-auto mt-6 text-zinc-500 hover:text-zinc-300 text-[14px] underline underline-offset-4 cursor-pointer">Entrar con contraseña de administración</button>
     </div>
   </div>
 
@@ -85,129 +87,133 @@ import Layout from "../layouts/Layout.astro";
       class="sticky top-0 z-50 bg-[#050505]/95 backdrop-blur-md border-b border-zinc-800/50"
     >
       <div
-        class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14 sm:h-16"
+        class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-3 min-h-16 sm:min-h-18 py-2"
       >
-        <div class="flex items-center gap-2 sm:gap-3">
+        <div class="flex items-center gap-2 sm:gap-3 shrink-0">
           <img
             src="/logos/logo-unicode-blanco.webp"
             alt="Unicode"
             class="w-7 h-7 sm:w-8 sm:h-8 opacity-80"
           />
-          <h1 class="text-white font-bold text-sm sm:text-lg">
-            Admin Dashboard
-          </h1>
+          <span class="text-white font-semibold text-[15px]"><span class="sm:hidden">Directores</span><span class="hidden sm:inline">Panel de directores</span></span>
         </div>
         <div class="flex items-center gap-3 sm:gap-5 min-w-0">
-          <span id="session-user" class="hidden md:inline text-zinc-500 text-xs truncate"></span>
+          <span id="session-user" class="hidden md:inline min-w-0 max-w-44 lg:max-w-64 text-zinc-500 text-[14px] truncate"></span>
           <a
             id="gth-panel-link"
             href="/admin/recruitment"
-            class="hidden border border-zinc-700 hover:border-zinc-500 text-white text-xs sm:text-sm font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors whitespace-nowrap"
+            aria-label="Panel de gestión de GTH"
+            class="hidden min-h-11 content-center shrink-0 border border-zinc-700 hover:border-zinc-500 text-white text-[14px] sm:text-[15px] font-semibold px-3 sm:px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
           >
-            Panel GTH
+            <span class="sm:hidden">GTH</span><span class="hidden sm:inline">Panel GTH</span>
           </a>
           <button
             id="logout-btn"
-            class="text-red-400 hover:text-red-300 text-xs sm:text-sm font-medium transition-colors cursor-pointer whitespace-nowrap"
+            class="min-h-11 min-w-11 shrink-0 text-zinc-400 hover:text-white text-[14px] font-medium transition-colors cursor-pointer whitespace-nowrap focus-visible:outline-2 focus-visible:outline-unicode focus-visible:outline-offset-4 rounded"
           >
-            Cerrar Sesión
+            Salir
           </button>
         </div>
       </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-      <div class="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 pt-7 sm:pt-10 pb-12">
+      <p id="admin-notice" role="status" hidden class="mb-6 flex items-start justify-between gap-4 rounded-xl border border-zinc-700 bg-zinc-900/60 px-4 py-3 text-[14px] text-zinc-200"><span></span><button id="admin-notice-close" type="button" aria-label="Cerrar aviso" class="shrink-0 text-zinc-500 hover:text-white cursor-pointer">✕</button></p>
+      <div class="flex flex-wrap items-start justify-between gap-4 mb-7">
+        <div class="min-w-0 flex-1">
+          <p class="text-zinc-500 text-[12px] font-medium tracking-widest uppercase mb-2">Convocatoria UNICODE</p>
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Postulaciones</h1>
+          <p class="text-zinc-400 text-[14px] sm:text-[15px] mt-2">Revisa los perfiles y conoce a quienes quieren sumarse.</p>
+        </div>
+        <button id="export-btn" type="button" aria-label="Exportar Excel" class="min-h-11 min-w-11 shrink-0 inline-flex items-center justify-center gap-2 rounded-full border border-zinc-700 px-3 sm:px-4 py-2.5 text-[14px] font-medium text-zinc-300 hover:border-zinc-500 hover:text-white transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-unicode focus-visible:outline-offset-4">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0l-4-4m4 4l4-4M5 16v4a1 1 0 001 1h12a1 1 0 001-1v-4"></path></svg>
+          <span class="hidden sm:inline">Exportar Excel</span><span class="hidden min-[360px]:inline sm:hidden">Exportar</span>
+        </button>
+      </div>
+      <nav aria-label="Áreas de postulación" class="flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden border-b border-zinc-800 pb-3 mb-6">
         <button
-          class="area-tab active-tab px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200"
+          class="area-tab min-h-11 active-tab shrink-0 px-4 py-2 rounded-full text-[14px] font-medium transition-colors"
+          data-area="summary"
+        >
+          Resumen
+        </button>
+        <span class="shrink-0 w-px my-2 bg-zinc-800" aria-hidden="true"></span>
+        <button
+          class="area-tab min-h-11 shrink-0 px-4 py-2 rounded-full text-[14px] font-medium transition-colors"
           data-area="GTH"
         >
-          Área de GTH
+          GTH
         </button>
         <button
-          class="area-tab px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200"
+          class="area-tab min-h-11 shrink-0 px-4 py-2 rounded-full text-[14px] font-medium transition-colors"
           data-area="ACD"
         >
-          Área Académica
+          Académica
         </button>
         <button
-          class="area-tab px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200"
+          class="area-tab min-h-11 shrink-0 px-4 py-2 rounded-full text-[14px] font-medium transition-colors"
           data-area="ID"
         >
-          Área de ID
+          ID
         </button>
         <button
-          class="area-tab px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200"
+          class="area-tab min-h-11 shrink-0 px-4 py-2 rounded-full text-[14px] font-medium transition-colors"
           data-area="RRPP"
         >
-          Área RRPP
+          RRPP
         </button>
         <button
-          class="area-tab px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200"
+          class="area-tab min-h-11 shrink-0 px-4 py-2 rounded-full text-[14px] font-medium transition-colors"
           data-area="DCC"
         >
-          Área DCC
+          DCC
         </button>
         <button
-          class="area-tab px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200"
+          class="area-tab min-h-11 shrink-0 px-4 py-2 rounded-full text-[14px] font-medium transition-colors"
           data-area="LGE"
         >
-          Área LGE
+          LGE
         </button>
         <button
-          class="area-tab px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200"
+          class="area-tab min-h-11 shrink-0 px-4 py-2 rounded-full text-[14px] font-medium transition-colors"
           data-area="FIN"
         >
           Finanzas
         </button>
+      </nav>
+
+      <section id="summary-view" aria-labelledby="summary-title">
+        <h2 id="summary-title" class="sr-only">Resumen de la convocatoria</h2>
+        <div id="summary-loading" class="py-16 text-center text-zinc-500 text-[15px]">Cargando resumen…</div>
+        <div id="summary-error" class="hidden py-16 text-center"><p class="text-red-400" id="summary-error-message"></p><button id="summary-retry" class="mt-4 text-unicode text-[15px] underline cursor-pointer">Reintentar</button></div>
+        <div id="summary-content" class="hidden space-y-4"></div>
+      </section>
+
+      <div id="area-view" class="hidden">
+      <div
+        class="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_220px_220px] gap-3 mb-6"
+      >
+        <label class="min-[480px]:col-span-2 lg:col-span-1 text-zinc-500 text-[12px] grid gap-2">
+          Buscar postulante
+          <div class="relative">
+            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path stroke-linecap="round" d="m16 16 4 4"></path></svg>
+            <input id="applicant-search" type="search" placeholder="Nombre o correo" class="w-full min-h-11 rounded-xl border border-zinc-800 bg-zinc-900/40 py-2.5 pl-10 pr-3 text-base text-white placeholder:text-zinc-500 outline-none focus:border-unicode transition-colors" />
+          </div>
+        </label>
+        <AdminSelect id="filter-option" label="Preferencia" options={[
+          { value: "all", label: "Todas las opciones" },
+          { value: "first", label: "Solo 1ra opción" },
+          { value: "second", label: "Solo 2da opción" },
+        ]} />
+        <AdminSelect id="filter-order" label="Orden" options={[
+          { value: "recent", label: "Más recientes" },
+          { value: "priority", label: "Prioridad (1ra → 2da)" },
+        ]} />
       </div>
 
-      <div
-        class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6"
-      >
-        <p id="results-info" class="text-zinc-400 text-xs sm:text-sm">
-          Mostrando <span id="count" class="text-unicode font-bold">0</span> postulantes
-          para <strong id="area-label" class="text-white">Área de GTH</strong>
-        </p>
-
-        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-          <button
-            id="export-btn"
-            class="flex items-center gap-1.5 bg-unicode hover:bg-unicode-light text-black font-bold text-xs px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all cursor-pointer"
-          >
-            <svg
-              class="w-3.5 h-3.5 sm:w-4 sm:h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              ></path>
-            </svg>
-            Exportar Excel
-          </button>
-
-          <select
-            id="filter-option"
-            class="bg-zinc-900 border border-zinc-700 text-zinc-300 text-xs rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 outline-none focus:border-unicode cursor-pointer appearance-none admin-select"
-          >
-            <option value="all">Todas las opciones</option>
-            <option value="first">Solo 1ra opción</option>
-            <option value="second">Solo 2da opción</option>
-          </select>
-
-          <select
-            id="filter-order"
-            class="bg-zinc-900 border border-zinc-700 text-zinc-300 text-xs rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 outline-none focus:border-unicode cursor-pointer appearance-none admin-select"
-          >
-            <option value="recent">Más recientes</option>
-            <option value="priority">Prioridad (1ra → 2da)</option>
-          </select>
-        </div>
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <h2 id="area-label" class="text-base font-semibold text-zinc-200">Área de GTH</h2>
+        <p id="results-info" role="status" aria-live="polite" class="text-zinc-500 text-[14px]"><span id="count" class="text-zinc-300 font-medium">0</span> <span id="count-label">postulantes</span></p>
       </div>
 
       <div
@@ -234,14 +240,13 @@ import Layout from "../layouts/Layout.astro";
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          <p class="text-zinc-500 text-sm">Cargando postulantes...</p>
+          <p class="text-zinc-500 text-[15px]">Cargando postulantes...</p>
         </div>
       </div>
 
-      <div id="empty-state" class="hidden text-center py-20">
-        <p class="text-zinc-500 text-base">
-          No hay postulantes para esta área.
-        </p>
+      <div id="empty-state" class="hidden text-center py-16 rounded-2xl border border-dashed border-zinc-800">
+        <p id="empty-message" class="text-zinc-400 text-[15px]">No hay postulantes para esta área.</p>
+        <p id="empty-hint" class="text-zinc-500 text-[14px] mt-2">Las postulaciones aparecerán aquí cuando estén completas.</p>
       </div>
 
       <div id="error-state" class="hidden text-center py-20">
@@ -250,55 +255,134 @@ import Layout from "../layouts/Layout.astro";
         </p>
         <button
           id="retry-btn"
-          class="mt-4 text-unicode text-sm underline hover:text-unicode-light cursor-pointer"
+          class="mt-4 text-unicode text-[15px] underline hover:text-unicode-light cursor-pointer"
         >
           Reintentar
         </button>
       </div>
 
-      <div id="applicants-list" class="hidden space-y-3 sm:space-y-4"></div>
+      <div id="applicants-list" class="hidden space-y-3" aria-busy="false"></div>
+      </div>
     </main>
+
+    <dialog id="applicant-detail" aria-labelledby="applicant-detail-title" class="fixed inset-y-0 left-auto right-0 m-0 w-full sm:max-w-[680px] max-w-full h-dvh max-h-dvh overflow-y-auto overscroll-contain border-0 border-l border-zinc-800 bg-[#0c0c0e] text-white p-0 backdrop:bg-black/70 backdrop:backdrop-blur-sm scheme-dark">
+      <header class="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-zinc-800 bg-[#0c0c0e]/95 backdrop-blur-sm px-5 sm:px-7 py-5">
+        <div class="min-w-0">
+          <p class="text-zinc-500 text-[12px] tracking-widest uppercase mb-2">Ficha de postulación</p>
+          <h2 id="applicant-detail-title" class="text-lg sm:text-xl font-semibold leading-snug break-words"></h2>
+          <p id="applicant-detail-date" class="text-zinc-500 text-[14px] mt-2"></p>
+        </div>
+        <button id="close-applicant-detail" type="button" aria-label="Cerrar ficha" class="shrink-0 flex items-center justify-center w-11 h-11 rounded-full border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-600 cursor-pointer focus-visible:outline-2 focus-visible:outline-unicode focus-visible:outline-offset-4">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" d="m6 6 12 12M6 18 18 6"></path></svg>
+        </button>
+      </header>
+      <div id="applicant-detail-content" class="p-5 sm:p-7 space-y-7"></div>
+    </dialog>
+  </div>
   </div>
 </Layout>
 
 <style>
+  .area-tab[data-count]::after {
+    content: attr(data-count);
+    margin-left: 0.45rem;
+    font-size: 12px;
+    color: #71717a;
+    font-variant-numeric: tabular-nums;
+  }
+  .area-tab.active-tab[data-count]::after { color: inherit; opacity: 0.7; }
   .area-tab {
     background: transparent;
     color: #a1a1aa; /* zinc-400 */
-    border: 1px solid #27272a; /* zinc-800 */
+    border: 1px solid transparent;
     cursor: pointer;
   }
   .area-tab:hover {
-    border-color: #75d32d40;
+    background: #18181b;
     color: #d4d4d8;
   }
   .area-tab.active-tab {
-    background: #75d32d;
-    color: #000;
-    border-color: #75d32d;
+    background: #75d32d15;
+    color: #94e65a;
+    border-color: #75d32d30;
+  }
+  .area-tab:focus-visible {
+    outline: 2px solid #75d32d;
+    outline-offset: -2px;
   }
 
-  .admin-select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2375D32D'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-    background-position: right 0.5rem center;
-    background-repeat: no-repeat;
-    background-size: 1em 1em;
-    padding-right: 2rem;
+  :global(#admin-page :is(button, a, input, summary, .applicant-card)) {
+    transition-property: color, background-color, border-color, opacity, box-shadow;
+    transition-duration: 150ms;
+    transition-timing-function: ease-out;
   }
-
-  .applicant-card {
-    animation: fadeInUp 0.3s ease-out forwards;
+  :global(#admin-page button:disabled) {
+    cursor: default;
+    opacity: 0.5;
+  }
+  #login-screen:not(.hidden),
+  #dashboard-screen:not(.hidden) main,
+  #email-form:not(.hidden),
+  #code-form:not(.hidden),
+  #login-form:not(.hidden),
+  #applicants-list:not(.hidden),
+  #empty-state:not(.hidden),
+  #error-state:not(.hidden) {
+    animation: admin-enter 160ms ease-out;
+  }
+  @keyframes admin-enter {
+    from { opacity: 0.65; transform: translateY(3px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  :global(#admin-page [data-admin-options]) {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 140ms ease-out, transform 140ms ease-out, display 140ms allow-discrete;
+  }
+  :global(#admin-page [data-admin-options][hidden]) {
+    display: none;
     opacity: 0;
+    transform: translateY(-3px);
   }
-
-  @keyframes fadeInUp {
-    from {
+  #applicant-detail {
+    opacity: 0;
+    transform: translateX(10px);
+    transition: opacity 180ms ease-out, transform 180ms ease-out, display 180ms allow-discrete, overlay 180ms allow-discrete;
+  }
+  #applicant-detail[open] {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  #applicant-detail::backdrop {
+    background-color: transparent;
+    transition: background-color 180ms ease-out, display 180ms allow-discrete, overlay 180ms allow-discrete;
+  }
+  #applicant-detail[open]::backdrop {
+    background-color: rgb(0 0 0 / 0.7);
+  }
+  :global(#applicant-detail details[open] ol) {
+    animation: admin-enter 150ms ease-out;
+  }
+  @starting-style {
+    :global(#admin-page [data-admin-options]:not([hidden])) {
       opacity: 0;
-      transform: translateY(8px);
+      transform: translateY(-3px);
     }
-    to {
-      opacity: 1;
-      transform: translateY(0);
+    #applicant-detail[open] {
+      opacity: 0;
+      transform: translateX(10px);
+    }
+    #applicant-detail[open]::backdrop {
+      background-color: transparent;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :global(html) { scroll-behavior: auto !important; }
+    :global(#admin-page *), :global(#admin-page *::before), :global(#admin-page *::after),
+    #applicant-detail::backdrop {
+      animation: none !important;
+      transition: none !important;
+      scroll-behavior: auto !important;
     }
   }
 
@@ -308,11 +392,71 @@ import Layout from "../layouts/Layout.astro";
 </style>
 
 <script>
+  import { applicantListMarkup, applicantDetailMarkup, applicantName, applicantDate, type Applicant } from "../scripts/admin-applicant-view";
+  import { setupAdminSelects } from "../scripts/admin-select";
+  const closeFilters = setupAdminSelects();
+
   let sessionToken = "";
   let currentArea = "GTH";
+  let currentView: "summary" | "area" = "summary";
   let currentOption = "all";
   let currentOrder = "recent";
-  let applicantsCache: any[] = [];
+  let applicantsCache: Applicant[] = [];
+  let displayedApplicants: Applicant[] = [];
+  let loadVersion = 0;
+  let lastDetailButton: HTMLButtonElement | null = null;
+  const searchInput = document.getElementById("applicant-search") as HTMLInputElement;
+  const detailDialog = document.getElementById("applicant-detail") as HTMLDialogElement;
+  const closeDetailButton = document.getElementById("close-applicant-detail") as HTMLButtonElement;
+
+  function closeDetail() {
+    if (detailDialog.open) detailDialog.close();
+  }
+  closeDetailButton.addEventListener("click", closeDetail);
+  detailDialog.addEventListener("close", () => {
+    document.documentElement.style.overflow = "";
+    if (lastDetailButton?.isConnected) lastDetailButton.focus({ preventScroll: true });
+    // Keep the content through the native closing transition; reduced motion settles immediately.
+    Promise.allSettled(detailDialog.getAnimations().map((animation) => animation.finished)).then(() => {
+      if (!detailDialog.open) document.getElementById("applicant-detail-content")!.replaceChildren();
+    });
+  });
+  detailDialog.addEventListener("click", (event) => {
+    const bounds = detailDialog.getBoundingClientRect();
+    if (event.target === detailDialog && (event.clientX < bounds.left || event.clientX > bounds.right)) closeDetail();
+  });
+
+  document.getElementById("applicants-list")!.addEventListener("click", (event) => {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>(".detail-button");
+    if (!button) return;
+    const applicant = displayedApplicants[Number(button.dataset.index)];
+    if (!applicant) return;
+    closeFilters();
+    lastDetailButton = button;
+    document.getElementById("applicant-detail-title")!.textContent = applicantName(applicant);
+    document.getElementById("applicant-detail-date")!.textContent = `Registrado el ${applicantDate(applicant.created_at, true)}`;
+    document.getElementById("applicant-detail-content")!.innerHTML = applicantDetailMarkup(applicant);
+    detailDialog.showModal();
+    detailDialog.scrollTop = 0;
+    document.documentElement.style.overflow = "hidden";
+    closeDetailButton.focus({ preventScroll: true });
+  });
+
+  function applySearch() {
+    closeDetail();
+    const query = searchInput.value.trim().toLocaleLowerCase("es");
+    displayedApplicants = applicantsCache.filter((applicant) => !query || `${applicantName(applicant)} ${applicant.email}`.toLocaleLowerCase("es").includes(query));
+    const count = displayedApplicants.length;
+    document.getElementById("count")!.textContent = String(count);
+    document.getElementById("count-label")!.textContent = `${count === 1 ? "postulante" : "postulantes"}${query ? ` de ${applicantsCache.length}` : ""}`;
+    document.getElementById("empty-message")!.textContent = query ? "No encontramos postulantes con esa búsqueda." : "No hay postulantes con estos filtros.";
+    document.getElementById("empty-hint")!.textContent = query ? "Prueba con otro nombre o correo." : "Puedes consultar otra área o cambiar la preferencia.";
+    document.getElementById("empty-state")!.classList.toggle("hidden", count > 0);
+    document.getElementById("applicants-list")!.classList.toggle("hidden", count === 0);
+    renderApplicants(displayedApplicants);
+    (document.getElementById("export-btn") as HTMLButtonElement).disabled = count === 0;
+  }
+  searchInput.addEventListener("input", applySearch);
 
   const areaNames: Record<string, string> = {
     GTH: "Área de GTH",
@@ -369,10 +513,26 @@ import Layout from "../layouts/Layout.astro";
     document.getElementById("gth-panel-link")!.classList.toggle("hidden", !managesCall);
     const user = document.getElementById("session-user")!;
     user.textContent = session.role === "director" ? session.email : "Super admin";
-    user.classList.remove("hidden");
     if (session.role === "director" && areaNames[session.area]) currentArea = session.area;
-    document.querySelectorAll<HTMLElement>(".area-tab").forEach((tab) => tab.classList.toggle("active-tab", tab.dataset.area === currentArea));
+    currentView = "summary";
+    markActiveTab("summary");
     document.getElementById("area-label")!.textContent = areaNames[currentArea] || currentArea;
+  }
+  function markActiveTab(key: string) {
+    document.querySelectorAll<HTMLElement>(".area-tab").forEach((tab) => {
+      const active = tab.dataset.area === key;
+      tab.classList.toggle("active-tab", active);
+      tab.setAttribute("aria-pressed", String(active));
+      if (active) tab.scrollIntoView({ block: "nearest", inline: "nearest" });
+    });
+  }
+  /** The summary opens first; each area tab shows that area's applications. */
+  function showView(view: "summary" | "area") {
+    currentView = view;
+    document.getElementById("summary-view")!.classList.toggle("hidden", view !== "summary");
+    document.getElementById("area-view")!.classList.toggle("hidden", view !== "area");
+    document.getElementById("export-btn")!.hidden = view !== "area";
+    if (view === "summary") void loadSummary(); else loadApplicants();
   }
   function startSession(token: string, session: Session) {
     sessionToken = token;
@@ -380,7 +540,18 @@ import Layout from "../layouts/Layout.astro";
     loginScreen.classList.add("hidden");
     dashboardScreen.classList.remove("hidden");
     applySession(session);
-    loadApplicants();
+    // Coming back from the GTH panel's sign-in: return there if this session may manage the call.
+    const params = new URLSearchParams(location.search);
+    const managesCall = session.role === "admin" || session.area === "GTH";
+    if (params.get("volver") === "gth" && managesCall) { location.replace("/admin/recruitment"); return; }
+    if (params.has("sin_gth") || params.get("volver") === "gth") showNotice("El Panel GTH es solo para directores de GTH. Aquí puedes ver todas las postulaciones.");
+    if (location.search) history.replaceState(null, "", "/admin");
+    showView("summary");
+  }
+  function showNotice(text: string) {
+    const notice = document.getElementById("admin-notice")!;
+    notice.querySelector("span")!.textContent = text;
+    notice.hidden = false;
   }
 
   emailForm.addEventListener("submit", async (e) => {
@@ -455,6 +626,18 @@ import Layout from "../layouts/Layout.astro";
     }
   });
 
+  function expireSession() {
+    sessionToken = "";
+    sessionStorage.removeItem("admin_token");
+    dashboardScreen.classList.add("hidden");
+    loginScreen.classList.remove("hidden");
+    showStep("email");
+    showError("Tu sesión venció. Ingresa de nuevo.");
+  }
+
+  document.getElementById("admin-notice-close")!.addEventListener("click", () => (document.getElementById("admin-notice")!.hidden = true));
+  if (new URLSearchParams(location.search).has("expirada")) showError("Tu sesión venció. Ingresa de nuevo.");
+
   // ===== CHECK EXISTING SESSION =====
   const savedToken = sessionStorage.getItem("admin_token");
   if (savedToken) {
@@ -468,6 +651,9 @@ import Layout from "../layouts/Layout.astro";
   }
 
   document.getElementById("logout-btn")?.addEventListener("click", async () => {
+    loadVersion++;
+    closeFilters();
+    closeDetail();
     try {
       await fetch("/api/admin-logout", {
         method: "POST",
@@ -478,6 +664,9 @@ import Layout from "../layouts/Layout.astro";
     }
 
     sessionToken = "";
+    applicantsCache = [];
+    displayedApplicants = [];
+    document.getElementById("applicants-list")!.replaceChildren();
     sessionStorage.removeItem("admin_token");
     dashboardScreen.classList.add("hidden");
     loginScreen.classList.remove("hidden");
@@ -485,30 +674,110 @@ import Layout from "../layouts/Layout.astro";
     showStep("email");
   });
 
-  document.querySelectorAll(".area-tab").forEach((tab) => {
+  function openArea(area: string) {
+    currentArea = area;
+    markActiveTab(area);
+    document.getElementById("area-label")!.textContent = areaNames[currentArea] || currentArea;
+    showView("area");
+  }
+  document.querySelectorAll<HTMLElement>(".area-tab").forEach((tab) => {
     tab.addEventListener("click", () => {
-      document
-        .querySelectorAll(".area-tab")
-        .forEach((t) => t.classList.remove("active-tab"));
-      tab.classList.add("active-tab");
-      currentArea = (tab as HTMLElement).dataset.area || "GTH";
-      document.getElementById("area-label")!.textContent =
-        areaNames[currentArea] || currentArea;
-      loadApplicants();
+      const key = tab.dataset.area || "summary";
+      if (key === "summary") { markActiveTab("summary"); showView("summary"); } else openArea(key);
     });
   });
 
+  // ===== SUMMARY =====
+  type Metrics = {
+    capacity: number; opensAt: string | null; closesAt: string | null;
+    totals: { submitted: number; inProgress: number; recordingStarted: number; expired: number };
+    stages: { pendingReview: number; advanced: number; rejected: number; joined: number; notJoined: number };
+    areas: { id: string; name: string; first: number; second: number }[];
+    referral: { label: string; count: number }[]; universities: { label: string; count: number }[];
+    semesters: { label: string; count: number }[]; daily: { day: string; count: number }[]; averageHours: number | null;
+  };
+  let summaryVersion = 0;
+  async function loadSummary() {
+    const version = ++summaryVersion;
+    const content = document.getElementById("summary-content")!;
+    document.getElementById("summary-loading")!.classList.toggle("hidden", !content.classList.contains("hidden"));
+    document.getElementById("summary-error")!.classList.add("hidden");
+    try {
+      const res = await fetch("/api/admin-metrics", { headers: { Authorization: `Bearer ${sessionToken}` } });
+      if (version !== summaryVersion) return;
+      if (res.status === 401) { expireSession(); return; }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "No se pudo cargar el resumen.");
+      content.innerHTML = summaryMarkup(data as Metrics);
+      content.classList.remove("hidden");
+      for (const area of (data as Metrics).areas) {
+        const tab = document.querySelector<HTMLElement>(`.area-tab[data-area="${area.id}"]`);
+        if (tab) tab.dataset.count = String(area.first + area.second);
+      }
+    } catch (error) {
+      if (version !== summaryVersion) return;
+      document.getElementById("summary-error-message")!.textContent = error instanceof Error ? error.message : "No se pudo cargar el resumen.";
+      document.getElementById("summary-error")!.classList.remove("hidden");
+    } finally {
+      if (version === summaryVersion) document.getElementById("summary-loading")!.classList.add("hidden");
+    }
+  }
+  document.getElementById("summary-retry")!.addEventListener("click", () => void loadSummary());
+  document.getElementById("summary-content")!.addEventListener("click", (event) => {
+    const area = (event.target as HTMLElement).closest<HTMLElement>("[data-open-area]")?.dataset.openArea;
+    if (area) openArea(area);
+  });
+
+  const card = (body: string, extra = "") => `<div class="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-5 sm:p-6 min-w-0 ${extra}">${body}</div>`;
+  const cardTitle = (title: string, hint = "") => `<div class="flex items-baseline justify-between gap-3 mb-4"><h3 class="text-[15px] font-semibold text-zinc-200">${title}</h3>${hint ? `<span class="text-zinc-500 text-[12px]">${hint}</span>` : ""}</div>`;
+  function bars(items: { label: string; count: number }[], empty: string) {
+    if (!items.length) return `<p class="text-zinc-500 text-[14px]">${empty}</p>`;
+    const max = Math.max(...items.map((item) => item.count), 1);
+    return `<ul class="space-y-3">${items.map((item) => `<li><div class="flex justify-between gap-3 text-[14px] mb-1.5"><span class="text-zinc-300 truncate">${esc(item.label)}</span><span class="text-zinc-400 tabular-nums">${item.count}</span></div><div class="h-1.5 rounded-full bg-zinc-800 overflow-hidden"><div class="h-full rounded-full bg-unicode/80" style="width:${Math.max(4, item.count / max * 100)}%"></div></div></li>`).join("")}</ul>`;
+  }
+  function kpi(label: string, value: number | string, detail: string, accent = false) {
+    return card(`<p class="text-zinc-500 text-[13px]">${label}</p><p class="mt-2 text-3xl sm:text-4xl font-bold tracking-tight tabular-nums ${accent ? "text-unicode" : "text-white"}">${value}</p><p class="mt-2 text-zinc-500 text-[13px]">${detail}</p>`);
+  }
+  function summaryMarkup(m: Metrics) {
+    const share = m.capacity ? Math.min(100, Math.round(m.totals.submitted / m.capacity * 100)) : 0;
+    const closes = m.closesAt ? new Date(m.closesAt).toLocaleString("es-PE", { timeZone: "America/Lima", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "sin fecha";
+    const maxArea = Math.max(...m.areas.map((area) => area.first + area.second), 1);
+    const maxDay = Math.max(...m.daily.map((day) => day.count), 1);
+    const reviewed = m.stages.advanced + m.stages.rejected;
+    return `
+      <div class="grid grid-cols-1 min-[520px]:grid-cols-2 xl:grid-cols-4 gap-4">
+        ${card(`<p class="text-zinc-500 text-[13px]">Inscripciones completas</p><p class="mt-2 text-3xl sm:text-4xl font-bold tracking-tight tabular-nums text-unicode">${m.totals.submitted}<span class="text-zinc-600 text-xl font-semibold"> / ${m.capacity}</span></p><div class="mt-3 h-1.5 rounded-full bg-zinc-800 overflow-hidden"><div class="h-full rounded-full bg-unicode" style="width:${share}%"></div></div><p class="mt-2 text-zinc-500 text-[13px]">${share}% del cupo · cierra el ${esc(closes)}</p>`)}
+        ${kpi("En proceso", m.totals.inProgress, `${m.totals.recordingStarted} ya empezaron su video`)}
+        ${kpi("Avanzan a la 2.ª etapa", m.stages.advanced, `${m.stages.pendingReview} por revisar · ${m.stages.rejected} no avanzan`)}
+        ${kpi("Ingresan a UNICODE", m.stages.joined, `${m.stages.notJoined} no ingresan`, m.stages.joined > 0)}
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-4">
+        ${card(cardTitle("Postulantes por área", `<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-unicode"></span>1ra</span> <span class="inline-flex items-center gap-1.5 ml-3"><span class="w-2 h-2 rounded-full bg-zinc-500"></span>2da</span>`) + `<ul class="space-y-1">${m.areas.map((area) => `<li><button type="button" data-open-area="${esc(area.id)}" class="w-full text-left rounded-xl px-2 py-2.5 -mx-2 hover:bg-zinc-800/50 cursor-pointer focus-visible:outline-2 focus-visible:outline-unicode"><div class="flex justify-between gap-3 text-[14px] mb-1.5"><span class="text-zinc-200 truncate">${esc(area.name)}</span><span class="text-zinc-400 tabular-nums shrink-0">${area.first} <span class="text-zinc-600">+ ${area.second}</span></span></div><div class="flex h-2 rounded-full bg-zinc-800 overflow-hidden"><div class="h-full bg-unicode" style="width:${area.first / maxArea * 100}%"></div><div class="h-full bg-zinc-500" style="width:${area.second / maxArea * 100}%"></div></div></button></li>`).join("")}</ul><p class="text-zinc-500 text-[12px] mt-3">Toca un área para ver sus postulaciones.</p>`)}
+        ${card(cardTitle("Inscripciones por día", "últimos 14 días") + `<div class="flex items-end gap-1.5 h-40" role="img" aria-label="Inscripciones completas por día">${m.daily.map((day) => `<div class="flex-1 h-full flex flex-col justify-end items-center gap-1.5 min-w-0" title="${esc(day.day)}: ${day.count}"><span class="text-[11px] text-zinc-500 tabular-nums">${day.count || ""}</span><div class="w-full rounded-t-md ${day.count ? "bg-unicode/80" : "bg-zinc-800"}" style="height:${day.count ? Math.max(6, day.count / maxDay * 100) : 3}%"></div></div>`).join("")}</div><div class="flex justify-between text-[11px] text-zinc-600 mt-2"><span>${esc(m.daily[0]?.day.slice(5).split("-").reverse().join("/") || "")}</span><span>hoy</span></div>`)}
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        ${card(cardTitle("Cómo se enteraron") + bars(m.referral, "Aún no hay respuestas."))}
+        ${card(cardTitle("Centro de estudios") + bars(m.universities, "Aún no hay inscripciones."))}
+        ${card(cardTitle("Ciclo", m.averageHours != null ? `${m.averageHours} h/semana en promedio` : "") + bars(m.semesters, "Aún no hay inscripciones."))}
+      </div>
+      <p class="text-zinc-600 text-[12px]">${reviewed} de ${m.totals.submitted} perfiles revisados · No incluye postulaciones de prueba.</p>`;
+  }
+
   document.getElementById("filter-option")?.addEventListener("change", (e) => {
-    currentOption = (e.target as HTMLSelectElement).value;
+    currentOption = (e.target as HTMLElement).dataset.value || "all";
     loadApplicants();
   });
 
   document.getElementById("filter-order")?.addEventListener("change", (e) => {
-    currentOrder = (e.target as HTMLSelectElement).value;
+    currentOrder = (e.target as HTMLElement).dataset.value || "recent";
     loadApplicants();
   });
 
   async function loadApplicants() {
+    const version = ++loadVersion;
+    let loaded = false;
+    closeFilters();
+    closeDetail();
     const loadingEl = document.getElementById("loading-indicator")!;
     const emptyEl = document.getElementById("empty-state")!;
     const errorEl = document.getElementById("error-state")!;
@@ -518,6 +787,13 @@ import Layout from "../layouts/Layout.astro";
     emptyEl.classList.add("hidden");
     errorEl.classList.add("hidden");
     listEl.classList.add("hidden");
+    listEl.setAttribute("aria-busy", "true");
+    searchInput.disabled = true;
+    (document.getElementById("export-btn") as HTMLButtonElement).disabled = true;
+    document.getElementById("count")!.textContent = "—";
+    document.getElementById("count-label")!.textContent = "postulantes";
+    applicantsCache = [];
+    displayedApplicants = [];
 
     try {
       const params = new URLSearchParams({
@@ -529,17 +805,9 @@ import Layout from "../layouts/Layout.astro";
       const res = await fetch(`/api/admin-applicants?${params}`, {
         headers: { Authorization: `Bearer ${sessionToken}` },
       });
+      if (version !== loadVersion) return;
 
-      if (res.status === 401) {
-        // Session expired
-        sessionToken = "";
-        sessionStorage.removeItem("admin_token");
-        dashboardScreen.classList.add("hidden");
-        loginScreen.classList.remove("hidden");
-        loginError.textContent = "Sesión expirada. Ingresa de nuevo.";
-        loginError.classList.remove("hidden");
-        return;
-      }
+      if (res.status === 401) { expireSession(); return; }
 
       if (!res.ok) {
         // Try to get JSON error first
@@ -558,29 +826,29 @@ import Layout from "../layouts/Layout.astro";
       }
 
       const result = await res.json();
+      if (version !== loadVersion) return;
 
       applicantsCache = result.data || [];
-      document.getElementById("count")!.textContent = String(result.total || 0);
-
+      loaded = true;
       loadingEl.classList.add("hidden");
-
-      if (applicantsCache.length === 0) {
-        emptyEl.classList.remove("hidden");
-        return;
-      }
-
-      renderApplicants(applicantsCache);
-      listEl.classList.remove("hidden");
+      applySearch();
     } catch (err: any) {
+      if (version !== loadVersion) return;
       loadingEl.classList.add("hidden");
       errorEl.classList.remove("hidden");
       document.getElementById("error-message")!.textContent =
         err.message || "Error al cargar los datos.";
+    } finally {
+      if (version === loadVersion) {
+        listEl.setAttribute("aria-busy", "false");
+        searchInput.disabled = !loaded;
+        (document.getElementById("export-btn") as HTMLButtonElement).disabled = !loaded || displayedApplicants.length === 0;
+      }
     }
   }
 
   // Videos are private: ask the server for a short-lived playback link when clicked.
-  document.getElementById("applicants-list")!.addEventListener("click", async (event) => {
+  detailDialog.addEventListener("click", async (event) => {
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>(".video-button");
     if (!button) return;
     const tab = window.open("", "_blank");
@@ -596,115 +864,16 @@ import Layout from "../layouts/Layout.astro";
     } finally { button.disabled = false; }
   });
 
-  function renderApplicants(applicants: any[]) {
-    const listEl = document.getElementById("applicants-list")!;
-    listEl.innerHTML = "";
-
-    applicants.forEach((p, index) => {
-      const isFirst = p.first_choice_area === currentArea;
-      const optionBadge = isFirst
-        ? '<span class="bg-unicode/20 text-unicode text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-md border border-unicode/30">1RA OPCIÓN</span>'
-        : '<span class="bg-amber-500/20 text-amber-400 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-md border border-amber-500/30">2DA OPCIÓN</span>';
-
-      let optionExtraDisplay = "";
-      if (isFirst && p.second_choice_area) {
-        optionExtraDisplay = `<span class="text-zinc-500 text-[10px] sm:text-xs ml-2">(2da: ${esc(p.second_choice_area)})</span>`;
-      } else if (!isFirst && p.first_choice_area) {
-        optionExtraDisplay = `<span class="text-zinc-500 text-[10px] sm:text-xs ml-2">(1ra: ${esc(p.first_choice_area)})</span>`;
-      }
-
-      const dateObj = new Date(p.created_at);
-      const date = dateObj.toLocaleDateString("es-PE", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
-      const time = dateObj.toLocaleTimeString("es-PE", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
-      const fullDate = `${date} ${time}`;
-
-      const card = document.createElement("article");
-      card.className =
-        "applicant-card bg-zinc-900/40 border border-zinc-800/50 rounded-2xl p-4 sm:p-6 hover:border-unicode/20 transition-all duration-300";
-      card.style.animationDelay = `${index * 50}ms`;
-
-      card.innerHTML = `
-        <div class="flex flex-col lg:flex-row lg:items-start gap-4 lg:gap-8">
-          <!-- Left: Personal info -->
-          <div class="flex-1 min-w-0">
-            <div class="flex flex-wrap items-center gap-2 mb-2">
-              <h3 class="text-white font-bold text-base sm:text-lg">${esc(p.first_name)} ${esc(p.last_name)}</h3>
-              <span class="text-zinc-600 text-[10px] sm:text-xs">#${String(index + 1).padStart(3, "0")}</span>
-              <span class="text-zinc-500 text-[10px] sm:text-xs flex items-center gap-1 ml-1">
-                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                ${fullDate}
-              </span>
-              ${optionBadge}
-              ${optionExtraDisplay}
-            </div>
-
-            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-zinc-500 text-[10px] sm:text-xs mb-3">
-              <span class="font-medium text-zinc-300">${esc(p.university) || "N/A"}</span>
-              <span class="text-zinc-700">•</span>
-              <span>${esc(p.faculty) || "N/A"}</span>
-              <span class="text-zinc-700">•</span>
-              <span>${esc(p.career) || "N/A"}</span>
-              <span class="text-zinc-700">•</span>
-              <span>${p.university_semester === 0 || p.university_semester === "0" ? "Egresado" : p.university_semester ? esc(p.university_semester) + "° Ciclo" : "N/A"}</span>
-              <span class="text-zinc-700">•</span>
-              <span>Ingreso ${esc(p.admission_term) || "N/A"}</span>
-              <span class="text-zinc-700">•</span>
-              <span>${p.availability_hours ?? "?"} h/semana</span>
-            </div>
-
-            <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-xs sm:text-sm text-zinc-400">
-              <span class="flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5 text-unicode/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                ${esc(p.phone) || "N/A"}
-              </span>
-              <span class="flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5 text-unicode/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                ${esc(p.email) || "N/A"}
-              </span>
-            </div>
-          </div>
-
-          <!-- Right: Reason -->
-          <div class="lg:w-[45%] shrink-0">
-            <div class="mb-3">
-              <p class="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-1">Motivo:</p>
-              <p class="text-zinc-300 text-xs sm:text-sm leading-relaxed line-clamp-3 transition-all duration-300 whitespace-pre-line">${esc(p.application_reason) || "Sin motivo registrado."}</p>
-              ${p.application_reason && p.application_reason.length > 150 ? `<button class="text-unicode text-[10px] sm:text-xs font-medium mt-1 hover:underline cursor-pointer" onclick="const textEl = this.previousElementSibling; textEl.classList.toggle('line-clamp-3'); this.innerText = textEl.classList.contains('line-clamp-3') ? 'Ver más' : 'Ver menos';">Ver más</button>` : ""}
-            </div>
-            ${p.showcase ? `<div class="mb-3"><p class="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-1">Algo que hizo:</p><p class="text-zinc-300 text-xs sm:text-sm leading-relaxed line-clamp-3 whitespace-pre-line break-words">${esc(p.showcase)}</p></div>` : ""}
-            ${p.organizations ? `<div class="mb-3"><p class="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-1">Otras organizaciones:</p><p class="text-zinc-300 text-xs sm:text-sm leading-relaxed line-clamp-3 whitespace-pre-line break-words">${esc(p.organizations)}</p></div>` : ""}
-            ${p.referral_source ? `<div class="mb-3"><p class="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-1">Se enteró por:</p><p class="text-zinc-300 text-xs sm:text-sm leading-relaxed line-clamp-3 whitespace-pre-line break-words">${esc(p.referral_source)}</p></div>` : ""}
-            ${p.short_case ? `<div class="mb-3"><p class="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-1">Caso breve:</p><p class="text-zinc-300 text-xs sm:text-sm leading-relaxed line-clamp-3 whitespace-pre-line">${esc(p.short_case)}</p></div>` : ""}
-            ${p.has_video ? `<button type="button" class="video-button inline-flex items-center gap-2 text-black bg-unicode hover:bg-unicode-light font-bold text-xs sm:text-sm px-4 py-2 rounded-full" data-id="${esc(p.id)}">▶ Ver video</button>` : `<span class="text-zinc-500 text-xs">Sin video</span>`}
-          </div>
-        </div>
-      `;
-
-      listEl.appendChild(card);
-    });
+  function renderApplicants(applicants: Applicant[]) {
+    document.getElementById("applicants-list")!.innerHTML = applicantListMarkup(applicants, currentArea);
   }
-
   document.getElementById("retry-btn")?.addEventListener("click", () => {
     loadApplicants();
   });
 
   // ===== EXPORT EXCEL (PRETTY) =====
   document.getElementById("export-btn")?.addEventListener("click", () => {
-    if (applicantsCache.length === 0) {
+    if (displayedApplicants.length === 0) {
       alert("No hay datos para exportar.");
       return;
     }
@@ -743,7 +912,7 @@ import Layout from "../layouts/Layout.astro";
       </style>
     `;
 
-    const rowsHtml = applicantsCache
+    const rowsHtml = displayedApplicants
       .map((p, index) => {
         const isFirst = p.first_choice_area === currentArea;
         const rowClass = index % 2 === 0 ? "" : 'class="row-alt"';

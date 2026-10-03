@@ -71,3 +71,17 @@ export async function directors(input?: unknown, actor = 'administracion'): Prom
 }
 
 export const areaLabel = (area: string) => AREA_NAMES[area as keyof typeof AREA_NAMES] ?? area;
+
+/** Adds a director or changes their area or name, one at a time. */
+export async function saveDirector(input: unknown, actor = 'administracion'): Promise<{ directors: Director[] }> {
+  const row = record(input);
+  const email = normalizeEmail(row.email);
+  if (!(AREA_IDS as readonly string[]).includes(String(row.area))) throw new RecruitmentError('configuration', 'Elige un área.');
+  const name = typeof row.name === 'string' ? row.name.trim().slice(0, 150) : '';
+  return recruitmentRpc('recruitment_director_save', { p_email: email, p_area: String(row.area), p_name: name, p_actor: actor });
+}
+
+/** Removes one director; any code they had pending stops working. */
+export async function removeDirector(input: unknown, actor = 'administracion'): Promise<{ directors: Director[] }> {
+  return recruitmentRpc('recruitment_director_remove', { p_email: normalizeEmail(record(input).email), p_actor: actor });
+}

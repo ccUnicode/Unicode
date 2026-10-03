@@ -4,24 +4,19 @@ import Layout from "../../layouts/Layout.astro";
 
 <Layout title="Gestión de convocatoria">
   <main class="recruitment-admin">
-    <section id="recruitment-login" class="login-panel panel" aria-labelledby="login-title">
-      <a class="back-link" href="/admin">← Postulaciones</a>
+    <section id="recruitment-login" class="login-panel panel" aria-live="polite">
       <p class="eyebrow">UNICODE · GTH</p>
-      <h1 id="login-title">Gestión de convocatoria</h1>
-      <p class="muted">Si diriges GTH, entra con tu correo UNI desde <a href="/admin" class="inline-link">el panel de postulaciones</a> y usa el botón «Panel GTH». También puedes usar la contraseña de administración.</p>
-      <form id="recruitment-login-form" class="stack">
-        <label>Contraseña<input id="recruitment-password" type="password" autocomplete="current-password" required /></label>
-        <button type="submit" class="primary">Ingresar</button>
-        <p id="recruitment-login-message" class="message" role="alert" hidden></p>
-      </form>
+      <h1>Gestión de <span class="title-accent">convocatoria</span></h1>
+      <p id="recruitment-login-message" class="muted">Abriendo el inicio de sesión…</p>
+      <a class="nav-back" href="/admin?volver=gth">Iniciar sesión</a>
     </section>
 
     <div id="recruitment-dashboard" hidden>
       <header class="admin-header">
         <div>
-          <a class="back-link" href="/admin">← Postulaciones</a>
+          <a class="nav-back" href="/admin"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m15 18-6-6 6-6" stroke-linecap="round" stroke-linejoin="round" /></svg>Volver a postulaciones</a>
           <p class="eyebrow">UNICODE · GTH</p>
-          <h1>Gestión de convocatoria</h1>
+          <h1>Gestión de <span class="title-accent">convocatoria</span></h1>
           <p class="muted">Configuración, seguimiento y comunicaciones.</p>
         </div>
         <button id="recruitment-logout" class="secondary">Cerrar sesión</button>
@@ -41,7 +36,7 @@ import Layout from "../../layouts/Layout.astro";
             <div><h2 id="config-title">Convocatoria</h2><p class="muted">Las fechas se guardan en horario de Lima (UTC−5).</p></div>
             <span id="config-state" class="badge">Cargando…</span>
           </div>
-          <div id="connection-status" class="button-row" aria-label="Configuración de conexiones"></div>
+          <section class="status-card" aria-labelledby="status-title"><h3 id="status-title" class="sr-only">Estado de las conexiones</h3><ul id="connection-status" class="status-list"></ul></section>
           <fieldset class="panel">
             <legend>Publicación y plazos</legend>
             <div class="field-grid">
@@ -51,7 +46,6 @@ import Layout from "../../layouts/Layout.astro";
               <label>Prórroga <span class="optional">Opcional</span><input name="extensionAt" type="datetime-local" /></label>
               <label>Máximo de postulantes<input name="maxApplicants" type="number" min="1" max="150" step="1" required /><small>Hasta 150 postulaciones completas.</small></label>
               <label>Horas de inactividad para recordar<input name="inactivityHours" type="number" min="1" max="720" step="1" required /></label>
-              <label class="wide">Caso corto<textarea name="shortCasePrompt" rows="3" maxlength="2000" required></textarea></label>
             </div>
             <label class="check-line"><input name="enabled" type="checkbox" /> Habilitar convocatoria dentro del plazo configurado</label>
             <p class="muted note">Para abrir, configura fechas, al menos un área y dos preguntas activas por categoría.</p>
@@ -97,7 +91,7 @@ import Layout from "../../layouts/Layout.astro";
             <div id="question-config" class="question-columns"></div>
           </fieldset>
 
-          <div class="save-bar">
+          <div class="save-bar" id="config-save-bar">
             <p class="muted" id="config-save-info">Los cambios se aplican al guardar.</p>
             <button type="submit" class="primary" id="save-config">Guardar configuración</button>
           </div>
@@ -108,11 +102,20 @@ import Layout from "../../layouts/Layout.astro";
         <div class="section-heading">
           <div><h2 id="access-title">Accesos de directores</h2><p class="muted">Cada director entra a /admin con su correo y un código que le llega por correo. Todos ven las postulaciones de todas las áreas; solo los de GTH entran a este panel.</p></div>
         </div>
-        <form id="directors-form" class="panel stack compact">
-          <div id="directors-list" class="director-list"></div>
-          <div class="button-row"><button id="add-director" type="button" class="secondary">Agregar director</button><button type="submit" class="primary">Guardar accesos</button></div>
-          <p id="directors-status" class="muted" role="status"></p>
+        <form id="director-add" class="panel director-add" novalidate>
+          <h3>Agregar director</h3>
+          <div class="director-add-grid">
+            <label>Correo<input name="email" type="email" required maxlength="254" placeholder="nombre.apellido@uni.pe" autocomplete="off" /></label>
+            <label>Nombre (opcional)<input name="name" maxlength="150" placeholder="Ej. Ana Quispe" autocomplete="off" /></label>
+            <label>Área<select name="area" required></select></label>
+            <button type="submit" class="primary">Agregar</button>
+          </div>
+          <p id="directors-status" class="muted" role="status" aria-live="polite"></p>
         </form>
+        <section class="panel director-panel" aria-labelledby="directors-count">
+          <div class="director-panel-head"><h3 id="directors-count">Directores con acceso</h3><p class="muted">Cada cambio se guarda al momento.</p></div>
+          <ul id="directors-list" class="director-list"></ul>
+        </section>
       </section>
 
       <section id="panel-applications" aria-labelledby="applications-title" hidden>
@@ -120,12 +123,15 @@ import Layout from "../../layouts/Layout.astro";
           <div><h2 id="applications-title">Postulaciones</h2><p class="muted">Datos, preguntas, video y cambios de estado.</p></div>
           <button id="refresh-applications" type="button" class="secondary">Actualizar</button>
         </div>
-        <div class="panel stack compact preview-panel">
-          <div><h3>Modo de prueba</h3><p class="muted">Genera un enlace secreto para que el equipo postule en la web publicada aunque la convocatoria esté cerrada al público. Esas postulaciones aparecen como «Prueba» y se borran con sus videos cuando termines.</p></div>
-          <p id="preview-state" class="muted" role="status"></p>
-          <div class="button-row"><button id="preview-create" type="button" class="primary">Generar enlace de prueba</button><button id="preview-disable" type="button" class="secondary">Desactivar enlace</button><button id="purge-tests" type="button" class="secondary">Borrar postulaciones de prueba</button></div>
-          <label id="preview-link-box" hidden>Enlace de prueba: cópialo ahora, no se volverá a mostrar<input id="preview-link" readonly /></label>
-        </div>
+        <details class="panel preview-panel">
+          <summary><span>Modo de prueba</span><svg class="preview-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" /></svg></summary>
+          <div class="stack compact preview-content">
+            <p class="muted">Genera un enlace secreto para que el equipo postule en la web publicada aunque la convocatoria esté cerrada al público. Esas postulaciones aparecen como «Prueba» y se borran con sus videos cuando termines.</p>
+            <p id="preview-state" class="muted" role="status"></p>
+            <div class="button-row"><button id="preview-create" type="button" class="primary">Generar enlace de prueba</button><button id="preview-disable" type="button" class="secondary">Desactivar enlace</button><button id="purge-tests" type="button" class="secondary">Borrar postulaciones de prueba</button></div>
+            <label id="preview-link-box" hidden>Enlace de prueba: cópialo ahora, no se volverá a mostrar<input id="preview-link" readonly /></label>
+          </div>
+        </details>
         <div class="filters panel">
           <label>Estado<select id="filter-status"><option value="">Todos los estados</option></select></label>
           <label>Área<select id="filter-area"><option value="">Todas las áreas</option></select></label>
@@ -166,12 +172,14 @@ import Layout from "../../layouts/Layout.astro";
           </div>
           <div id="email-summary" class="stats"></div>
           <div id="email-list" class="email-list"></div>
+          <button id="email-more" type="button" class="link-more" hidden></button>
           <p id="email-process-result" class="muted" role="status" hidden></p>
         </section>
         <form id="templates-form" class="stack">
           <div><h3>Plantillas</h3><p class="muted note">Texto plano. Variables permitidas: <span id="template-variables"></span></p></div>
-          <div id="template-list" class="stack"></div>
-          <div class="save-bar"><p class="muted">Cada etapa genera una única solicitud de correo.</p><button type="submit" class="primary">Guardar plantillas</button></div>
+          <div id="template-list" class="template-list"></div>
+          <details id="disabled-templates" class="disabled-templates" hidden><summary></summary><div id="disabled-template-list" class="template-list"></div></details>
+          <div class="save-bar" id="templates-save-bar"><p class="muted" id="templates-save-info">Los cambios se aplican al guardar.</p><button type="submit" class="primary">Guardar plantillas</button></div>
         </form>
       </section>
     </div>
@@ -184,119 +192,237 @@ import Layout from "../../layouts/Layout.astro";
 </script>
 
 <style is:global>
-  .recruitment-admin { --admin-green: #75d32d; --admin-border: #27272a; --admin-muted: #a1a1aa; width: min(1160px, 100%); margin-inline: auto; padding: 28px 20px 64px; }
+  .recruitment-admin ~ footer { display: none; }
+  .recruitment-admin { --admin-green: #75d32d; --admin-border: #27272a; --admin-muted: #b4b4bd; --admin-motion: 160ms; width: min(1160px, 100%); min-width: 0; margin-inline: auto; padding: 32px 24px 72px; font-size: 15px; line-height: 1.6; }
+  .recruitment-admin *, .recruitment-admin *::before, .recruitment-admin *::after { box-sizing: border-box; }
   .recruitment-admin [hidden] { display: none !important; }
-  .recruitment-admin .login-panel { max-width: 460px; margin: max(40px, 12vh) auto; }
-  .recruitment-admin h1 { font-size: clamp(1.65rem, 3vw, 2.1rem); font-weight: 700; line-height: 1.3; }
-  .recruitment-admin h2 { font-size: 1.35rem; font-weight: 650; }
-  .recruitment-admin h3 { font-size: 1rem; font-weight: 600; }
+  .recruitment-admin .login-panel { max-width: 500px; margin: max(40px, 12vh) auto; }
+  .recruitment-admin .login-panel .stack { margin-top: 24px; }
+  .recruitment-admin h1 { font-size: clamp(28px, 3.1vw, 36px); font-weight: 700; line-height: 1.25; letter-spacing: -.035em; overflow-wrap: anywhere; }
+  .recruitment-admin h2 { font-size: 23px; font-weight: 650; line-height: 1.35; letter-spacing: -.02em; overflow-wrap: anywhere; }
+  .recruitment-admin h3 { font-size: 17px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
+  .recruitment-admin .title-accent { color: var(--admin-green); }
   .recruitment-admin p { line-height: 1.65; }
-  .recruitment-admin .muted { color: var(--admin-muted); font-size: .85rem; }
-  .recruitment-admin .eyebrow { color: var(--admin-green); font-size: .7rem; font-weight: 650; letter-spacing: .1em; margin: 15px 0 6px; }
-  .recruitment-admin .back-link { font-size: .8rem; color: var(--admin-muted); }
-  .recruitment-admin .back-link:hover { color: var(--admin-green); }
+  .recruitment-admin .muted { color: var(--admin-muted); font-size: 14px; overflow-wrap: anywhere; }
+  .recruitment-admin .eyebrow { color: var(--admin-green); font-size: 12px; font-weight: 650; letter-spacing: .1em; margin: 16px 0 8px; }
+  .recruitment-admin .nav-back { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 16px 8px 11px; border: 1px solid var(--admin-border); border-radius: 999px; background: #0d0d10; color: #d4d4d8; font-size: 14px; font-weight: 500; }
+  .recruitment-admin .nav-back:hover { border-color: #52525b; background: #18181b; color: #fff; }
+  .recruitment-admin .login-panel .nav-back { margin-top: 20px; padding-left: 16px; }
   .recruitment-admin .admin-header, .recruitment-admin .section-heading, .recruitment-admin .save-bar, .recruitment-admin .video-summary { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
   .recruitment-admin .admin-header { margin-bottom: 28px; align-items: flex-start; }
+  .recruitment-admin .admin-header > div, .recruitment-admin .section-heading > div, .recruitment-admin .video-summary > div { min-width: 0; }
+  .recruitment-admin .admin-header .muted { margin-top: 8px; }
   .recruitment-admin .admin-header > button { margin-top: 16px; }
   .recruitment-admin .section-heading { margin-bottom: 20px; }
-  .recruitment-admin .stack { display: grid; gap: 24px; }
-  .recruitment-admin .compact { gap: 14px; }
-  .recruitment-admin .panel { background: #111113; border: 1px solid var(--admin-border); border-radius: 16px; padding: 24px; min-width: 0; }
+  .recruitment-admin .section-heading .muted { margin-top: 6px; }
+  .recruitment-admin .stack { display: grid; gap: 28px; min-width: 0; }
+  .recruitment-admin .compact { gap: 16px; }
+  .recruitment-admin .panel { background: #111113; border: 1px solid var(--admin-border); border-radius: 18px; padding: 26px; min-width: 0; }
   .recruitment-admin fieldset { margin: 0; }
-  .recruitment-admin legend { color: #fff; font-size: 1rem; font-weight: 600; padding: 0 7px; }
-  .recruitment-admin label { display: flex; flex-direction: column; gap: 8px; font-size: .8rem; color: #e4e4e7; }
-  .recruitment-admin input:not([type="checkbox"]), .recruitment-admin select, .recruitment-admin textarea { width: 100%; min-width: 0; background: #09090b; border: 1px solid #3f3f46; border-radius: 9px; padding: 11px 12px; font: inherit; color: #fff; color-scheme: dark; }
-  .recruitment-admin textarea { resize: vertical; line-height: 1.6; }
+  .recruitment-admin legend { max-width: 100%; color: #fff; font-size: 18px; font-weight: 600; line-height: 1.4; padding: 0 8px; overflow-wrap: anywhere; }
+  .recruitment-admin label { display: flex; flex-direction: column; min-width: 0; gap: 9px; font-size: 14px; line-height: 1.5; color: #e4e4e7; overflow-wrap: anywhere; }
+  .recruitment-admin input:not([type="checkbox"]), .recruitment-admin select, .recruitment-admin textarea { width: 100%; min-width: 0; min-height: 46px; background: #09090b; border: 1px solid #3f3f46; border-radius: 10px; padding: 11px 13px; font-family: inherit; font-size: 15px; line-height: 1.5; color: #fff; color-scheme: dark; transition: border-color var(--admin-motion), box-shadow var(--admin-motion); }
+  .recruitment-admin :is(input:not([type="checkbox"]), select, textarea):hover:not(:disabled) { border-color: #60606b; }
+  .recruitment-admin textarea { min-height: 118px; resize: vertical; line-height: 1.65; }
+  .recruitment-admin :is(input, textarea)::placeholder { color: #858590; opacity: 1; }
   .recruitment-admin input:disabled { color: var(--admin-muted); opacity: .85; }
-  .recruitment-admin small, .recruitment-admin .optional { color: var(--admin-muted); font-size: .72rem; }
+  .recruitment-admin small, .recruitment-admin .optional { color: var(--admin-muted); font-size: 13px; line-height: 1.5; }
   .recruitment-admin .optional { display: inline; }
-  .recruitment-admin input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--admin-green); flex-shrink: 0; }
-  .recruitment-admin .check-line { flex-direction: row; align-items: center; margin-top: 18px; }
+  .recruitment-admin input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--admin-green); flex-shrink: 0; cursor: pointer; }
+  .recruitment-admin .check-line { flex-direction: row; align-items: center; min-height: 44px; gap: 11px; margin-top: 18px; padding-block: 6px; cursor: pointer; }
   .recruitment-admin .field-grid, .recruitment-admin .question-columns, .recruitment-admin .detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
   .recruitment-admin .field-grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .recruitment-admin .wide { grid-column: 1 / -1; }
   .recruitment-admin .note { margin: 0 0 18px; }
   .recruitment-admin .check-line + .note { margin: 14px 0 0; }
-  .recruitment-admin button { cursor: pointer; transition: background .15s, border-color .15s; }
+  .recruitment-admin button, .recruitment-admin a { -webkit-tap-highlight-color: transparent; transition: background var(--admin-motion), border-color var(--admin-motion), color var(--admin-motion), box-shadow var(--admin-motion); }
+  .recruitment-admin button { cursor: pointer; touch-action: manipulation; }
   .recruitment-admin button:disabled { opacity: .5; cursor: wait; }
-  .recruitment-admin :is(button, a, input, select, textarea):focus-visible { outline: 2px solid var(--admin-green); outline-offset: 3px; }
-  .recruitment-admin .primary, .recruitment-admin .secondary { border-radius: 9px; padding: 11px 16px; font-size: .8rem; font-weight: 600; line-height: 1.4; }
+  .recruitment-admin :is(button, a, input, select, textarea, summary):focus-visible { outline: 2px solid var(--admin-green); outline-offset: 3px; }
+  .recruitment-admin .primary, .recruitment-admin .secondary { min-height: 44px; max-width: 100%; border-radius: 999px; padding: 11px 18px; font-size: 14px; font-weight: 600; line-height: 1.5; text-align: center; overflow-wrap: anywhere; }
   .recruitment-admin .primary { background: var(--admin-green); color: #0a0a0a; border: 1px solid var(--admin-green); }
   .recruitment-admin .primary:hover:not(:disabled) { background: #94e65a; }
   .recruitment-admin .secondary { border: 1px solid #3f3f46; color: #e4e4e7; background: #18181b; }
   .recruitment-admin .secondary:hover:not(:disabled) { border-color: #71717a; background: #27272a; }
-  .recruitment-admin .message { padding: 13px 16px; border-radius: 9px; border: 1px solid #3f3f46; border-left: 3px solid var(--admin-green); background: #18181b; color: #f4f4f5; font-size: .85rem; margin: 16px 0; }
+  .recruitment-admin .message { padding: 14px 17px; border-radius: 12px; border: 1px solid #3f3f46; border-left: 3px solid var(--admin-green); background: #18181b; color: #f4f4f5; font-size: 14px; line-height: 1.65; margin: 16px 0; overflow-wrap: anywhere; }
   .recruitment-admin .message.error { border-color: #7f1d1d; border-left-color: #f87171; background: #1c1214; color: #fecaca; }
-  .recruitment-admin .admin-nav { display: flex; flex-wrap: wrap; gap: 5px; padding: 5px; border: 1px solid var(--admin-border); border-radius: 12px; margin: 0 0 30px; background: #0c0c0e; }
-  .recruitment-admin .admin-nav button { flex: 1 1 auto; min-width: 0; padding: 12px; border-radius: 7px; color: var(--admin-muted); font-size: .85rem; }
+  .recruitment-admin .admin-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 6px; border: 1px solid var(--admin-border); border-radius: 14px; margin: 0 0 30px; background: #0c0c0e; }
+  .recruitment-admin .admin-nav button { min-width: 0; min-height: 46px; padding: 11px 10px; border-radius: 9px; color: var(--admin-muted); font-size: 14px; font-weight: 500; line-height: 1.5; overflow-wrap: anywhere; }
+  .recruitment-admin .admin-nav button:hover { background: #19191d; color: #fff; }
   .recruitment-admin .admin-nav button[aria-current="page"] { color: #fff; background: #27272a; box-shadow: inset 0 -2px 0 var(--admin-green); }
   .recruitment-admin .admin-nav button[aria-current="page"] .count { color: var(--admin-green); }
-  .recruitment-admin .count { display: inline-block; margin-left: 4px; font-size: .7rem; }
-  .recruitment-admin .badge { display: inline-flex; align-items: center; border: 1px solid #3f3f46; background: #18181b; color: #d4d4d8; border-radius: 999px; font-size: .7rem; padding: 5px 10px; white-space: nowrap; }
+  .recruitment-admin .count { display: inline-block; margin-left: 4px; font-size: 13px; font-weight: 600; }
+  .recruitment-admin .badge { display: inline-flex; align-items: center; min-width: 0; max-width: 100%; border: 1px solid #3f3f46; background: #18181b; color: #d4d4d8; border-radius: 999px; font-size: 13px; line-height: 1.5; padding: 5px 11px; white-space: normal; overflow-wrap: anywhere; }
   .recruitment-admin .area-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-  .recruitment-admin .area-card { border: 1px solid var(--admin-border); border-radius: 10px; padding: 16px; }
-  .recruitment-admin .area-card .check-line { margin: 0 0 14px; font-weight: 600; }
-  .recruitment-admin .question-group { display: grid; align-content: start; gap: 16px; }
-  .recruitment-admin .question-item { border-bottom: 1px solid var(--admin-border); padding-bottom: 16px; }
-  .recruitment-admin .question-item .check-line { margin-top: 10px; font-size: .75rem; }
-  .recruitment-admin .save-bar { position: sticky; bottom: 16px; background: #111113f5; border: 1px solid var(--admin-border); border-radius: 12px; padding: 16px 20px; z-index: 5; backdrop-filter: blur(8px); }
+  .recruitment-admin .area-card { display: flex; flex-direction: column; gap: 18px; min-width: 0; border: 1px solid var(--admin-border); border-radius: 14px; padding: 18px; background: #0d0d10; }
+  .recruitment-admin .area-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; min-width: 0; }
+  .recruitment-admin .area-card .check-line { flex: 1; align-items: flex-start; margin: 0; font-weight: 600; }
+  .recruitment-admin .area-card .check-line input { margin-top: 1px; }
+  .recruitment-admin .area-card .area-name { min-width: 0; line-height: 1.5; }
+  .recruitment-admin .area-card > label { margin-top: auto; }
+  .recruitment-admin .area-code { flex-shrink: 0; margin-top: 5px; padding: 3px 7px; border-radius: 7px; color: #9edf6d; background: #75d32d12; font-size: 12px; font-weight: 600; letter-spacing: .03em; }
+  .recruitment-admin .question-group { display: grid; align-content: start; gap: 16px; min-width: 0; }
+  .recruitment-admin .question-group-title { min-height: 48px; padding-bottom: 12px; border-bottom: 1px solid #3f3f46; }
+  .recruitment-admin .question-item { border: 1px solid var(--admin-border); border-radius: 13px; padding: 16px; background: #0d0d10; }
+  .recruitment-admin .question-item > label:first-child { font-weight: 600; }
+  .recruitment-admin .question-item textarea { min-height: 134px; font-weight: 400; }
+  .recruitment-admin .question-item .check-line { margin-top: 10px; font-size: 14px; }
+  .recruitment-admin .rubric-card { padding: 18px; border: 1px solid var(--admin-border); border-radius: 14px; background: #0d0d10; }
+  .recruitment-admin .rubric-card > label { font-weight: 600; }
+  /* Quiet at the end of the form; it only floats, clearly marked, while there are unsaved changes. */
+  .recruitment-admin .save-bar { background: #0d0d10; border: 1px solid var(--admin-border); border-radius: 14px; padding: 16px 20px; }
+  .recruitment-admin .save-bar.is-dirty { position: sticky; bottom: 16px; z-index: 5; background: #17171a; border-color: #75d32d80; box-shadow: 0 -12px 32px #000c, 0 0 0 4px #75d32d14; }
+  .recruitment-admin .save-bar.is-dirty .muted { color: #e4e4e7; }
+  .recruitment-admin .save-bar.is-dirty .muted::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 10px; border-radius: 50%; background: var(--admin-green); vertical-align: 1px; }
+  .recruitment-admin .status-card { border: 1px solid var(--admin-border); border-radius: 16px; background: #0d0d10; }
+  .recruitment-admin .status-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); list-style: none; margin: 0; padding: 0; }
+  .recruitment-admin .status-list li { display: grid; gap: 4px; min-width: 0; padding: 16px 20px; border-left: 1px solid var(--admin-border); }
+  .recruitment-admin .status-list li:first-child { border-left: 0; }
+  .recruitment-admin .status-list .status-label { color: var(--admin-muted); font-size: 13px; }
+  .recruitment-admin .status-list .status-value { display: flex; align-items: center; gap: 8px; color: #f4f4f5; font-size: 15px; font-weight: 500; }
+  .recruitment-admin .status-list .status-value::before { content: ""; flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--admin-green); box-shadow: 0 0 0 3px #75d32d26; }
+  .recruitment-admin .status-list .is-pending .status-value::before { background: #f59e0b; box-shadow: 0 0 0 3px #f59e0b26; }
+  .recruitment-admin .save-bar > button { flex-shrink: 0; }
   .recruitment-admin .filters { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 16px; margin-bottom: 18px; }
   .recruitment-admin .app-list { display: grid; gap: 12px; margin-top: 18px; }
-  .recruitment-admin .app-card { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px; background: #111113; transition: border-color .15s; border: 1px solid var(--admin-border); border-radius: 12px; }
+  .recruitment-admin .app-card { display: flex; justify-content: space-between; align-items: center; gap: 20px; min-width: 0; padding: 22px; background: #111113; transition: border-color var(--admin-motion); border: 1px solid var(--admin-border); border-radius: 16px; }
+  .recruitment-admin .app-card-info { min-width: 0; flex: 1; }
+  .recruitment-admin .app-card > button { flex-shrink: 0; }
   .recruitment-admin .app-card h3 { margin-bottom: 3px; }
   .recruitment-admin .app-card p { overflow-wrap: anywhere; }
   .recruitment-admin .app-card .app-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
   .recruitment-admin .app-card:hover { border-color: #3f3f46; }
-  .recruitment-admin .detail-panel { position: fixed; inset: 0 0 0 auto; width: min(760px, 100vw); max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; padding: 28px; overflow-y: auto; overscroll-behavior: contain; background: #0c0c0e; color: inherit; border: 0; border-left: 1px solid var(--admin-border); }
-  .recruitment-admin .detail-panel[open] { display: grid; align-content: start; gap: 24px; animation: detail-in .2s ease-out; }
+  .recruitment-admin .detail-panel { --drawer-padding: 28px; position: fixed; inset: 0 0 0 auto; width: min(760px, 100vw); max-width: 100vw; height: 100vh; height: 100dvh; max-height: 100dvh; margin: 0; padding: var(--drawer-padding); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-gutter: stable; background: #0c0c0e; color: inherit; border: 0; border-left: 1px solid var(--admin-border); }
+  .recruitment-admin .detail-panel[open] { display: grid; align-content: start; gap: 26px; animation: detail-in var(--admin-motion) ease-out; }
   .recruitment-admin .detail-panel::backdrop { background: #000a; backdrop-filter: blur(2px); }
-  .recruitment-admin .detail-panel > .section-heading { position: sticky; top: -28px; z-index: 1; margin: -28px -28px 0; padding: 20px 28px; background: #0c0c0ef2; border-bottom: 1px solid var(--admin-border); backdrop-filter: blur(8px); }
+  .recruitment-admin .detail-panel > .section-heading { position: sticky; top: calc(-1 * var(--drawer-padding)); z-index: 1; margin: calc(-1 * var(--drawer-padding)) calc(-1 * var(--drawer-padding)) 0; padding: 20px var(--drawer-padding); background: #0c0c0ef2; border-bottom: 1px solid var(--admin-border); backdrop-filter: blur(8px); }
+  .recruitment-admin .detail-panel > .section-heading > button { flex-shrink: 0; }
   .recruitment-admin .detail-panel .eyebrow { margin-top: 0; }
-  @keyframes detail-in { from { transform: translateX(24px); opacity: 0; } }
+  @keyframes detail-in { from { transform: translateX(10px); opacity: 0; } }
   .recruitment-admin .detail-panel .section-heading { margin-bottom: 0; }
   .recruitment-admin .detail-grid > div { min-width: 0; overflow-wrap: anywhere; }
-  .recruitment-admin .detail-grid dt { color: var(--admin-muted); font-size: .72rem; margin-bottom: 5px; }
-  .recruitment-admin .detail-grid dd { font-size: .85rem; }
-  .recruitment-admin .answer-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85rem; color: #e4e4e7; margin-top: 6px; }
-  .recruitment-admin .assigned-questions { margin: 8px 0 0; padding-left: 20px; list-style: decimal; font-size: .85rem; color: #e4e4e7; }
+  .recruitment-admin .detail-grid dt { color: var(--admin-muted); font-size: 13px; margin-bottom: 6px; }
+  .recruitment-admin .detail-grid dd { font-size: 15px; line-height: 1.6; }
+  .recruitment-admin .detail-grid > div { border-bottom: 1px solid var(--admin-border); padding-bottom: 14px; }
+  .recruitment-admin .answer-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; line-height: 1.75; color: #e4e4e7; margin-top: 8px; }
+  .recruitment-admin .assigned-question-group { min-width: 0; padding: 18px; border: 1px solid var(--admin-border); border-radius: 14px; background: #111113; }
+  .recruitment-admin .assigned-questions { margin: 14px 0 0; padding-left: 20px; list-style: decimal; font-size: 15px; color: #e4e4e7; overflow-wrap: anywhere; }
   .recruitment-admin .assigned-questions li { margin-bottom: 12px; line-height: 1.6; }
   .recruitment-admin .transition-box { display: grid; gap: 16px; border-block: 1px solid var(--admin-border); padding-block: 24px; }
   .recruitment-admin .transition-box .note { margin: 0; }
   .recruitment-admin .transition-box > button { justify-self: start; }
   .recruitment-admin .history { display: grid; gap: 16px; list-style: none; }
   .recruitment-admin .history li { border-left: 2px solid #3f3f46; padding-left: 16px; }
-  .recruitment-admin .history .muted { font-size: .72rem; }
+  .recruitment-admin .history .muted { margin-top: 4px; font-size: 13px; }
   .recruitment-admin .button-row { display: flex; flex-wrap: wrap; gap: 10px; }
   .recruitment-admin .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
   .recruitment-admin .stat { background: #09090b; border: 1px solid var(--admin-border); border-radius: 10px; padding: 14px; }
-  .recruitment-admin .stat strong { display: block; color: var(--admin-green); font-size: 1.4rem; }
-  .recruitment-admin .stat span { color: var(--admin-muted); font-size: .72rem; }
+  .recruitment-admin .stat strong { display: block; color: var(--admin-green); font-size: 26px; line-height: 1.4; }
+  .recruitment-admin .stat span { display: block; color: var(--admin-muted); font-size: 13px; overflow-wrap: anywhere; }
   .recruitment-admin .email-list { display: grid; gap: 10px; }
-  .recruitment-admin .email-row { display: flex; justify-content: space-between; align-items: start; gap: 12px; border-top: 1px solid var(--admin-border); padding-top: 12px; font-size: .8rem; }
+  .recruitment-admin .email-row { display: flex; justify-content: space-between; align-items: start; gap: 16px; border-top: 1px solid var(--admin-border); padding-top: 16px; font-size: 15px; }
+  .recruitment-admin .email-row > div { min-width: 0; }
   .recruitment-admin .email-row p { overflow-wrap: anywhere; }
-  .recruitment-admin .template-card { display: grid; gap: 16px; }
+  .recruitment-admin #templates-form { margin-top: 40px; }
+  .recruitment-admin .template-list { display: grid; gap: 16px; }
+  .recruitment-admin .template-card { display: grid; gap: 18px; padding: 24px; border: 1px solid var(--admin-border); border-radius: 16px; background: #111113; }
+  .recruitment-admin .template-card.is-off { opacity: .72; }
+  .recruitment-admin .template-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--admin-border); }
+  .recruitment-admin .template-head h4 { font-size: 17px; font-weight: 600; }
+  .recruitment-admin .template-head p { margin-top: 4px; }
+  .recruitment-admin .template-toggle { flex-direction: row; align-items: center; gap: 10px; flex-shrink: 0; margin: 0; color: var(--admin-muted); cursor: pointer; }
+  .recruitment-admin .disabled-templates { border: 1px dashed #3f3f46; border-radius: 16px; padding: 4px 20px; }
+  .recruitment-admin .disabled-templates[open] { padding-bottom: 20px; }
+  .recruitment-admin .disabled-templates > summary { min-height: 48px; display: flex; align-items: center; color: var(--admin-muted); font-size: 14px; cursor: pointer; }
+  .recruitment-admin .disabled-templates > .template-list { margin-top: 8px; }
+  .recruitment-admin .link-more { justify-self: start; min-height: 40px; color: var(--admin-green); font-size: 14px; font-weight: 500; background: none; border: 0; padding: 0; text-decoration: underline; text-underline-offset: 4px; }
   .recruitment-admin .preview-panel { margin-bottom: 18px; }
+  .recruitment-admin .preview-panel > summary { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 44px; font-size: 16px; font-weight: 600; line-height: 1.5; list-style: none; cursor: pointer; touch-action: manipulation; }
+  .recruitment-admin .preview-panel > summary::-webkit-details-marker { display: none; }
+  .recruitment-admin .preview-chevron { flex-shrink: 0; color: var(--admin-muted); transition: transform var(--admin-motion); }
+  .recruitment-admin .preview-panel[open] .preview-chevron { transform: rotate(180deg); }
+  .recruitment-admin .preview-content { padding-top: 18px; margin-top: 12px; border-top: 1px solid var(--admin-border); }
   .recruitment-admin .badge.test { border-color: #a16207; background: #422006; color: #fde68a; }
   .recruitment-admin .template-card .check-line { margin: 0; }
   .recruitment-admin .inline-link { color: var(--admin-green); text-decoration: underline; text-underline-offset: 3px; }
-  .recruitment-admin .director-list { display: grid; gap: 10px; }
-  .recruitment-admin .director-row { display: grid; grid-template-columns: 1.4fr 1fr .9fr auto; gap: 10px; align-items: end; }
+  .recruitment-admin .director-add { display: grid; gap: 18px; margin-bottom: 18px; }
+  .recruitment-admin .director-add-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: 14px; align-items: end; }
+  .recruitment-admin .director-panel { padding: 8px 0 0; }
+  .recruitment-admin .director-panel-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; padding: 16px 24px; border-bottom: 1px solid var(--admin-border); }
+  .recruitment-admin .director-list { display: grid; list-style: none; margin: 0; padding: 0; }
+  .recruitment-admin .director-item { display: grid; grid-template-columns: 40px minmax(0, 1fr) 240px auto; align-items: center; gap: 14px; padding: 14px 24px; border-bottom: 1px solid var(--admin-border); }
+  .recruitment-admin .director-item:last-child { border-bottom: 0; }
+  .recruitment-admin .director-avatar { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #1c1c20; color: #d4d4d8; font-size: 14px; font-weight: 600; }
+  .recruitment-admin .director-who { min-width: 0; }
+  .recruitment-admin .director-who strong { display: block; font-weight: 600; overflow-wrap: anywhere; }
+  .recruitment-admin .director-who span { display: block; color: var(--admin-muted); font-size: 14px; overflow-wrap: anywhere; }
+  .recruitment-admin .director-saved { color: var(--admin-green); font-size: 13px; }
+  .recruitment-admin .director-item .secondary { min-height: 40px; padding: 8px 14px; }
+  .recruitment-admin .director-row { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, .9fr) auto; gap: 12px; align-items: end; min-width: 0; padding: 18px; border: 1px solid var(--admin-border); border-radius: 14px; background: #0d0d10; }
   .recruitment-admin .director-row .remove { padding: 11px 12px; }
-  @media (max-width: 720px) {
-    .recruitment-admin { padding: 20px 14px 48px; }
-    .recruitment-admin .panel { padding: 18px; }
-    .recruitment-admin .field-grid, .recruitment-admin .field-grid.three, .recruitment-admin .question-columns, .recruitment-admin .area-grid, .recruitment-admin .filters { grid-template-columns: 1fr; }
+  @media (max-width: 1023px) {
+    .recruitment-admin .status-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .recruitment-admin .status-list li:nth-child(3) { border-left: 0; }
+    .recruitment-admin .status-list li:nth-child(n+3) { border-top: 1px solid var(--admin-border); }
+    .recruitment-admin .director-add-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .recruitment-admin .director-item { grid-template-columns: 40px minmax(0, 1fr) auto; grid-template-areas: "avatar who remove" ". area area"; row-gap: 12px; }
+    .recruitment-admin .director-item .director-avatar { grid-area: avatar; }
+    .recruitment-admin .director-item .director-who { grid-area: who; }
+    .recruitment-admin .director-item select { grid-area: area; }
+    .recruitment-admin .director-item .secondary { grid-area: remove; }
+    .recruitment-admin .area-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .recruitment-admin .field-grid.three { grid-template-columns: 1fr; }
+    .recruitment-admin .director-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .recruitment-admin .director-row .remove { justify-self: end; }
+  }
+  @media (max-width: 767px) {
+    .recruitment-admin { padding: 20px 16px 48px; }
+    .recruitment-admin .panel { padding: 20px; }
+    .recruitment-admin .field-grid, .recruitment-admin .question-columns, .recruitment-admin .filters { grid-template-columns: 1fr; }
+    .recruitment-admin input:not([type="checkbox"]), .recruitment-admin select, .recruitment-admin textarea { font-size: 16px; }
     .recruitment-admin .admin-header { flex-direction: column; gap: 12px; }
     .recruitment-admin .admin-header > button { margin: 0; }
-    .recruitment-admin .admin-nav button { padding: 11px 5px; font-size: .73rem; }
+    .recruitment-admin .admin-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .recruitment-admin .admin-nav button { padding: 10px 6px; font-size: 14px; }
     .recruitment-admin .section-heading, .recruitment-admin .save-bar, .recruitment-admin .app-card, .recruitment-admin .video-summary { align-items: flex-start; flex-direction: column; }
-    .recruitment-admin .save-bar { bottom: 8px; gap: 8px; }
+    .recruitment-admin .save-bar { bottom: 8px; gap: 10px; padding: 12px 16px; }
+    .recruitment-admin .save-bar .muted { font-size: 13px; }
     .recruitment-admin .save-bar .primary { width: 100%; }
     .recruitment-admin .detail-grid { gap: 16px; }
-    .recruitment-admin .detail-panel { padding: 20px 16px; border-left: 0; }
-    .recruitment-admin .detail-panel > .section-heading { top: -20px; margin: -20px -16px 0; padding: 14px 16px; flex-direction: row; align-items: center; }
+    .recruitment-admin .detail-panel { --drawer-padding: 20px; border-left: 0; scrollbar-gutter: auto; }
+    .recruitment-admin .detail-panel > .section-heading { padding-block: 16px; flex-direction: row; align-items: flex-start; gap: 14px; }
+    .recruitment-admin .detail-panel h2 { font-size: 21px; }
+    .recruitment-admin .question-group-title { min-height: 0; }
     .recruitment-admin .email-row { flex-direction: column; }
-    .recruitment-admin .director-row { grid-template-columns: 1fr; padding-bottom: 14px; border-bottom: 1px solid var(--admin-border); }
+    .recruitment-admin .button-row { gap: 12px; }
+    .recruitment-admin .button-row > button { flex-grow: 1; }
+    .recruitment-admin .app-card > button { align-self: flex-end; }
   }
-  @media (prefers-reduced-motion: reduce) { .recruitment-admin * { transition: none !important; animation: none !important; } }
+  @media (max-width: 519px) {
+    .recruitment-admin .director-add-grid { grid-template-columns: 1fr; }
+    .recruitment-admin .director-item { padding: 14px 16px; }
+    .recruitment-admin .director-panel-head { padding: 14px 16px; }
+    .recruitment-admin .template-card { padding: 18px; }
+    .recruitment-admin .template-head { flex-direction: column; }
+    .recruitment-admin .panel { padding: 18px; }
+    .recruitment-admin .area-grid, .recruitment-admin .detail-grid, .recruitment-admin .director-row { grid-template-columns: 1fr; }
+    .recruitment-admin .director-row .remove { justify-self: stretch; }
+    .recruitment-admin .stats { gap: 8px; }
+    .recruitment-admin .stat { padding: 12px 9px; }
+    .recruitment-admin .stat strong { font-size: 24px; }
+    .recruitment-admin .detail-panel { --drawer-padding: 18px; }
+    .recruitment-admin .detail-panel > .section-heading { gap: 10px; }
+    .recruitment-admin .detail-panel > .section-heading > button { padding-inline: 14px; }
+    .recruitment-admin .assigned-question-group, .recruitment-admin .rubric-card { padding: 15px; }
+    .recruitment-admin .button-row > button { flex-basis: 100%; }
+    .recruitment-admin .app-card { padding: 18px; }
+  }
+  @media (max-height: 560px) and (max-width: 767px) {
+    .recruitment-admin .save-bar { position: static; }
+    .recruitment-admin .login-panel { margin-block: 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto !important; }
+    .recruitment-admin *, .recruitment-admin *::before, .recruitment-admin *::after, .recruitment-admin .detail-panel::backdrop { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+  }
 </style>

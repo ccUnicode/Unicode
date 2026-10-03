@@ -1,5 +1,6 @@
 import { createVideoUpload, deleteVideo, inspectVideo, getVideoPlayback, videoStorageConfigured } from '../recruitment-storage';
 import { sendRecruitmentEmail, recruitmentEmailConfigured } from '../recruitment-email';
+import { UNIVERSITIES } from './universities';
 import { renderRecruitmentEmailHtml } from '../recruitment-email-layout';
 import { createVideoTicket } from '../video-ticket';
 import { databaseConfigured, localDevelopmentDatabase, recruitmentRpc } from './database';
@@ -201,4 +202,49 @@ export async function processEmails(limit = 10) {
   }
   const queue = await recruitmentRpc<{ queue: { status: string }[] }>('recruitment_queue');
   return { sent, failed, processed: items.length, remaining: queue.queue.filter((item) => ['pending', 'leased'].includes(item.status)).length };
+}
+
+/**
+ * Figures for the directors' summary. Only counts leave the server, never personal data.
+ * Test applications are excluded.
+ */
+export async function adminMetrics() {
+  const [{ applications = [] }, { config }] = await Promise.all([adminApplications(), adminConfig()]);
+  const real = applications.filter((application) => !application.isTest);
+  const submitted = real.filter((application) => application.submittedAt);
+  const inProgress = real.filter((application) => ['draft', 'incomplete'].includes(application.status));
+  const tally = (values: string[], limit = 8) => {
+    const counts = new Map<string, number>();
+    for (const value of values) if (value) counts.set(value, (counts.get(value) ?? 0) + 1);
+    return [...counts].sort((a, b) => b[1] - a[1]).slice(0, limit).map(([label, count]) => ({ label, count }));
+  };
+  const placeName = (value: string) => {
+    const key = value.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+    const match = UNIVERSITIES.find(([name, acronym]) => name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase() === key || acronym.toLowerCase() === key);
+    return match ? match[1] : value.trim();
+  };
+  const limaDay = (value: string) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima' }).format(new Date(value));
+  const days = Array.from({ length: 14 }, (_, index) => limaDay(new Date(Date.now() - (13 - index) * 86_400_000).toISOString()));
+  const perDay = new Map(days.map((day) => [day, 0]));
+  for (const application of submitted) { const day = limaDay(application.submittedAt!); if (perDay.has(day)) perDay.set(day, perDay.get(day)! + 1); }
+  const hours = submitted.map((application) => application.data.availabilityHours).filter((value): value is number => typeof value === 'number');
+  const status = (name: string) => real.filter((application) => application.status === name).length;
+  return {
+    capacity: config.maxApplicants, opensAt: config.opensAt, closesAt: config.extensionAt || config.closesAt,
+    totals: {
+      submitted: submitted.length, inProgress: inProgress.length,
+      recordingStarted: inProgress.filter((application) => application.recordingAttempts > 0).length,
+      expired: status('expired'),
+    },
+    stages: {
+      pendingReview: status('submitted'), advanced: status('profile_validated') + status('selected') + status('not_selected'),
+      rejected: status('profile_rejected'), joined: status('selected'), notJoined: status('not_selected'),
+    },
+    areas: AREA_IDS.map((id) => ({ id, name: AREA_NAMES[id], first: submitted.filter((a) => a.data.firstChoiceArea === id).length, second: submitted.filter((a) => a.data.secondChoiceArea === id).length })),
+    referral: tally(submitted.map((a) => (a.data.referralSource || '').startsWith('Otro') ? 'Otro' : a.data.referralSource || '')),
+    universities: tally(submitted.map((a) => placeName(a.data.university || '')), 6),
+    semesters: tally(submitted.map((a) => a.data.semester === '0' ? 'Egresado/a' : a.data.semester ? `${a.data.semester}.º ciclo` : ''), 11),
+    daily: days.map((day) => ({ day, count: perDay.get(day)! })),
+    averageHours: hours.length ? Math.round(hours.reduce((sum, value) => sum + value, 0) / hours.length * 10) / 10 : null,
+  };
 }
