@@ -371,6 +371,21 @@ test('emails queued for a template that was later disabled are not sent', async 
   assert.equal((await db.query("SELECT status FROM recruitment_email_outbox WHERE template_key='test_sent'")).rows[0].status, 'pending');
 });
 
+test('directors are added, moved and removed one at a time, with a record of each change', async t => {
+  const db = await database(t);
+  await rpc(db, 'recruitment_directors', [{ email: 'uno@uni.pe', area: 'ID', name: 'Uno' }], 'prueba');
+  let list = await rpc(db, 'recruitment_director_save', 'Dos@UNI.pe', 'GTH', 'Dos', 'gth@uni.pe');
+  assert.deepEqual(list.directors.map((d) => d.email).sort(), ['dos@uni.pe', 'uno@uni.pe']);
+  list = await rpc(db, 'recruitment_director_save', 'uno@uni.pe', 'FIN', 'Uno', 'gth@uni.pe');
+  assert.equal(list.directors.find((d) => d.email === 'uno@uni.pe').area, 'FIN');
+  await rpc(db, 'recruitment_login_request', 'uno@uni.pe', '1'.repeat(64));
+  list = await rpc(db, 'recruitment_director_remove', 'uno@uni.pe', 'gth@uni.pe');
+  assert.deepEqual(list.directors.map((d) => d.email), ['dos@uni.pe']);
+  assert.equal((await rpc(db, 'recruitment_login_verify', 'uno@uni.pe', '1'.repeat(64))).ok, false, 'pending codes stop working');
+  await assert.rejects(() => rpc(db, 'recruitment_director_remove', 'uno@uni.pe', 'gth@uni.pe'), /not_found/);
+  assert.equal((await db.query("SELECT count(*)::integer AS n FROM recruitment_config_events WHERE kind='director'")).rows[0].n, 3);
+});
+
 test('outbox leases are exclusive, retry with backoff and recover expired fifth leases', async t => {
   const db = await database(t);
   await openCall(db);

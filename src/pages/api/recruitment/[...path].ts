@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { managesRecruitment, sessionStore, type AdminSession } from '../../../lib/session-store';
-import { directors } from '../../../lib/admin-access';
+import { directors, removeDirector, saveDirector } from '../../../lib/admin-access';
 import { verifyVideoTicket } from '../../../lib/video-ticket';
 import { streamDriveVideo } from '../../../lib/recruitment-storage';
 import * as recruitment from '../../../lib/recruitment/service';
@@ -120,6 +120,8 @@ async function handle(request: Request, rawPath: string | undefined): Promise<Re
       const actor = session.role === 'director' ? session.email : 'contraseña de administración';
       if (action === 'directors' && method === 'GET') return json(await directors());
       if (action === 'directors' && method === 'PUT') return json(await directors(await body(request), actor));
+      if (action === 'directors' && method === 'POST') return json(await saveDirector(await body(request), actor));
+      if (action === 'directors/remove' && method === 'POST') return json(await removeDirector(await body(request), actor));
       if (action === 'config' && method === 'GET') return json(await recruitment.adminConfig());
       if (action === 'config' && ['PUT', 'PATCH'].includes(method)) return json(await recruitment.saveConfig(await body(request)));
       if (action === 'applications' && method === 'GET') return json(await recruitment.adminApplications());

@@ -111,16 +111,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (options.body) headers.set("Content-Type", "application/json");
   const response = await fetch(`${apiRoot}${path}`, { ...options, headers, cache: "no-store" });
   const result = await response.json().catch(() => ({})) as { error?: string };
-  if (response.status === 401) {
-    clearSession();
-    loginMessage("La sesión venció. Ingresa nuevamente.");
-  }
-  if (response.status === 403) {
-    // A director outside GTH: their session stays valid for /admin.
-    element("recruitment-dashboard").hidden = true;
-    element("recruitment-login").hidden = false;
-    loginMessage("Este panel es solo para GTH. Puedes ver todas las postulaciones en /admin.");
-  }
+  if (response.status === 401) { clearSession(); toLogin("expirada"); }
+  // A director outside GTH keeps their session for /admin.
+  if (response.status === 403) location.replace("/admin?sin_gth=1");
   if (!response.ok) throw new Error(result.error || `No se pudo completar la solicitud (${response.status}).`);
   return result as T;
 }
@@ -139,45 +132,18 @@ function clearSession(): void {
   ["applications-list", "detail-title", "detail-personal", "detail-answers", "detail-questions", "detail-history", "detail-video-info", "video-access-message", "template-list", "email-list", "email-summary"].forEach((id) => element(id).replaceChildren());
   const detail = element<HTMLDialogElement>("application-detail");
   if (detail.open) detail.close();
-  element<HTMLInputElement>("recruitment-password").value = "";
 }
 
-function loginMessage(message: string): void {
-  const box = element("recruitment-login-message");
-  box.textContent = message;
-  box.hidden = false;
-  box.classList.add("error");
+/** There is a single sign-in, in /admin; it brings GTH back here afterwards. */
+function toLogin(reason?: "expirada"): void {
+  location.replace(`/admin?volver=gth${reason ? `&${reason}=1` : ""}`);
 }
-
-element<HTMLFormElement>("recruitment-login-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const form = event.currentTarget as HTMLFormElement;
-  const password = element<HTMLInputElement>("recruitment-password").value;
-  if (!password) return;
-  lockForm(form, true);
-  element("recruitment-login-message").hidden = true;
-  try {
-    const response = await fetch("/api/admin-login", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }),
-    });
-    const result = await response.json() as { error?: string; token?: string };
-    if (!response.ok || !result.token) throw new Error(result.error || "No se pudo iniciar sesión.");
-    token = result.token;
-    sessionStorage.setItem("admin_token", token);
-    element<HTMLInputElement>("recruitment-password").value = "";
-    await initialize();
-  } catch (error) {
-    loginMessage(messageOf(error));
-  } finally {
-    lockForm(form, false);
-  }
-});
 
 element("recruitment-logout").addEventListener("click", async () => {
   const currentToken = token;
   clearSession();
-  element<HTMLInputElement>("recruitment-password").focus();
   await fetch("/api/admin-logout", { method: "POST", headers: { Authorization: `Bearer ${currentToken}` } }).catch(() => undefined);
+  location.replace("/admin");
 });
 
 function switchPanel(panel: string): void {
@@ -196,46 +162,66 @@ function switchPanel(panel: string): void {
 type Director = { email: string; area: string; name: string };
 const directorAreas: [string, string][] = [["GTH", "Gestión del Talento Humano"], ["ID", "Investigación y Desarrollo"], ["RRPP", "Relaciones Públicas"], ["ACD", "Académica"], ["DCC", "Comunicación y Contenido"], ["LGE", "Logística y Gestión de Eventos"], ["FIN", "Finanzas"]];
 
-function directorRow(director: Director = { email: "", area: "", name: "" }): HTMLElement {
-  const row = node("div", undefined, "director-row");
-  const email = node("label", "Correo"); const emailInput = node("input"); emailInput.type = "email"; emailInput.required = true; emailInput.name = "email"; emailInput.placeholder = "nombre.apellido@uni.pe"; emailInput.value = director.email; email.append(emailInput);
-  const name = node("label", "Nombre"); const nameInput = node("input"); nameInput.name = "name"; nameInput.maxLength = 150; nameInput.placeholder = "Opcional"; nameInput.value = director.name; name.append(nameInput);
-  const area = node("label", "Área"); const select = node("select"); select.name = "area"; select.required = true;
-  select.append(new Option("Elige un área", ""), ...directorAreas.map(([id, label]) => new Option(label, id, false, id === director.area))); area.append(select);
-  const remove = node("button", "Quitar", "secondary remove"); remove.type = "button"; remove.addEventListener("click", () => row.remove());
-  row.append(email, name, area, remove);
-  return row;
+const areaLabel = (id: string) => directorAreas.find(([key]) => key === id)?.[1] ?? id;
+const initials = (text: string) => text.split(/[\s.@]+/).filter(Boolean).slice(0, 2).map((part) => part[0]!.toUpperCase()).join("") || "?";
+
+function directorItem(director: Director): HTMLElement {
+  const item = node("li", undefined, "director-item");
+  const avatar = node("span", initials(director.name || director.email), "director-avatar");
+  avatar.setAttribute("aria-hidden", "true");
+  const who = node("div", undefined, "director-who");
+  who.append(node("strong", director.name || director.email), node("span", director.name ? director.email : "Sin nombre registrado"));
+  const area = node("select");
+  area.setAttribute("aria-label", `Área de ${director.name || director.email}`);
+  area.append(...directorAreas.map(([id, label]) => new Option(label, id, false, id === director.area)));
+  area.addEventListener("change", async () => {
+    area.disabled = true;
+    try {
+      const { directors } = await request<{ directors: Director[] }>("/directors", { method: "POST", body: JSON.stringify({ ...director, area: area.value }) });
+      renderDirectors(directors, `Listo: ${director.name || director.email} ahora está en ${areaLabel(area.value)}.`);
+    } catch (error) { area.value = director.area; element("directors-status").textContent = messageOf(error); area.disabled = false; }
+  });
+  const remove = node("button", "Quitar", "secondary");
+  remove.type = "button";
+  remove.addEventListener("click", async () => {
+    if (!confirm(`${director.name || director.email} dejará de poder entrar al panel. ¿Quitar su acceso?`)) return;
+    remove.disabled = true;
+    try {
+      const { directors } = await request<{ directors: Director[] }>("/directors/remove", { method: "POST", body: JSON.stringify({ email: director.email }) });
+      renderDirectors(directors, `Se quitó el acceso de ${director.name || director.email}.`);
+    } catch (error) { element("directors-status").textContent = messageOf(error); remove.disabled = false; }
+  });
+  item.append(avatar, who, area, remove);
+  return item;
+}
+
+function renderDirectors(directors: Director[], status = ""): void {
+  const sorted = [...directors].sort((a, b) => directorAreas.findIndex(([id]) => id === a.area) - directorAreas.findIndex(([id]) => id === b.area) || (a.name || a.email).localeCompare(b.name || b.email, "es"));
+  const list = element("directors-list");
+  list.replaceChildren(...(sorted.length ? sorted.map(directorItem) : [node("li", "Todavía no hay directores. Agrega el primero arriba.", "muted director-item")]));
+  element("directors-count").textContent = `Directores con acceso (${directors.length})`;
+  element("directors-status").textContent = status;
 }
 
 async function loadDirectors(): Promise<void> {
-  const list = element("directors-list");
   element("directors-status").textContent = "Cargando…";
-  try {
-    const { directors } = await request<{ directors: Director[] }>("/directors");
-    list.replaceChildren(...(directors.length ? directors.map((director) => directorRow(director)) : [directorRow()]));
-    element("directors-status").textContent = `${directors.length} director(es) con acceso.`;
-  } catch (error) { element("directors-status").textContent = messageOf(error); }
+  try { renderDirectors((await request<{ directors: Director[] }>("/directors")).directors); }
+  catch (error) { element("directors-status").textContent = messageOf(error); }
 }
 
-element("add-director").addEventListener("click", () => {
-  const row = directorRow(); element("directors-list").append(row); row.querySelector("input")?.focus();
-});
-
-element<HTMLFormElement>("directors-form").addEventListener("submit", async (event) => {
+const addForm = element<HTMLFormElement>("director-add");
+(addForm.elements.namedItem("area") as HTMLSelectElement).append(new Option("Elige un área", ""), ...directorAreas.map(([id, label]) => new Option(label, id)));
+addForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const form = event.currentTarget as HTMLFormElement;
-  if (!form.reportValidity()) return;
-  const directors = [...element("directors-list").querySelectorAll(".director-row")].map((row) => ({
-    email: (row.querySelector("[name=email]") as HTMLInputElement).value.trim(),
-    name: (row.querySelector("[name=name]") as HTMLInputElement).value.trim(),
-    area: (row.querySelector("[name=area]") as HTMLSelectElement).value,
-  })).filter((director) => director.email);
-  lockForm(form, true);
+  if (!addForm.reportValidity()) return;
+  const value = (name: string) => (addForm.elements.namedItem(name) as HTMLInputElement | HTMLSelectElement).value.trim();
+  lockForm(addForm, true);
   try {
-    const result = await request<{ directors: Director[] }>("/directors", { method: "PUT", body: JSON.stringify({ directors }) });
-    element("directors-status").textContent = `Accesos guardados: ${result.directors.length} director(es).`;
+    const { directors } = await request<{ directors: Director[] }>("/directors", { method: "POST", body: JSON.stringify({ email: value("email"), name: value("name"), area: value("area") }) });
+    renderDirectors(directors, `Listo: ${value("name") || value("email")} ya puede entrar con su correo.`);
+    addForm.reset();
   } catch (error) { element("directors-status").textContent = messageOf(error); }
-  finally { lockForm(form, false); }
+  finally { lockForm(addForm, false); }
 });
 
 document.querySelectorAll<HTMLButtonElement>("[data-panel]").forEach((button) => {
@@ -284,7 +270,6 @@ function renderConfig(value: RecruitmentConfig): void {
   for (const dateName of ["opensAt", "closesAt", "extensionAt"] as const) field(dateName).value = limaDateInput(value[dateName]);
   field("maxApplicants").value = String(value.maxApplicants);
   field("inactivityHours").value = String(value.inactivityHours);
-  field("shortCasePrompt").value = value.shortCasePrompt;
   field("preparationSeconds").value = String(value.preparationSeconds);
   field("maxVideoMB").value = String(value.maxVideoBytes / 1024 / 1024);
   field("storageProvider").value = value.storageProvider;
@@ -305,7 +290,9 @@ function renderConfig(value: RecruitmentConfig): void {
     enabled.type = "checkbox";
     enabled.name = `area-enabled-${area.id}`;
     enabled.checked = area.enabled;
-    checkboxLabel.append(enabled, node("span", `${area.name} (${area.id})`));
+    checkboxLabel.append(enabled, node("span", area.name, "area-name"));
+    const header = node("div", undefined, "area-card-header");
+    header.append(checkboxLabel, node("span", area.id, "area-code"));
     const quotaLabel = node("label", "Cupo del área");
     const quota = node("input");
     quota.type = "number";
@@ -321,7 +308,7 @@ function renderConfig(value: RecruitmentConfig): void {
     quotaLabel.append(quota, percentage);
     quota.addEventListener("input", updateAreaPercentages);
     enabled.addEventListener("change", updateAreaPercentages);
-    card.append(checkboxLabel, quotaLabel);
+    card.append(header, quotaLabel);
     areas.append(card);
   });
   updateAreaPercentages();
@@ -330,7 +317,7 @@ function renderConfig(value: RecruitmentConfig): void {
   bank.replaceChildren();
   for (const category of ["motivation", "collaboration"] as const) {
     const group = node("div", undefined, "question-group");
-    group.append(node("h3", categoryNames[category]));
+    group.append(node("h3", categoryNames[category], "question-group-title"));
     value.questions.filter((question) => question.category === category).forEach((question, index) => {
       const item = node("div", undefined, "question-item");
       item.dataset.questionId = question.id;
@@ -356,7 +343,7 @@ function renderConfig(value: RecruitmentConfig): void {
   const rubric = element("video-rubric-config");
   rubric.replaceChildren();
   value.videoRubric.forEach((criterion) => {
-    const card = node("div", undefined, "stack compact");
+    const card = node("div", undefined, "stack compact rubric-card");
     const label = node("label", "Criterio (máximo 5 puntos)");
     const title = node("input");
     title.name = `rubric-label-${criterion.id}`;
@@ -413,14 +400,25 @@ function renderReadiness(readiness?: Readiness): void {
   const list = element("connection-status");
   list.replaceChildren();
   if (!readiness) return;
-  const labels = [
-    readiness.localDevelopment ? "Base local de desarrollo" : "Base de datos disponible",
-    readiness.video ? "Video: credenciales configuradas" : "Video: conexión pendiente",
-    readiness.email ? "Correo: credenciales configuradas" : "Correo: conexión pendiente",
-    readiness.resumeEncryption ? "Enlaces personales protegidos" : "Protección de enlaces pendiente",
+  const items: [string, boolean, string, string][] = [
+    ["Base de datos", readiness.database, readiness.localDevelopment ? "Local (desarrollo)" : "Conectada", "Pendiente"],
+    ["Videos", readiness.video, "Google Drive conectado", "Pendiente"],
+    ["Correos", readiness.email, "Envío configurado", "Pendiente"],
+    ["Enlaces personales", readiness.resumeEncryption, "Protegidos", "Pendiente"],
   ];
-  labels.forEach((label) => list.append(node("span", label, "badge")));
+  for (const [label, ready, okText, pendingText] of items) {
+    const item = node("li", undefined, ready ? "" : "is-pending");
+    item.append(node("span", label, "status-label"), node("span", ready ? okText : pendingText, "status-value"));
+    list.append(item);
+  }
 }
+
+function setDirty(bar: string, info: string, dirty: boolean, idle = "Los cambios se aplican al guardar."): void {
+  element(bar).classList.toggle("is-dirty", dirty);
+  element(info).textContent = dirty ? "Tienes cambios sin guardar." : idle;
+}
+for (const type of ["input", "change"]) configForm.addEventListener(type, () => setDirty("config-save-bar", "config-save-info", true));
+window.addEventListener("beforeunload", (event) => { if (document.querySelector(".save-bar.is-dirty")) event.preventDefault(); });
 
 configForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -435,7 +433,7 @@ configForm.addEventListener("submit", async (event) => {
     maxApplicants: Number(field("maxApplicants").value),
     minAvailabilityHours: 0,
     inactivityHours: Number(field("inactivityHours").value),
-    shortCasePrompt: field("shortCasePrompt").value.trim(),
+    shortCasePrompt: config.shortCasePrompt,
     preparationSeconds: Number(field("preparationSeconds").value),
     maxVideoBytes: Math.round(Number(field("maxVideoMB").value) * 1024 * 1024),
     storageProvider: field("storageProvider").value as RecruitmentConfig["storageProvider"],
@@ -483,6 +481,7 @@ configForm.addEventListener("submit", async (event) => {
     // Refresh readiness for the chosen provider after changing storage settings.
     const readiness = await request<{ config: RecruitmentConfig; readiness?: Readiness }>("/config").catch(() => null);
     renderReadiness(readiness?.readiness);
+    setDirty("config-save-bar", "config-save-info", false, `Configuración guardada · versión ${config.revision}`);
     showMessage("Configuración guardada. Las preguntas ya asignadas conservan su texto original.");
   } catch (error) {
     showMessage(messageOf(error), true);
@@ -544,7 +543,7 @@ function renderApplications(): void {
   }
   matches.forEach((application) => {
     const card = node("article", undefined, "app-card");
-    const info = node("div");
+    const info = node("div", undefined, "app-card-info");
     info.append(node("h3", `${application.data.firstName} ${application.data.lastName}`.trim() || "Borrador sin nombre"));
     info.append(node("p", application.data.email || "Sin correo", "muted"));
     const meta = node("div", undefined, "app-meta");
@@ -628,7 +627,7 @@ function renderDetail(application: RecruitmentApplication): void {
   const questions = element("detail-questions");
   questions.replaceChildren();
   for (const category of ["motivation", "collaboration"] as const) {
-    const group = node("div");
+    const group = node("div", undefined, "assigned-question-group");
     group.append(node("h3", categoryNames[category]));
     const list = node("ol", undefined, "assigned-questions");
     const assigned = application.questions.filter((question) => question.category === category);
@@ -728,8 +727,18 @@ element("open-video").addEventListener("click", async () => {
   }
 });
 
+const templateInfo: Record<string, [string, string]> = {
+  resume: ["Enlace personal", "Al guardar el borrador por primera vez. Trae el botón para continuar."],
+  incomplete: ["Recordatorio: falta completar", "Si el borrador pasa las horas de inactividad configuradas sin avanzar."],
+  submitted: ["Inscripción completa", "Automático, al confirmar el envío de la postulación."],
+  profile_validated: ["Avanza a la 2.ª etapa", "Botón «Avanza a la 2.ª etapa» en el detalle del postulante."],
+  profile_rejected: ["No avanza", "Botón «No avanza» en el detalle del postulante."],
+  selected: ["Ingresa a UNICODE", "Botón «Ingresa a UNICODE» en el detalle del postulante."],
+  not_selected: ["No ingresa", "Botón «No ingresa» en el detalle del postulante."],
+};
+const templateOrder = Object.keys(templateInfo);
 function templateName(key: string): string {
-  return key === "resume" ? "Enlace para continuar y recordatorio" : statusNames[key as ApplicationStatus] || key;
+  return templateInfo[key]?.[0] ?? (statusNames[key as ApplicationStatus] || key);
 }
 
 async function loadCommunications(): Promise<void> {
@@ -745,39 +754,53 @@ async function loadTemplates(): Promise<void> {
   renderTemplates();
 }
 
-function renderTemplates(): void {
-  element("template-variables").textContent = `${allowedTemplateVariables.map((variable) => `{{${variable}}}`).join(", ")}. {{resumeUrl}} se usa en el enlace para continuar y el recordatorio de postulación incompleta.`;
-  const list = element("template-list");
-  list.replaceChildren();
-  templates.forEach((template) => {
-    const card = node("fieldset", undefined, "panel template-card");
-    card.dataset.templateKey = template.key;
-    card.append(node("legend", templateName(template.key)));
-    const subjectLabel = node("label", "Asunto");
-    const subject = node("input");
-    subject.name = `subject-${template.key}`;
-    subject.maxLength = 200;
-    subject.required = true;
-    subject.value = template.subject;
-    subjectLabel.append(subject);
-    const bodyLabel = node("label", "Mensaje");
-    const body = node("textarea");
-    body.name = `body-${template.key}`;
-    body.rows = 5;
-    body.maxLength = 5000;
-    body.required = true;
-    body.value = template.body;
-    bodyLabel.append(body);
-    const enabledLabel = node("label", undefined, "check-line");
-    const enabled = node("input");
-    enabled.name = `enabled-${template.key}`;
-    enabled.type = "checkbox";
-    enabled.checked = template.enabled;
-    enabledLabel.append(enabled, node("span", "Enviar al llegar a esta etapa"));
-    card.append(subjectLabel, bodyLabel, enabledLabel);
-    list.append(card);
-  });
+function templateCard(template: EmailTemplate): HTMLElement {
+  const card = node("section", undefined, `template-card${template.enabled ? "" : " is-off"}`);
+  card.dataset.templateKey = template.key;
+  const head = node("div", undefined, "template-head");
+  const title = node("div");
+  title.append(node("h4", templateName(template.key)), node("p", templateInfo[template.key]?.[1] ?? "Etapa del proceso anterior; ya no se usa.", "muted"));
+  const toggle = node("label", undefined, "template-toggle");
+  const enabled = node("input");
+  enabled.name = `enabled-${template.key}`;
+  enabled.type = "checkbox";
+  enabled.checked = template.enabled;
+  enabled.addEventListener("change", () => card.classList.toggle("is-off", !enabled.checked));
+  toggle.append(enabled, node("span", "Activo"));
+  head.append(title, toggle);
+  const subjectLabel = node("label", "Asunto");
+  const subject = node("input");
+  subject.name = `subject-${template.key}`;
+  subject.maxLength = 200;
+  subject.required = true;
+  subject.value = template.subject;
+  subjectLabel.append(subject);
+  const bodyLabel = node("label", "Mensaje");
+  const body = node("textarea");
+  body.name = `body-${template.key}`;
+  body.rows = 4;
+  body.maxLength = 5000;
+  body.required = true;
+  body.value = template.body;
+  bodyLabel.append(body);
+  card.append(head, subjectLabel, bodyLabel);
+  return card;
 }
+
+function renderTemplates(): void {
+  element("template-variables").textContent = `${allowedTemplateVariables.map((variable) => `{{${variable}}}`).join(", ")}. {{resumeUrl}} solo en el enlace personal y el recordatorio.`;
+  const rank = (key: string) => (templateOrder.includes(key) ? templateOrder.indexOf(key) : templateOrder.length);
+  const sorted = [...templates].sort((a, b) => rank(a.key) - rank(b.key));
+  const active = sorted.filter((template) => template.enabled || templateOrder.includes(template.key));
+  const old = sorted.filter((template) => !active.includes(template));
+  element("template-list").replaceChildren(...active.map(templateCard));
+  element("disabled-template-list").replaceChildren(...old.map(templateCard));
+  const folded = element<HTMLDetailsElement>("disabled-templates");
+  folded.hidden = !old.length;
+  folded.querySelector("summary")!.textContent = `Plantillas del proceso anterior, desactivadas (${old.length})`;
+  setDirty("templates-save-bar", "templates-save-info", false);
+}
+for (const type of ["input", "change"]) element("templates-form").addEventListener(type, () => setDirty("templates-save-bar", "templates-save-info", true));
 
 element<HTMLFormElement>("templates-form").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -830,7 +853,12 @@ async function loadQueue(): Promise<void> {
   const list = element("email-list");
   list.replaceChildren();
   if (!result.queue.length) list.append(node("p", "Todavía no hay correos en la cola.", "muted"));
-  result.queue.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 30).forEach((item) => {
+  const recent = result.queue.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 30);
+  const more = element<HTMLButtonElement>("email-more");
+  more.hidden = recent.length <= 6;
+  more.textContent = `Ver ${recent.length - 6} más`;
+  more.onclick = () => { list.querySelectorAll<HTMLElement>(".email-row[hidden]").forEach((row) => { row.hidden = false; }); more.hidden = true; };
+  recent.forEach((item, index) => {
     const row = node("div", undefined, "email-row");
     const info = node("div");
     const application = applications.find((candidate) => candidate.id === item.applicationId);
@@ -840,9 +868,10 @@ async function loadQueue(): Promise<void> {
     if (item.lastError) info.append(node("p", item.lastError, "muted"));
     if (item.nextAttemptAt && !["sent", "delivered", "failed", "cancelled"].includes(item.status)) info.append(node("p", `Próximo intento: ${formattedDate(item.nextAttemptAt)}`, "muted"));
     row.append(info, node("span", queueLabel(item.status), "badge"));
+    row.hidden = index >= 6;
     list.append(row);
   });
-  if (result.queue.length > 30) list.append(node("p", "Se muestran los últimos 30 registros de la cola.", "muted"));
+  if (result.queue.length > 30) more.textContent += " (de los últimos 30)";
 }
 
 element("refresh-emails").addEventListener("click", async () => {
@@ -926,6 +955,6 @@ async function initialize(): Promise<void> {
   }
 }
 
-if (token) void initialize();
+if (token) void initialize(); else toLogin();
 
 export {};

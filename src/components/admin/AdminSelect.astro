@@ -1,0 +1,50 @@
+---
+interface Props {
+  id: string;
+  label: string;
+  options: { value: string; label: string }[];
+}
+const { id, label, options } = Astro.props;
+---
+
+<div data-admin-select class="relative min-w-0 grid gap-2 text-[12px] text-zinc-500">
+  <span id={`${id}-label`}>{label}</span>
+  <button
+    id={id}
+    type="button"
+    role="combobox"
+    aria-haspopup="listbox"
+    aria-expanded="false"
+    aria-controls={`${id}-list`}
+    aria-labelledby={`${id}-label ${id}-value`}
+    data-value={options[0].value}
+    class="flex w-full min-w-0 min-h-11 items-center justify-between gap-2 rounded-xl border border-zinc-800 bg-zinc-900/40 px-3 py-2.5 text-left text-[14px] text-zinc-300 cursor-pointer hover:border-zinc-600 outline-none focus-visible:border-unicode focus-visible:ring-1 focus-visible:ring-unicode aria-expanded:border-unicode/60"
+  >
+    <span id={`${id}-value`} data-admin-value class="min-w-0 truncate">{options[0].label}</span>
+    <svg class="w-3.5 h-3.5 shrink-0 text-unicode transition-transform duration-150 [[aria-expanded=true]_&]:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"></path></svg>
+  </button>
+  <div
+    id={`${id}-list`}
+    data-admin-options
+    role="listbox"
+    aria-labelledby={`${id}-label`}
+    hidden
+    inert
+    class="absolute top-full left-0 right-0 z-30 mt-2 rounded-xl border border-zinc-700/80 bg-[#121214] p-1.5 shadow-xl shadow-black/40"
+  >
+    {options.map((option, index) => (
+      <button
+        id={`${id}-item-${index}`}
+        type="button"
+        role="option"
+        aria-selected={index === 0 ? "true" : "false"}
+        tabindex="-1"
+        data-value={option.value}
+        class="flex w-full min-h-11 items-center justify-between gap-2 rounded-lg px-2.5 py-2.5 text-left text-[14px] text-zinc-300 cursor-pointer outline-none data-[highlighted=true]:bg-zinc-800 aria-selected:text-unicode-light"
+      >
+        <span class="min-w-0">{option.label}</span>
+        <svg class="w-3.5 h-3.5 shrink-0 opacity-0 [[aria-selected=true]_&]:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m5 12 4 4L19 6"></path></svg>
+      </button>
+    ))}
+  </div>
+</div>
