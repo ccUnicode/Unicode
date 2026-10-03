@@ -39,7 +39,7 @@ export function validateApplicationData(input: unknown, existing: ApplicationDat
   const result: ApplicationData = {
     firstName: string(source.firstName, 'nombres', 150), lastName: string(source.lastName, 'apellidos', 150),
     email: string(source.email, 'correo', 254).toLowerCase(), phone: string(source.phone, 'teléfono', 30).replace(/[\s().-]/g, ''),
-    university: string(source.university, 'universidad', 150), faculty: string(source.faculty, 'facultad', 150),
+    university: string(source.university, 'centro de estudios', 150), faculty: string(source.faculty, 'facultad', 150),
     career: string(source.career, 'carrera', 150), admissionTerm: string(source.admissionTerm, 'periodo de ingreso', 20),
     semester: string(source.semester, 'ciclo', 2), firstChoiceArea: string(source.firstChoiceArea, 'primera área', 10) as ApplicationData['firstChoiceArea'],
     secondChoiceArea: string(source.secondChoiceArea, 'segunda área', 10) as ApplicationData['secondChoiceArea'],

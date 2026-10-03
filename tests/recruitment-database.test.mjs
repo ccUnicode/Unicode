@@ -135,7 +135,7 @@ test('closed calls, future opening, deadline, extension and minimum availability
   await assert.rejects(() => rpc(db, 'recruitment_submit', lowAvailability.id, lowAvailability.owner), /availability/);
   const missingAvailability = await verifiedDraft(db, { availabilityHours: null });
   await assert.rejects(() => rpc(db, 'recruitment_submit', missingAvailability.id, missingAvailability.owner), /availability/);
-  const missingField = await verifiedDraft(db, { faculty: '' });
+  const missingField = await verifiedDraft(db, { career: '' });
   await assert.rejects(() => rpc(db, 'recruitment_submit', missingField.id, missingField.owner), /incomplete/);
 });
 
@@ -143,6 +143,14 @@ test('applications submit without the removed short case answer', async t => {
   const db = await database(t);
   await openCall(db);
   const application = await verifiedDraft(db, { shortCase: '' });
+  const result = await rpc(db, 'recruitment_submit', application.id, application.owner);
+  assert.equal(result.application.status, 'submitted');
+});
+
+test('applications submit without a faculty, as institutes have none', async t => {
+  const db = await database(t);
+  await openCall(db);
+  const application = await verifiedDraft(db, { faculty: '' });
   const result = await rpc(db, 'recruitment_submit', application.id, application.owner);
   assert.equal(result.application.status, 'submitted');
 });

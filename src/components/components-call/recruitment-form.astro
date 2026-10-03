@@ -16,7 +16,6 @@
   <noscript><p class="notice error">Activa JavaScript para guardar tu postulación y grabar el video.</p></noscript>
 
   <div id="recruitment-flow" hidden>
-    <p id="save-status" class="save-indicator" role="status" aria-live="polite" hidden><span aria-hidden="true"></span><span id="save-status-text"></span></p>
     <ol class="steps" aria-label="Pasos de tu postulación">
       <li id="step-data" aria-current="step"><span>1</span> Tus datos</li>
       <li id="step-video"><span>2</span> Tu video</li>
@@ -24,40 +23,40 @@
     </ol>
 
     <aside id="resume-panel" class="resume-panel" hidden>
-      <div><strong>Tu borrador está guardado</strong><p>Este navegador recordará tu avance aunque lo cierres. Para continuar en otro dispositivo usa tu enlace personal (también te lo enviamos por correo). No lo compartas: permite acceder a tu postulación.</p></div>
-      <div class="resume-actions"><button id="copy-resume" type="button" class="button secondary">Copiar enlace personal</button><button id="forget-device" type="button" class="button secondary compact">No es mi dispositivo: olvidar aquí</button></div>
+      <span class="resume-label"><span class="dot" aria-hidden="true"></span>Avance guardado</span>
+      <div class="resume-actions"><button id="copy-resume" type="button" class="link-button" title="Te permite continuar desde otro dispositivo. No lo compartas.">Copiar mi enlace</button><button id="forget-device" type="button" class="link-button muted" title="Borra tu avance de este navegador.">Olvidar en este equipo</button></div>
     </aside>
 
     <section id="data-phase" class="panel" aria-labelledby="data-heading">
       <h2 id="data-heading" tabindex="-1">Primero, vamos a conocerte</h2>
-      <p>Los campos con * son obligatorios. Tu avance se guarda automáticamente mientras escribes.</p>
-      <form id="recruitment-data-form">
+      <p>Los campos con <span class="req">*</span> son obligatorios. Tu avance se guarda solo mientras escribes.</p>
+      <form id="recruitment-data-form" novalidate>
         <fieldset id="data-fields">
           <legend class="sr-only">Datos de la postulación</legend>
           <div class="field-grid">
-            <div class="field"><label for="firstName">Nombres *</label><input id="firstName" name="firstName" required maxlength="150" autocomplete="given-name" /></div>
-            <div class="field"><label for="lastName">Apellidos *</label><input id="lastName" name="lastName" required maxlength="150" autocomplete="family-name" /></div>
-            <div class="field"><label for="email">Correo electrónico *</label><input id="email" name="email" type="email" required maxlength="254" autocomplete="email" /><p class="hint">Revísalo bien: al guardarse tu borrador quedará asociado a tu enlace personal y no se podrá cambiar después.</p></div>
-            <div class="field"><label for="phone">Celular *</label><input id="phone" name="phone" type="tel" required pattern="[0-9]{9}" minlength="9" maxlength="9" inputmode="numeric" autocomplete="tel-national" placeholder="999999999" title="Ingresa los 9 dígitos de tu celular, sin espacios." /></div>
-            <div class="field"><label for="university">Universidad *</label><input id="university" name="university" required maxlength="150" autocomplete="organization" /></div>
-            <div class="field"><label for="faculty">Facultad *</label><input id="faculty" name="faculty" required maxlength="150" /></div>
-            <div class="field"><label for="career">Carrera *</label><input id="career" name="career" required maxlength="150" /></div>
-            <div class="field"><label for="admissionTerm">Periodo de ingreso *</label><input id="admissionTerm" name="admissionTerm" required maxlength="6" pattern="[0-9]{4}-[12]" placeholder="Ej. 2024-2" title="Escribe el año y semestre de ingreso, por ejemplo 2024-2." /></div>
-            <div class="field"><label for="semester">Ciclo actual *</label><select id="semester" name="semester" required><option value="">Selecciona tu ciclo</option>{Array.from({length:10}, (_, i) => <option value={String(i+1)}>{i+1}.º ciclo</option>)}<option value="0">Egresado/a</option></select></div>
-            <div class="field"><label for="availabilityHours">Horas disponibles por semana *</label><input id="availabilityHours" name="availabilityHours" type="number" required min="0" max="168" step="0.5" inputmode="decimal" /><p id="availability-hint" class="hint">Considera el tiempo que puedes dedicar a las actividades de UNICODE.</p></div>
-            <div class="field"><label for="firstChoiceArea">Primera opción de área *</label><select id="firstChoiceArea" name="firstChoiceArea" required><option value="">Selecciona un área</option></select></div>
+            <div class="field"><label for="firstName">Nombres <span class="req" aria-hidden="true">*</span></label><input id="firstName" name="firstName" required maxlength="150" autocomplete="given-name" placeholder="Ej. Ana Lucía" /></div>
+            <div class="field"><label for="lastName">Apellidos <span class="req" aria-hidden="true">*</span></label><input id="lastName" name="lastName" required maxlength="150" autocomplete="family-name" placeholder="Ej. Quispe Rojas" /></div>
+            <div class="field"><label for="email">Correo electrónico <span class="req" aria-hidden="true">*</span></label><input id="email" name="email" type="email" required maxlength="254" autocomplete="email" placeholder="Ej. ana.quispe@uni.pe" /></div>
+            <div class="field"><label for="phone">Celular <span class="req" aria-hidden="true">*</span></label><input id="phone" name="phone" type="tel" required pattern="[0-9]{9}" minlength="9" maxlength="9" inputmode="numeric" autocomplete="tel-national" placeholder="Ej. 987654321" title="Ingresa los 9 dígitos de tu celular, sin espacios." /></div>
+            <div class="field"><label for="university">Centro de estudios <span class="req" aria-hidden="true">*</span></label><div class="combobox"><input id="university" name="university" required maxlength="150" placeholder="Ej. Universidad Nacional de Ingeniería, SENATI" /><ul id="university-options" class="combobox-list" role="listbox" aria-label="Centros de estudio sugeridos" hidden></ul></div></div>
+            <div class="field"><label for="faculty">Facultad <span class="optional">(si aplica)</span></label><div class="combobox"><input id="faculty" name="faculty" maxlength="150" placeholder="Ej. Facultad de Ingeniería Industrial y de Sistemas" /><ul id="faculty-options" class="combobox-list" role="listbox" aria-label="Facultades sugeridas" hidden></ul></div></div>
+            <div class="field"><label for="career">Carrera <span class="req" aria-hidden="true">*</span></label><div class="combobox"><input id="career" name="career" required maxlength="150" placeholder="Ej. Ingeniería de Sistemas" /><ul id="career-options" class="combobox-list" role="listbox" aria-label="Carreras sugeridas" hidden></ul></div></div>
+            <div class="field"><label for="admissionTerm">Periodo de ingreso <span class="req" aria-hidden="true">*</span></label><input id="admissionTerm" name="admissionTerm" required maxlength="6" pattern="[0-9]{4}-[12]" placeholder="Ej. 2024-2" title="Escribe el año y semestre de ingreso, por ejemplo 2024-2." /></div>
+            <div class="field"><label for="semester">Ciclo actual <span class="req" aria-hidden="true">*</span></label><select id="semester" name="semester" required><option value="">Selecciona tu ciclo</option>{Array.from({length:10}, (_, i) => <option value={String(i+1)}>{i+1}.º ciclo</option>)}<option value="0">Egresado/a</option></select></div>
+            <div class="field"><label for="availabilityHours">Horas disponibles por semana (aprox.) <span class="req" aria-hidden="true">*</span></label><input id="availabilityHours" name="availabilityHours" type="number" required min="0" max="168" step="0.5" inputmode="decimal" placeholder="Ej. 6" /><p id="availability-hint" class="hint">Considera el tiempo que puedes dedicar a las actividades de UNICODE.</p></div>
+            <div class="field"><label for="firstChoiceArea">Primera opción de área <span class="req" aria-hidden="true">*</span></label><select id="firstChoiceArea" name="firstChoiceArea" required><option value="">Selecciona un área</option></select></div>
             <div class="field"><label for="secondChoiceArea">Segunda opción de área</label><select id="secondChoiceArea" name="secondChoiceArea"><option value="">Sin segunda opción</option></select></div>
           </div>
-          <div class="field"><label for="motivation">¿Por qué quieres unirte a UNICODE? *</label><textarea id="motivation" name="motivation" rows="4" required maxlength="2000"></textarea><p class="hint">Hasta 2000 caracteres.</p></div>
-          <div class="consent"><input id="consent" name="consent" type="checkbox" required /><label for="consent">Autorizo el uso de mis datos y mi video para evaluar esta postulación y contactarme durante el proceso. El acceso estará limitado al equipo autorizado de selección. Lee la <a href="/privacidad" target="_blank" rel="noopener" class="privacy-link">política de privacidad</a>. *</label></div>
+          <div class="field"><label for="motivation">¿Por qué quieres unirte a UNICODE? <span class="req" aria-hidden="true">*</span></label><textarea id="motivation" name="motivation" rows="4" required maxlength="2000" placeholder="Ej. Quiero aprender a trabajar en proyectos reales con otros estudiantes y aportar en…"></textarea><p class="hint">Hasta 2000 caracteres.</p></div>
+          <div class="consent"><input id="consent" name="consent" type="checkbox" required /><label for="consent">Autorizo el uso de mis datos y mi video para evaluar esta postulación y contactarme durante el proceso. El acceso estará limitado al equipo autorizado de selección. Lee la <a href="/privacidad" target="_blank" rel="noopener" class="privacy-link">política de privacidad</a>. <span class="req" aria-hidden="true">*</span></label></div>
         </fieldset>
-        <div class="actions"><button id="continue-video" type="submit" class="button primary">Continuar al video →</button></div>
+        <div class="actions form-actions"><button id="continue-video" type="submit" class="button primary">Continuar al video</button><p id="save-status" class="save-indicator" role="status" aria-live="polite" hidden><span class="save-icon" aria-hidden="true"></span><span id="save-status-text"></span></p></div>
       </form>
     </section>
 
     <section id="video-phase" class="panel" aria-labelledby="video-heading" hidden>
-      <div class="section-heading"><div><p class="eyebrow">Paso 2</p><h2 id="video-heading" tabindex="-1">Cuatro preguntas. Un solo video.</h2></div><button id="edit-data" type="button" class="button secondary compact">Revisar mis datos</button></div>
-      <p id="video-instructions">Responde las cuatro preguntas en un video de hasta 60 segundos en total. Las preguntas se mantienen al volver a entrar.</p>
+      <div class="section-heading"><div><p class="eyebrow">Paso 2</p><h2 id="video-heading" tabindex="-1">Cuatro preguntas. Un solo video.</h2></div><button id="edit-data" type="button" class="button secondary compact">Volver a mis datos</button></div>
+      <p id="video-instructions">Responde las 4 preguntas en un solo video de hasta 60 segundos.</p>
       <div id="active-capture-banner" class="active-capture-banner" hidden><span>Grabando tu respuesta</span><strong id="capture-banner-timer">00:00 / 01:00</strong><button id="finish-capture" type="button" class="button danger compact">Terminar</button></div>
       <div id="assigned-questions" class="questions"></div>
       <div class="video-grid">
@@ -67,16 +66,14 @@
           <div id="recording-indicator" class="recording-indicator" hidden><span></span><span id="recording-label">Grabando</span><strong id="recording-timer">00:00</strong></div>
         </div>
         <div class="video-controls">
-          <h3>Prepárate con calma</h3>
-          <p id="preparation-instructions">Tendrás 30 segundos de preparación al iniciar. El contador de tu respuesta comenzará después.</p>
-          <p>El ensayo de 10 segundos solo sirve para revisar tu audio y tu imagen. Se elimina al terminar y no se envía.</p>
+          <p id="preparation-instructions" class="hint">Antes de grabar tendrás 30 segundos para prepararte. El ensayo no se envía.</p>
           <div class="actions stacked"><button id="test-camera" type="button" class="button secondary">Activar cámara y micrófono</button><button id="rehearse" type="button" class="button secondary" disabled>Hacer ensayo de 10 segundos</button><button id="start-recording" type="button" class="button primary" disabled>Iniciar preparación y grabar</button><button id="stop-recording" type="button" class="button danger" hidden>Terminar grabación</button></div>
           <p id="camera-status" class="hint" role="status" aria-live="polite"></p>
           <div id="rehearsal-result" hidden><h4>Revisa tu ensayo</h4><video id="rehearsal-preview" controls playsinline aria-label="Video de ensayo"></video><button id="discard-rehearsal" class="button secondary compact" type="button">Eliminar ensayo</button></div>
         </div>
       </div>
 
-      <div id="technical-help" class="technical-help"><h3>¿Tuviste un problema técnico?</h3><p>Si la grabación falla, puedes registrar el problema y usar una única alternativa. Las preguntas serán las mismas.</p><label for="failure-reason">Qué ocurrió</label><select id="failure-reason"><option value="">Selecciona el problema</option><option value="permission">No pude habilitar la cámara o el micrófono</option><option value="unsupported">Mi navegador no permite grabar</option><option value="interrupted">La grabación se interrumpió o se perdió</option><option value="device">El audio o la cámara fallaron durante la grabación</option></select><button id="report-failure" type="button" class="button secondary">Registrar falla técnica</button></div>
+      <details id="technical-help" class="technical-help"><summary>¿Problemas con la cámara o la grabación?</summary><p>Registra lo que pasó y te habilitamos una única alternativa con las mismas preguntas.</p><label for="failure-reason">Qué ocurrió</label><select id="failure-reason"><option value="">Selecciona el problema</option><option value="permission">No pude habilitar la cámara o el micrófono</option><option value="unsupported">Mi navegador no permite grabar</option><option value="interrupted">La grabación se interrumpió o se perdió</option><option value="device">El audio o la cámara fallaron durante la grabación</option></select><button id="report-failure" type="button" class="button secondary">Registrar falla técnica</button></details>
 
       <div id="alternate-upload" class="notice" hidden><h3>Tu alternativa está habilitada</h3><p>Graba un video respondiendo las mismas cuatro preguntas y súbelo aquí. Esta alternativa se puede usar una sola vez.</p><label for="alternate-file">Seleccionar video</label><input id="alternate-file" type="file" accept="video/mp4,video/webm" /><p id="alternate-limit" class="hint"></p></div>
 
@@ -95,7 +92,7 @@
 </script>
 
 <style>
-  .recruitment { --green: #75d32d; --muted: #a1a1aa; }
+  .recruitment { --green: #75d32d; --muted: #a1a1aa; color-scheme: dark; }
   .recruitment [hidden] { display: none !important; }
   .intro { margin-bottom: 2rem; }
   .eyebrow { color: var(--green); font-size: .75rem; font-weight: 650; letter-spacing: .12em; text-transform: uppercase; }
@@ -112,11 +109,18 @@
   .steps span { display: grid; place-items: center; border: 1px solid #3f3f46; border-radius: 50%; width: 1.8rem; height: 1.8rem; }
   .steps [aria-current] { color: white; }
   .steps [aria-current] span { color: #0a0a0a; background: var(--green); border-color: var(--green); }
-  .resume-panel { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; padding: 1rem 1.2rem; border: 1px solid #75d32d40; border-radius: 1rem; margin-bottom: 1rem; background: #75d32d08; }
-  .resume-panel > div:first-child { flex: 1 1 300px; }
-  .resume-actions { display: flex; flex-wrap: wrap; gap: .6rem; }
-  .resume-panel strong { font-size: .9rem; }
-  .resume-panel p { margin-top: .3rem; font-size: .8rem; }
+  .resume-panel { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; align-items: center; justify-content: space-between; padding: .2rem 0 1rem; font-size: .8rem; }
+  .resume-label { display: inline-flex; align-items: center; gap: .5rem; color: #d4d4d8; }
+  .resume-label .dot { width: .45rem; height: .45rem; border-radius: 50%; background: var(--green); }
+  .resume-actions { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; }
+  .link-button { color: var(--green); font-size: .8rem; font-weight: 600; background: none; border: 0; padding: .3rem 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: #75d32d60; }
+  .link-button:hover { text-decoration-color: currentColor; }
+  .link-button.muted { color: #a1a1aa; text-decoration-color: #52525b; }
+  .resume-panel :global(input) { flex-basis: 100%; }
+  .recruitment :global(.field-error) { display: flex; align-items: center; gap: .4rem; font-size: .75rem; font-weight: 600; color: #fca5a5; }
+  .recruitment :global(.field-error)::before { content: ""; width: .35rem; height: .35rem; border-radius: 50%; background: #f87171; flex-shrink: 0; }
+  .field :is(input,select,textarea)[aria-invalid=true] { border-color: #f87171; background: #f871710a; }
+  .consent.invalid label { color: #fca5a5; }
   form { margin-top: 1.5rem; }
   fieldset { min-width: 0; }
   .field-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 1.2rem; }
@@ -124,12 +128,22 @@
   label { font-size: .85rem; font-weight: 550; color: #d4d4d8; }
   input:not([type=checkbox]),select,textarea { color: white; background: #171719; width: 100%; border: 1px solid #3f3f46; border-radius: .7rem; padding: .8rem .9rem; font-size: .9rem; }
   input:focus,select:focus,textarea:focus { outline: 2px solid var(--green); outline-offset: 2px; }
-  input::placeholder { color: #71717a; }
+  input::placeholder,textarea::placeholder { color: #71717a; }
+  .req { color: #f87171; font-weight: 700; }
+  .optional { color: #71717a; font-weight: 400; }
+  select option { background: #171719; color: #f4f4f5; }
+  .combobox { position: relative; }
+  .combobox-list { position: absolute; z-index: 20; top: calc(100% + .35rem); left: 0; right: 0; max-height: 16rem; overflow-y: auto; margin: 0; padding: .35rem; list-style: none; background: #171719; border: 1px solid #3f3f46; border-radius: .7rem; box-shadow: 0 12px 30px #000a; }
+  .combobox-list :global(li) { display: flex; justify-content: space-between; align-items: center; gap: .8rem; padding: .6rem .7rem; border-radius: .5rem; font-size: .85rem; color: #e4e4e7; cursor: pointer; }
+  .combobox-list :global(li small) { color: #71717a; font-size: .7rem; font-weight: 600; flex-shrink: 0; }
+  .combobox-list :global(li[aria-selected=true]) { background: #75d32d1f; color: white; }
   input[type=file] { margin-top: .5rem; }
   select { min-height: 3rem; }
   textarea { resize: vertical; }
   .hint { font-size: .75rem; }
-  .consent { display: flex; align-items: flex-start; gap: .7rem; margin: .5rem 0 1.6rem; }
+  .consent { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .7rem; margin: .5rem 0 1.6rem; }
+  .consent label { flex: 1 1 0; }
+  .consent :global(.field-error) { flex-basis: 100%; }
   .consent input { width: 1.15rem; height: 1.15rem; accent-color: var(--green); margin-top: .2rem; flex-shrink: 0; }
   .consent label { font-weight: 400; font-size: .8rem; line-height: 1.6; }
   .privacy-link { color: var(--green); text-decoration: underline; }
@@ -148,11 +162,9 @@
   .success { border-color: #75d32d60; background: #75d32d0d; }
   #development-notice { border-color: #facc1580; background: #facc150f; color: #fde68a; font-weight: 600; }
   .section-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
-  .questions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .8rem; margin: 1.2rem 0; }
+  .questions { margin: 1.2rem 0; border: 1px solid #27272a; border-radius: 1rem; padding: .4rem 1.2rem; }
   .active-capture-banner { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem; position: sticky; top: 6rem; z-index: 20; background: #18181bf5; border: 1px solid #75d32d80; border-radius: .8rem; padding: .7rem 1rem; margin-top: 1rem; font-size: .8rem; }
   .active-capture-banner strong { font-variant-numeric: tabular-nums; margin-left: auto; }
-  .questions :global(.question-group) { border: 1px solid #3f3f46; border-radius: 1rem; padding: 1rem; }
-  .questions :global(h3) { color: var(--green); font-size: .75rem; font-weight: 650; line-height: 1.5; }
   .questions :global(ol) { list-style: decimal; margin: .7rem 0 0 1.2rem; }
   .questions :global(li) { font-size: .85rem; line-height: 1.65; color: #e4e4e7; margin: .7rem 0; padding-left: .2rem; }
   .video-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; align-items: start; }
@@ -163,7 +175,10 @@
   .recording-indicator > span:first-child { width: .6rem; height: .6rem; border-radius: 50%; background: #f87171; }
   .recording-indicator strong { margin-left: auto; color: white; font-variant-numeric: tabular-nums; font-size: 1rem; }
   .stacked { flex-direction: column; }
-  .technical-help { border-top: 1px solid #27272a; padding-top: 1.5rem; margin-top: 1.5rem; }
+  .technical-help { border-top: 1px solid #27272a; padding-top: 1.2rem; margin-top: 1.2rem; }
+  .technical-help summary { cursor: pointer; font-size: .85rem; color: #a1a1aa; width: fit-content; }
+  .technical-help summary:hover { color: #e4e4e7; }
+  .technical-help > p { margin-top: .8rem; font-size: .85rem; }
   .technical-help label { display: block; margin: 1rem 0 .5rem; }
   .technical-help .button { margin-top: .7rem; }
   .video-result { border-top: 1px solid #27272a; padding-top: 1.5rem; margin-top: 1.5rem; }
@@ -171,15 +186,18 @@
   progress { width: 100%; height: 1rem; accent-color: var(--green); margin: .7rem 0; }
   #upload-progress-panel { margin-top: 1.2rem; }
   .final-action { border-top: 1px solid #27272a; padding-top: 1.2rem; }
-  .save-indicator { position: fixed; z-index: 40; left: 50%; bottom: 1rem; transform: translateX(-50%); display: flex; align-items: center; gap: .55rem; width: max-content; max-width: calc(100vw - 2rem); padding: .55rem .95rem; border: 1px solid #3f3f46; border-radius: 999px; background: #18181bf2; color: #e4e4e7; font-size: .78rem; line-height: 1.35; box-shadow: 0 8px 24px #0008; backdrop-filter: blur(6px); }
-  .save-indicator > span:first-child { flex-shrink: 0; width: .55rem; height: .55rem; border-radius: 50%; background: #a1a1aa; }
-  .save-indicator[data-state=saving] > span:first-child { background: #facc15; animation: pulse 1s ease-in-out infinite; }
-  .save-indicator[data-state=saved] > span:first-child { background: var(--green); }
-  .save-indicator[data-state=offline] > span:first-child { background: #fb923c; }
-  .save-indicator[data-state=error] { border-color: #f8717180; color: #fecaca; }
-  .save-indicator[data-state=error] > span:first-child { background: #f87171; }
+  .form-actions { align-items: center; gap: .9rem 1.2rem; }
+  .save-indicator { display: inline-flex; align-items: center; gap: .45rem; font-size: .78rem; color: #a1a1aa; }
+  .save-icon { flex-shrink: 0; width: .8rem; height: .8rem; border-radius: 50%; border: 1.5px solid #52525b; }
+  .save-indicator[data-state=saving] .save-icon { border-color: #52525b; border-top-color: var(--green); animation: spin .8s linear infinite; }
+  .save-indicator[data-state=saved] .save-icon { width: .45rem; height: .75rem; border: solid var(--green); border-width: 0 2px 2px 0; border-radius: 0; transform: rotate(45deg) translate(-1px,-2px); }
+  .save-indicator[data-state=offline] { color: #fdba74; }
+  .save-indicator[data-state=offline] .save-icon { border-color: #fb923c; }
+  .save-indicator[data-state=error] { color: #fca5a5; }
+  .save-indicator[data-state=error] .save-icon { border-color: #f87171; background: #f87171; }
+  @keyframes spin { to { transform: rotate(360deg); } }
   @keyframes pulse { 50% { opacity: .35; } }
-  @media (prefers-reduced-motion: reduce) { .save-indicator > span:first-child { animation: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .save-icon { animation: none !important; } }
   .complete { text-align: center; }
   #application-reference { overflow-wrap: anywhere; }
   .complete-icon { display: grid; place-items: center; width: 4rem; height: 4rem; margin: 0 auto 1.5rem; border: 1px solid #75d32d60; background: #75d32d15; border-radius: 50%; color: var(--green); font-size: 2rem; }
