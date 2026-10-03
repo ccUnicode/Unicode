@@ -360,6 +360,17 @@ test('two stages: each result sends its own email, and only the kept emails are 
   assert.equal((await rpc(db, 'recruitment_admin_applications', joined.id)).application.history.at(-1).actor, 'gth@uni.pe');
 });
 
+test('emails queued for a template that was later disabled are not sent', async t => {
+  const db = await database(t);
+  await openCall(db);
+  const application = await draft(db);
+  await db.query("UPDATE recruitment_email_outbox SET status='sent' WHERE application_id=$1", [application.id]);
+  await db.query("INSERT INTO recruitment_email_outbox(application_id,template_key,recipient,subject,body,payload) VALUES($1,'test_sent','a@example.test','s','b','{}'),($1,'selected','a@example.test','s','b','{}')", [application.id]);
+  const leased = await rpc(db, 'recruitment_lease_emails', 10, randomUUID());
+  assert.deepEqual(leased.items.map((item) => item.templateKey), ['selected']);
+  assert.equal((await db.query("SELECT status FROM recruitment_email_outbox WHERE template_key='test_sent'")).rows[0].status, 'pending');
+});
+
 test('outbox leases are exclusive, retry with backoff and recover expired fifth leases', async t => {
   const db = await database(t);
   await openCall(db);
