@@ -29,7 +29,7 @@ export async function requestLoginCode(input: unknown): Promise<{ message: strin
   const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000).padStart(6, '0');
   const result = await recruitmentRpc<{ sent: boolean; limited?: boolean; name?: string }>('recruitment_login_request', { p_email: email, p_code_hash: await codeHash(email, code) });
   // Server log only (never the code): tells a missing director apart from the hourly limit.
-  console.info(`[admin] código para ${email}: ${result.sent ? 'enviado' : result.limited ? 'límite de 5 por hora' : 'correo sin acceso'}`);
+  console.info(`[admin] código para ${email}: ${result.sent ? 'enviado' : result.limited ? 'límite de 20 por hora' : 'correo sin acceso'}`);
   if (result.sent) {
     if (localDevelopmentDatabase()) console.info(`[admin] Código de acceso local para ${email}: ${code}`);
     else if (recruitmentEmailConfigured()) {
