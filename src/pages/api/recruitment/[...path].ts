@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
-import { sessionStore } from '../../../lib/session-store';
+import { managesRecruitment, sessionStore, type AdminSession } from '../../../lib/session-store';
+import { directors } from '../../../lib/admin-access';
 import * as recruitment from '../../../lib/recruitment/service';
 import { withPreviewKey } from '../../../lib/recruitment/database';
 import { RecruitmentError } from '../../../lib/recruitment/validation';
@@ -32,9 +33,12 @@ function bearer(request: Request): string {
   if (!/^Bearer [A-Za-z0-9_.=+/\-]{20,2048}$/.test(authorization)) throw new RecruitmentError('unauthorized', 'No autorizado. Usa tu enlace personal o inicia sesión.', 401);
   return authorization.slice(7);
 }
-async function admin(request: Request): Promise<void> {
-  if (!env('ADMIN_PASSWORD') || !(await sessionStore.isValid(bearer(request)))) throw new RecruitmentError('unauthorized', 'No autorizado. Inicia sesión nuevamente.', 401);
+async function admin(request: Request): Promise<AdminSession> {
+  const session = env('ADMIN_PASSWORD') ? await sessionStore.verify(bearer(request)) : null;
+  if (!session) throw new RecruitmentError('unauthorized', 'No autorizado. Inicia sesión nuevamente.', 401);
+  return session;
 }
+const forbidden = () => new RecruitmentError('forbidden', 'Tu cuenta no tiene acceso a esta sección.', 403);
 /** Origins this deployment answers to. Behind Vercel, request.url can carry an internal host. */
 function allowedOrigins(request: Request): Set<string> {
   const origins = new Set([new URL(request.url).origin]);
@@ -76,7 +80,18 @@ async function handle(request: Request, rawPath: string | undefined): Promise<Re
     if (path[0] === 'admin') {
       const action = path.slice(1).join('/');
       if (action === 'process-emails' && ['GET', 'POST'].includes(method) && env('CRON_SECRET') && request.headers.get('authorization') === `Bearer ${env('CRON_SECRET')}`) return json(await recruitment.processEmails());
-      await admin(request);
+      const session = await admin(request);
+      if (action === 'session' && method === 'GET') return json({ session, managesRecruitment: managesRecruitment(session) });
+      // Directors of other areas may only play the videos of applicants to their area.
+      if (path[1] === 'applications' && path[3] === 'video' && path.length === 4 && method === 'GET' && !managesRecruitment(session)) {
+        const { application } = await recruitment.adminApplications(recruitment.requireUuid(path[2]));
+        if (session.role !== 'director' || ![application?.data.firstChoiceArea, application?.data.secondChoiceArea].includes(session.area as never)) throw forbidden();
+        return json(await recruitment.adminVideo(application!.id));
+      }
+      if (!managesRecruitment(session)) throw forbidden();
+      const actor = session.role === 'director' ? session.email : 'contraseña de administración';
+      if (action === 'directors' && method === 'GET') return json(await directors());
+      if (action === 'directors' && method === 'PUT') return json(await directors(await body(request), actor));
       if (action === 'config' && method === 'GET') return json(await recruitment.adminConfig());
       if (action === 'config' && ['PUT', 'PATCH'].includes(method)) return json(await recruitment.saveConfig(await body(request)));
       if (action === 'applications' && method === 'GET') return json(await recruitment.adminApplications());

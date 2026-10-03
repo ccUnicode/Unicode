@@ -11,7 +11,7 @@ const media = await server.ssrLoadModule('/src/lib/recruitment-media.ts');
 const storage = await server.ssrLoadModule('/src/lib/recruitment-storage.ts');
 const email = await server.ssrLoadModule('/src/lib/recruitment-email.ts');
 const google = await server.ssrLoadModule('/src/lib/recruitment-google.ts');
-const { sessionStore } = await server.ssrLoadModule('/src/lib/session-store.ts');
+const { sessionStore, managesRecruitment } = await server.ssrLoadModule('/src/lib/session-store.ts');
 const layout = await server.ssrLoadModule('/src/lib/recruitment-email-layout.ts');
 const fixture = async (name) => new Uint8Array(await readFile(new URL(`./fixtures/${name}`, import.meta.url)));
 const applicationId = '11111111-1111-4111-8111-111111111111';
@@ -103,4 +103,15 @@ test('emails turn the personal link into a button and escape template text', () 
   assert.match(html, />No lo compartas\.<\/p>/);
   assert.match(html, /src="https:\/\/www\.ccunicode\.org\/email\/logo\.png"/);
   assert.doesNotMatch(layout.renderRecruitmentEmailHtml({ subject: 's', text: 'Sin enlace', siteUrl: 'https://x.test' }), /Continuar mi postulación/);
+});
+
+test('sessions carry the director area; only GTH and the shared password manage the call', async () => {
+  const director = await sessionStore.verify(await sessionStore.createToken({ role: 'director', email: 'lenin.castro.a@uni.pe', area: 'ID', name: 'Lenín Castro' }));
+  assert.deepEqual(director, { role: 'director', email: 'lenin.castro.a@uni.pe', area: 'ID', name: 'Lenín Castro' });
+  assert.equal(managesRecruitment(director), false);
+  assert.equal(managesRecruitment(await sessionStore.verify(await sessionStore.createToken({ role: 'director', email: 'g@uni.pe', area: 'GTH' }))), true);
+  assert.deepEqual(await sessionStore.verify(await sessionStore.createToken()), { role: 'admin' });
+  const [payload, signature] = (await sessionStore.createToken({ role: 'director', email: 'x@uni.pe', area: 'ID' })).split('.');
+  const forged = btoa(JSON.stringify({ ...JSON.parse(atob(payload)), area: 'GTH' }));
+  assert.equal(await sessionStore.verify(`${forged}.${signature}`), null);
 });

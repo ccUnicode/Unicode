@@ -1,6 +1,7 @@
 /**
  * API Endpoint: POST /api/admin-login
- * Validates admin password server-side.
+ * Signs in a director with { email, code } (one-time code from /api/admin-code),
+ * or the shared administration password with { password }.
  * 
  * Security measures:
  * - Rate limiting: max 5 attempts per IP in 15 minutes
@@ -76,14 +77,29 @@ export async function POST({ request }: { request: Request }) {
 
   // Parse body
   let password: string;
+  let body: Record<string, unknown>;
   try {
-    const body = await request.json();
-    password = body.password || '';
+    body = await request.json();
+    password = typeof body.password === 'string' ? body.password : '';
   } catch {
     return new Response(
       JSON.stringify({ error: 'Solicitud inválida.' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
+  }
+
+  if (typeof body.email === 'string') {
+    // Wrong codes are counted per code in the database; the IP limit below is not needed here.
+    const { verifyLoginCode } = await import('../../lib/admin-access');
+    const { RecruitmentError } = await import('../../lib/recruitment/validation');
+    try {
+      const session = await verifyLoginCode(body);
+      const { sessionStore } = await import('../../lib/session-store');
+      return new Response(JSON.stringify({ success: true, token: await sessionStore.createToken(session), session }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    } catch (error) {
+      const message = error instanceof RecruitmentError ? error.message : 'No se pudo verificar el código. Intenta de nuevo.';
+      return new Response(JSON.stringify({ error: message }), { status: error instanceof RecruitmentError ? error.status : 503, headers: { 'Content-Type': 'application/json' } });
+    }
   }
 
   // Get admin password from environment variable ONLY (never hardcoded)
@@ -132,7 +148,7 @@ export async function POST({ request }: { request: Request }) {
   const sessionToken = await sessionStore.createToken();
 
   return new Response(
-    JSON.stringify({ success: true, token: sessionToken }),
+    JSON.stringify({ success: true, token: sessionToken, session: { role: 'admin' } }),
     { status: 200, headers: { 'Content-Type': 'application/json' } }
   );
 }

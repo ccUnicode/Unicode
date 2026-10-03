@@ -426,3 +426,30 @@ test('a secret test link applies while the call is closed, flags the drafts and 
   await rpc(db, 'recruitment_set_preview_key', null, 'prueba');
   assert.equal((await previewRpc(db, key, 'recruitment_public_config')).preview, false);
 });
+
+test('directors sign in with a single-use code limited in time, attempts and requests', async t => {
+  const db = await database(t);
+  const h = (n) => String(n).repeat(64).slice(0, 64);
+  const saved = await rpc(db, 'recruitment_directors', [{ email: 'Lenin.Castro.A@uni.pe', area: 'ID', name: 'Lenin Castro' }, { email: 'gth@uni.pe', area: 'GTH', name: '' }], 'prueba');
+  assert.deepEqual(saved.directors.map(d => [d.email, d.area]), [['gth@uni.pe', 'GTH'], ['lenin.castro.a@uni.pe', 'ID']]);
+  assert.deepEqual(await rpc(db, 'recruitment_login_request', 'nadie@uni.pe', h(1)), { sent: false });
+  assert.equal((await rpc(db, 'recruitment_login_request', 'LENIN.castro.a@uni.pe', h(1))).sent, true);
+  const wrong = await rpc(db, 'recruitment_login_verify', 'lenin.castro.a@uni.pe', h(2));
+  assert.deepEqual([wrong.ok, wrong.error], [false, 'Código incorrecto.']);
+  const ok = await rpc(db, 'recruitment_login_verify', 'lenin.castro.a@uni.pe', h(1));
+  assert.deepEqual([ok.ok, ok.email, ok.area], [true, 'lenin.castro.a@uni.pe', 'ID']);
+  assert.equal((await rpc(db, 'recruitment_login_verify', 'lenin.castro.a@uni.pe', h(1))).ok, false, 'single use');
+  await rpc(db, 'recruitment_login_request', 'gth@uni.pe', h(3));
+  for (let i = 0; i < 4; i++) await rpc(db, 'recruitment_login_verify', 'gth@uni.pe', h(4));
+  const locked = await rpc(db, 'recruitment_login_verify', 'gth@uni.pe', h(4));
+  assert.equal(locked.error, 'Demasiados intentos. Pide un código nuevo.');
+  assert.equal((await rpc(db, 'recruitment_login_verify', 'gth@uni.pe', h(3))).ok, false, 'locked after 5 wrong attempts');
+  for (let i = 0; i < 4; i++) await rpc(db, 'recruitment_login_request', 'gth@uni.pe', h(5));
+  assert.deepEqual(await rpc(db, 'recruitment_login_request', 'gth@uni.pe', h(5)), { sent: false, limited: true });
+  await db.query("update recruitment_login_codes set expires_at = now() - interval '1 second'");
+  assert.equal((await rpc(db, 'recruitment_login_verify', 'gth@uni.pe', h(5))).ok, false, 'expired');
+  for (const role of ['anon', 'authenticated']) {
+    const r = await db.query(`select has_table_privilege($1,'public.recruitment_login_codes','SELECT') t, has_function_privilege($1,'public.recruitment_login_verify(text,text)','EXECUTE') f`, [role]);
+    assert.deepEqual(r.rows[0], { t: false, f: false });
+  }
+});
