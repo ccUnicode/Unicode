@@ -607,7 +607,7 @@ function initializeRecruitment() {
             const pad = (n: number) => String(n).padStart(2, "0");
             const tick = () => {
               const diff = deadlineTime - Date.now();
-              if (diff <= 0) {
+              if (diff <= 0 || diff > 86_400_000) {
                 banner.hidden = true;
                 return;
               }

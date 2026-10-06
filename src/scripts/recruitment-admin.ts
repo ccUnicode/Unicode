@@ -374,10 +374,12 @@ function renderRecruitmentCountdown(targetIso: string | null): void {
   if (!targetIso) { el.hidden = true; return; }
   const target = new Date(targetIso).getTime();
   if (Number.isNaN(target)) { el.hidden = true; return; }
-  el.hidden = false;
+  el.hidden = true;
 
   const update = () => {
     const diff = target - Date.now();
+    el.hidden = diff <= 0 || diff > 86_400_000;
+    if (diff > 86_400_000) return;
     if (diff <= 0) {
       el.innerHTML = `<span class="countdown-badge is-closed">Convocatoria cerrada</span>`;
       if (recruitmentCountdownInterval) clearInterval(recruitmentCountdownInterval);
