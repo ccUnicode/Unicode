@@ -86,6 +86,12 @@ try {
     try {
       const result = await sendRecruitmentEmail({ to: item.to, subject, text: `${text}\n\nDejar de recibir recordatorios o retirar postulación: ${optOut}`, html, idempotencyKey: `${campaign}-${current.id}`, headers: { 'List-Unsubscribe': `<${optOut}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } });
       await appendFile(logPath, JSON.stringify({ ...audit, status: 'accepted', messageId: result.messageId }) + '\n');
+      const recorded = await fetch(`${base}/rest/v1/rpc/recruitment_record_reminder_sent`, {
+        method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_id: current.id, p_sent_at: new Date().toISOString() }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!recorded.ok) throw new Error('El envío fue aceptado, pero falta registrar su hora. Revisa el registro antes de continuar.');
       console.log(JSON.stringify({ to: item.to, status: 'accepted', messageId: result.messageId }));
       accepted++;
     } catch {
