@@ -38,7 +38,7 @@ export function renderRecruitmentEmailHtml({ subject, text, actionUrl, actionLab
     + `<span style="vertical-align:middle;margin-left:10px;font-size:18px;font-weight:800;letter-spacing:.06em;color:#75d32d;">UNICODE</span></a></td></tr>`
     + `<tr><td style="padding:32px 28px 16px;">${content}</td></tr>`
     + `<tr><td style="padding:20px 28px 28px;border-top:1px solid #f4f4f5;font-size:12px;line-height:1.6;color:#a1a1aa;">`
-    + `UNICODE · Centro Cultural Estudiantil de Ingeniería · FIIS UNI<br>`
+    + `Centro Cultural Unicode · FIIS UNI<br>`
     + `Recibes este correo porque postulaste en <a href="${escapeHtml(site)}" style="color:#71717a;">ccunicode.org</a>.`
     + (unsubscribeUrl ? `<br><a href="${escapeHtml(unsubscribeUrl)}" style="color:#71717a;text-decoration:underline;">Dejar de recibir recordatorios o retirar postulación</a>` : '')
     + `</td></tr>`

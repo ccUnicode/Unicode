@@ -164,3 +164,32 @@ test('reminder opt-out links are signed per application and shown at the bottom 
   const html = layout.renderRecruitmentEmailHtml({ subject: 'Recordatorio', text: 'Hola', siteUrl: 'https://www.ccunicode.org', unsubscribeUrl: url.toString() });
   assert.match(html, />Dejar de recibir recordatorios o retirar postulación<\/a>/);
 });
+
+
+test('area priority always precedes arrival order, including newest-first views', async () => {
+  const { compareApplicationOrder } = await server.ssrLoadModule('/src/lib/recruitment-application-order.ts');
+  const rows = [
+    { id: 'second-old', firstChoiceArea: 'GTH', arrivedAt: '2026-10-01T10:00:00Z' },
+    { id: 'first-new', firstChoiceArea: 'ID', arrivedAt: '2026-10-03T10:00:00Z' },
+    { id: 'first-old', firstChoiceArea: 'ID', arrivedAt: '2026-10-02T10:00:00Z' },
+    { id: 'second-new', firstChoiceArea: 'GTH', arrivedAt: '2026-10-04T10:00:00Z' },
+  ];
+  assert.deepEqual([...rows].sort((a, b) => compareApplicationOrder(a, b, 'ID')).map(a => a.id), ['first-old', 'first-new', 'second-old', 'second-new']);
+  assert.deepEqual([...rows].sort((a, b) => compareApplicationOrder(a, b, 'ID', true)).map(a => a.id), ['first-new', 'first-old', 'second-new', 'second-old']);
+  assert.deepEqual([...rows].sort((a, b) => compareApplicationOrder(a, b, '')).map(a => a.id), ['second-old', 'first-old', 'first-new', 'second-new']);
+});
+
+test('extension messages request only missing steps and use the approved footer', async () => {
+  const { extensionPendingSteps, extensionEmailText } = await server.ssrLoadModule('/src/lib/recruitment-extension-email.ts');
+  const data = { firstName: 'Prueba', lastName: 'Local', email: 'test@example.test', phone: '999999999', university: 'UNI', career: 'Sistemas', admissionTerm: '2023-1', semester: '0', firstChoiceArea: 'ID', availabilityHours: 0, motivation: 'Aprender', consent: true, showcase: 'Proyecto', organizations: 'Ninguna', referralSource: 'Instagram' };
+  const confirmOnly = ['Confirma el envío de tu postulación al finalizar.'];
+  assert.deepEqual(extensionPendingSteps({ data, hasVideo: true }), confirmOnly);
+  const missingVideo = extensionPendingSteps({ data, hasVideo: false });
+  assert.equal(missingVideo.length, 2); assert.match(missingVideo[0], /video/);
+  const missingData = extensionPendingSteps({ data: { ...data, phone: '' }, hasVideo: true });
+  assert.match(missingData[0], /teléfono/); assert.ok(!missingData.some(step => step.includes('video')));
+  const text = extensionEmailText({ firstName: 'Prueba', steps: missingVideo, resumeUrl: 'https://www.ccunicode.org/postular', deadlineLabel: 'sábado 10 de octubre, a las 23:59' });
+  assert.match(text, /sábado 10 de octubre, a las 23:59/); assert.ok(!text.includes('Esperamos contar contigo'));
+  const html = layout.renderRecruitmentEmailHtml({ subject: 'Ampliación', text, siteUrl: 'https://www.ccunicode.org' });
+  assert.match(html, /Centro Cultural Unicode · FIIS UNI/); assert.ok(!html.includes('Estudiantil de Ingeniería'));
+});

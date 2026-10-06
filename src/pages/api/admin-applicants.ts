@@ -8,11 +8,12 @@ export const prerender = false;
 
 import { sessionStore } from '../../lib/session-store';
 import { adminApplications } from '../../lib/recruitment/service';
+import { compareApplicationOrder } from '../../lib/recruitment-application-order';
 
 const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 
 /**
- * GET handler: submitted, non-test applications filtered by area and choice, newest first.
+ * GET handler: submitted, non-test applications filtered by area and choice; first choice, then arrival.
  *
  * @async
  * @param {Object} context - Request context containing the request object.
@@ -27,7 +28,7 @@ export async function GET({ request }: { request: Request }) {
   const url = new URL(request.url);
   const area = url.searchParams.get('area') || '';
   const option = url.searchParams.get('option') || 'all'; // 'all', 'first', 'second'
-  const order = url.searchParams.get('order') || 'recent'; // 'recent', 'priority'
+  const order = url.searchParams.get('order') || 'arrival'; // First choice always leads.
 
   try {
     const { applications = [] } = await adminApplications();
@@ -55,13 +56,11 @@ export async function GET({ request }: { request: Request }) {
         : option === 'second' ? p.second_choice_area === area
         : p.first_choice_area === area || p.second_choice_area === area);
     }
-    data.sort((a, b) => {
-      if (area && order === 'priority') {
-        const aFirst = a.first_choice_area === area; const bFirst = b.first_choice_area === area;
-        if (aFirst !== bFirst) return aFirst ? -1 : 1;
-      }
-      return new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime();
-    });
+    data.sort((a, b) => compareApplicationOrder(
+      { id: a.id, firstChoiceArea: a.first_choice_area, arrivedAt: a.created_at! },
+      { id: b.id, firstChoiceArea: b.first_choice_area, arrivedAt: b.created_at! },
+      area, order === 'recent',
+    ));
     return json({ data, total: data.length });
   } catch {
     return json({ error: 'No se pudieron obtener las postulaciones.' }, 500);
