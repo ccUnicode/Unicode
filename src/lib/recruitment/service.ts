@@ -243,8 +243,32 @@ export async function adminMetrics() {
     const match = UNIVERSITIES.find(([name, acronym]) => name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase() === key || acronym.toLowerCase() === key);
     return match ? match[1] : value.trim();
   };
-  const limaDay = (value: string) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima' }).format(new Date(value));
-  const days = Array.from({ length: 14 }, (_, index) => limaDay(new Date(Date.now() - (13 - index) * 86_400_000).toISOString()));
+  const limaDay = (value: string | number | Date) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima' }).format(new Date(value));
+  const todayLima = limaDay(new Date());
+
+  // Determine start date from config.opensAt or the earliest submitted application
+  let startLima: string | null = config.opensAt ? limaDay(config.opensAt) : null;
+  for (const application of submitted) {
+    if (application.submittedAt) {
+      const day = limaDay(application.submittedAt);
+      if (!startLima || day < startLima) startLima = day;
+    }
+  }
+  if (!startLima || startLima > todayLima) {
+    startLima = submitted.length ? todayLima : limaDay(new Date(Date.now() - 13 * 86_400_000));
+  }
+
+  // Generate continuous list of dates from startLima to todayLima
+  const days: string[] = [];
+  const [startYear, startMonth, startDay] = startLima.split('-').map(Number);
+  let cursor = new Date(Date.UTC(startYear, startMonth - 1, startDay, 12, 0, 0));
+  while (true) {
+    const current = limaDay(cursor);
+    days.push(current);
+    if (current >= todayLima || days.length >= 365) break;
+    cursor = new Date(cursor.getTime() + 86_400_000);
+  }
+
   const perDay = new Map(days.map((day) => [day, 0]));
   for (const application of submitted) { const day = limaDay(application.submittedAt!); if (perDay.has(day)) perDay.set(day, perDay.get(day)! + 1); }
   const hours = submitted.map((application) => application.data.availabilityHours).filter((value): value is number => typeof value === 'number');

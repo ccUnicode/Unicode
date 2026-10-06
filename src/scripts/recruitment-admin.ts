@@ -282,6 +282,34 @@ function areaName(id: string): string {
   return config?.areas.find((area) => area.id === id)?.name || id || "Sin área";
 }
 
+let recruitmentCountdownInterval: number | undefined;
+function renderRecruitmentCountdown(targetIso: string | null): void {
+  if (recruitmentCountdownInterval) clearInterval(recruitmentCountdownInterval);
+  const el = document.getElementById("recruitment-countdown");
+  if (!el) return;
+  if (!targetIso) { el.hidden = true; return; }
+  const target = new Date(targetIso).getTime();
+  if (Number.isNaN(target)) { el.hidden = true; return; }
+  el.hidden = false;
+
+  const update = () => {
+    const diff = target - Date.now();
+    if (diff <= 0) {
+      el.innerHTML = `<span class="countdown-badge is-closed">Convocatoria cerrada</span>`;
+      if (recruitmentCountdownInterval) clearInterval(recruitmentCountdownInterval);
+      return;
+    }
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+    const seconds = Math.floor((diff / 1000) % 60);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    el.innerHTML = `<span class="countdown-badge" title="Tiempo restante para el cierre de convocatoria"><svg class="countdown-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Cierre en: <strong>${days}d ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s</strong></span>`;
+  };
+  update();
+  recruitmentCountdownInterval = window.setInterval(update, 1000);
+}
+
 function renderConfig(value: RecruitmentConfig): void {
   field("title").value = value.title;
   for (const dateName of ["opensAt", "closesAt", "extensionAt"] as const) field(dateName).value = limaDateInput(value[dateName]);
@@ -295,6 +323,7 @@ function renderConfig(value: RecruitmentConfig): void {
   field("thresholdVideo").value = value.thresholds.video === null ? "" : String(value.thresholds.video);
   element("config-state").textContent = value.enabled ? "Habilitada según plazo" : "Cerrada";
   element("config-save-info").textContent = `Configuración guardada · versión ${value.revision}`;
+  renderRecruitmentCountdown(value.extensionAt || value.closesAt);
 
   const areas = element("area-config");
   areas.replaceChildren();
