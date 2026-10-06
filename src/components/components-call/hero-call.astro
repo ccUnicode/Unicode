@@ -83,7 +83,7 @@ const areas: Area[] = [
           cuatro preguntas en un video de hasta 3 minutos y medio.
         </p>
         {HAS_CLOSING_COUNTDOWN && (
-          <div id="call-closing-countdown" data-closes-at={new Date(closesAt).toISOString()} class="mb-8 w-full max-w-lg mx-auto">
+          <div id="call-closing-countdown" data-closes-at={new Date(closesAt).toISOString()} class:list={["mb-8 w-full max-w-lg mx-auto", { hidden: closesAt - Date.now() > 86_400_000 }]}>
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-unicode/10 border border-unicode/30 text-unicode text-xs font-semibold uppercase tracking-wider mb-3">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
               <span>Tiempo restante para postular</span>
@@ -274,6 +274,7 @@ const areas: Area[] = [
     const pad = (value: number) => String(value).padStart(2, "0");
     const tickClosing = () => {
       const left = Math.max(0, closesAt - Date.now());
+      closingCountdown.classList.toggle("hidden", left <= 0 || left > 86_400_000);
       const total = Math.floor(left / 1000);
       const values = { days: Math.floor(total / 86400), hours: Math.floor(total / 3600) % 24, minutes: Math.floor(total / 60) % 60, seconds: total % 60 };
       for (const [unit, value] of Object.entries(values)) {

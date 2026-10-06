@@ -759,7 +759,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     const badge = document.getElementById("countdown-status-badge");
     const closesLabel = document.getElementById("countdown-closes-label");
     if (!container) return;
-    if (banner) banner.classList.remove("hidden");
+    if (banner) banner.classList.add("hidden");
     if (!targetIso) {
       if (closesLabel) closesLabel.textContent = "sin fecha definida";
       container.innerHTML = `<span class="text-zinc-500 text-[13px]">Sin fecha límite configurada</span>`;
@@ -778,6 +778,8 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
 
     const tick = () => {
       const diff = target - Date.now();
+      banner?.classList.toggle("hidden", diff <= 0 || diff > 86_400_000);
+      if (diff > 86_400_000) return;
       if (diff <= 0) {
         container.innerHTML = `<span class="text-red-400 font-semibold text-sm flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-red-500"></span>Convocatoria cerrada</span>`;
         if (badge) { badge.textContent = "Finalizada"; badge.className = "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-red-950/80 text-red-400 border border-red-800/60"; }
