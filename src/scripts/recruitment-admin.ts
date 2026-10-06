@@ -1156,12 +1156,12 @@ element("refresh-emails").addEventListener("click", async () => {
 
 element("remind-all").addEventListener("click", async () => {
   const pending = applications.filter((application) => ["draft", "incomplete"].includes(application.status) && !application.isTest && !application.remindersOff).length;
-  if (!confirm(`Se enviará ahora el recordatorio a ${pending} postulante(s) que no terminaron (excepto quienes los desactivaron). ¿Continuar?`)) return;
+  if (!confirm(`Se revisarán ${pending} postulación(es) incompletas. Solo se pondrán en cola recordatorios sin otro pendiente y con al menos 8 horas desde el último correo o avance (excepto quienes los desactivaron). ¿Continuar?`)) return;
   const button = element<HTMLButtonElement>("remind-all");
   button.disabled = true;
   try {
     const { queued } = await request<{ queued: number }>("/remind-all", { method: "POST", body: "{}" });
-    showMessage(`Listo: ${queued} recordatorio(s) en camino. Los que no salgan en este momento se envían en los próximos minutos.`);
+    showMessage(`Listo: ${queued} recordatorio(s) nuevos en cola. El envío respeta la disponibilidad del proveedor y la pausa configurada.`);
     await loadQueue();
   } catch (error) { showMessage(messageOf(error), true); }
   finally { button.disabled = false; }

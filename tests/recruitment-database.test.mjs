@@ -474,12 +474,14 @@ test('unfinished drafts are reminded every few hours until they finish, opt out 
   const db = await database(t);
   await openCall(db, { inactivityHours: 8 });
   const application = await draft(db);
+  await db.query("UPDATE recruitment_email_outbox SET status='sent', sent_at=now()-interval '9 hours' WHERE application_id=$1 AND template_key='resume'", [application.id]);
   const reminders = async () => (await db.query("SELECT count(*)::integer AS count FROM recruitment_email_outbox WHERE application_id=$1 AND template_key='incomplete'", [application.id])).rows[0].count;
   assert.equal(await rpc(db, 'recruitment_expire_drafts'), 0, 'nothing before 8 hours');
   await db.query("UPDATE recruitment_applications SET updated_at=now()-interval '9 hours' WHERE id=$1", [application.id]);
   assert.equal(await rpc(db, 'recruitment_expire_drafts'), 1);
   assert.equal((await rpc(db, 'recruitment_get_draft', application.id, application.owner)).application.status, 'incomplete');
   assert.equal(await rpc(db, 'recruitment_expire_drafts'), 0, 'not again right away');
+  await db.query("UPDATE recruitment_email_outbox SET status='sent', sent_at=now()-interval '9 hours' WHERE application_id=$1 AND template_key='incomplete'", [application.id]);
   await db.query("UPDATE recruitment_applications SET last_reminder_at=now()-interval '9 hours' WHERE id=$1", [application.id]);
   assert.equal(await rpc(db, 'recruitment_expire_drafts'), 1, 'again after another 8 hours');
   assert.equal(await reminders(), 2);
@@ -501,8 +503,11 @@ test('GTH reminds everyone at once, and a queued reminder is dropped once the ap
   const optedOut = await draft(db);
   await rpc(db, 'recruitment_unsubscribe', optedOut.id);
   const done = await submitted(db);
+  assert.equal(await rpc(db, 'recruitment_remind_all', 'gth@uni.pe'), 0, 'initial email is still pending');
+  await db.query("UPDATE recruitment_email_outbox SET status='sent', sent_at=now()-interval '9 hours' WHERE template_key='resume'");
+  await db.query("UPDATE recruitment_applications SET updated_at=now()-interval '9 hours'");
   assert.equal(await rpc(db, 'recruitment_remind_all', 'gth@uni.pe'), 2);
-  assert.equal(await rpc(db, 'recruitment_remind_all', 'gth@uni.pe'), 2, 'can be forced again');
+  assert.equal(await rpc(db, 'recruitment_remind_all', 'gth@uni.pe'), 0, 'pending reminders cannot be duplicated');
   await db.query("UPDATE recruitment_email_outbox SET status='sent' WHERE template_key<>'incomplete'");
   const finished = await verifiedDraft(db);
   await rpc(db, 'recruitment_queue_reminder', finished.id);
@@ -600,6 +605,7 @@ test('extending the call reactivates expired drafts and allows them to continue 
   await rpc(db, 'recruitment_patch_draft', app.id, app.owner, applicant(app.id));
   assert.equal((await rpc(db, 'recruitment_get_draft', app.id, app.owner)).application.status, 'draft');
 
+  await db.query("UPDATE recruitment_email_outbox SET status='sent', sent_at=now()-interval '9 hours' WHERE application_id=$1 AND template_key='resume'", [app.id]);
   // Inactive draft receives reminders while call is extended
   await db.query("UPDATE recruitment_applications SET updated_at=now()-interval '9 hours' WHERE id=$1", [app.id]);
   assert.equal(await rpc(db, 'recruitment_expire_drafts'), 1);
@@ -629,4 +635,34 @@ test('expired drafts stay expired before opening and reactivation is restricted 
     const result = await db.query("SELECT has_function_privilege($1, 'public.recruitment_reactivate_expired_drafts()', 'EXECUTE') AS allowed", [role]);
     assert.equal(result.rows[0].allowed, role === 'service_role');
   }
+});
+
+
+test('reminder cooldown starts at successful delivery and failed attempts do not restart it', async t => {
+  const db = await database(t);
+  await openCall(db, { inactivityHours: 8 });
+  const app = await draft(db);
+  await db.query("UPDATE recruitment_email_outbox SET status='sent', sent_at=now()-interval '9 hours' WHERE application_id=$1 AND template_key='resume'", [app.id]);
+  await db.query("UPDATE recruitment_applications SET updated_at=now()-interval '9 hours' WHERE id=$1", [app.id]);
+  await rpc(db, 'recruitment_queue_reminder', app.id);
+  const before = (await db.query('SELECT last_reminder_at FROM recruitment_applications WHERE id=$1', [app.id])).rows[0].last_reminder_at;
+  const token = randomUUID();
+  const first = (await rpc(db, 'recruitment_lease_emails', 20, token)).items.find(x => x.templateKey === 'incomplete');
+  await rpc(db, 'recruitment_finish_email', first.id, token, null, 'quota exhausted');
+  const failed = (await db.query('SELECT last_reminder_at FROM recruitment_applications WHERE id=$1', [app.id])).rows[0].last_reminder_at;
+  assert.equal(String(failed), String(before), 'failed send leaves the last successful time unchanged');
+  await rpc(db, 'recruitment_queue_reminder', app.id);
+  assert.equal((await db.query("SELECT count(*)::integer AS n FROM recruitment_email_outbox WHERE application_id=$1 AND template_key='incomplete'", [app.id])).rows[0].n, 1);
+  await db.query('UPDATE recruitment_email_outbox SET next_attempt_at=now() WHERE id=$1', [first.id]);
+  const retry = randomUUID();
+  await rpc(db, 'recruitment_lease_emails', 20, retry);
+  await rpc(db, 'recruitment_finish_email', first.id, retry, 'accepted-test-message', null);
+  await rpc(db, 'recruitment_queue_reminder', app.id);
+  assert.equal((await db.query("SELECT count(*)::integer AS n FROM recruitment_email_outbox WHERE application_id=$1 AND template_key='incomplete'", [app.id])).rows[0].n, 1, 'successful send starts another 8 hour cooldown');
+  await db.query("UPDATE recruitment_applications SET last_reminder_at=now()-interval '7 hours 59 minutes' WHERE id=$1", [app.id]);
+  assert.equal(await rpc(db, 'recruitment_remind_all', 'test'), 0);
+  await db.query("UPDATE recruitment_applications SET last_reminder_at=now()-interval '8 hours 1 minute' WHERE id=$1", [app.id]);
+  assert.equal(await rpc(db, 'recruitment_remind_all', 'test'), 1);
+  await rpc(db, 'recruitment_record_reminder_sent', app.id, new Date().toISOString());
+  assert.equal((await db.query("SELECT count(*)::integer AS n FROM recruitment_email_outbox WHERE application_id=$1 AND template_key='incomplete' AND status='pending'", [app.id])).rows[0].n, 0, 'extension email cancels a superseded pending reminder');
 });

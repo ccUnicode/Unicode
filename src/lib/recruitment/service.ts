@@ -137,7 +137,7 @@ export async function discardDraft(id: string, token: string) {
   for (const file of result.files) { try { await deleteVideo(file); } catch { /* Already gone or never uploaded. */ } }
   return { discarded: true };
 }
-/** GTH reminds every unfinished application right now, then sends the first batch. */
+/** GTH queues eligible reminders respecting the delivery cooldown, then processes a batch. */
 export async function remindAll(actor = 'administracion') {
   const queued = await recruitmentRpc<number>('recruitment_remind_all', { p_actor: actor });
   if (recruitmentEmailConfigured()) await processEmails(10).catch(() => undefined);
