@@ -134,6 +134,38 @@ import Layout from "../../layouts/Layout.astro";
             <label id="preview-link-box" hidden>Enlace de prueba: cópialo ahora, no se volverá a mostrar<input id="preview-link" readonly /></label>
           </div>
         </details>
+        <details class="panel preview-panel status-guide-panel">
+          <summary><span>Guía y significado de estados</span><svg class="preview-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" /></svg></summary>
+          <div class="preview-content status-guide-content">
+            <p class="muted">El proceso es flexible: se puede avanzar por etapas o definir la decisión directamente sin pasar obligatoriamente por una 2.ª etapa. <strong>Cada director decide sobre los postulantes de su propia área</strong> (1.ª o 2.ª opción), mientras que los directores de <strong>GTH y administración general pueden decidir sobre todas las áreas</strong>.</p>
+            <div class="status-guide-grid">
+              <div class="status-guide-card">
+                <h4>1.ª Etapa · Revisión inicial o directa</h4>
+                <ul>
+                  <li><span class="badge status-submitted">Inscripción completa</span> Formulario y video enviados. Pendiente de decisión del equipo.</li>
+                  <li><span class="badge status-profile_validated">Avanza a la 2.ª etapa</span> Perfil aprobado. Pasa a evaluación final o entrevista.</li>
+                  <li><span class="badge status-profile_rejected">No avanza</span> No superó la revisión de la 1.ª etapa. Recibe correo de cierre.</li>
+                </ul>
+              </div>
+              <div class="status-guide-card">
+                <h4>Decisión final (2.ª etapa o directa)</h4>
+                <ul>
+                  <li><span class="badge status-selected">Ingresa a UNICODE</span> Postulante seleccionado/a definitivamente (tras 2.ª etapa o por decisión directa).</li>
+                  <li><span class="badge status-not_selected">No ingresa</span> No seleccionado/a en el resultado final (o decisión directa de no ingreso).</li>
+                </ul>
+              </div>
+              <div class="status-guide-card">
+                <h4>Borradores y gestión</h4>
+                <ul>
+                  <li><span class="badge status-draft">Borrador</span> En edición por el postulante (aún sin enviar).</li>
+                  <li><span class="badge status-incomplete">Incompleto</span> Borrador inactivo con recordatorios por correo.</li>
+                  <li><span class="badge status-expired">Plazo vencido</span> No llegó a enviarse antes del cierre de convocatoria.</li>
+                  <li><span class="badge status-withdrawn">Retirado</span> Postulación cancelada o retirada a solicitud del postulante.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </details>
         <div class="filters panel">
           <label>Estado<select id="filter-status"><option value="">Todos los estados</option></select></label>
           <label>Área<select id="filter-area"><option value="">Todas las áreas</option></select></label>
@@ -373,6 +405,13 @@ import Layout from "../../layouts/Layout.astro";
   .recruitment-admin .preview-chevron { flex-shrink: 0; color: var(--admin-muted); transition: transform var(--admin-motion); }
   .recruitment-admin .preview-panel[open] .preview-chevron { transform: rotate(180deg); }
   .recruitment-admin .preview-content { padding-top: 18px; margin-top: 12px; border-top: 1px solid var(--admin-border); }
+  .recruitment-admin .status-guide-panel { margin-bottom: 18px; }
+  .recruitment-admin .status-guide-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+  .recruitment-admin .status-guide-card { background: #0d0d10; border: 1px solid var(--admin-border); border-radius: 12px; padding: 16px; }
+  .recruitment-admin .status-guide-card h4 { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 12px; }
+  .recruitment-admin .status-guide-card ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .recruitment-admin .status-guide-card li { font-size: 13px; line-height: 1.5; color: var(--admin-muted); display: grid; gap: 4px; }
+  .recruitment-admin .status-guide-card .badge { justify-self: start; font-size: 12px; font-weight: 500; }
   .recruitment-admin .badge.test { border-color: #a16207; background: #422006; color: #fde68a; }
   .recruitment-admin .badge.status::before { content: ""; flex-shrink: 0; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: currentColor; }
   .recruitment-admin .status-progress { border-color: #b4530966; background: #451a0399; color: #fcd34d; }
@@ -390,6 +429,15 @@ import Layout from "../../layouts/Layout.astro";
   .recruitment-admin .app-card.tone-joined { border-left-color: #75d32d; }
   .recruitment-admin .app-card.tone-negative { border-left-color: #ef4444; }
   .recruitment-admin .app-card.tone-inactive { border-left-color: #52525b; }
+  .recruitment-admin .badge.status-submitted { border-color: #0284c7; background: #082f4955; color: #7dd3fc; }
+  .recruitment-admin .badge.status-profile_validated { border-color: #6366f1; background: #1e1b4b55; color: #c7d2fe; }
+  .recruitment-admin .badge.status-profile_rejected { border-color: #e11d48; background: #4c051955; color: #fca5a5; }
+  .recruitment-admin .badge.status-selected { border-color: #16a34a; background: #052e1677; color: #86efac; font-weight: 600; }
+  .recruitment-admin .badge.status-not_selected { border-color: #dc2626; background: #450a0a55; color: #fca5a5; }
+  .recruitment-admin .badge.status-draft { border-color: #52525b; background: #27272a55; color: #d4d4d8; }
+  .recruitment-admin .badge.status-incomplete { border-color: #d97706; background: #451a0355; color: #fde68a; }
+  .recruitment-admin .badge.status-expired { border-color: #991b1b; background: #2b0c1055; color: #f87171; }
+  .recruitment-admin .badge.status-withdrawn { border-color: #3f3f46; background: #18181b; color: #a1a1aa; }
   .recruitment-admin .header-actions { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
   .recruitment-admin .countdown-badge { display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 999px; background: #75d32d18; border: 1px solid #75d32d44; color: #e4e4e7; font-size: 13px; font-variant-numeric: tabular-nums; }
   .recruitment-admin .countdown-badge strong { color: var(--admin-green); font-family: monospace; font-size: 14px; }
@@ -426,6 +474,7 @@ import Layout from "../../layouts/Layout.astro";
     .recruitment-admin .field-grid.three { grid-template-columns: 1fr; }
     .recruitment-admin .director-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .recruitment-admin .director-row .remove { justify-self: end; }
+    .recruitment-admin .status-guide-grid { grid-template-columns: 1fr; }
   }
   @media (max-width: 767px) {
     .recruitment-admin { padding: 20px 16px 48px; }

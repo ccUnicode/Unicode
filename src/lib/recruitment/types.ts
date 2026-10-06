@@ -29,8 +29,8 @@ export type ApplicationStatus = 'draft' | 'incomplete' | 'expired' | 'submitted'
   | 'waitlisted' | 'not_selected' | 'onboarding_sent' | 'buddy_assigned' | 'integrated' | 'discarded' | 'withdrawn';
 export const allowedApplicationTransitions: Record<ApplicationStatus, readonly ApplicationStatus[]> = {
   draft: ['withdrawn'], incomplete: ['withdrawn'], expired: [],
-  // Two stages: the profile advances or not, then the applicant joins or not. Older statuses only close.
-  submitted: ['profile_validated', 'profile_rejected', 'withdrawn'],
+  // Two stages or direct decision: profile advances or direct join/rejection. Older statuses only close.
+  submitted: ['profile_validated', 'profile_rejected', 'selected', 'not_selected', 'withdrawn'],
   profile_validated: ['selected', 'not_selected', 'withdrawn'], profile_rejected: [],
   selected: [], not_selected: [], discarded: [], withdrawn: [],
   test_sent: ['selected', 'not_selected', 'withdrawn'], test_completed: ['selected', 'not_selected', 'withdrawn'],

@@ -136,6 +136,19 @@ async function handle(request: Request, rawPath: string | undefined): Promise<Re
       if (action === 'session' && method === 'GET') return json({ session, managesRecruitment: managesRecruitment(session) });
       // Every director can play the videos shown in /admin; managing the call stays with GTH.
       if (path[1] === 'applications' && path[3] === 'video' && path.length === 4 && method === 'GET') return json(await recruitment.adminVideo(recruitment.requireUuid(path[2])));
+      // Transitioning an application: directors can decide on applicants of their own area; GTH and admin decide on all.
+      if (path[1] === 'applications' && path[3] === 'transition' && path.length === 4 && method === 'POST') {
+        const id = recruitment.requireUuid(path[2]);
+        const appRes = await recruitment.adminApplications(id);
+        const app = appRes.application;
+        if (!app) throw new RecruitmentError('not_found', 'No existe esa postulación.', 404);
+        if (session.role === 'director' && session.area !== 'GTH') {
+          const isDirectorArea = app.data.firstChoiceArea === session.area || app.data.secondChoiceArea === session.area;
+          if (!isDirectorArea) throw new RecruitmentError('forbidden', 'Cada director solo puede decidir sobre postulantes de su propia área.', 403);
+        }
+        const actor = session.role === 'director' ? session.email : 'contraseña de administración';
+        return json(await recruitment.transition(id, await body(request), actor));
+      }
       if (!managesRecruitment(session)) throw forbidden();
       const actor = session.role === 'director' ? session.email : 'contraseña de administración';
       if (action === 'directors' && method === 'GET') return json(await directors());

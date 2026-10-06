@@ -23,7 +23,7 @@ const statusNames: Record<ApplicationStatus, string> = {
   group_eligible: "Habilitado para dinámica grupal",
   group_scheduled: "Dinámica grupal programada",
   group_completed: "Dinámica grupal completada",
-  selected: "Ingresa",
+  selected: "Ingresa a UNICODE",
   conditional_selected: "Seleccionado con condición",
   waitlisted: "Lista de espera",
   not_selected: "No ingresa",
@@ -48,6 +48,90 @@ function statusTone(status: ApplicationStatus): StatusTone {
 function statusBadge(status: ApplicationStatus): HTMLElement {
   return node("span", statusNames[status] || status, `badge status status-${statusTone(status)}`);
 }
+
+interface StatusMeta {
+  key: ApplicationStatus;
+  shortLabel: string;
+  filterLabel: string;
+  category: "evaluation" | "draft";
+  description: string;
+}
+
+const activeStatuses: StatusMeta[] = [
+  // 1.ª Etapa de evaluación
+  {
+    key: "submitted",
+    shortLabel: "Inscripción completa",
+    filterLabel: "Inscripción completa · Pendiente de 1.ª etapa",
+    category: "evaluation",
+    description: "Postulación y video recibidos. Pendiente de revisión de perfil en la primera etapa.",
+  },
+  {
+    key: "profile_validated",
+    shortLabel: "Avanza a la 2.ª etapa",
+    filterLabel: "Avanza a la 2.ª etapa · Perfil aprobado",
+    category: "evaluation",
+    description: "Perfil aprobado en la 1.ª etapa. Avanza a la evaluación final.",
+  },
+  {
+    key: "profile_rejected",
+    shortLabel: "No avanza",
+    filterLabel: "No avanza · Descartado en 1.ª etapa",
+    category: "evaluation",
+    description: "No superó la revisión de perfil en la primera etapa.",
+  },
+  // 2.ª Etapa de evaluación
+  {
+    key: "selected",
+    shortLabel: "Ingresa a UNICODE",
+    filterLabel: "Ingresa a UNICODE · Seleccionado final",
+    category: "evaluation",
+    description: "Postulante seleccionado/a definitivamente, por decisión directa o tras la 2.ª etapa.",
+  },
+  {
+    key: "not_selected",
+    shortLabel: "No ingresa",
+    filterLabel: "No ingresa · No seleccionado en 2.ª etapa",
+    category: "evaluation",
+    description: "No fue seleccionado/a, por decisión directa o tras la 2.ª etapa.",
+  },
+  // Borradores y gestión
+  {
+    key: "draft",
+    shortLabel: "Borrador",
+    filterLabel: "Borrador · En edición",
+    category: "draft",
+    description: "Postulación iniciada aún en edición por el postulante.",
+  },
+  {
+    key: "incomplete",
+    shortLabel: "Incompleto",
+    filterLabel: "Incompleto · Con recordatorios automáticos",
+    category: "draft",
+    description: "Borrador sin actividad que recibe recordatorios periódicos por correo.",
+  },
+  {
+    key: "expired",
+    shortLabel: "Plazo vencido",
+    filterLabel: "Plazo vencido · No enviado a tiempo",
+    category: "draft",
+    description: "Borrador que no se completó antes del cierre de la convocatoria.",
+  },
+  {
+    key: "withdrawn",
+    shortLabel: "Retirado",
+    filterLabel: "Retirado · Cancelado",
+    category: "draft",
+    description: "Postulación cancelada o retirada.",
+  },
+];
+
+function statusLabelWithDesc(status: ApplicationStatus): string {
+  const meta = activeStatuses.find((s) => s.key === status);
+  const name = statusNames[status] || status;
+  return meta ? `${name} (${meta.description})` : name;
+}
+
 const categoryNames: Record<QuestionCategory, string> = {
   motivation: "Motivación y calce cultural",
   collaboration: "Colaboración y resolución de problemas",
@@ -583,8 +667,49 @@ function updateAreaFilter(): void {
   select.value = selected;
 }
 
+function updateStatusFilter(apps: RecruitmentApplication[] = []): void {
+  const currentVal = statusFilter.value;
+  statusFilter.replaceChildren(new Option("Todos los estados", ""));
+
+  const evalGroup = document.createElement("optgroup");
+  evalGroup.label = "Etapas de selección";
+  const draftGroup = document.createElement("optgroup");
+  draftGroup.label = "Borradores y gestión";
+
+  for (const item of activeStatuses) {
+    const opt = new Option(item.filterLabel, item.key);
+    if (item.category === "evaluation") {
+      evalGroup.appendChild(opt);
+    } else {
+      draftGroup.appendChild(opt);
+    }
+  }
+
+  statusFilter.appendChild(evalGroup);
+  statusFilter.appendChild(draftGroup);
+
+  const activeKeys = new Set(activeStatuses.map((s) => s.key));
+  const legacyStatuses = new Set<string>();
+  for (const app of apps) {
+    if (app.status && !activeKeys.has(app.status)) {
+      legacyStatuses.add(app.status);
+    }
+  }
+  if (legacyStatuses.size > 0) {
+    const legacyGroup = document.createElement("optgroup");
+    legacyGroup.label = "Estados históricos";
+    for (const legacyKey of legacyStatuses) {
+      const name = statusNames[legacyKey as ApplicationStatus] || legacyKey;
+      legacyGroup.appendChild(new Option(`${name} (Histórico)`, legacyKey));
+    }
+    statusFilter.appendChild(legacyGroup);
+  }
+
+  statusFilter.value = currentVal;
+}
+
 const statusFilter = element<HTMLSelectElement>("filter-status");
-(Object.keys(statusNames) as ApplicationStatus[]).forEach((status) => statusFilter.add(new Option(statusNames[status], status)));
+updateStatusFilter();
 for (const id of ["filter-status", "filter-area"]) element(id).addEventListener("change", renderApplications);
 element("filter-search").addEventListener("input", renderApplications);
 element("refresh-applications").addEventListener("click", () => void loadApplications());
@@ -597,6 +722,7 @@ async function loadApplications(): Promise<void> {
   try {
     const result = await request<{ applications: RecruitmentApplication[] }>("/applications");
     applications = result.applications;
+    updateStatusFilter(applications);
     renderPreview();
     element("application-count").textContent = String(applications.length);
     renderApplications();
@@ -635,6 +761,8 @@ function renderApplications(): void {
     if (application.isTest) meta.append(node("span", "Prueba", "badge test"));
     meta.append(statusBadge(application.status));
     card.classList.add(`tone-${statusTone(application.status)}`);
+    const statusMeta = activeStatuses.find((s) => s.key === application.status);
+    if (statusMeta) meta.lastElementChild?.setAttribute("title", statusMeta.description);
     if (application.data.firstChoiceArea) meta.append(node("span", `1. ${areaName(application.data.firstChoiceArea)}`, "muted"));
     if (application.data.secondChoiceArea) meta.append(node("span", `2. ${areaName(application.data.secondChoiceArea)}`, "muted"));
     info.append(meta, node("p", formattedDate(application.createdAt), "muted"));
@@ -685,7 +813,7 @@ function renderDetail(application: RecruitmentApplication): void {
   const personal = element("detail-personal");
   personal.replaceChildren();
   const entries: [string, string][] = [
-    ["Estado", statusNames[application.status] || application.status], ["Correo", data.email || "Pendiente"],
+    ["Estado", statusLabelWithDesc(application.status)], ["Correo", data.email || "Pendiente"],
     ["Teléfono", data.phone || "Pendiente"], ["Universidad", data.university || "Pendiente"],
     ["Facultad", data.faculty || "Pendiente"], ["Ingreso", data.admissionTerm || "Pendiente"],
     ["Carrera", data.career || "Pendiente"], ["Ciclo", data.semester === "0" ? "Egresado" : data.semester || "Pendiente"],
@@ -698,9 +826,27 @@ function renderDetail(application: RecruitmentApplication): void {
   entries.forEach(([label, text]) => {
     const pair = node("div");
     const definition = node("dl");
-    const value = node("dd");
-    if (label === "Estado") value.append(statusBadge(application.status)); else value.textContent = text;
-    definition.append(node("dt", label), value);
+    const dd = node("dd");
+    if (label === "Teléfono" && data.phone) {
+      const digits = data.phone.replace(/\D/g, "");
+      const waNumber = digits.length === 9 ? `51${digits}` : digits;
+      const link = document.createElement("a");
+      link.href = `https://wa.me/${waNumber}`;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.className = "inline-link";
+      link.title = "Abrir chat de WhatsApp";
+      link.textContent = `${data.phone} (WhatsApp ↗)`;
+      dd.append(link);
+    } else if (label === "Estado") {
+      const badge = node("span", statusNames[application.status] || application.status, `badge status status-${statusTone(application.status)}`);
+      const desc = activeStatuses.find((s) => s.key === application.status)?.description;
+      dd.append(badge);
+      if (desc) dd.append(node("small", ` · ${desc}`, "muted"));
+    } else {
+      dd.textContent = text;
+    }
+    definition.append(node("dt", label), dd);
     pair.append(definition);
     personal.append(pair);
   });
@@ -744,10 +890,24 @@ function renderDetail(application: RecruitmentApplication): void {
   });
 }
 
-/** Each result is one button: it changes the status and sends that email to the applicant. */
+/** Each result is one button: it changes the status and sends that email to the applicant. Direct decisions (skipping 2nd stage) are allowed. */
 const stageActions: Partial<Record<ApplicationStatus, { title: string; buttons: [ApplicationStatus, string, string][] }>> = {
-  submitted: { title: "Primera etapa: revisión del perfil", buttons: [["profile_validated", "Avanza a la 2.ª etapa", "primary"], ["profile_rejected", "No avanza", "secondary"]] },
-  profile_validated: { title: "Segunda etapa: resultado final", buttons: [["selected", "Ingresa a UNICODE", "primary"], ["not_selected", "No ingresa", "secondary"]] },
+  submitted: {
+    title: "Evaluación y decisión (1.ª etapa o directa)",
+    buttons: [
+      ["profile_validated", "Avanza a la 2.ª etapa", "primary"],
+      ["selected", "Ingresa directo a UNICODE", "primary"],
+      ["profile_rejected", "No avanza (1.ª etapa)", "secondary"],
+      ["not_selected", "No ingresa", "secondary"],
+    ],
+  },
+  profile_validated: {
+    title: "Segunda etapa: resultado final",
+    buttons: [
+      ["selected", "Ingresa a UNICODE", "primary"],
+      ["not_selected", "No ingresa", "secondary"],
+    ],
+  },
 };
 
 function renderStageButtons(application: RecruitmentApplication): void {
