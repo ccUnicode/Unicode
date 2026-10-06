@@ -84,3 +84,11 @@ test('Finanzas is a valid application area and is added to configs saved before 
   validation.validateConfig(completed);
   assert.equal(validation.validateApplicationData({ firstName: 'A', lastName: 'B', email: 'a@b.pe', consent: true, firstChoiceArea: 'FIN' }, undefined, true).firstChoiceArea, 'FIN');
 });
+
+
+test('saving configuration preserves the email release time and rejects dates without a timezone', () => {
+  const paused = { ...configuration(), emailPausedUntil: '2026-10-06T19:00:00-05:00' };
+  assert.equal(validation.validateConfig(paused).emailPausedUntil, '2026-10-07T00:00:00.000Z');
+  assert.equal(validation.validateConfig({ ...paused, emailPausedUntil: null }).emailPausedUntil, null);
+  assert.throws(() => validation.validateConfig({ ...paused, emailPausedUntil: '2026-10-06T19:00:00' }));
+});

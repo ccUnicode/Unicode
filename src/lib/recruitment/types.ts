@@ -11,6 +11,7 @@ export interface RecruitmentArea { id: AreaId; name: string; enabled: boolean; q
 export interface VideoRubricCriterion { id: string; label: string; low: string; medium: string; high: string; maxScore: number }
 export interface RecruitmentConfig {
   enabled: boolean; title: string; opensAt: string | null; closesAt: string | null; extensionAt: string | null;
+  emailPausedUntil?: string | null;
   maxApplicants: number; areas: RecruitmentArea[]; minAvailabilityHours: number | null;
   maxVideoSeconds: number; maxVideoBytes: number; questionsPerCategory: number; preparationSeconds: number;
   inactivityHours: number; shortCasePrompt: string; storageProvider: 'drive' | 'supabase';

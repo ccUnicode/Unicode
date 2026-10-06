@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '*/5 * * * *'
+    # Resend resets its daily allowance at 00:00 UTC (19:00 in Lima).
+    - cron: '0 0 * * *'
 
 permissions: {}
 concurrency:
@@ -28,7 +30,11 @@ jobs:
             https://*) ;;
             *) echo "The configured deployment URL must use HTTPS."; exit 1 ;;
           esac
-          curl --fail --silent --show-error --max-time 90 \
-            -H "Authorization: Bearer $CRON_SECRET" \
-            "${RECRUITMENT_BASE_URL%/}/api/recruitment/admin/process-emails" \
-            --output /dev/null
+          for batch in 1 2 3; do
+            curl --fail --silent --show-error --max-time 30 \
+              -H "Authorization: Bearer $CRON_SECRET" \
+              "${RECRUITMENT_BASE_URL%/}/api/recruitment/admin/process-emails" \
+              --output /tmp/recruitment-mail-result.json
+            state=$(node -e 'const r = JSON.parse(require("fs").readFileSync("/tmp/recruitment-mail-result.json", "utf8")); console.log(r.skipped || r.failed > 0 || r.processed === 0 || r.remaining === 0 ? "stop" : "continue")')
+            if [ "$state" = "stop" ]; then break; fi
+          done
