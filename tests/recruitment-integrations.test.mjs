@@ -193,3 +193,29 @@ test('extension messages request only missing steps and use the approved footer'
   const html = layout.renderRecruitmentEmailHtml({ subject: 'Ampliación', text, siteUrl: 'https://www.ccunicode.org' });
   assert.match(html, /Centro Cultural Unicode · FIIS UNI/); assert.ok(!html.includes('Estudiantil de Ingeniería'));
 });
+
+
+test('mail processing waits without leasing messages until the configured release time', async () => {
+  configure({ PUBLIC_SUPABASE_URL: 'https://queue-test.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'test-only-service-key', RESEND_API_KEY: 'local-key', RECRUITMENT_EMAIL_FROM: 'test@example.invalid' });
+  const service = await server.ssrLoadModule('/src/lib/recruitment/service.ts');
+  let pauseUntil = new Date(Date.now() + 60_000).toISOString();
+  const calls = [];
+  globalThis.fetch = async (url) => {
+    const name = new URL(String(url)).pathname.split('/').at(-1);
+    calls.push(name);
+    if (name === 'recruitment_expire_drafts') return Response.json(0);
+    if (name === 'recruitment_admin_config') return Response.json({ config: { areas: [], storageProvider: 'drive', emailPausedUntil: pauseUntil } });
+    if (name === 'recruitment_lease_emails') return Response.json({ items: [] });
+    if (name === 'recruitment_queue') return Response.json({ queue: [] });
+    throw new Error('Unexpected request in pause test');
+  };
+  try {
+    const paused = await service.processEmails();
+    assert.equal(paused.skipped, true); assert.equal(paused.resumeAt, pauseUntil);
+    assert.equal(paused.processed, 0); assert.ok(!calls.includes('recruitment_lease_emails'));
+    assert.ok(!calls.includes('recruitment_expire_drafts'));
+    pauseUntil = new Date(Date.now() - 60_000).toISOString();
+    const resumed = await service.processEmails();
+    assert.equal(resumed.processed, 0); assert.ok(calls.includes('recruitment_lease_emails'));
+  } finally { globalThis.fetch = originalFetch; }
+});

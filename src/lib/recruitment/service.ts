@@ -191,6 +191,11 @@ function localRecipientAllowed(to: string): boolean {
   return (env('RECRUITMENT_LOCAL_EMAIL_TO') || '').split(',').map((item) => item.trim().toLowerCase()).filter(Boolean).includes(to.toLowerCase());
 }
 export async function processEmails(limit = 10) {
+  const { config } = await adminConfig();
+  if (config.emailPausedUntil && Date.parse(config.emailPausedUntil) > Date.now()) {
+    const until = new Intl.DateTimeFormat('es-PE', { timeZone: 'America/Lima', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }).format(new Date(config.emailPausedUntil));
+    return { sent: 0, failed: 0, processed: 0, remaining: null, skipped: true, resumeAt: config.emailPausedUntil, reason: `Los correos están en cola. El envío se reanudará el ${until} (hora de Lima).` };
+  }
   await recruitmentRpc<number>('recruitment_expire_drafts');
   if (!recruitmentEmailConfigured()) return { sent: 0, failed: 0, processed: 0, remaining: null, skipped: true, reason: 'El proveedor de correo aún no está configurado.' };
   const leaseToken = crypto.randomUUID();
