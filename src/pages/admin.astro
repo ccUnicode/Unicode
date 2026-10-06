@@ -836,7 +836,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
       content.classList.remove("hidden");
       for (const area of (data as Metrics).areas) {
         const tab = document.querySelector<HTMLElement>(`.area-tab[data-area="${area.id}"]`);
-        if (tab) tab.dataset.count = String(area.first + area.second);
+        if (tab) tab.dataset.count = String(area.first);
       }
     } catch (error) {
       if (version !== summaryVersion) return;
