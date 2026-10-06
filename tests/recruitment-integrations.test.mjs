@@ -162,5 +162,5 @@ test('reminder opt-out links are signed per application and shown at the bottom 
   assert.equal(await optOut.verifyUnsubscribe('44444444-4444-4444-8444-444444444444', url.searchParams.get('t')), false);
   assert.equal(await optOut.verifyUnsubscribe(id, 'f'.repeat(40)), false);
   const html = layout.renderRecruitmentEmailHtml({ subject: 'Recordatorio', text: 'Hola', siteUrl: 'https://www.ccunicode.org', unsubscribeUrl: url.toString() });
-  assert.match(html, />Dejar de recibir recordatorios<\/a>/);
+  assert.match(html, />Dejar de recibir recordatorios o retirar postulación<\/a>/);
 });

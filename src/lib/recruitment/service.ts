@@ -208,9 +208,9 @@ export async function processEmails(limit = 10) {
         continue;
       }
       const siteUrl = env('RECRUITMENT_BASE_URL') || 'https://www.ccunicode.org';
-      // Reminders carry a signed opt-out link, in the email and as the standard header mail apps show.
-      const optOut = item.templateKey === 'incomplete' ? await unsubscribeUrl(siteUrl, item.applicationId) : undefined;
-      const body = optOut ? `${text}\n\n¿No quieres más recordatorios? Deja de recibirlos aquí: ${optOut}` : text;
+      // All recruitment emails carry a signed opt-out / withdraw link.
+      const optOut = item.applicationId ? await unsubscribeUrl(siteUrl, item.applicationId) : undefined;
+      const body = optOut ? `${text}\n\n¿Deseas dejar de recibir recordatorios o retirar tu postulación? Puedes gestionarlo aquí: ${optOut}` : text;
       const headers = optOut ? { 'List-Unsubscribe': `<${optOut}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } : undefined;
       const result = await sendRecruitmentEmail({ to: item.to, subject, text: body, html: renderRecruitmentEmailHtml({ subject, text, actionUrl: payload.resumeUrl, siteUrl, unsubscribeUrl: optOut }), idempotencyKey: `recruitment-${item.id}`, headers });
       await recruitmentRpc<null>('recruitment_finish_email', { p_id: item.id, p_lease_token: leaseToken, p_message_id: result.messageId, p_error: null });
