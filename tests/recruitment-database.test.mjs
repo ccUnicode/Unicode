@@ -579,3 +579,54 @@ test('directors sign in with a single-use code limited in time, attempts and req
     assert.deepEqual(r.rows[0], { t: false, f: false });
   }
 });
+
+test('extending the call reactivates expired drafts and allows them to continue and receive reminders', async t => {
+  const db = await database(t);
+  await openCall(db, { inactivityHours: 8, closesAt: new Date(Date.now() + 3_600_000).toISOString() });
+  const app = await draft(db);
+  // Call closes: application expires
+  await openCall(db, { closesAt: new Date(Date.now() - 60_000).toISOString() });
+  assert.equal(await rpc(db, 'recruitment_expire_drafts'), 1);
+  assert.equal((await rpc(db, 'recruitment_get_draft', app.id, app.owner)).application.status, 'expired');
+
+  // Now admin extends the deadline into the future
+  await openCall(db, { extensionAt: new Date(Date.now() + 86_400_000).toISOString() });
+
+  // Draft is reactivated to incomplete
+  const resumed = await rpc(db, 'recruitment_get_draft', app.id, app.owner);
+  assert.equal(resumed.application.status, 'incomplete');
+
+  // Applicant can continue modifying the draft
+  await rpc(db, 'recruitment_patch_draft', app.id, app.owner, applicant(app.id));
+  assert.equal((await rpc(db, 'recruitment_get_draft', app.id, app.owner)).application.status, 'draft');
+
+  // Inactive draft receives reminders while call is extended
+  await db.query("UPDATE recruitment_applications SET updated_at=now()-interval '9 hours' WHERE id=$1", [app.id]);
+  assert.equal(await rpc(db, 'recruitment_expire_drafts'), 1);
+  const reminders = (await db.query("SELECT count(*)::integer AS count FROM recruitment_email_outbox WHERE application_id=$1 AND template_key='incomplete'", [app.id])).rows[0].count;
+  assert.equal(reminders, 1);
+
+  // Once call closes finally, no reminder emails or expired emails remain or get sent
+  await openCall(db, { extensionAt: new Date(Date.now() - 60_000).toISOString() });
+  assert.equal(await rpc(db, 'recruitment_expire_drafts'), 1);
+  const pendingOutbox = (await db.query("SELECT count(*)::integer AS count FROM recruitment_email_outbox WHERE status='pending'")).rows[0].count;
+  assert.equal(pendingOutbox, 0, 'no pending reminder or expired emails after close');
+});
+
+
+test('expired drafts stay expired before opening and reactivation is restricted to the service role', async t => {
+  const db = await database(t);
+  await openCall(db);
+  const app = await draft(db);
+  await openCall(db, { closesAt: new Date(Date.now() - 60_000).toISOString() });
+  await rpc(db, 'recruitment_expire_drafts');
+  await openCall(db, { opensAt: new Date(Date.now() + 3_600_000).toISOString() });
+  assert.equal(await rpc(db, 'recruitment_reactivate_expired_drafts'), 0);
+  assert.equal((await rpc(db, 'recruitment_get_draft', app.id, app.owner)).application.status, 'expired');
+  assert.equal((await rpc(db, 'recruitment_admin_applications', app.id)).application.status, 'expired');
+  await assert.rejects(() => rpc(db, 'recruitment_patch_draft', app.id, app.owner, applicant(app.id)), /call_not_started/);
+  for (const role of ['anon', 'authenticated', 'service_role']) {
+    const result = await db.query("SELECT has_function_privilege($1, 'public.recruitment_reactivate_expired_drafts()', 'EXECUTE') AS allowed", [role]);
+    assert.equal(result.rows[0].allowed, role === 'service_role');
+  }
+});

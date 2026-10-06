@@ -654,6 +654,7 @@ configForm.addEventListener("submit", async (event) => {
     renderReadiness(readiness?.readiness);
     setDirty("config-save-bar", "config-save-info", false, `Configuración guardada · versión ${config.revision}`);
     showMessage("Configuración guardada. Las preguntas ya asignadas conservan su texto original.");
+    void loadApplications();
   } catch (error) {
     showMessage(messageOf(error), true);
   } finally {
