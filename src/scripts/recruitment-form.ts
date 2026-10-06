@@ -597,6 +597,32 @@ function initializeRecruitment() {
       if (result.preview) element("development-notice").textContent = "Modo de prueba: esta postulación es solo para probar y el equipo la borrará. No uses este enlace para tu postulación real.";
       else if (previewKey) { previewKey = ""; try { localStorage.removeItem(PREVIEW_KEY); } catch { /* Storage blocked. */ } }
       config = result.config;
+      const deadlineIso = config.extensionAt || config.closesAt;
+      if (deadlineIso && result.available) {
+        const deadlineTime = Date.parse(deadlineIso);
+        if (!Number.isNaN(deadlineTime) && deadlineTime > Date.now()) {
+          const banner = document.getElementById("applicant-deadline-banner");
+          const digits = document.getElementById("applicant-deadline-digits");
+          if (banner && digits) {
+            const pad = (n: number) => String(n).padStart(2, "0");
+            const tick = () => {
+              const diff = deadlineTime - Date.now();
+              if (diff <= 0) {
+                banner.hidden = true;
+                return;
+              }
+              banner.hidden = false;
+              const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+              const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+              const minutes = Math.floor((diff / (1000 * 60)) % 60);
+              const seconds = Math.floor((diff / 1000) % 60);
+              digits.textContent = `${days}d ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
+            };
+            tick();
+            setInterval(tick, 1000);
+          }
+        }
+      }
       for (const id of ["firstChoiceArea", "secondChoiceArea"]) {
         const select = element<HTMLSelectElement>(id);
         for (const area of config.areas.filter(item => item.enabled)) { const option = document.createElement("option"); option.value = area.id; option.textContent = area.name; select.append(option); }

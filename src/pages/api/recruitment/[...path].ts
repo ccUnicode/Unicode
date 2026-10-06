@@ -86,21 +86,30 @@ async function playVideo(request: Request, id: string): Promise<Response> {
   return new Response(drive.body, { status: 206, headers: { ...headers, 'Content-Type': video.contentType, 'Accept-Ranges': 'bytes', 'Content-Range': `bytes ${start}-${end}/${size}`, 'Content-Length': String(end - start + 1) } });
 }
 /**
- * Opt-out of reminders. GET only shows a confirmation (mail scanners open links on their own);
+ * Opt-out of reminders or withdraw application. GET shows the confirmation options;
  * the button, or the mail app's one-click unsubscribe, sends the POST that applies it.
  */
 async function optOut(request: Request, id: string): Promise<Response> {
-  const page = (title: string, text: string, form = '') => new Response(`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${title}</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0a0a0a;color:#e4e4e7;font-family:system-ui,sans-serif;padding:24px}main{max-width:440px;text-align:center}h1{color:#fff;font-size:22px}p{line-height:1.6;color:#a1a1aa}button{margin-top:12px;padding:12px 22px;border:0;border-radius:999px;background:#75d32d;color:#0a0a0a;font-weight:700;font-size:15px;cursor:pointer}</style></head><body><main><h1>${title}</h1><p>${text}</p>${form}</main></body></html>`,
+  const page = (title: string, text: string, form = '') => new Response(`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${title}</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0a0a0a;color:#e4e4e7;font-family:system-ui,sans-serif;padding:24px}main{max-width:480px;text-align:center}h1{color:#fff;font-size:22px}p{line-height:1.6;color:#a1a1aa}.buttons{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:20px}button{padding:12px 22px;border:0;border-radius:999px;background:#75d32d;color:#0a0a0a;font-weight:700;font-size:14px;cursor:pointer}.btn-danger{background:#dc2626;color:#fff;}</style></head><body><main><h1>${title}</h1><p>${text}</p>${form}</main></body></html>`,
     { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer', 'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'" } });
   const url = new URL(request.url);
   const token = url.searchParams.get('t');
   if (!(await verifyUnsubscribe(id, token))) return page('Enlace no válido', 'Este enlace no es correcto. Usa el que viene en tu correo.');
+  const action = url.searchParams.get('action');
   if (request.method === 'POST') {
+    if (action === 'withdraw') {
+      await recruitment.transition(id, { status: 'withdrawn', reason: 'Postulación retirada por el postulante desde el enlace del correo.' }, 'postulante');
+      await recruitment.unsubscribe(id);
+      return page('Postulación retirada', 'Tu postulación a UNICODE ha sido retirada y no recibirás más recordatorios.');
+    }
     await recruitment.unsubscribe(id);
-    return page('Listo', 'Ya no te enviaremos recordatorios. Tu postulación sigue guardada: puedes terminarla cuando quieras con tu enlace personal.');
+    return page('Listo', 'Ya no te enviaremos recordatorios. Tu postulación queda guardada.');
   }
-  return page('¿Dejar de recibir recordatorios?', 'Dejaremos de recordarte que termines tu postulación. No se borra nada de lo que avanzaste.',
-    `<form method="post" action="${url.pathname}?t=${encodeURIComponent(token!)}"><button type="submit">Sí, dejar de recibirlos</button></form>`);
+  return page('Gestión de correos y postulación', 'Elige qué deseas hacer con tu postulación en UNICODE:',
+    `<div class="buttons">
+      <form method="post" action="${url.pathname}?t=${encodeURIComponent(token!)}&action=unsubscribe"><button type="submit">Dejar de recibir recordatorios</button></form>
+      <form method="post" action="${url.pathname}?t=${encodeURIComponent(token!)}&action=withdraw"><button type="submit" class="btn-danger">Retirar mi postulación</button></form>
+    </div>`);
 }
 export const ALL: APIRoute = ({ request, params }) => withPreviewKey(request.headers.get('x-recruitment-preview'), () => handle(request, params.path));
 async function handle(request: Request, rawPath: string | undefined): Promise<Response> {
@@ -136,6 +145,19 @@ async function handle(request: Request, rawPath: string | undefined): Promise<Re
       if (action === 'session' && method === 'GET') return json({ session, managesRecruitment: managesRecruitment(session) });
       // Every director can play the videos shown in /admin; managing the call stays with GTH.
       if (path[1] === 'applications' && path[3] === 'video' && path.length === 4 && method === 'GET') return json(await recruitment.adminVideo(recruitment.requireUuid(path[2])));
+      // Transitioning an application: directors can decide on applicants of their own area; GTH and admin decide on all.
+      if (path[1] === 'applications' && path[3] === 'transition' && path.length === 4 && method === 'POST') {
+        const id = recruitment.requireUuid(path[2]);
+        const appRes = await recruitment.adminApplications(id);
+        const app = appRes.application;
+        if (!app) throw new RecruitmentError('not_found', 'No existe esa postulación.', 404);
+        if (session.role === 'director' && session.area !== 'GTH') {
+          const isDirectorArea = app.data.firstChoiceArea === session.area || app.data.secondChoiceArea === session.area;
+          if (!isDirectorArea) throw new RecruitmentError('forbidden', 'Cada director solo puede decidir sobre postulantes de su propia área.', 403);
+        }
+        const actor = session.role === 'director' ? session.email : 'contraseña de administración';
+        return json(await recruitment.transition(id, await body(request), actor));
+      }
       if (!managesRecruitment(session)) throw forbidden();
       const actor = session.role === 'director' ? session.email : 'contraseña de administración';
       if (action === 'directors' && method === 'GET') return json(await directors());

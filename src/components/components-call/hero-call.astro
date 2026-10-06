@@ -6,7 +6,7 @@
  *
  * @component
  */
-interface Props { recruitment: { available: boolean; reason?: string | null; deploymentReady?: boolean; config: { title: string; enabled: boolean; opensAt: string | null; areas: { id: string; enabled: boolean }[] } } }
+interface Props { recruitment: { available: boolean; reason?: string | null; deploymentReady?: boolean; config: { title: string; enabled: boolean; opensAt: string | null; closesAt?: string | null; extensionAt?: string | null; areas: { id: string; enabled: boolean }[] } } }
 const { recruitment } = Astro.props;
 const IS_CALL_OPEN = recruitment.available;
 // Enabled in the admin panel with a future opening date: count down instead of "Próximamente".
@@ -14,6 +14,9 @@ const opensAt = recruitment.config.opensAt ? Date.parse(recruitment.config.opens
 const IS_UPCOMING = !IS_CALL_OPEN && recruitment.config.enabled && recruitment.deploymentReady !== false && opensAt > Date.now();
 const SHOW_AREAS = IS_CALL_OPEN || IS_UPCOMING;
 const opensTime = IS_UPCOMING ? new Intl.DateTimeFormat("es-PE", { timeZone: "America/Lima", hour: "numeric", minute: "2-digit" }).format(opensAt) : "";
+const rawClosesAt = recruitment.config.extensionAt || recruitment.config.closesAt;
+const closesAt = rawClosesAt ? Date.parse(rawClosesAt) : NaN;
+const HAS_CLOSING_COUNTDOWN = IS_CALL_OPEN && !Number.isNaN(closesAt) && closesAt > Date.now();
 
 interface Area {
   icon: string;
@@ -72,12 +75,30 @@ const areas: Area[] = [
     </p>
 
     {IS_CALL_OPEN ? (
-      <p
-        class="text-zinc-300 text-sm md:text-base max-w-xl mx-auto mb-12 leading-relaxed"
-      >
-        Encuentra el área donde puedes aportar a UNICODE. Completa tus datos y responde
-        cuatro preguntas en un video de hasta 3 minutos y medio.
-      </p>
+      <>
+        <p
+          class="text-zinc-300 text-sm md:text-base max-w-xl mx-auto mb-6 leading-relaxed"
+        >
+          Encuentra el área donde puedes aportar a UNICODE. Completa tus datos y responde
+          cuatro preguntas en un video de hasta 3 minutos y medio.
+        </p>
+        {HAS_CLOSING_COUNTDOWN && (
+          <div id="call-closing-countdown" data-closes-at={new Date(closesAt).toISOString()} class="mb-8 w-full max-w-lg mx-auto">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-unicode/10 border border-unicode/30 text-unicode text-xs font-semibold uppercase tracking-wider mb-3">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <span>Tiempo restante para postular</span>
+            </div>
+            <div class="grid grid-cols-4 gap-2 sm:gap-4 max-w-md mx-auto" role="timer" aria-live="off" aria-label="Tiempo restante para el cierre de convocatoria">
+              {[["days", "Días"], ["hours", "Horas"], ["minutes", "Min"], ["seconds", "Seg"]].map(([unit, label]) => (
+                <div class="rounded-2xl border border-unicode/40 bg-unicode/10 px-1 py-3 sm:py-4 backdrop-blur-sm shadow-[0_0_20px_rgba(117,211,45,0.08)]">
+                  <span data-closing-unit={unit} class="block text-3xl sm:text-5xl font-extrabold text-unicode text-glow tabular-nums leading-none">--</span>
+                  <span class="mt-2 block text-[0.65rem] sm:text-xs font-semibold uppercase tracking-widest text-zinc-400">{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </>
     ) : IS_UPCOMING ? (
       <div id="call-countdown" data-opens-at={new Date(opensAt).toISOString()} class="mb-8 w-full">
         <div class="grid grid-cols-4 gap-2 sm:gap-4 max-w-md mx-auto" role="timer" aria-live="off" aria-label="Tiempo para la apertura">
@@ -245,5 +266,25 @@ const areas: Area[] = [
     };
     const timer = setInterval(tick, 1000);
     tick();
+  }
+
+  const closingCountdown = document.getElementById("call-closing-countdown");
+  if (closingCountdown) {
+    const closesAt = Date.parse(closingCountdown.dataset.closesAt || "");
+    const pad = (value: number) => String(value).padStart(2, "0");
+    const tickClosing = () => {
+      const left = Math.max(0, closesAt - Date.now());
+      const total = Math.floor(left / 1000);
+      const values = { days: Math.floor(total / 86400), hours: Math.floor(total / 3600) % 24, minutes: Math.floor(total / 60) % 60, seconds: total % 60 };
+      for (const [unit, value] of Object.entries(values)) {
+        const cell = closingCountdown.querySelector(`[data-closing-unit="${unit}"]`);
+        if (cell) cell.textContent = pad(value);
+      }
+      if (left > 0) return;
+      clearInterval(closingTimer);
+      setTimeout(() => location.reload(), 1500);
+    };
+    const closingTimer = setInterval(tickClosing, 1000);
+    tickClosing();
   }
 </script>

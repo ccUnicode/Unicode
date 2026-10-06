@@ -314,12 +314,12 @@ test('video metadata must prove content, byte size and at most 3 min 30 s', asyn
   assert.equal(repeated.application.video.uploadId, pending.id);
 });
 
-test('workflow blocks stage skipping and backwards moves and atomically records history plus one outbox entry', async t => {
+test('workflow blocks backwards moves and atomically records history plus one outbox entry', async t => {
   const db = await database(t);
   await openCall(db);
   const application = await submitted(db);
   const actor = 'sesión administrativa compartida';
-  await assert.rejects(() => rpc(db, 'recruitment_transition', application.id, 'selected', 'Resultado acordado por el equipo.', actor), /invalid_transition/);
+  await assert.rejects(() => rpc(db, 'recruitment_transition', application.id, 'draft', 'Intento inválido de regresar a borrador.', actor), /invalid_transition/);
   await assert.rejects(() => rpc(db, 'recruitment_transition', application.id, 'profile_validated', 'x', actor), /reason_required/);
   // A database failure while enqueueing must roll back the state and audit event too.
   await db.exec(`CREATE FUNCTION test_reject_outbox() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'test_outbox_failure'; END $$;
@@ -341,6 +341,20 @@ test('workflow blocks stage skipping and backwards moves and atomically records 
   const detail = await rpc(db, 'recruitment_admin_applications', application.id);
   assert.equal(detail.application.history.at(-1).actor, actor);
   assert.equal(detail.application.history.at(-1).reason, 'Etapa confirmada por el equipo responsable.');
+});
+
+test('submitted applications allow direct selection and rejection with an audit event and email', async (t) => {
+  const db = await database(t);
+  await openCall(db);
+  for (const status of ['selected', 'not_selected']) {
+    const application = await submitted(db);
+    const result = await rpc(db, 'recruitment_transition', application.id, status, 'Decisión directa del equipo.', 'director@example.test');
+    assert.equal(result.application.status, status);
+    const event = await db.query('SELECT from_status, to_status FROM recruitment_events WHERE application_id=$1 AND to_status=$2', [application.id, status]);
+    assert.deepEqual(event.rows, [{ from_status: 'submitted', to_status: status }]);
+    const email = await db.query('SELECT template_key FROM recruitment_email_outbox WHERE application_id=$1 AND template_key=$2', [application.id, status]);
+    assert.equal(email.rows.length, 1);
+  }
 });
 
 test('two stages: each result sends its own email, and only the kept emails are enabled', async t => {

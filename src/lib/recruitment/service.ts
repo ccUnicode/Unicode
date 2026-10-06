@@ -208,9 +208,9 @@ export async function processEmails(limit = 10) {
         continue;
       }
       const siteUrl = env('RECRUITMENT_BASE_URL') || 'https://www.ccunicode.org';
-      // Reminders carry a signed opt-out link, in the email and as the standard header mail apps show.
-      const optOut = item.templateKey === 'incomplete' ? await unsubscribeUrl(siteUrl, item.applicationId) : undefined;
-      const body = optOut ? `${text}\n\n¿No quieres más recordatorios? Deja de recibirlos aquí: ${optOut}` : text;
+      // All recruitment emails carry a signed opt-out / withdraw link.
+      const optOut = item.applicationId ? await unsubscribeUrl(siteUrl, item.applicationId) : undefined;
+      const body = optOut ? `${text}\n\n¿Deseas dejar de recibir recordatorios o retirar tu postulación? Puedes gestionarlo aquí: ${optOut}` : text;
       const headers = optOut ? { 'List-Unsubscribe': `<${optOut}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } : undefined;
       const result = await sendRecruitmentEmail({ to: item.to, subject, text: body, html: renderRecruitmentEmailHtml({ subject, text, actionUrl: payload.resumeUrl, siteUrl, unsubscribeUrl: optOut }), idempotencyKey: `recruitment-${item.id}`, headers });
       await recruitmentRpc<null>('recruitment_finish_email', { p_id: item.id, p_lease_token: leaseToken, p_message_id: result.messageId, p_error: null });
@@ -243,8 +243,32 @@ export async function adminMetrics() {
     const match = UNIVERSITIES.find(([name, acronym]) => name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase() === key || acronym.toLowerCase() === key);
     return match ? match[1] : value.trim();
   };
-  const limaDay = (value: string) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima' }).format(new Date(value));
-  const days = Array.from({ length: 14 }, (_, index) => limaDay(new Date(Date.now() - (13 - index) * 86_400_000).toISOString()));
+  const limaDay = (value: string | number | Date) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima' }).format(new Date(value));
+  const todayLima = limaDay(new Date());
+
+  // Determine start date from config.opensAt or the earliest submitted application
+  let startLima: string | null = config.opensAt ? limaDay(config.opensAt) : null;
+  for (const application of submitted) {
+    if (application.submittedAt) {
+      const day = limaDay(application.submittedAt);
+      if (!startLima || day < startLima) startLima = day;
+    }
+  }
+  if (!startLima || startLima > todayLima) {
+    startLima = submitted.length ? todayLima : limaDay(new Date(Date.now() - 13 * 86_400_000));
+  }
+
+  // Generate continuous list of dates from startLima to todayLima
+  const days: string[] = [];
+  const [startYear, startMonth, startDay] = startLima.split('-').map(Number);
+  let cursor = new Date(Date.UTC(startYear, startMonth - 1, startDay, 12, 0, 0));
+  while (true) {
+    const current = limaDay(cursor);
+    days.push(current);
+    if (current >= todayLima || days.length >= 365) break;
+    cursor = new Date(cursor.getTime() + 86_400_000);
+  }
+
   const perDay = new Map(days.map((day) => [day, 0]));
   for (const application of submitted) { const day = limaDay(application.submittedAt!); if (perDay.has(day)) perDay.set(day, perDay.get(day)! + 1); }
   const hours = submitted.map((application) => application.data.availabilityHours).filter((value): value is number => typeof value === 'number');

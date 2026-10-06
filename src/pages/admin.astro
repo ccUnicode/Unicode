@@ -130,6 +130,21 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
           <span class="hidden sm:inline">Exportar Excel</span><span class="hidden min-[360px]:inline sm:hidden">Exportar</span>
         </button>
       </div>
+      <div id="admin-countdown-banner" class="hidden mb-6 rounded-2xl border border-unicode/30 bg-gradient-to-r from-unicode/10 via-zinc-900/70 to-zinc-900/40 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-[0_0_30px_rgba(117,211,45,0.06)]">
+        <div class="flex items-center gap-3.5 min-w-0">
+          <div class="w-10 h-10 rounded-xl bg-unicode/15 border border-unicode/30 flex items-center justify-center text-unicode shrink-0 shadow-[0_0_15px_rgba(117,211,45,0.15)]">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-semibold text-white tracking-tight">Cuenta regresiva de convocatoria</h3>
+              <span id="countdown-status-badge" class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-unicode/20 text-unicode">En curso</span>
+            </div>
+            <p class="text-[13px] text-zinc-400 mt-0.5 truncate">Cierre programado: <span id="countdown-closes-label" class="text-zinc-200 font-medium"></span></p>
+          </div>
+        </div>
+        <div id="countdown-timer-display" class="shrink-0 self-center sm:self-auto"></div>
+      </div>
       <nav aria-label="Áreas de postulación" class="flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden border-b border-zinc-800 pb-3 mb-6">
         <button
           class="area-tab min-h-11 active-tab shrink-0 px-4 py-2 rounded-full text-[14px] font-medium transition-colors"
@@ -736,6 +751,73 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     semesters: { label: string; count: number }[]; daily: { day: string; count: number }[]; averageHours: number | null;
   };
   let summaryVersion = 0;
+  let countdownInterval: number | undefined;
+  function updateCountdown(targetIso: string | null) {
+    if (countdownInterval) clearInterval(countdownInterval);
+    const banner = document.getElementById("admin-countdown-banner");
+    const container = document.getElementById("countdown-timer-display");
+    const badge = document.getElementById("countdown-status-badge");
+    const closesLabel = document.getElementById("countdown-closes-label");
+    if (!container) return;
+    if (banner) banner.classList.remove("hidden");
+    if (!targetIso) {
+      if (closesLabel) closesLabel.textContent = "sin fecha definida";
+      container.innerHTML = `<span class="text-zinc-500 text-[13px]">Sin fecha límite configurada</span>`;
+      if (badge) { badge.textContent = "Sin fecha"; badge.className = "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-zinc-800 text-zinc-400"; }
+      return;
+    }
+    const target = new Date(targetIso).getTime();
+    if (Number.isNaN(target)) {
+      if (closesLabel) closesLabel.textContent = "sin fecha";
+      container.innerHTML = `<span class="text-zinc-500 text-[13px]">Fecha no válida</span>`;
+      return;
+    }
+    if (closesLabel) {
+      closesLabel.textContent = new Date(targetIso).toLocaleString("es-PE", { timeZone: "America/Lima", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+    }
+
+    const tick = () => {
+      const diff = target - Date.now();
+      if (diff <= 0) {
+        container.innerHTML = `<span class="text-red-400 font-semibold text-sm flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-red-500"></span>Convocatoria cerrada</span>`;
+        if (badge) { badge.textContent = "Finalizada"; badge.className = "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-red-950/80 text-red-400 border border-red-800/60"; }
+        if (countdownInterval) clearInterval(countdownInterval);
+        return;
+      }
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+      const pad = (v: number) => String(v).padStart(2, "0");
+
+      container.innerHTML = `
+        <div class="flex items-center gap-1.5 sm:gap-2">
+          <div class="flex flex-col items-center justify-center bg-zinc-950/90 border border-zinc-800 rounded-xl px-2.5 py-1 min-w-[48px] sm:min-w-[54px] shadow-inner">
+            <span class="text-lg sm:text-xl font-bold font-mono text-unicode tabular-nums leading-tight">${days}</span>
+            <span class="text-[10px] text-zinc-500 uppercase tracking-wider">días</span>
+          </div>
+          <span class="text-zinc-600 font-bold">:</span>
+          <div class="flex flex-col items-center justify-center bg-zinc-950/90 border border-zinc-800 rounded-xl px-2.5 py-1 min-w-[48px] sm:min-w-[54px] shadow-inner">
+            <span class="text-lg sm:text-xl font-bold font-mono text-zinc-100 tabular-nums leading-tight">${pad(hours)}</span>
+            <span class="text-[10px] text-zinc-500 uppercase tracking-wider">h</span>
+          </div>
+          <span class="text-zinc-600 font-bold">:</span>
+          <div class="flex flex-col items-center justify-center bg-zinc-950/90 border border-zinc-800 rounded-xl px-2.5 py-1 min-w-[48px] sm:min-w-[54px] shadow-inner">
+            <span class="text-lg sm:text-xl font-bold font-mono text-zinc-100 tabular-nums leading-tight">${pad(minutes)}</span>
+            <span class="text-[10px] text-zinc-500 uppercase tracking-wider">m</span>
+          </div>
+          <span class="text-zinc-600 font-bold">:</span>
+          <div class="flex flex-col items-center justify-center bg-zinc-950/90 border border-zinc-800 rounded-xl px-2.5 py-1 min-w-[48px] sm:min-w-[54px] shadow-inner">
+            <span class="text-lg sm:text-xl font-bold font-mono text-zinc-100 tabular-nums leading-tight">${pad(seconds)}</span>
+            <span class="text-[10px] text-zinc-500 uppercase tracking-wider">s</span>
+          </div>
+        </div>
+      `;
+    };
+    tick();
+    countdownInterval = window.setInterval(tick, 1000);
+  }
+
   async function loadSummary() {
     const version = ++summaryVersion;
     const content = document.getElementById("summary-content")!;
@@ -748,6 +830,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "No se pudo cargar el resumen.");
       content.innerHTML = summaryMarkup(data as Metrics);
+      updateCountdown((data as Metrics).closesAt);
       content.classList.remove("hidden");
       for (const area of (data as Metrics).areas) {
         const tab = document.querySelector<HTMLElement>(`.area-tab[data-area="${area.id}"]`);
@@ -782,6 +865,9 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     const maxArea = Math.max(...m.areas.map((area) => area.first + area.second), 1);
     const maxDay = Math.max(...m.daily.map((day) => day.count), 1);
     const reviewed = m.stages.advanced + m.stages.rejected;
+    const firstDay = m.daily[0]?.day ? m.daily[0].day.slice(5).split("-").reverse().join("/") : "";
+    const totalDays = m.daily.length;
+    const dailyHint = totalDays ? `${totalDays} ${totalDays === 1 ? "día" : "días"} · desde el inicio (${firstDay})` : "sin registros";
     return `
       <div class="grid grid-cols-1 min-[520px]:grid-cols-2 xl:grid-cols-4 gap-4">
         ${kpi("Inscripciones completas", m.totals.submitted, `La convocatoria cierra el ${esc(closes)}`, true)}
@@ -791,14 +877,29 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-4">
         ${card(cardTitle("Postulantes por área", `<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-unicode"></span>1ra</span> <span class="inline-flex items-center gap-1.5 ml-3"><span class="w-2 h-2 rounded-full bg-zinc-500"></span>2da</span>`) + `<ul class="space-y-1">${m.areas.map((area) => `<li><button type="button" data-open-area="${esc(area.id)}" class="w-full text-left rounded-xl px-2 py-2.5 -mx-2 hover:bg-zinc-800/50 cursor-pointer focus-visible:outline-2 focus-visible:outline-unicode"><div class="flex justify-between gap-3 text-[14px] mb-1.5"><span class="text-zinc-200 truncate">${esc(area.name)}</span><span class="text-zinc-400 tabular-nums shrink-0">${area.first} <span class="text-zinc-600">+ ${area.second}</span></span></div><div class="flex h-2 rounded-full bg-zinc-800 overflow-hidden"><div class="h-full bg-unicode" style="width:${area.first / maxArea * 100}%"></div><div class="h-full bg-zinc-500" style="width:${area.second / maxArea * 100}%"></div></div></button></li>`).join("")}</ul><p class="text-zinc-500 text-[12px] mt-3">Toca un área para ver sus postulaciones.</p>`)}
-        ${card(cardTitle("Inscripciones por día", "últimos 14 días") + `<div class="flex items-end gap-1.5 h-40" role="img" aria-label="Inscripciones completas por día">${m.daily.map((day) => `<div class="flex-1 h-full flex flex-col justify-end items-center gap-1.5 min-w-0" title="${esc(day.day)}: ${day.count}"><span class="text-[11px] text-zinc-500 tabular-nums">${day.count || ""}</span><div class="w-full rounded-t-md ${day.count ? "bg-unicode/80" : "bg-zinc-800"}" style="height:${day.count ? Math.max(6, day.count / maxDay * 100) : 3}%"></div></div>`).join("")}</div><div class="flex justify-between text-[11px] text-zinc-600 mt-2"><span>${esc(m.daily[0]?.day.slice(5).split("-").reverse().join("/") || "")}</span><span>hoy</span></div>`)}
+        ${card(cardTitle("Inscripciones por día", dailyHint) + `
+          <div class="overflow-x-auto [scrollbar-width:thin] pb-1 -mx-1 px-1">
+            <div class="flex items-end gap-1.5 h-40 min-w-full" style="min-width: ${Math.max(120, m.daily.length * 20)}px" role="img" aria-label="Inscripciones completas por día">
+              ${m.daily.map((day) => `
+                <div class="flex-1 h-full flex flex-col justify-end items-center gap-1.5 min-w-[14px]" title="${esc(day.day)}: ${day.count} ${day.count === 1 ? "inscripción" : "inscripciones"}">
+                  <span class="text-[11px] text-zinc-500 tabular-nums">${day.count || ""}</span>
+                  <div class="w-full rounded-t-md transition-all ${day.count ? "bg-unicode/80 hover:bg-unicode" : "bg-zinc-800"}" style="height:${day.count ? Math.max(6, day.count / maxDay * 100) : 3}%"></div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+          <div class="flex justify-between text-[11px] text-zinc-500 mt-2">
+            <span>Inicio: ${esc(firstDay)}</span>
+            <span>Hoy (${m.daily[m.daily.length - 1]?.count ?? 0})</span>
+          </div>
+        `)}
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         ${card(cardTitle("Cómo se enteraron") + bars(m.referral, "Aún no hay respuestas."))}
         ${card(cardTitle("Centro de estudios") + bars(m.universities, "Aún no hay inscripciones."))}
         ${card(cardTitle("Ciclo", m.averageHours != null ? `${m.averageHours} h/semana en promedio` : "") + bars(m.semesters, "Aún no hay inscripciones."))}
       </div>
-      <p class="text-zinc-600 text-[12px]">${reviewed} de ${m.totals.submitted} perfiles revisados · No incluye postulaciones de prueba.</p>`;
+      <p class="text-zinc-600 text-[12px]">${reviewed} de ${m.totals.submitted} perfiles revisados.</p>`;
   }
 
   document.getElementById("filter-option")?.addEventListener("change", (e) => {

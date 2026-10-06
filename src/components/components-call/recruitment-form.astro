@@ -5,6 +5,13 @@
     <p>Completa tus datos y cuéntanos quién eres en un video de hasta 3 minutos y medio.</p>
   </header>
 
+  <div id="applicant-deadline-banner" class="applicant-deadline-banner" hidden>
+    <div class="applicant-deadline-content">
+      <svg class="applicant-deadline-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      <span>Cierre de convocatoria en: <strong id="applicant-deadline-digits">--</strong></span>
+    </div>
+  </div>
+
   <p id="recruitment-status" class="status" role="status" aria-live="polite">Consultando la convocatoria…</p>
   <p id="development-notice" class="notice" hidden>Modo de prueba local. No completes aquí una postulación real.</p>
   <div id="recruitment-error" class="notice error" role="alert" hidden></div>
@@ -263,4 +270,8 @@
   @media(max-width:640px) { .field-grid,.guide-grid,.questions,.video-grid { grid-template-columns: 1fr; } .steps { gap: .7rem; font-size: .7rem; } .steps span { width: 1.5rem; height: 1.5rem; } .steps li { gap: .35rem; } .section-heading { flex-direction: column; } .actions .button { flex: 1 1 100%; } .resume-actions, .resume-panel .button { width: 100%; } .active-capture-banner { top: 5rem; } .active-capture-banner strong { margin-left: 0; } .active-capture-banner .button { flex: 1 1 100%; } }
   /* iOS zooms into fields whose text is smaller than 16px. */
   @media(max-width:768px) { input:not([type=checkbox]),select,textarea { font-size: 1rem; } }
+  .applicant-deadline-banner { display: flex; justify-content: center; margin: 0 0 1.5rem; }
+  .applicant-deadline-content { display: inline-flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 999px; background: #75d32d12; border: 1px solid #75d32d33; color: #d4d4d8; font-size: 0.85rem; }
+  .applicant-deadline-icon { color: var(--green); flex-shrink: 0; }
+  .applicant-deadline-digits { color: var(--green); font-family: monospace; font-size: 0.95rem; }
 </style>
