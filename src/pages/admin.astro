@@ -221,8 +221,8 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
           { value: "second", label: "Solo 2da opción" },
         ]} />
         <AdminSelect id="filter-order" label="Orden" options={[
+          { value: "arrival", label: "Orden de llegada" },
           { value: "recent", label: "Más recientes" },
-          { value: "priority", label: "Prioridad (1ra → 2da)" },
         ]} />
       </div>
 
@@ -446,7 +446,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   let currentArea = "GTH";
   let currentView: "summary" | "area" = "summary";
   let currentOption = "all";
-  let currentOrder = "recent";
+  let currentOrder = "arrival";
   let applicantsCache: Applicant[] = [];
   let displayedApplicants: Applicant[] = [];
   let loadVersion = 0;
@@ -910,7 +910,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   });
 
   document.getElementById("filter-order")?.addEventListener("change", (e) => {
-    currentOrder = (e.target as HTMLElement).dataset.value || "recent";
+    currentOrder = (e.target as HTMLElement).dataset.value || "arrival";
     loadApplicants();
   });
 

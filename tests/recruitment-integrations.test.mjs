@@ -164,3 +164,17 @@ test('reminder opt-out links are signed per application and shown at the bottom 
   const html = layout.renderRecruitmentEmailHtml({ subject: 'Recordatorio', text: 'Hola', siteUrl: 'https://www.ccunicode.org', unsubscribeUrl: url.toString() });
   assert.match(html, />Dejar de recibir recordatorios o retirar postulación<\/a>/);
 });
+
+
+test('area priority always precedes arrival order, including newest-first views', async () => {
+  const { compareApplicationOrder } = await server.ssrLoadModule('/src/lib/recruitment-application-order.ts');
+  const rows = [
+    { id: 'second-old', firstChoiceArea: 'GTH', arrivedAt: '2026-10-01T10:00:00Z' },
+    { id: 'first-new', firstChoiceArea: 'ID', arrivedAt: '2026-10-03T10:00:00Z' },
+    { id: 'first-old', firstChoiceArea: 'ID', arrivedAt: '2026-10-02T10:00:00Z' },
+    { id: 'second-new', firstChoiceArea: 'GTH', arrivedAt: '2026-10-04T10:00:00Z' },
+  ];
+  assert.deepEqual([...rows].sort((a, b) => compareApplicationOrder(a, b, 'ID')).map(a => a.id), ['first-old', 'first-new', 'second-old', 'second-new']);
+  assert.deepEqual([...rows].sort((a, b) => compareApplicationOrder(a, b, 'ID', true)).map(a => a.id), ['first-new', 'first-old', 'second-new', 'second-old']);
+  assert.deepEqual([...rows].sort((a, b) => compareApplicationOrder(a, b, '')).map(a => a.id), ['second-old', 'first-old', 'first-new', 'second-new']);
+});

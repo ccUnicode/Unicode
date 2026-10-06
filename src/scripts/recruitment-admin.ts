@@ -1,3 +1,4 @@
+import { compareApplicationOrder } from '../lib/recruitment-application-order';
 import type {
   ApplicationStatus,
   EmailTemplate,
@@ -747,7 +748,11 @@ function renderApplications(): void {
     return (!status || application.status === status)
       && (!area || data.firstChoiceArea === area || data.secondChoiceArea === area)
       && (!search || `${data.firstName} ${data.lastName} ${data.email}`.toLocaleLowerCase("es").includes(search));
-  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }).sort((a, b) => compareApplicationOrder(
+    { id: a.id, firstChoiceArea: a.data.firstChoiceArea, arrivedAt: a.submittedAt || a.createdAt },
+    { id: b.id, firstChoiceArea: b.data.firstChoiceArea, arrivedAt: b.submittedAt || b.createdAt },
+    area,
+  ));
   element("applications-info").textContent = `${matches.length} de ${applications.length} postulaciones · Horario de Lima`;
   const list = element("applications-list");
   list.replaceChildren();
