@@ -15,11 +15,24 @@ const { sessionStore, managesRecruitment } = await server.ssrLoadModule('/src/li
 const layout = await server.ssrLoadModule('/src/lib/recruitment-email-layout.ts');
 const tickets = await server.ssrLoadModule('/src/lib/video-ticket.ts');
 const optOut = await server.ssrLoadModule('/src/lib/unsubscribe.ts');
+const { orderVideoQuestions } = await server.ssrLoadModule('/src/lib/recruitment-question-order.ts');
 const fixture = async (name) => new Uint8Array(await readFile(new URL(`./fixtures/${name}`, import.meta.url)));
 const applicationId = '11111111-1111-4111-8111-111111111111';
 const uploadId = '22222222-2222-4222-8222-222222222222';
 const identity = { provider: 'drive', fileId: 'private-test-file', applicationId, uploadId };
 const originalFetch = globalThis.fetch;
+test('admin video questions match the applicant order without changing the stored snapshot', () => {
+  const questions = [
+    { category: 'collaboration', text: 'Collaboration 1' },
+    { category: 'motivation', text: 'Motivation 1' },
+    { category: 'collaboration', text: 'Collaboration 2' },
+    { category: 'motivation', text: 'Motivation 2' },
+  ];
+  const snapshot = structuredClone(questions);
+  assert.deepEqual(orderVideoQuestions(questions).map(q => q.text),
+    ['Motivation 1', 'Motivation 2', 'Collaboration 1', 'Collaboration 2']);
+  assert.deepEqual(questions, snapshot);
+});
 const saved = new Map();
 function configure(values) {
   for (const [key, value] of Object.entries(values)) { if (!saved.has(key)) saved.set(key, process.env[key]); process.env[key] = value; }
