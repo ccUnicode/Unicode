@@ -68,8 +68,8 @@ async function playVideo(request: Request, id: string): Promise<Response> {
   const headers = { 'Cache-Control': 'private, no-store', 'Referrer-Policy': 'no-referrer', 'X-Content-Type-Options': 'nosniff' };
   if (!url.searchParams.has('raw')) {
     const source = `${url.pathname}?t=${encodeURIComponent(url.searchParams.get('t')!)}&raw=1`;
-    return new Response(`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Video de postulación</title><style>html,body{margin:0;height:100%;background:#0a0a0a}video{display:block;width:100%;height:100%;object-fit:contain}</style></head><body><video src="${source}" controls preload="metadata" playsinline></video></body></html>`,
-      { headers: { ...headers, 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': "default-src 'none'; media-src 'self'; style-src 'unsafe-inline'; frame-ancestors 'self'" } });
+    return new Response(`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Video de postulación</title><style>html,body{margin:0;height:100%;background:#0a0a0a}video{display:block;width:100%;height:100%;object-fit:contain}</style></head><body><video src="${source}" controls autoplay preload="auto" playsinline></video><script>const v=document.querySelector('video');v.play().catch(()=>{v.muted=true;v.play().catch(()=>{});});</script></body></html>`,
+      { headers: { ...headers, 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': "default-src 'none'; media-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; frame-ancestors 'self'" } });
   }
   const video = await recruitment.videoForPlayback(id);
   const size = video.bytes;

@@ -432,6 +432,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
 </style>
 
 <script>
+  import { mountAdminVideo } from "../scripts/admin-video-player";
   import { applicantListMarkup, applicantDetailMarkup, applicantName, applicantDate, type Applicant } from "../scripts/admin-applicant-view";
   import { setupAdminSelects } from "../scripts/admin-select";
   const closeFilters = setupAdminSelects();
@@ -452,6 +453,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   let loadVersion = 0;
   let lastDetailButton: HTMLButtonElement | null = null;
   const searchInput = document.getElementById("applicant-search") as HTMLInputElement;
+  let disposeVideo: (() => void) | undefined;
   const detailDialog = document.getElementById("applicant-detail") as HTMLDialogElement;
   const closeDetailButton = document.getElementById("close-applicant-detail") as HTMLButtonElement;
 
@@ -460,6 +462,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   }
   closeDetailButton.addEventListener("click", closeDetail);
   detailDialog.addEventListener("close", () => {
+    disposeVideo?.(); disposeVideo = undefined;
     document.documentElement.style.overflow = "";
     if (lastDetailButton?.isConnected) lastDetailButton.focus({ preventScroll: true });
     // Keep the content through the native closing transition; reduced motion settles immediately.
@@ -1001,28 +1004,8 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
       const url = new URL(result.url, window.location.origin);
       if (url.protocol !== "https:" && url.origin !== window.location.origin) throw new Error("Enlace de video inválido.");
       const container = detailDialog.querySelector<HTMLElement>(".inline-applicant-video")!;
-      const frame = document.createElement("div");
-      Object.assign(frame.style, { height: "360px", minHeight: "200px", maxHeight: "85vh", resize: "vertical", overflow: "auto", background: "#080808", marginTop: "12px", borderRadius: "12px" });
-      const player = document.createElement(url.pathname.startsWith("/api/recruitment/video/") ? "iframe" : "video");
-      player.src = url.href;
-      Object.assign(player.style, { width: "100%", height: "100%", border: "0", objectFit: "contain", display: "block" });
-      if (player instanceof HTMLIFrameElement) { player.title = "Video de postulación"; player.allowFullscreen = true; player.allow = "fullscreen"; player.referrerPolicy = "no-referrer"; }
-      else { player.controls = true; player.preload = "metadata"; player.playsInline = true; }
-      frame.append(player);
-      const resize = document.createElement("button");
-      resize.type = "button"; resize.textContent = "Ampliar reproductor"; resize.setAttribute("aria-pressed", "false");
-      resize.className = "min-h-11 px-3 text-sm text-unicode cursor-pointer";
-      resize.addEventListener("click", () => {
-        const expanded = resize.getAttribute("aria-pressed") !== "true";
-        resize.setAttribute("aria-pressed", String(expanded));
-        resize.textContent = expanded ? "Reducir reproductor" : "Ampliar reproductor";
-        frame.style.height = expanded ? "650px" : "360px";
-      });
-      const link = document.createElement("a");
-      link.href = url.href; link.target = "_blank"; link.rel = "noopener noreferrer";
-      link.textContent = "Abrir en otra pestaña"; link.className = "inline-flex items-center min-h-11 px-3 text-sm text-unicode";
-      container.replaceChildren(resize, link, frame); container.hidden = false;
-      container.style.width = "100%";
+      disposeVideo?.();
+      disposeVideo = mountAdminVideo(container, url);
     } catch (error) {
       alert(error instanceof Error ? error.message : "No se pudo abrir el video.");
     } finally { button.disabled = false; }
