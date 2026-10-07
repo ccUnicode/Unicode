@@ -1,0 +1,13 @@
+.admin-video-frame { width:100%; aspect-ratio:16/9; max-height:60vh; background:#060607; border:1px solid #29292e; border-radius:14px; overflow:hidden; margin-top:16px; }
+.admin-video-media { display:block; width:100%; height:100%; object-fit:contain; background:#060607; }
+.admin-video-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:10px; }
+.admin-video-action { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:42px; padding:10px 14px; border:1px solid #38383f; border-radius:10px; background:#1a1a1f; color:#eeeef0; font:500 13px/1.3 system-ui,sans-serif; text-decoration:none; cursor:pointer; transition:background .15s,border-color .15s; }
+.admin-video-action:hover { background:#29292f; border-color:#80d918; color:#fff; }
+.admin-video-action:focus-visible { outline:2px solid #80d918; outline-offset:3px; }
+.admin-video-action svg { width:16px; height:16px; flex:none; }
+.admin-video-action[hidden] { display:none; }
+.admin-video-theater { box-sizing:border-box; width:min(1200px,calc(100vw - 32px)); max-width:none; max-height:92dvh; margin:auto; padding:0; border:1px solid #35353c; border-radius:18px; background:#0c0c0f; color:#eeeef0; box-shadow:0 24px 100px #0009; overflow:hidden; }
+.admin-video-theater::backdrop { background:rgba(0,0,0,.85); backdrop-filter:blur(6px); }
+.admin-video-theater-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 16px; font:600 14px system-ui,sans-serif; }
+.admin-video-theater-frame { height:min(72vw,calc(90dvh - 72px),675px); background:#000; }
+@media(max-width:600px) { .admin-video-theater { width:calc(100vw - 16px); border-radius:12px; } .admin-video-theater-header { padding:10px; } .admin-video-toolbar { gap:6px; } .admin-video-action { padding:10px 12px; } }

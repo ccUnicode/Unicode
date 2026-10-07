@@ -1,3 +1,5 @@
+import { mountAdminVideo } from "./admin-video-player";
+let disposeVideo: (() => void) | undefined;
 import { compareApplicationOrder } from '../lib/recruitment-application-order';
 import type {
   ApplicationStatus,
@@ -229,6 +231,7 @@ function clearSession(): void {
   element("recruitment-dashboard").hidden = true;
   element("recruitment-login").hidden = false;
   // Remove protected data from the DOM after expiration or logout.
+  disposeVideo?.(); disposeVideo = undefined;
   element("video-frame").replaceChildren();
   element("inline-video").hidden = true;
   ["applications-list", "detail-title", "detail-personal", "detail-answers", "detail-questions", "detail-history", "detail-video-info", "video-access-message", "template-list", "email-list", "email-summary"].forEach((id) => element(id).replaceChildren());
@@ -881,12 +884,11 @@ function renderDetail(application: RecruitmentApplication): void {
     else group.append(list);
     questions.append(group);
   }
+  disposeVideo?.(); disposeVideo = undefined;
   element("video-frame").replaceChildren();
   element("video-frame").classList.remove("expanded");
   element("inline-video").hidden = true;
-  element("resize-video").setAttribute("aria-pressed", "false");
-  element("resize-video").textContent = "Ampliar reproductor";
-  element("video-new-tab").removeAttribute("href");
+
   const video = application.video;
   element("detail-video-info").textContent = video
     ? `${video.mode === "recording" ? "Grabado en la web" : "Carga alternativa"} · ${video.durationSeconds.toFixed(1)} segundos · ${(video.bytes / 1024 / 1024).toFixed(1)} MB · ${video.provider === "drive" ? "Google Drive" : "Supabase"}`
@@ -977,17 +979,11 @@ element("delete-application").addEventListener("click", async () => {
   finally { button.disabled = false; }
 });
 
-element("resize-video").addEventListener("click", () => {
-  const expanded = element("video-frame").classList.toggle("expanded");
-  element("resize-video").setAttribute("aria-pressed", String(expanded));
-  element("resize-video").textContent = expanded ? "Reducir reproductor" : "Ampliar reproductor";
-});
 element("open-video").addEventListener("click", async () => {
   if (!selectedApplication?.video) return;
   const id = selectedApplication.id;
   const button = element<HTMLButtonElement>("open-video");
   const message = element("video-access-message");
-  const provider = selectedApplication.video.provider;
   message.hidden = false;
   message.textContent = "Autorizando video…";
   button.disabled = true;
@@ -996,22 +992,10 @@ element("open-video").addEventListener("click", async () => {
     if (selectedApplication?.id !== id) return;
     const url = new URL(result.url, window.location.origin);
     if (url.protocol !== "https:" && url.origin !== window.location.origin) throw new Error("El servidor no devolvió un enlace seguro para el video.");
-    const player = document.createElement(provider === "drive" ? "iframe" : "video");
-    player.src = url.href;
-    if (player instanceof HTMLIFrameElement) {
-      player.title = "Video de postulación";
-      player.allow = "fullscreen";
-      player.allowFullscreen = true;
-      player.referrerPolicy = "no-referrer";
-    } else {
-      player.controls = true;
-      player.preload = "metadata";
-      player.playsInline = true;
-    }
-    element("video-frame").replaceChildren(player);
-    element<HTMLAnchorElement>("video-new-tab").href = url.href;
+    disposeVideo?.();
+    disposeVideo = mountAdminVideo(element("video-frame"), url);
     element("inline-video").hidden = false;
-    message.textContent = "Pulsa reproducir para iniciar. Puedes ampliar el marco o ajustar su altura desde la esquina inferior.";
+    message.textContent = "El video se inicia automáticamente. Si empieza sin sonido, puedes activarlo en el reproductor.";
   } catch (error) {
     if (selectedApplication?.id === id) showMessage(messageOf(error), true);
   } finally {
