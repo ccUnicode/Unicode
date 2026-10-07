@@ -192,9 +192,16 @@ import Layout from "../../layouts/Layout.astro";
           <div id="detail-questions" class="question-columns"></div>
           <div class="video-summary">
             <div><h3>Video</h3><p id="detail-video-info" class="muted"></p></div>
-            <button id="open-video" type="button" class="secondary" hidden>Abrir video privado</button>
+            <button id="open-video" type="button" class="secondary" hidden>Ver video aquí</button>
           </div>
           <p id="video-access-message" class="muted" role="status" hidden></p>
+          <div id="inline-video" hidden>
+            <div class="button-row">
+              <button id="resize-video" type="button" class="secondary" aria-pressed="false">Ampliar reproductor</button>
+              <a id="video-new-tab" class="back-link" target="_blank" rel="noopener noreferrer">Abrir en otra pestaña</a>
+            </div>
+            <div id="video-frame" class="video-frame"></div>
+          </div>
           <section class="transition-box" aria-labelledby="stage-title">
             <h3 id="stage-title">Resultado</h3>
             <p id="stage-hint" class="muted note"></p>
@@ -257,6 +264,9 @@ import Layout from "../../layouts/Layout.astro";
   .recruitment-admin .admin-header, .recruitment-admin .section-heading, .recruitment-admin .save-bar, .recruitment-admin .video-summary { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
   .recruitment-admin .admin-header { margin-bottom: 28px; align-items: flex-start; }
   .recruitment-admin .admin-header > div, .recruitment-admin .section-heading > div, .recruitment-admin .video-summary > div { min-width: 0; }
+  .recruitment-admin .video-frame { height: 360px; min-height: 200px; max-height: 85vh; resize: vertical; overflow: auto; background: #080808; margin-top: 12px; border-radius: 12px; }
+  .recruitment-admin .video-frame.expanded { height: 650px; }
+  .recruitment-admin .video-frame :global(iframe), .recruitment-admin .video-frame :global(video) { display: block; width: 100%; height: 100%; border: 0; object-fit: contain; }
   .recruitment-admin .admin-header .muted { margin-top: 8px; }
   .recruitment-admin .admin-header > button { margin-top: 16px; }
   .recruitment-admin .section-heading { margin-bottom: 20px; }
