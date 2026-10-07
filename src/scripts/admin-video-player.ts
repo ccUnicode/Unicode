@@ -4,20 +4,71 @@ const expandIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 const externalIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M14 3h7v7m0-7L10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/></svg>';
 
 /** One native player moves into the theater dialog without restarting playback. */
-export function mountAdminVideo(host: HTMLElement, url: URL): () => void {
+export function mountAdminVideo(host: HTMLElement, url: URL, durationSeconds: number): () => void {
   let disposed = false;
   const video = document.createElement('video');
   const source = new URL(url);
   if (source.origin === location.origin && source.pathname.startsWith('/api/recruitment/video/')) source.searchParams.set('raw', '1');
   video.src = source.href;
-  video.controls = true;
+  video.controls = false;
   video.autoplay = true;
   video.playsInline = true;
   video.preload = 'auto';
   video.className = 'admin-video-media';
   const frame = document.createElement('div');
   frame.className = 'admin-video-frame';
-  frame.append(video);
+  const playerBox = document.createElement('div');
+  playerBox.className = 'admin-video-player-box';
+  const controls = document.createElement('div');
+  controls.className = 'admin-video-controls';
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'admin-video-control';
+  const progress = document.createElement('input');
+  progress.type = 'range';
+  progress.min = '0';
+  progress.max = String(Number.isFinite(durationSeconds) && durationSeconds > 0 ? durationSeconds : 0);
+  progress.step = '0.1';
+  progress.value = '0';
+  progress.disabled = Number(progress.max) === 0;
+  progress.setAttribute('aria-label', 'Posición del video');
+  const time = document.createElement('span');
+  time.className = 'admin-video-time';
+  const formatTime = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
+  let previewing = false;
+  const update = () => {
+    toggle.innerHTML = video.paused ? '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m8 4 12 8-12 8z"/></svg>' : '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4h4v16H6zm8 0h4v16h-4z"/></svg>';
+    toggle.setAttribute('aria-label', video.paused ? 'Reproducir' : 'Pausar');
+    const position = Math.min(Number(progress.max), Math.max(0, video.currentTime));
+    if (!previewing) progress.value = String(position);
+    time.textContent = `${formatTime(previewing ? Number(progress.value) : position)} / ${formatTime(Number(progress.max))}`;
+    progress.setAttribute('aria-valuetext', time.textContent);
+  };
+  toggle.addEventListener('click', () => { if (video.paused) video.play().catch(() => {}); else video.pause(); });
+  progress.addEventListener('pointerdown', () => { previewing = true; });
+  progress.addEventListener('input', () => { previewing = true; update(); });
+  progress.addEventListener('change', () => {
+    const playing = !video.paused;
+    video.currentTime = Math.min(Number(progress.max), Math.max(0, Number(progress.value)));
+    previewing = false;
+    if (playing) video.play().catch(() => {});
+    update();
+  });
+  progress.addEventListener('pointercancel', () => { previewing = false; update(); });
+  progress.addEventListener('blur', () => { previewing = false; update(); });
+  ['timeupdate', 'play', 'pause', 'ended', 'loadedmetadata'].forEach(event => video.addEventListener(event, update));
+  const full = document.createElement('button');
+  full.type = 'button';
+  full.className = 'admin-video-control';
+  full.innerHTML = expandIcon;
+  full.setAttribute('aria-label', 'Pantalla completa');
+  full.addEventListener('click', () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else playerBox.requestFullscreen().catch(() => {});
+  });
+  controls.append(toggle, progress, time);
+  playerBox.append(video, controls);
+  frame.append(playerBox);
   const toolbar = document.createElement('div');
   toolbar.className = 'admin-video-toolbar';
   const expand = document.createElement('button');
@@ -33,12 +84,16 @@ export function mountAdminVideo(host: HTMLElement, url: URL): () => void {
   external.innerHTML = `${externalIcon}<span>Abrir en otra pestaña</span>`;
   const sound = document.createElement('button');
   sound.type = 'button';
-  sound.className = 'admin-video-action';
-  sound.textContent = 'Activar sonido';
-  sound.hidden = true;
-  sound.addEventListener('click', () => { video.muted = false; video.play().catch(() => {}); });
-  video.addEventListener('volumechange', () => { sound.hidden = !video.muted; });
-  toolbar.append(expand, external, sound);
+  sound.className = 'admin-video-control';
+  const updateSound = () => {
+    sound.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3z"/>${video.muted ? '<path d="m16 9 5 6m0-6-5 6"/>' : '<path d="M16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>'}</svg>`;
+    sound.setAttribute('aria-label', video.muted ? 'Activar sonido' : 'Silenciar');
+  };
+  sound.addEventListener('click', () => { video.muted = !video.muted; updateSound(); });
+  video.addEventListener('volumechange', updateSound);
+  controls.append(sound, full);
+  updateSound(); update();
+  toolbar.append(expand, external);
   host.replaceChildren(frame, toolbar);
   host.hidden = false;
 
@@ -58,29 +113,35 @@ export function mountAdminVideo(host: HTMLElement, url: URL): () => void {
   header.append(title, close);
   dialog.append(header, largeFrame);
   document.body.append(dialog);
-  expand.addEventListener('click', () => {
+  const movePlayer = (parent: HTMLElement) => {
     const playing = !video.paused;
-    largeFrame.append(video);
-    dialog.showModal();
+    // Chromium preserves media playback when moving a connected tree this way.
+    const movable = parent as HTMLElement & { moveBefore?: (node: Node, child: Node | null) => void };
+    if (typeof movable.moveBefore === 'function') movable.moveBefore(playerBox, null);
+    else parent.append(playerBox);
     if (playing) video.play().catch(() => {});
+  };
+  expand.addEventListener('click', () => {
+    dialog.showModal();
+    movePlayer(largeFrame);
   });
-  close.addEventListener('click', () => dialog.close());
+  const closeTheater = () => { movePlayer(frame); dialog.close(); };
+  close.addEventListener('click', closeTheater);
+  dialog.addEventListener('cancel', event => { event.preventDefault(); closeTheater(); });
   dialog.addEventListener('click', event => {
     const bounds = dialog.getBoundingClientRect();
-    if (event.target === dialog && (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom)) dialog.close();
+    if (event.target === dialog && (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom)) closeTheater();
   });
   dialog.addEventListener('close', () => {
     if (disposed) return;
-    const playing = !video.paused;
-    frame.append(video);
-    if (playing) video.play().catch(() => {});
+    if (playerBox.parentElement !== frame) movePlayer(frame);
     expand.focus();
   });
   // Browsers may block sound after asynchronous authorization. Start muted in that case.
   video.play().catch(async () => {
     if (disposed) return;
     video.muted = true;
-    sound.hidden = false;
+    updateSound();
     try { await video.play(); } catch { /* Native play control remains available. */ }
   });
   return () => {

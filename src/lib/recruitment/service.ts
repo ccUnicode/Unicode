@@ -172,8 +172,8 @@ export async function adminVideo(id: string) {
   const response = await adminApplications(id); const video = response.application?.video;
   if (!video) throw new RecruitmentError('not_found', 'Esta postulación todavía no tiene un video validado.', 404);
   // Drive only lets the owner account watch: play it through this site with a signed link instead.
-  if (video.provider === 'drive') return { url: `/api/recruitment/video/${id}?t=${await createVideoTicket(id)}`, embedded: false };
-  return getVideoPlayback({ applicationId: id, uploadId: video.uploadId, provider: video.provider, fileId: video.fileId });
+  if (video.provider === 'drive') return { url: `/api/recruitment/video/${id}?t=${await createVideoTicket(id)}`, embedded: false, durationSeconds: video.durationSeconds };
+  return { ...await getVideoPlayback({ applicationId: id, uploadId: video.uploadId, provider: video.provider, fileId: video.fileId }), durationSeconds: video.durationSeconds };
 }
 /** The stored video of an application, for the signed playback route. */
 export async function videoForPlayback(id: string) {

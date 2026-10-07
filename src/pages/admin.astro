@@ -1005,7 +1005,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
       if (url.protocol !== "https:" && url.origin !== window.location.origin) throw new Error("Enlace de video inválido.");
       const container = detailDialog.querySelector<HTMLElement>(".inline-applicant-video")!;
       disposeVideo?.();
-      disposeVideo = mountAdminVideo(container, url);
+      disposeVideo = mountAdminVideo(container, url, result.durationSeconds);
     } catch (error) {
       alert(error instanceof Error ? error.message : "No se pudo abrir el video.");
     } finally { button.disabled = false; }
