@@ -992,15 +992,38 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   detailDialog.addEventListener("click", async (event) => {
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>(".video-button");
     if (!button) return;
-    const tab = window.open("", "_blank");
     button.disabled = true;
     try {
       const response = await fetch(`/api/recruitment/admin/applications/${button.dataset.id}/video`, { headers: { Authorization: `Bearer ${sessionToken}` } });
       const result = await response.json();
       if (!response.ok || !result.url) throw new Error(result.error || "No se pudo abrir el video.");
-      if (tab) tab.location.href = result.url; else window.location.href = result.url;
+      if (!button.isConnected || !detailDialog.open) return;
+      const url = new URL(result.url, window.location.origin);
+      if (url.protocol !== "https:" && url.origin !== window.location.origin) throw new Error("Enlace de video inválido.");
+      const container = detailDialog.querySelector<HTMLElement>(".inline-applicant-video")!;
+      const frame = document.createElement("div");
+      Object.assign(frame.style, { height: "360px", minHeight: "200px", maxHeight: "85vh", resize: "vertical", overflow: "auto", background: "#080808", marginTop: "12px", borderRadius: "12px" });
+      const player = document.createElement(url.pathname.startsWith("/api/recruitment/video/") ? "iframe" : "video");
+      player.src = url.href;
+      Object.assign(player.style, { width: "100%", height: "100%", border: "0", objectFit: "contain", display: "block" });
+      if (player instanceof HTMLIFrameElement) { player.title = "Video de postulación"; player.allowFullscreen = true; player.allow = "fullscreen"; player.referrerPolicy = "no-referrer"; }
+      else { player.controls = true; player.preload = "metadata"; player.playsInline = true; }
+      frame.append(player);
+      const resize = document.createElement("button");
+      resize.type = "button"; resize.textContent = "Ampliar reproductor"; resize.setAttribute("aria-pressed", "false");
+      resize.className = "min-h-11 px-3 text-sm text-unicode cursor-pointer";
+      resize.addEventListener("click", () => {
+        const expanded = resize.getAttribute("aria-pressed") !== "true";
+        resize.setAttribute("aria-pressed", String(expanded));
+        resize.textContent = expanded ? "Reducir reproductor" : "Ampliar reproductor";
+        frame.style.height = expanded ? "650px" : "360px";
+      });
+      const link = document.createElement("a");
+      link.href = url.href; link.target = "_blank"; link.rel = "noopener noreferrer";
+      link.textContent = "Abrir en otra pestaña"; link.className = "inline-flex items-center min-h-11 px-3 text-sm text-unicode";
+      container.replaceChildren(resize, link, frame); container.hidden = false;
+      container.style.width = "100%";
     } catch (error) {
-      tab?.close();
       alert(error instanceof Error ? error.message : "No se pudo abrir el video.");
     } finally { button.disabled = false; }
   });
