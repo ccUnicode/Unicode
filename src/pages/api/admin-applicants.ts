@@ -9,6 +9,7 @@ export const prerender = false;
 import { sessionStore } from '../../lib/session-store';
 import { adminApplications } from '../../lib/recruitment/service';
 import { compareApplicationOrder } from '../../lib/recruitment-application-order';
+import { orderVideoQuestions } from '../../lib/recruitment-question-order';
 
 const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 
@@ -44,7 +45,7 @@ export async function GET({ request }: { request: Request }) {
           first_choice_area: d.firstChoiceArea, second_choice_area: d.secondChoiceArea || null,
           application_reason: d.motivation, short_case: d.shortCase,
           showcase: d.showcase || '', organizations: d.organizations || '', referral_source: d.referralSource || '',
-          questions: application.questions.map((question) => question.text),
+          questions: orderVideoQuestions(application.questions).map((question) => question.text),
           video_url: application.video?.provider === 'drive' ? `https://drive.google.com/file/d/${application.video.fileId}/view` : null,
           has_video: Boolean(application.video),
           created_at: application.submittedAt,
