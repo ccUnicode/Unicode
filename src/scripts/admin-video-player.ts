@@ -6,6 +6,7 @@ const externalIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 /** One native player moves into the theater dialog without restarting playback. */
 export function mountAdminVideo(host: HTMLElement, url: URL, durationSeconds: number): () => void {
   let disposed = false;
+  let wantsPlayback = true;
   const video = document.createElement('video');
   const source = new URL(url);
   if (source.origin === location.origin && source.pathname.startsWith('/api/recruitment/video/')) source.searchParams.set('raw', '1');
@@ -44,11 +45,13 @@ export function mountAdminVideo(host: HTMLElement, url: URL, durationSeconds: nu
     time.textContent = `${formatTime(previewing ? Number(progress.value) : position)} / ${formatTime(Number(progress.max))}`;
     progress.setAttribute('aria-valuetext', time.textContent);
   };
-  toggle.addEventListener('click', () => { if (video.paused) video.play().catch(() => {}); else video.pause(); });
+  const play = () => { wantsPlayback = true; video.play().catch(() => { wantsPlayback = false; update(); }); };
+  const pause = () => { wantsPlayback = false; video.pause(); update(); };
+  toggle.addEventListener('click', () => { if (video.paused) play(); else pause(); });
   progress.addEventListener('pointerdown', () => { previewing = true; });
   progress.addEventListener('input', () => { previewing = true; update(); });
   progress.addEventListener('change', () => {
-    const playing = !video.paused;
+    const playing = wantsPlayback;
     video.currentTime = Math.min(Number(progress.max), Math.max(0, Number(progress.value)));
     previewing = false;
     if (playing) video.play().catch(() => {});
@@ -57,6 +60,16 @@ export function mountAdminVideo(host: HTMLElement, url: URL, durationSeconds: nu
   progress.addEventListener('pointercancel', () => { previewing = false; update(); });
   progress.addEventListener('blur', () => { previewing = false; update(); });
   ['timeupdate', 'play', 'pause', 'ended', 'loadedmetadata'].forEach(event => video.addEventListener(event, update));
+  video.addEventListener('ended', () => { wantsPlayback = false; });
+  // Preserve the explicit play/pause choice across browser-driven pauses and seeking.
+  video.addEventListener('pause', () => {
+    if (!wantsPlayback || disposed || video.ended || document.hidden) return;
+    queueMicrotask(() => { if (wantsPlayback && !disposed && !video.ended) video.play().catch(() => { wantsPlayback = false; update(); }); });
+  });
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.setActionHandler('play', play);
+    navigator.mediaSession.setActionHandler('pause', pause);
+  }
   const full = document.createElement('button');
   full.type = 'button';
   full.className = 'admin-video-control';
@@ -114,7 +127,7 @@ export function mountAdminVideo(host: HTMLElement, url: URL, durationSeconds: nu
   dialog.append(header, largeFrame);
   document.body.append(dialog);
   const movePlayer = (parent: HTMLElement) => {
-    const playing = !video.paused;
+    const playing = wantsPlayback;
     // Chromium preserves media playback when moving a connected tree this way.
     const movable = parent as HTMLElement & { moveBefore?: (node: Node, child: Node | null) => void };
     if (typeof movable.moveBefore === 'function') movable.moveBefore(playerBox, null);
@@ -146,6 +159,11 @@ export function mountAdminVideo(host: HTMLElement, url: URL, durationSeconds: nu
   });
   return () => {
     disposed = true;
+    wantsPlayback = false;
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.setActionHandler('play', null);
+      navigator.mediaSession.setActionHandler('pause', null);
+    }
     video.pause();
     video.removeAttribute('src');
     video.load();
