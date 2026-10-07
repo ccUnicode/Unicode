@@ -988,12 +988,12 @@ element("open-video").addEventListener("click", async () => {
   message.textContent = "Autorizando video…";
   button.disabled = true;
   try {
-    const result = await request<{ url: string }>(`/applications/${encodeURIComponent(id)}/video`);
+    const result = await request<{ url: string; durationSeconds: number }>(`/applications/${encodeURIComponent(id)}/video`);
     if (selectedApplication?.id !== id) return;
     const url = new URL(result.url, window.location.origin);
     if (url.protocol !== "https:" && url.origin !== window.location.origin) throw new Error("El servidor no devolvió un enlace seguro para el video.");
     disposeVideo?.();
-    disposeVideo = mountAdminVideo(element("video-frame"), url);
+    disposeVideo = mountAdminVideo(element("video-frame"), url, result.durationSeconds);
     element("inline-video").hidden = false;
     message.textContent = "El video se inicia automáticamente. Si empieza sin sonido, puedes activarlo en el reproductor.";
   } catch (error) {

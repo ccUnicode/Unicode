@@ -219,3 +219,21 @@ test('mail processing waits without leasing messages until the configured releas
     assert.equal(resumed.processed, 0); assert.ok(calls.includes('recruitment_lease_emails'));
   } finally { globalThis.fetch = originalFetch; }
 });
+
+test('private playback returns the verified duration without scanning the stored video again', async () => {
+  configure({ PUBLIC_SUPABASE_URL: 'https://queue-test.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'test-only-service-key' });
+  const service = await server.ssrLoadModule('/src/lib/recruitment/service.ts');
+  let reads = 0;
+  globalThis.fetch = async url => {
+    assert.equal(new URL(String(url)).pathname.split('/').at(-1), 'recruitment_admin_applications');
+    reads++;
+    return Response.json({ application: { video: { provider: 'drive', durationSeconds: 147.25 } } });
+  };
+  try {
+    const result = await service.adminVideo(applicationId);
+    assert.equal(result.durationSeconds, 147.25);
+    assert.equal(reads, 1);
+    const link = new URL(result.url, 'https://www.ccunicode.org');
+    assert.equal(await tickets.verifyVideoTicket(applicationId, link.searchParams.get('t')), true);
+  } finally { globalThis.fetch = originalFetch; }
+});
