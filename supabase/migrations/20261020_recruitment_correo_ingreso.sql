@@ -1,0 +1,8 @@
+-- Warm welcome using the area that actually selected the applicant.
+-- Preserve customized templates. Punctuation correction keeps all other wording.
+begin;
+update public.recruitment_email_templates set subject='¡Ya eres parte de UNICODE!',body=E'Hola {{firstName}},\n\n¡Felicitaciones, ya eres parte de UNICODE! Nos alegra muchísimo darte esta noticia y saber que vamos a compartir esta nueva etapa contigo en el equipo de {{evaluationArea}}.\n\nGracias por animarte a postular, por compartir tus ideas y por mostrarnos las ganas que tienes de aprender y aportar. Hoy empieza una oportunidad para convertir esa energía en proyectos, experiencias y buenos momentos con personas que también quieren crecer en comunidad.\n\nEstamos felices de recibirte y de conocer todo lo que puedes sumar al equipo. Queremos que este sea un espacio donde puedas preguntar, proponer, equivocarte, aprender y celebrar lo que vayamos construyendo juntos.\n\nEn los próximos días te escribiremos para darte la bienvenida, presentarte al equipo y contarte los primeros pasos. Por ahora, celebra esta noticia, porque ya tienes un lugar en UNICODE y nos entusiasma comenzar este camino contigo.\n\n¡Bienvenido a esta nueva aventura!\nUn abrazo grande,\nEl equipo de UNICODE',updated_at=now()
+ where key='selected' and body=E'Hola {{firstName}}, ¡felicitaciones! Terminamos la segunda etapa y ingresas a UNICODE. En los próximos días te escribiremos para darte la bienvenida y contarte cómo empezar.';
+update public.recruitment_email_templates set body=replace(body,'una selección; te escribiremos','una selección. Te escribiremos'),updated_at=now()
+ where key='second_option' and body like '%una selección; te escribiremos%';
+commit;
