@@ -536,7 +536,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   const codeInput = document.getElementById("director-code") as HTMLInputElement;
   const loginInfo = document.getElementById("login-info")!;
   const loginIntro = document.getElementById("login-intro")!;
-  type Session = { role: "admin" } | { role: "director"; email: string; area: string; name?: string };
+  type Session = { role: "admin" } | { role: "demo" } | { role: "director"; email: string; area: string; name?: string };
 
   const showError = (text: string) => { loginError.textContent = text; loginError.classList.remove("hidden"); loginInfo.classList.add("hidden"); };
   const showInfo = (text: string) => { loginInfo.textContent = text; loginInfo.classList.remove("hidden"); loginError.classList.add("hidden"); };
@@ -549,7 +549,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     back.textContent = "Entrar con mi correo UNI";
     back.classList.toggle("hidden", step !== "password");
     back.classList.toggle("block", step === "password");
-    loginIntro.textContent = step === "password" ? "Acceso de super admin con la contraseña de administración." : step === "code" ? `Escribe el código que enviamos a ${emailInput.value.trim()}.` : "Ingresa con tu correo UNI y te enviaremos un código.";
+    loginIntro.textContent = step === "password" ? "Acceso con contraseña de administración o de demostración." : step === "code" ? `Escribe el código que enviamos a ${emailInput.value.trim()}.` : "Ingresa con tu correo UNI y te enviaremos un código.";
     loginError.classList.add("hidden");
     (step === "email" ? emailInput : step === "code" ? codeInput : passwordInput).focus();
   }
@@ -558,10 +558,10 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
 
   /** Every director sees all areas, starting on their own; GTH and the super admin also reach the GTH panel. */
   function applySession(session: Session) {
-    const managesCall = session.role === "admin" || session.area === "GTH";
+    const managesCall = session.role === "admin" || session.role === "demo" || session.area === "GTH";
     document.getElementById("gth-panel-link")!.classList.toggle("hidden", !managesCall);
     const user = document.getElementById("session-user")!;
-    user.textContent = session.role === "director" ? session.email : "Super admin";
+    user.textContent = session.role === "director" ? session.email : session.role === "demo" ? "Demostración · datos ficticios" : "Super admin";
     if (session.role === "director" && areaNames[session.area]) currentArea = session.area;
     currentView = "summary";
     markActiveTab("summary");
@@ -591,7 +591,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     applySession(session);
     // Coming back from the GTH panel's sign-in: return there if this session may manage the call.
     const params = new URLSearchParams(location.search);
-    const managesCall = session.role === "admin" || session.area === "GTH";
+    const managesCall = session.role === "admin" || session.role === "demo" || session.area === "GTH";
     if (params.get("volver") === "gth" && managesCall) { location.replace("/admin/recruitment"); return; }
     if (params.has("sin_gth") || params.get("volver") === "gth") showNotice("El Panel GTH es solo para directores de GTH. Aquí puedes ver todas las postulaciones.");
     if (location.search) history.replaceState(null, "", "/admin");
@@ -605,7 +605,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
 
   emailForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (emailInput.value.trim().toLowerCase() === "admin") { showStep("password"); return; }
+    if (["admin", "demo"].includes(emailInput.value.trim().toLowerCase())) { showStep("password"); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())) { showError("Escribe tu correo UNI completo."); return; }
     const button = document.getElementById("email-btn") as HTMLButtonElement;
     button.disabled = true; button.textContent = "Enviando...";

@@ -7,6 +7,8 @@
 export const prerender = false;
 
 import { sessionStore } from '../../lib/session-store';
+import { demoApplications } from '../../lib/recruitment/demo';
+import { adminConfig } from '../../lib/recruitment/service';
 import { adminApplications } from '../../lib/recruitment/service';
 import { compareApplicationOrder } from '../../lib/recruitment-application-order';
 import { orderVideoQuestions } from '../../lib/recruitment-question-order';
@@ -32,7 +34,7 @@ export async function GET({ request }: { request: Request }) {
   const order = url.searchParams.get('order') || 'arrival'; // First choice always leads.
 
   try {
-    const { applications = [] } = await adminApplications();
+    const { applications = [] } = session.role === 'demo' ? demoApplications((await adminConfig()).config) : await adminApplications();
     let data = applications
       .filter((application) => application.submittedAt && !application.isTest)
       .map((application) => {

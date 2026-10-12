@@ -10,6 +10,7 @@ import type {
 } from "../lib/recruitment/types";
 import { allowedApplicationTransitions } from "../lib/recruitment/types";
 
+let demoMode = false;
 const apiRoot = "/api/recruitment/admin";
 const statusNames: Record<ApplicationStatus, string> = {
   draft: "Borrador",
@@ -215,7 +216,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const result = await response.json().catch(() => ({})) as { error?: string };
   if (response.status === 401) { clearSession(); toLogin("expirada"); }
   // A director outside GTH keeps their session for /admin.
-  if (response.status === 403) location.replace("/admin?sin_gth=1");
+  if (response.status === 403 && !demoMode) location.replace("/admin?sin_gth=1");
   if (!response.ok) throw new Error(result.error || `No se pudo completar la solicitud (${response.status}).`);
   return result as T;
 }
@@ -574,7 +575,7 @@ async function loadConfig(): Promise<void> {
   renderConfig(config);
   renderReadiness(response.readiness);
   renderPreview(response.previewEnabled === true);
-  lockForm(configForm, false);
+  lockForm(configForm, demoMode);
 }
 
 function renderReadiness(readiness?: Readiness): void {
@@ -941,6 +942,7 @@ function renderStageButtons(application: RecruitmentApplication): void {
   for (const [status, label, kind] of stage?.buttons ?? []) {
     const button = node("button", label, kind);
     button.type = "button";
+    button.disabled = demoMode;
     button.addEventListener("click", () => void sendResult(application, status, label));
     box.append(button);
   }
@@ -1231,6 +1233,14 @@ async function initialize(): Promise<void> {
   element("recruitment-dashboard").hidden = false;
   lockForm(configForm, true);
   try {
+    const { session } = await request<{ session: { role: string } }>("/session");
+    demoMode = session.role === 'demo';
+    if (demoMode) {
+      showMessage("Demostración: postulantes, historial, videos y correos ficticios. Configuración real en modo consulta; no se modifica ni se envía nada.");
+      document.querySelectorAll<HTMLButtonElement>('button').forEach(button => {
+        if (['preview-create', 'preview-disable', 'purge-tests', 'delete-application', 'process-emails', 'remind-all'].includes(button.id)) button.disabled = true;
+      });
+    }
     await loadConfig();
     void loadApplications();
   } catch (error) {

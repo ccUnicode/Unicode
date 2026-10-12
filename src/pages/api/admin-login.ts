@@ -114,7 +114,9 @@ export async function POST({ request }: { request: Request }) {
   }
 
   // Validate password (constant-time)
-  const isValid = safeCompare(password, adminPassword);
+  const demoPassword = import.meta.env.ADMIN_DEMO_PASSWORD || process.env.ADMIN_DEMO_PASSWORD;
+  const isDemo = Boolean(demoPassword && demoPassword !== adminPassword && safeCompare(password, demoPassword));
+  const isValid = safeCompare(password, adminPassword) || isDemo;
 
   if (!isValid) {
     record.count += 1;
@@ -145,10 +147,11 @@ export async function POST({ request }: { request: Request }) {
 
   // Generate a stateless session token
   const { sessionStore } = await import('../../lib/session-store');
-  const sessionToken = await sessionStore.createToken();
+  const session = { role: isDemo ? 'demo' as const : 'admin' as const };
+  const sessionToken = await sessionStore.createToken(session);
 
   return new Response(
-    JSON.stringify({ success: true, token: sessionToken, session: { role: 'admin' } }),
+    JSON.stringify({ success: true, token: sessionToken, session }),
     { status: 200, headers: { 'Content-Type': 'application/json' } }
   );
 }
