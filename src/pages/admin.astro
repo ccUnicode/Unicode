@@ -1075,14 +1075,14 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
             await loadAreaEvaluation();
           } catch (error) { showNotice(error instanceof Error ? error.message : 'No se pudo guardar.'); button.disabled = false; }
         });
-        card.append(button);
+        if (!readOnly) card.append(button);
         panel.append(card);
       }
     } catch (error) { showNotice(error instanceof Error ? error.message : 'No se pudo cargar el cierre por área.'); }
   }
 
   async function renderAreaDecision(applicant: Applicant) {
-    if (!activeSession) return;
+    if (!activeSession || activeSession.role === 'demo') return;
     const responsible = applicant.evaluation_area || (applicant.evaluation_choice === 2 ? applicant.second_choice_area : applicant.first_choice_area);
     if ((activeSession.role === 'director' && activeSession.area !== 'GTH' && activeSession.area !== responsible)) return;
     const box = document.createElement('section');
@@ -1107,7 +1107,6 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
       const negative = status === 'profile_rejected' || status === 'not_selected';
       const actionLabel = negative ? preview.rejectionLabel : status === 'selected' ? 'Ingresa a UNICODE' : 'Avanza de etapa';
       button.textContent = actionLabel;
-      button.disabled = activeSession?.role === 'demo';
       const color = negative ? (preview.transferAvailable ? 'bg-amber-400 text-black hover:bg-amber-300' : 'bg-rose-600 text-white hover:bg-rose-500') : status === 'selected' ? 'bg-unicode text-black hover:bg-unicode-light' : 'bg-sky-600 text-white hover:bg-sky-500';
       button.className = `min-h-11 rounded-xl px-4 py-2 text-sm font-semibold ${color}`;
       button.addEventListener('click', async () => {
