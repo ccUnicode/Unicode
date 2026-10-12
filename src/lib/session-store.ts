@@ -3,7 +3,7 @@
  * Stateless session store for Vercel/Edge environments.
  * Uses Web Crypto API to sign and verify a token so it survives serverless restarts.
  * The signed payload says who is signed in: the shared password (full administrator)
- * or a director. Every director sees all applications; only GTH manages the call.
+ * or a director. Directors see their own evaluation area; GTH manages all areas.
  */
 
 const SECRET_KEY = import.meta.env.ADMIN_PASSWORD;
@@ -87,3 +87,6 @@ export const sessionStore = {
     return (await this.verify(token)) !== null;
   }
 };
+
+/** Null means full scope; a director outside GTH is restricted to the area in their signed session. */
+export const directorArea = (session: AdminSession) => session.role === 'director' && session.area !== 'GTH' ? session.area : null;

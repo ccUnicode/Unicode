@@ -86,3 +86,34 @@ test('director area closures cannot target another area; decision scope and snap
   assert.equal((await request('applications/11111111-1111-4111-8111-111111111111/transition', 'POST', { status: 'not_selected', reason: 'Ficha sin versión.' })).status, 400);
   assert.equal(calls.length, 2);
 });
+
+
+test('directors cannot read other areas through lists, metrics, videos or area management; GTH sees all', async () => {
+  const { demoApplications } = await server.ssrLoadModule('/src/lib/recruitment/demo.ts');
+  const applications = demoApplications(config).applications.map(a => ({ ...a, video: a.video ? { ...a.video, provider: 'drive' } : null }));
+  globalThis.fetch = async (url, init) => {
+    const rpc = new URL(String(url)).pathname.split('/').at(-1);
+    if (rpc === 'recruitment_admin_config') return Response.json({ config });
+    if (rpc === 'recruitment_admin_applications') {
+      const { p_id } = JSON.parse(init.body);
+      return Response.json(p_id ? { application: applications.find(a => a.id === p_id) } : { applications });
+    }
+    if (rpc === 'recruitment_area_evaluation') return Response.json({ areas: [{ area: 'ID', closed: false }, { area: 'GTH', closed: false }] });
+    throw new Error(`Unexpected RPC ${rpc}`);
+  };
+  const token = await sessionStore.createToken({ role: 'director', area: 'ID', email: 'id@example.invalid' });
+  const request = path => new Request(`https://www.ccunicode.org${path}`, { headers: { Authorization: `Bearer ${token}` } });
+  const list = await (await applicantsRoute.GET({ request: request('/api/admin-applicants') })).json();
+  assert.equal(list.total, 5); assert.ok(list.data.every(a => a.evaluation_area === 'ID'));
+  assert.equal((await applicantsRoute.GET({ request: request('/api/admin-applicants?area=GTH') })).status, 403);
+  const metrics = await (await metricsRoute.GET({ request: request('/api/admin-metrics') })).json();
+  assert.equal(metrics.totals.submitted, 5); assert.deepEqual(metrics.areas.map(a => a.id), ['ID']);
+  const other = applications.find(a => a.evaluationArea === 'GTH' && a.video);
+  const response = await route.ALL({ params: { path: `admin/applications/${other.id}/video` }, request: request(`/api/recruitment/admin/applications/${other.id}/video`) });
+  assert.equal(response.status, 403);
+  const areas = await (await route.ALL({ params: { path: 'admin/area-evaluation' }, request: request('/api/recruitment/admin/area-evaluation') })).json();
+  assert.deepEqual(areas.areas.map(a => a.area), ['ID']);
+  const gthToken = await sessionStore.createToken({ role: 'director', area: 'GTH', email: 'gth@example.invalid' });
+  const gthReq = new Request('https://www.ccunicode.org/api/admin-applicants', { headers: { Authorization: `Bearer ${gthToken}` } });
+  assert.equal((await (await applicantsRoute.GET({ request: gthReq })).json()).total, 35);
+});

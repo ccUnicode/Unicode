@@ -119,10 +119,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 pt-7 sm:pt-10 pb-12">
       <p id="admin-notice" role="status" hidden class="mb-6 flex items-start justify-between gap-4 rounded-xl border border-zinc-700 bg-zinc-900/60 px-4 py-3 text-[14px] text-zinc-200"><span></span><button id="admin-notice-close" type="button" aria-label="Cerrar aviso" class="shrink-0 text-zinc-500 hover:text-white cursor-pointer">✕</button></p>
-      <section class="mb-6" aria-label="Cierre de evaluación por área">
-        <p class="text-zinc-400 text-sm mb-3">Cierre por área: bloquea nuevos pases de segunda opción. Permite terminar las evaluaciones ya recibidas.</p>
-        <div id="area-evaluation-control" class="flex flex-wrap gap-2"></div>
-      </section>
+
       <div class="flex flex-wrap items-start justify-between gap-4 mb-7">
         <div class="min-w-0 flex-1">
           <p class="text-zinc-500 text-[12px] font-medium tracking-widest uppercase mb-2">Convocatoria UNICODE</p>
@@ -282,6 +279,16 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
 
       <div id="applicants-list" class="hidden space-y-3" aria-busy="false"></div>
       </div>
+      <details class="mt-10 rounded-2xl border border-zinc-800 bg-zinc-900/30 group" id="area-management">
+        <summary class="min-h-16 cursor-pointer list-none px-5 py-5 flex items-center justify-between gap-4 focus-visible:outline-2 focus-visible:outline-unicode rounded-2xl">
+          <div><span class="text-white font-semibold">Gestión de convocatoria</span><p class="text-sm text-zinc-500 mt-1">Recepción de postulantes por segunda opción</p></div>
+          <svg class="w-5 h-5 text-zinc-500 group-open:rotate-180 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+        </summary>
+        <div class="px-5 pb-5 border-t border-zinc-800/60 pt-5">
+          <p class="text-sm text-zinc-400 mb-5 max-w-2xl">Cerrar la recepción impide nuevos pases a esta área. Los postulantes que ya recibiste pueden terminar su evaluación.</p>
+          <div id="area-evaluation-control" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"></div>
+        </div>
+      </details>
     </main>
 
     <dialog id="applicant-detail" aria-labelledby="applicant-detail-title" class="fixed inset-y-0 left-auto right-0 m-0 w-full sm:max-w-[680px] max-w-full h-dvh max-h-dvh overflow-y-auto overscroll-contain border-0 border-l border-zinc-800 bg-[#0c0c0e] text-white p-0 backdrop:bg-black/70 backdrop:backdrop-blur-sm scheme-dark">
@@ -302,6 +309,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
 </Layout>
 
 <style>
+  .area-tab[hidden] { display: none !important; }
   .area-tab[data-count]::after {
     content: attr(data-count);
     margin-left: 0.45rem;
@@ -562,7 +570,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   document.getElementById("toggle-password")!.addEventListener("click", () => { emailInput.value = ""; showStep("email"); });
   document.getElementById("change-email")!.addEventListener("click", () => { codeInput.value = ""; showStep("email"); });
 
-  /** Every director sees all areas, starting on their own; GTH and the super admin also reach the GTH panel. */
+  /** Directors outside GTH see only their own area; GTH and the super admin also reach the GTH panel. */
   function applySession(session: Session) {
     const managesCall = session.role === "admin" || session.role === "demo" || session.area === "GTH";
     document.getElementById("gth-panel-link")!.classList.toggle("hidden", !managesCall);
@@ -570,6 +578,8 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     user.classList.toggle("hidden", session.role !== "demo");
     user.textContent = session.role === "director" ? session.email : session.role === "demo" ? "Demostración · datos ficticios" : "Super admin";
     if (session.role === "director" && areaNames[session.area]) currentArea = session.area;
+    const restricted = session.role === 'director' && session.area !== 'GTH';
+    document.querySelectorAll<HTMLElement>('.area-tab').forEach(tab => { delete tab.dataset.count; tab.hidden = restricted && tab.dataset.area !== 'summary' && tab.dataset.area !== session.area; });
     currentView = "summary";
     markActiveTab("summary");
     document.getElementById("area-label")!.textContent = areaNames[currentArea] || currentArea;
@@ -602,11 +612,22 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     const params = new URLSearchParams(location.search);
     const managesCall = session.role === "admin" || session.role === "demo" || session.area === "GTH";
     if (params.get("volver") === "gth" && managesCall) { location.replace("/admin/recruitment"); return; }
-    if (params.has("sin_gth") || params.get("volver") === "gth") showNotice("El Panel GTH es solo para directores de GTH. Aquí puedes ver todas las postulaciones.");
+    if (params.has("sin_gth") || params.get("volver") === "gth") showNotice("El Panel GTH es solo para directores de GTH. Aquí puedes revisar las postulaciones que corresponden a tu área.");
     if (location.search) history.replaceState(null, "", "/admin");
     if (session.role === "demo") showNotice("Demostración: todos los postulantes, videos, estadísticas y correos son ficticios. Configuración real en modo consulta.");
     showView("summary");
     void loadAreaEvaluation();
+  }
+  function clearDisplayedData() {
+    activeSession = null;
+    summaryVersion++; loadVersion++;
+    applicantsCache = []; displayedApplicants = [];
+    document.getElementById('summary-content')!.replaceChildren();
+    document.getElementById('applicants-list')!.replaceChildren();
+    document.getElementById('applicant-detail-content')!.replaceChildren();
+    document.getElementById('area-evaluation-control')!.replaceChildren();
+    document.querySelectorAll<HTMLElement>('.area-tab').forEach(tab => delete tab.dataset.count);
+    if (detailDialog.open) closeDetail();
   }
   function showNotice(text: string) {
     const notice = document.getElementById("admin-notice")!;
@@ -694,6 +715,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   }
   function expireSession() {
     sessionToken = "";
+    clearDisplayedData();
     storedToken.clear();
     dashboardScreen.classList.add("hidden");
     loginScreen.classList.remove("hidden");
@@ -730,6 +752,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     }
 
     sessionToken = "";
+    clearDisplayedData();
     applicantsCache = [];
     displayedApplicants = [];
     await fadeOut(dashboardScreen);
@@ -743,6 +766,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   });
 
   function openArea(area: string) {
+    if (activeSession?.role === 'director' && activeSession.area !== 'GTH' && area !== activeSession.area) return;
     currentArea = area;
     markActiveTab(area);
     document.getElementById("area-label")!.textContent = areaNames[currentArea] || currentArea;
@@ -1026,16 +1050,24 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     const panel = document.getElementById('area-evaluation-control')!;
     panel.replaceChildren();
     if (!activeSession) return;
+    const requestToken = sessionToken;
     try {
       const response = await fetch('/api/recruitment/admin/area-evaluation', { headers: { Authorization: `Bearer ${sessionToken}` }, cache: 'no-store' });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'No se pudo consultar el cierre por área.');
+      if (requestToken !== sessionToken || !activeSession) return;
       for (const row of result.areas as { area: string; closed: boolean }[]) {
         if (activeSession.role === 'director' && activeSession.area !== 'GTH' && row.area !== activeSession.area) continue;
+        const card = document.createElement('section');
+        card.className = 'rounded-xl border border-zinc-800 bg-zinc-950/50 p-4';
+        const title = document.createElement('h3'); title.className = 'font-medium text-white text-sm'; title.textContent = areaNames[row.area] || row.area;
+        const status = document.createElement('p'); status.className = row.closed ? 'text-sm text-zinc-500 mt-2 mb-4' : 'text-sm text-unicode mt-2 mb-4'; status.textContent = row.closed ? 'Recepción cerrada' : 'Recibe nuevos postulantes';
+        card.append(title, status);
         const button = document.createElement('button');
-        button.className = 'min-h-11 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-300 hover:border-unicode';
+        button.className = row.closed ? 'min-h-11 rounded-lg px-4 py-2 text-sm font-medium border border-unicode/40 text-unicode hover:bg-unicode/10 disabled:opacity-50' : 'min-h-11 rounded-lg px-4 py-2 text-sm font-medium border border-zinc-700 text-zinc-300 hover:border-rose-400/50 hover:text-rose-300 disabled:opacity-50';
         button.disabled = activeSession.role === 'demo';
-        button.textContent = `${row.area}: ${row.closed ? 'cerrada a nuevos pases · reabrir' : 'abierta a nuevos pases · cerrar'}`;
+        button.textContent = row.closed ? 'Reabrir recepción' : 'Cerrar recepción';
+        button.setAttribute('aria-label', `${button.textContent} de ${areaNames[row.area] || row.area}`);
         button.addEventListener('click', async () => {
           if (!confirm(`${row.closed ? 'Reabrir' : 'Cerrar'} la evaluación de ${row.area} para nuevos pases de segunda opción. Quienes ya recibió pueden terminar su evaluación. ¿Continuar?`)) return;
           button.disabled = true;
@@ -1046,7 +1078,8 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
             await loadAreaEvaluation();
           } catch (error) { showNotice(error instanceof Error ? error.message : 'No se pudo guardar.'); button.disabled = false; }
         });
-        panel.append(button);
+        card.append(button);
+        panel.append(card);
       }
     } catch (error) { showNotice(error instanceof Error ? error.message : 'No se pudo cargar el cierre por área.'); }
   }
