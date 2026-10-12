@@ -19,7 +19,7 @@ export function localDevelopmentDatabase(): boolean { return import.meta.env.DEV
 export function databaseConfigured(): boolean { return localDevelopmentDatabase() || Boolean(env('PUBLIC_SUPABASE_URL') && env('SUPABASE_SERVICE_ROLE_KEY')); }
 
 const statuses: Record<string, number> = {
-  unauthorized: 401, not_found: 404, duplicate: 409, capacity: 409, revision_conflict: 409,
+  forbidden: 403, unauthorized: 401, not_found: 404, duplicate: 409, capacity: 409, revision_conflict: 409,
   immutable: 409, invalid_transition: 409, attempts_exhausted: 409, upload_pending: 409, upload_in_progress: 409,
   call_closed: 403, call_not_started: 403, call_expired: 403, rate_limited: 429,
   alternate_not_allowed: 403, recording_required: 409, upload_expired: 409, upload_not_found: 404,

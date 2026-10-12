@@ -145,6 +145,7 @@ async function handle(request: Request, rawPath: string | undefined): Promise<Re
       if (session.role === 'demo') {
         // Route before every production read/mutation, including arbitrary application IDs.
         if (method !== 'GET') return json({ error: 'La cuenta de demostración solo permite consultar. No se cambió nada ni se enviaron correos.' }, 403);
+        if (action === 'area-evaluation') return json(await recruitment.areaEvaluation());
         if (action === 'config') return json(await recruitment.adminConfig());
         if (action === 'templates') return json(await recruitment.getTemplates());
         if (action === 'directors') return json({ directors: [] });
@@ -163,15 +164,12 @@ async function handle(request: Request, rawPath: string | undefined): Promise<Re
       // Transitioning an application: directors can decide on applicants of their own area; GTH and admin decide on all.
       if (path[1] === 'applications' && path[3] === 'transition' && path.length === 4 && method === 'POST') {
         const id = recruitment.requireUuid(path[2]);
-        const appRes = await recruitment.adminApplications(id);
-        const app = appRes.application;
-        if (!app) throw new RecruitmentError('not_found', 'No existe esa postulación.', 404);
-        if (session.role === 'director' && session.area !== 'GTH') {
-          const isDirectorArea = app.data.firstChoiceArea === session.area || app.data.secondChoiceArea === session.area;
-          if (!isDirectorArea) throw new RecruitmentError('forbidden', 'Cada director solo puede decidir sobre postulantes de su propia área.', 403);
-        }
         const actor = session.role === 'director' ? session.email : 'contraseña de administración';
-        return json(await recruitment.transition(id, await body(request), actor));
+        return json(await recruitment.transition(id, await body(request), actor, session.role === 'director' && session.area !== 'GTH' ? session.area : null));
+      }
+      if (action === 'area-evaluation') {
+        if (method === 'GET') return json(await recruitment.areaEvaluation());
+        if (method === 'PUT') return json(await recruitment.closeAreaEvaluation(await body(request), session.role === 'director' ? session.email : 'administración', session.role === 'director' && session.area !== 'GTH' ? session.area : null));
       }
       if (!managesRecruitment(session)) throw forbidden();
       const actor = session.role === 'director' ? session.email : 'contraseña de administración';

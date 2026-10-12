@@ -161,3 +161,13 @@ El plan gratis permite 100 correos al día. Si Resend responde que llegó a su l
 Define `ADMIN_DEMO_PASSWORD` con una contraseña distinta de `ADMIN_PASSWORD` en el servidor. En `/admin`, escribe `demo` en el campo de correo y después esa contraseña. El acceso usa datos completamente inventados para postulaciones, borradores, historial, videos, estadísticas y cola de correos; nunca consulta postulaciones reales. Configuración y plantillas se consultan desde la convocatoria real. Todas las escrituras y envíos quedan bloqueados en el servidor. La lista de accesos reales se oculta. El video es un clip técnico de ejemplo, sin personas.
 
 La sesión dura dos días. Cambiar o quitar `ADMIN_DEMO_PASSWORD` revoca las sesiones de demostración existentes. No compartas la contraseña de administración.
+
+## Segunda opción y cierre de evaluación por área
+
+Aplicar `supabase/migrations/20261019_recruitment_segunda_opcion.sql` antes de desplegar esta versión. No cambia retrospectivamente los rechazos existentes.
+
+En `/admin`, cada director puede decidir sobre postulaciones que actualmente evalúa su área y cerrar o reabrir la recepción de pases a segunda opción. GTH y administración gestionan todas las áreas. El cierre de evaluación es independiente de las fechas de inscripción y del interruptor de áreas habilitadas: bloquea nuevos pases, sin finalizar automáticamente a quienes ya recibió. El formulario público conserva sus plazos actuales.
+
+Al marcar «No avanza» o «No ingresa» en primera opción, el servidor deriva automáticamente a la segunda si existe, es distinta, está habilitada y no cerró su recepción. Se conservan los datos, preguntas y video; el perfil comienza pendiente de revisión en esa segunda área. Si no puede derivarse, o si el rechazo proviene de segunda opción, se encola el correo de resultado final. Nunca hay un tercer pase. La ficha y el historial muestran el área actual sin sobrescribir las preferencias originales.
+
+El pase y su correo se registran en la misma transacción. Las decisiones usan la etapa y opción que mostró la ficha; un doble clic o una ficha anterior al pase se rechaza sin enviar otro correo. El cierre y el pase se serializan en base de datos. Las plantillas nuevas son `second_option` y `second_profile_validated`, y pueden usar `evaluationArea`, `firstArea` y `secondArea`. El motivo interno nunca se envía. El envío respeta la pausa y los reintentos de la cola existentes. Se mantiene el diseño HTML de marca.

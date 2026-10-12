@@ -87,8 +87,8 @@ async function verifiedDraft(db, changes = {}) {
   return application;
 }
 
-async function submitted(db) {
-  const application = await verifiedDraft(db);
+async function submitted(db, changes = {}) {
+  const application = await verifiedDraft(db, changes);
   await rpc(db, 'recruitment_submit', application.id, application.owner);
   return application;
 }
@@ -347,7 +347,7 @@ test('submitted applications allow direct selection and rejection with an audit 
   const db = await database(t);
   await openCall(db);
   for (const status of ['selected', 'not_selected']) {
-    const application = await submitted(db);
+    const application = await submitted(db, { secondChoiceArea: '' });
     const result = await rpc(db, 'recruitment_transition', application.id, status, 'Decisión directa del equipo.', 'director@example.test');
     assert.equal(result.application.status, status);
     const event = await db.query('SELECT from_status, to_status FROM recruitment_events WHERE application_id=$1 AND to_status=$2', [application.id, status]);
@@ -361,15 +361,15 @@ test('two stages: each result sends its own email, and only the kept emails are 
   const db = await database(t);
   await openCall(db);
   const enabled = (await db.query('SELECT key FROM recruitment_email_templates WHERE enabled ORDER BY key')).rows.map((row) => row.key);
-  assert.deepEqual(enabled, ['incomplete', 'not_selected', 'profile_rejected', 'profile_validated', 'resume', 'selected', 'submitted']);
-  const rejected = await submitted(db);
+  assert.deepEqual(enabled, ['incomplete', 'not_selected', 'profile_rejected', 'profile_validated', 'resume', 'second_option', 'second_profile_validated', 'selected', 'submitted']);
+  const rejected = await submitted(db, { secondChoiceArea: '' });
   await rpc(db, 'recruitment_transition', rejected.id, 'profile_rejected', 'Resultado enviado: No avanza.', 'gth@uni.pe');
   await assert.rejects(() => rpc(db, 'recruitment_transition', rejected.id, 'selected', 'No corresponde.', 'gth@uni.pe'), /invalid_transition/);
-  const joined = await submitted(db);
+  const joined = await submitted(db, { secondChoiceArea: '' });
   await rpc(db, 'recruitment_transition', joined.id, 'profile_validated', 'Resultado enviado: Avanza.', 'gth@uni.pe');
   await rpc(db, 'recruitment_transition', joined.id, 'not_selected', 'Resultado enviado: No ingresa.', 'gth@uni.pe');
   const mails = async (id) => (await db.query('SELECT template_key, subject FROM recruitment_email_outbox WHERE application_id=$1 ORDER BY created_at', [id])).rows.map((row) => row.template_key);
-  assert.deepEqual(await mails(rejected.id), ['resume', 'submitted', 'profile_rejected']);
+  assert.deepEqual(await mails(rejected.id), ['resume', 'submitted', 'not_selected']);
   assert.deepEqual(await mails(joined.id), ['resume', 'submitted', 'profile_validated', 'not_selected']);
   assert.equal((await rpc(db, 'recruitment_admin_applications', joined.id)).application.history.at(-1).actor, 'gth@uni.pe');
 });
@@ -665,4 +665,73 @@ test('reminder cooldown starts at successful delivery and failed attempts do not
   assert.equal(await rpc(db, 'recruitment_remind_all', 'test'), 1);
   await rpc(db, 'recruitment_record_reminder_sent', app.id, new Date().toISOString());
   assert.equal((await db.query("SELECT count(*)::integer AS n FROM recruitment_email_outbox WHERE application_id=$1 AND template_key='incomplete' AND status='pending'", [app.id])).rows[0].n, 0, 'extension email cancels a superseded pending reminder');
+});
+
+
+test('first rejection hands off once, preserves answers and queues a warm second-option email', async t => {
+  const db = await database(t); await openCall(db);
+  const application = await submitted(db);
+  const original = (await rpc(db, 'recruitment_admin_applications', application.id)).application;
+  const result = await rpc(db, 'recruitment_transition', application.id, 'profile_rejected', 'No encaja con las necesidades de ID.', 'id@uni.pe', 'submitted', 1, 'ID');
+  assert.equal(result.transferred, true);
+  assert.equal(result.application.status, 'submitted');
+  assert.equal(result.application.evaluationChoice, 2); assert.equal(result.application.evaluationArea, 'GTH');
+  assert.deepEqual(result.application.data, original.data); assert.deepEqual(result.application.video, original.video);
+  assert.match(result.application.history.at(-1).reason, /Pase de primera opción.*ID.*segunda opción.*GTH/);
+  const mails = (await db.query("select template_key,body,payload from recruitment_email_outbox where application_id=$1 and template_key in ('second_option','not_selected','profile_rejected')", [application.id])).rows;
+  assert.equal(mails.length, 1); assert.equal(mails[0].template_key, 'second_option');
+  const templates = await rpc(db, 'recruitment_templates');
+  assert.ok(templates.allowedTemplateVariables.includes('secondArea'));
+  assert.ok(templates.allowedTemplateVariables.includes('evaluationArea'));
+  assert.match(mails[0].body, /No necesitas volver a inscribirte/); assert.match(mails[0].body, /todavía no significa una selección/);
+  assert.equal(mails[0].payload.secondArea, 'Gestión del Talento Humano');
+  await assert.rejects(() => rpc(db, 'recruitment_transition', application.id, 'profile_rejected', 'Doble clic anterior.', 'id@uni.pe', 'submitted', 1, 'ID'), /forbidden|revision_conflict/);
+  await rpc(db, 'recruitment_transition', application.id, 'profile_validated', 'Perfil aprobado por GTH.', 'gth@uni.pe', 'submitted', 2, 'GTH');
+  const final = await rpc(db, 'recruitment_transition', application.id, 'not_selected', 'Decisión final del equipo.', 'gth@uni.pe', 'profile_validated', 2, 'GTH');
+  assert.equal(final.transferred, false); assert.equal(final.application.status, 'not_selected');
+  assert.equal((await db.query("select count(*)::int n from recruitment_email_outbox where application_id=$1 and template_key='not_selected'", [application.id])).rows[0].n, 1);
+  assert.equal((await db.query("select count(*)::int n from recruitment_email_outbox where application_id=$1 and template_key='second_profile_validated'", [application.id])).rows[0].n, 1);
+});
+
+test('missing, disabled or closed second choice gets a final rejection, with no handoff email', async t => {
+  const db = await database(t); await openCall(db);
+  for (const scenario of ['missing', 'closed', 'disabled']) {
+    const application = await submitted(db, { secondChoiceArea: scenario === 'missing' ? '' : 'GTH' });
+    if (scenario === 'closed') await rpc(db, 'recruitment_area_evaluation', 'GTH', true, 'gth@uni.pe');
+    if (scenario === 'disabled') {
+      await rpc(db, 'recruitment_area_evaluation', 'GTH', false, 'gth@uni.pe');
+      const config = await currentConfig(db); config.areas.find(a => a.id === 'GTH').enabled = false;
+      await rpc(db, 'recruitment_update_config', config, 'administración');
+    }
+    const result = await rpc(db, 'recruitment_transition', application.id, 'not_selected', 'No fue seleccionado en ID.', 'id@uni.pe', 'submitted', 1, 'ID');
+    assert.equal(result.application.status, 'not_selected'); assert.equal(result.application.evaluationChoice, 1);
+    const mails = (await db.query("select template_key from recruitment_email_outbox where application_id=$1 and template_key in ('second_option','not_selected')", [application.id])).rows;
+    assert.deepEqual(mails, [{ template_key: 'not_selected' }]);
+  }
+});
+
+test('closing an area preserves received second-choice evaluations and audits the closure', async t => {
+  const db = await database(t); await openCall(db);
+  const application = await submitted(db);
+  await rpc(db, 'recruitment_transition', application.id, 'not_selected', 'Primera opción no selecciona.', 'id@uni.pe', 'submitted', 1, 'ID');
+  await rpc(db, 'recruitment_area_evaluation', 'GTH', true, 'gth@uni.pe');
+  const areas = await rpc(db, 'recruitment_area_evaluation');
+  assert.equal(areas.areas.find(a => a.area === 'GTH').closed, true);
+  const result = await rpc(db, 'recruitment_transition', application.id, 'selected', 'Seleccionado por segunda opción.', 'gth@uni.pe', 'submitted', 2, 'GTH');
+  assert.equal(result.application.status, 'selected'); assert.equal(result.application.evaluationArea, 'GTH');
+  assert.equal((await db.query("select actor from recruitment_config_events where kind='area_evaluation'")).rows[0].actor, 'gth@uni.pe');
+  for (const role of ['anon', 'authenticated']) {
+    await db.exec(`SET ROLE ${role}`);
+    await assert.rejects(() => rpc(db, 'recruitment_area_evaluation', 'ID', true, 'fake'), /permission denied/);
+    await db.exec('RESET ROLE');
+  }
+});
+
+test('concurrent first-choice rejection clicks produce one handoff and cannot reject the second choice', async t => {
+  const db = await database(t); await openCall(db); const application = await submitted(db);
+  const results = await Promise.allSettled([1,2].map(() => rpc(db, 'recruitment_transition', application.id, 'not_selected', 'Decisión de primera opción.', 'id@uni.pe', 'submitted', 1, 'ID')));
+  assert.equal(results.filter(r => r.status === 'fulfilled').length, 1);
+  const final = (await rpc(db, 'recruitment_admin_applications', application.id)).application;
+  assert.equal(final.status, 'submitted'); assert.equal(final.evaluationChoice, 2);
+  assert.equal((await db.query("select count(*)::int n from recruitment_email_outbox where application_id=$1 and template_key='second_option'", [application.id])).rows[0].n, 1);
 });

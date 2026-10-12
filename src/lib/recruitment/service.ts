@@ -161,10 +161,11 @@ export function requireUuid(value: unknown): string {
   return value;
 }
 export async function adminApplications(id?: string) { return recruitmentRpc<{ applications?: RecruitmentApplication[]; application?: RecruitmentApplication }>('recruitment_admin_applications', { p_id: id || null }); }
-export async function transition(id: string, input: unknown, actor = 'administracion-compartida') {
+export async function transition(id: string, input: unknown, actor = 'administracion-compartida', scopeArea: string | null = null) {
   const body = record(input); const status = body.status;
   if (typeof status !== 'string' || !Object.hasOwn(allowedApplicationTransitions, status) || typeof body.reason !== 'string' || body.reason.trim().length < 3 || body.reason.length > 2000) throw new RecruitmentError('invalid_transition', 'Elige un estado válido y registra el motivo.');
-  const result = await recruitmentRpc<ApplicationResponse>('recruitment_transition', { p_id: id, p_status: status as ApplicationStatus, p_reason: body.reason.trim(), p_actor: actor });
+  if (typeof body.expectedStatus !== 'string' || !Object.hasOwn(allowedApplicationTransitions, body.expectedStatus) || ![1, 2].includes(Number(body.expectedChoice))) throw new RecruitmentError('invalid_transition', 'Actualiza la ficha antes de decidir.');
+  const result = await recruitmentRpc<ApplicationResponse & { transferred: boolean }>('recruitment_transition', { p_id: id, p_status: status as ApplicationStatus, p_reason: body.reason.trim(), p_actor: actor, p_expected_status: body.expectedStatus, p_expected_choice: Number(body.expectedChoice), p_scope_area: scopeArea });
   if (recruitmentEmailConfigured()) await processEmails(2).catch(() => undefined);
   return result;
 }
@@ -290,11 +291,20 @@ export async function adminMetrics(demo = false) {
       pendingReview: status('submitted'), advanced: status('profile_validated') + status('selected') + status('not_selected'),
       rejected: status('profile_rejected'), joined: status('selected'), notJoined: status('not_selected'),
     },
-    areas: AREA_IDS.map((id) => ({ id, name: AREA_NAMES[id], first: submitted.filter((a) => a.data.firstChoiceArea === id).length, second: submitted.filter((a) => a.data.secondChoiceArea === id).length })),
+    areas: AREA_IDS.map((id) => ({ id, name: AREA_NAMES[id], first: submitted.filter((a) => a.evaluationChoice !== 2 && a.data.firstChoiceArea === id).length, second: submitted.filter((a) => a.evaluationChoice === 2 && a.data.secondChoiceArea === id).length })),
     referral: tally(submitted.map((a) => (a.data.referralSource || '').startsWith('Otro') ? 'Otro' : a.data.referralSource || '')),
     universities: tally(submitted.map((a) => placeName(a.data.university || '')), 6),
     semesters: tally(submitted.map((a) => a.data.semester === '0' ? 'Egresado/a' : a.data.semester ? `${a.data.semester}.º ciclo` : ''), 11),
     daily: days.map((day) => ({ day, count: perDay.get(day)! })),
     averageHours: hours.length ? Math.round(hours.reduce((sum, value) => sum + value, 0) / hours.length * 10) / 10 : null,
   };
+}
+
+/** Evaluation closure is separate from registration dates and the public enabled-area switch. */
+export function areaEvaluation() { return recruitmentRpc<{ areas: { area: string; closed: boolean }[] }>('recruitment_area_evaluation'); }
+export function closeAreaEvaluation(input: unknown, actor: string, scopeArea: string | null) {
+  const value = record(input);
+  if (!(AREA_IDS as readonly unknown[]).includes(value.area) || typeof value.closed !== 'boolean') throw new RecruitmentError('invalid_area', 'Elige un área y un estado de cierre válido.');
+  if (scopeArea && value.area !== scopeArea) throw new RecruitmentError('forbidden', 'Solo puedes cerrar la evaluación de tu área.', 403);
+  return recruitmentRpc('recruitment_area_evaluation', { p_area: value.area, p_closed: value.closed, p_actor: actor });
 }

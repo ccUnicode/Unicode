@@ -2,6 +2,8 @@
 export interface Applicant {
   id: string;
   status?: string;
+  evaluation_choice?: number;
+  evaluation_area?: string;
   first_name: string;
   last_name: string;
   email: string;
@@ -80,7 +82,7 @@ export function applicantListMarkup(applicants: Applicant[], area: string): stri
         <div class="min-w-0">
           <div class="flex flex-wrap items-center gap-2">
             <h3 class="font-semibold text-base leading-6 text-white [overflow-wrap:anywhere]">${escape(applicantName(applicant))}</h3>
-            ${statusBadgeMarkup(applicant.status)}
+            ${statusBadgeMarkup(applicant.status)}${applicant.evaluation_choice === 2 ? `<span class="text-[12px] text-sky-300">En evaluación de 2da opción · ${escape(applicant.evaluation_area)}</span>` : ""}
           </div>
           <p class="text-zinc-400 text-[14px] leading-5 mt-1 [overflow-wrap:anywhere]">${escape(applicant.career) || "Carrera no indicada"}</p>
           <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-zinc-500 text-[12px] mt-1.5"><span class="text-zinc-400">${escape(semester(applicant))}</span><span class="text-zinc-700" aria-hidden="true">·</span><span><span class="sr-only">Registrado el </span>${escape(applicantDate(applicant.created_at))}</span></p>
@@ -127,7 +129,7 @@ export function applicantDetailMarkup(applicant: Applicant): string {
   return `<section aria-label="Preferencias y video" class="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 sm:p-5">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <dl class="flex flex-wrap gap-6 items-center">
-          ${applicant.status ? `<div class="min-w-0"><dt class="text-zinc-500 text-[12px] mb-1.5">Estado</dt><dd>${statusBadgeMarkup(applicant.status)}</dd></div>` : ""}
+          ${applicant.status ? `<div class="min-w-0"><dt class="text-zinc-500 text-[12px] mb-1.5">Estado</dt><dd>${statusBadgeMarkup(applicant.status)}${applicant.evaluation_choice === 2 ? `<span class="text-[12px] text-sky-300">En evaluación de 2da opción · ${escape(applicant.evaluation_area)}</span>` : ""}</dd></div>` : ""}
           ${information("Primera opción", applicant.first_choice_area)}
           ${information("Segunda opción", applicant.second_choice_area || "No seleccionada")}
         </dl>

@@ -40,7 +40,14 @@ test('demo never reads production applications, queue or directors and blocks al
   await request('queue'); await request('directors');
   const req = new Request('https://www.ccunicode.org/api/admin-applicants', { headers: { Authorization: `Bearer ${token}` } });
   assert.equal((await (await applicantsRoute.GET({ request: req })).json()).total, 35);
-  assert.equal((await metricsRoute.GET({ request: req })).status, 200);
+  const metrics = await (await metricsRoute.GET({ request: req })).json();
+  assert.equal(metrics.areas.reduce((sum, area) => sum + area.first, 0), 28);
+  assert.equal(metrics.areas.reduce((sum, area) => sum + area.second, 0), 7);
+  const secondReq = new Request('https://www.ccunicode.org/api/admin-applicants?area=ID&option=second', { headers: { Authorization: `Bearer ${token}` } });
+  const second = await (await applicantsRoute.GET({ request: secondReq })).json();
+  assert.equal(second.total, 1);
+  assert.equal(second.data[0].evaluation_choice, 2);
+  assert.equal(second.data[0].evaluation_area, 'ID');
   assert.ok(calls.length > 0);
 });
 
@@ -52,4 +59,30 @@ test('rotating or disabling demo password revokes existing demo sessions', async
   delete process.env.ADMIN_DEMO_PASSWORD;
   assert.equal(await sessionStore.verify(token), null);
   process.env.ADMIN_DEMO_PASSWORD = 'test-demo-secret';
+});
+
+test('director area closures cannot target another area; decision scope and snapshot reach SQL', async () => {
+  const calls = [];
+  globalThis.fetch = async (url, init) => {
+    const rpc = new URL(String(url)).pathname.split('/').at(-1);
+    const args = JSON.parse(init.body);
+    calls.push({ rpc, args });
+    if (rpc === 'recruitment_transition') return Response.json({ application: {}, transferred: true });
+    assert.equal(rpc, 'recruitment_area_evaluation');
+    return Response.json({ areas: [{ area: 'ID', closed: true }] });
+  };
+  const token = await sessionStore.createToken({ role: 'director', area: 'ID', email: 'id@example.invalid' });
+  async function request(path, method, data) {
+    return route.ALL({ params: { path: `admin/${path}` }, request: new Request(`https://www.ccunicode.org/api/recruitment/admin/${path}`, { method, headers: { Authorization: `Bearer ${token}`, Origin: 'https://www.ccunicode.org', 'Content-Type': 'application/json' }, body: JSON.stringify(data) }) });
+  }
+  assert.equal((await request('area-evaluation', 'PUT', { area: 'GTH', closed: true })).status, 403);
+  assert.equal(calls.length, 0);
+  assert.equal((await request('area-evaluation', 'PUT', { area: 'ID', closed: true })).status, 200);
+  assert.equal(calls[0].args.p_actor, 'id@example.invalid');
+  assert.equal((await request('applications/11111111-1111-4111-8111-111111111111/transition', 'POST', { status: 'not_selected', reason: 'No encaja con el área.', expectedStatus: 'submitted', expectedChoice: 1 })).status, 200);
+  assert.equal(calls[1].args.p_scope_area, 'ID');
+  assert.equal(calls[1].args.p_expected_choice, 1);
+  assert.equal(calls[1].args.p_expected_status, 'submitted');
+  assert.equal((await request('applications/11111111-1111-4111-8111-111111111111/transition', 'POST', { status: 'not_selected', reason: 'Ficha sin versión.' })).status, 400);
+  assert.equal(calls.length, 2);
 });

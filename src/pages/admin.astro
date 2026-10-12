@@ -119,6 +119,10 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 pt-7 sm:pt-10 pb-12">
       <p id="admin-notice" role="status" hidden class="mb-6 flex items-start justify-between gap-4 rounded-xl border border-zinc-700 bg-zinc-900/60 px-4 py-3 text-[14px] text-zinc-200"><span></span><button id="admin-notice-close" type="button" aria-label="Cerrar aviso" class="shrink-0 text-zinc-500 hover:text-white cursor-pointer">✕</button></p>
+      <section class="mb-6" aria-label="Cierre de evaluación por área">
+        <p class="text-zinc-400 text-sm mb-3">Cierre por área: bloquea nuevos pases de segunda opción. Permite terminar las evaluaciones ya recibidas.</p>
+        <div id="area-evaluation-control" class="flex flex-wrap gap-2"></div>
+      </section>
       <div class="flex flex-wrap items-start justify-between gap-4 mb-7">
         <div class="min-w-0 flex-1">
           <p class="text-zinc-500 text-[12px] font-medium tracking-widest uppercase mb-2">Convocatoria UNICODE</p>
@@ -485,6 +489,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     document.getElementById("applicant-detail-title")!.textContent = applicantName(applicant);
     document.getElementById("applicant-detail-date")!.textContent = `Registrado el ${applicantDate(applicant.created_at, true)}`;
     document.getElementById("applicant-detail-content")!.innerHTML = applicantDetailMarkup(applicant);
+    renderAreaDecision(applicant);
     detailDialog.showModal();
     detailDialog.scrollTop = 0;
     document.documentElement.style.overflow = "hidden";
@@ -536,6 +541,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   const codeInput = document.getElementById("director-code") as HTMLInputElement;
   const loginInfo = document.getElementById("login-info")!;
   const loginIntro = document.getElementById("login-intro")!;
+  let activeSession: Session | null = null;
   type Session = { role: "admin" } | { role: "demo" } | { role: "director"; email: string; area: string; name?: string };
 
   const showError = (text: string) => { loginError.textContent = text; loginError.classList.remove("hidden"); loginInfo.classList.add("hidden"); };
@@ -561,6 +567,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     const managesCall = session.role === "admin" || session.role === "demo" || session.area === "GTH";
     document.getElementById("gth-panel-link")!.classList.toggle("hidden", !managesCall);
     const user = document.getElementById("session-user")!;
+    user.classList.toggle("hidden", session.role !== "demo");
     user.textContent = session.role === "director" ? session.email : session.role === "demo" ? "Demostración · datos ficticios" : "Super admin";
     if (session.role === "director" && areaNames[session.area]) currentArea = session.area;
     currentView = "summary";
@@ -585,9 +592,11 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   }
   function startSession(token: string, session: Session) {
     sessionToken = token;
+    activeSession = session;
     storedToken.set(token);
     loginScreen.classList.add("hidden");
     dashboardScreen.classList.remove("hidden");
+    document.getElementById("admin-notice")!.hidden = true;
     applySession(session);
     // Coming back from the GTH panel's sign-in: return there if this session may manage the call.
     const params = new URLSearchParams(location.search);
@@ -595,7 +604,9 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     if (params.get("volver") === "gth" && managesCall) { location.replace("/admin/recruitment"); return; }
     if (params.has("sin_gth") || params.get("volver") === "gth") showNotice("El Panel GTH es solo para directores de GTH. Aquí puedes ver todas las postulaciones.");
     if (location.search) history.replaceState(null, "", "/admin");
+    if (session.role === "demo") showNotice("Demostración: todos los postulantes, videos, estadísticas y correos son ficticios. Configuración real en modo consulta.");
     showView("summary");
+    void loadAreaEvaluation();
   }
   function showNotice(text: string) {
     const notice = document.getElementById("admin-notice")!;
@@ -839,7 +850,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
       content.classList.remove("hidden");
       for (const area of (data as Metrics).areas) {
         const tab = document.querySelector<HTMLElement>(`.area-tab[data-area="${area.id}"]`);
-        if (tab) tab.dataset.count = String(area.first);
+        if (tab) tab.dataset.count = String(area.first + area.second);
       }
     } catch (error) {
       if (version !== summaryVersion) return;
@@ -1011,6 +1022,72 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     } finally { button.disabled = false; }
   });
 
+  async function loadAreaEvaluation() {
+    const panel = document.getElementById('area-evaluation-control')!;
+    panel.replaceChildren();
+    if (!activeSession) return;
+    try {
+      const response = await fetch('/api/recruitment/admin/area-evaluation', { headers: { Authorization: `Bearer ${sessionToken}` }, cache: 'no-store' });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'No se pudo consultar el cierre por área.');
+      for (const row of result.areas as { area: string; closed: boolean }[]) {
+        if (activeSession.role === 'director' && activeSession.area !== 'GTH' && row.area !== activeSession.area) continue;
+        const button = document.createElement('button');
+        button.className = 'min-h-11 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-300 hover:border-unicode';
+        button.disabled = activeSession.role === 'demo';
+        button.textContent = `${row.area}: ${row.closed ? 'cerrada a nuevos pases · reabrir' : 'abierta a nuevos pases · cerrar'}`;
+        button.addEventListener('click', async () => {
+          if (!confirm(`${row.closed ? 'Reabrir' : 'Cerrar'} la evaluación de ${row.area} para nuevos pases de segunda opción. Quienes ya recibió pueden terminar su evaluación. ¿Continuar?`)) return;
+          button.disabled = true;
+          try {
+            const response = await fetch('/api/recruitment/admin/area-evaluation', { method: 'PUT', headers: { Authorization: `Bearer ${sessionToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ area: row.area, closed: !row.closed }) });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'No se pudo cambiar el cierre del área.');
+            await loadAreaEvaluation();
+          } catch (error) { showNotice(error instanceof Error ? error.message : 'No se pudo guardar.'); button.disabled = false; }
+        });
+        panel.append(button);
+      }
+    } catch (error) { showNotice(error instanceof Error ? error.message : 'No se pudo cargar el cierre por área.'); }
+  }
+
+  function renderAreaDecision(applicant: Applicant) {
+    if (!activeSession) return;
+    const responsible = applicant.evaluation_area || (applicant.evaluation_choice === 2 ? applicant.second_choice_area : applicant.first_choice_area);
+    if ((activeSession.role === 'director' && activeSession.area !== 'GTH' && activeSession.area !== responsible)) return;
+    const box = document.createElement('section');
+    box.className = 'mt-6 border-t border-zinc-800 pt-5 flex flex-wrap gap-3';
+    const intro = document.createElement('p');
+    intro.className = 'w-full text-sm text-zinc-400';
+    intro.textContent = `Evalúa ${responsible}, ${applicant.evaluation_choice === 2 ? 'segunda' : 'primera'} opción. Al rechazar en primera opción, pasará a la segunda si está abierta; de lo contrario se enviará el resultado final.`;
+    box.append(intro);
+    const statuses = ['submitted', 'profile_validated', 'test_sent', 'test_completed', 'awaiting_second_review', 'interview_eligible', 'interview_scheduled', 'interviewed', 'group_eligible', 'group_scheduled', 'group_completed', 'waitlisted'];
+    if (!statuses.includes(applicant.status || '')) return;
+    const actions = applicant.status === 'submitted' ? [['profile_validated', 'Avanza de etapa'], ['selected', 'Seleccionar'], ['profile_rejected', 'No avanza en esta área']] : [['selected', 'Seleccionar'], ['not_selected', 'No ingresa en esta área']];
+    for (const [status, label] of actions) {
+      const button = document.createElement('button');
+      button.textContent = label;
+      button.disabled = activeSession.role === 'demo';
+      button.className = 'min-h-11 rounded-xl border border-zinc-700 px-4 py-2 text-sm hover:border-unicode';
+      button.addEventListener('click', async () => {
+        const reason = prompt(`${label}: registra el motivo interno. El postulante recibirá un correo cálido con el resultado correspondiente; el motivo interno no se envía.`);
+        if (!reason) return;
+        if (reason.trim().length < 3) { alert('Escribe un motivo de al menos tres caracteres.'); return; }
+        box.querySelectorAll('button').forEach(button => button.disabled = true);
+        try {
+          const response = await fetch(`/api/recruitment/admin/applications/${applicant.id}/transition`, { method: 'POST', headers: { Authorization: `Bearer ${sessionToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status, reason, expectedStatus: applicant.status, expectedChoice: applicant.evaluation_choice || 1 }) });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'No se pudo registrar el resultado.');
+          closeDetail();
+          showNotice(result.transferred ? 'Pasó a evaluación de su segunda opción. Se encoló el correo correspondiente.' : 'Resultado guardado. Se encoló el correo correspondiente.');
+          await loadApplicants();
+        } catch (error) { alert(error instanceof Error ? error.message : 'No se pudo registrar.'); box.querySelectorAll('button').forEach(button => button.disabled = false); }
+      });
+      box.append(button);
+    }
+    document.getElementById('applicant-detail-content')!.append(box);
+  }
+
   function renderApplicants(applicants: Applicant[]) {
     document.getElementById("applicants-list")!.innerHTML = applicantListMarkup(applicants, currentArea);
   }
@@ -1038,6 +1115,9 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
       "Horas/semana",
       "Opción 1",
       "Opción 2",
+      "Área que evalúa",
+      "Opción en evaluación",
+      "Estado",
       "Motivo",
       "Caso breve",
       "Algo que hizo",
@@ -1077,6 +1157,9 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
           <td class="data-cell" style="text-align: center; vertical-align: middle;">${p.availability_hours ?? ""}</td>
           <td class="data-cell ${isFirst ? "opcion-1" : ""}" style="text-align: center; vertical-align: middle;">${esc(p.first_choice_area)}</td>
           <td class="data-cell" style="text-align: center; vertical-align: middle;">${esc(p.second_choice_area)}</td>
+          <td class="data-cell">${esc(p.evaluation_area)}</td>
+          <td class="data-cell">${p.evaluation_choice === 2 ? "Segunda" : "Primera"}</td>
+          <td class="data-cell">${esc(p.status)}</td>
           <td class="data-cell" style="font-size: 9pt; width: 350px; vertical-align: middle;">${esc(p.application_reason).replace(/\n/g, "<br>")}</td>
           <td class="data-cell" style="font-size: 9pt; width: 350px; vertical-align: middle;">${esc(p.short_case).replace(/\n/g, "<br>")}</td>
           <td class="data-cell" style="font-size: 9pt; width: 350px; vertical-align: middle;">${esc(p.showcase).replace(/\n/g, "<br>")}</td>
