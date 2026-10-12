@@ -1194,7 +1194,7 @@ function renderPreview(enabled = previewActive): void {
   previewActive = enabled;
   const tests = applications.filter((application) => application.isTest).length;
   element("preview-state").textContent = `${enabled ? "Hay un enlace de prueba activo." : "No hay enlace de prueba activo."} Postulaciones de prueba: ${tests}.`;
-  element<HTMLButtonElement>("preview-disable").disabled = !enabled;
+  element<HTMLButtonElement>("preview-disable").disabled = demoMode || !enabled;
 }
 
 element("preview-create").addEventListener("click", async () => {
