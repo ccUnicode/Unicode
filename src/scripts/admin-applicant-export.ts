@@ -3,7 +3,7 @@ import type { Applicant } from './admin-applicant-view';
 import { AREA_NAMES } from '../lib/recruitment/types';
 
 const labels: Record<string, string> = {
-  submitted: 'Inscripción completa', profile_validated: 'Avanza de etapa', profile_rejected: 'No avanza',
+  submitted: 'Inscripción completa', profile_validated: 'Avanza de etapa', profile_rejected: 'No seleccionado',
   selected: 'Seleccionado', not_selected: 'No seleccionado', draft: 'Borrador', incomplete: 'Incompleto', expired: 'Plazo vencido',
   withdrawn: 'Retirado', test_sent: 'Prueba enviada', test_completed: 'Prueba completada', awaiting_second_review: 'Pendiente de revisión',
   interview_eligible: 'Habilitado para entrevista', interview_ineligible: 'No habilitado para entrevista', interview_scheduled: 'Entrevista programada',

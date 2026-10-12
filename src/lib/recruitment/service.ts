@@ -309,3 +309,15 @@ export function closeAreaEvaluation(input: unknown, actor: string, scopeArea: st
   if (scopeArea && value.area !== scopeArea) throw new RecruitmentError('forbidden', 'Solo puedes cerrar la evaluación de tu área.', 403);
   return recruitmentRpc('recruitment_area_evaluation', { p_area: value.area, p_closed: value.closed, p_actor: actor });
 }
+
+/** Read-only outcome preview; the transaction still checks availability when confirming. */
+export async function decisionPreview(id: string, demo = false) {
+  const { config } = await adminConfig();
+  const { application } = demo ? (await import('./demo')).demoApplications(config, id) : await adminApplications(id);
+  if (!application) throw new RecruitmentError('not_found', 'No existe esa postulación.', 404);
+  const { areas } = await areaEvaluation();
+  const second = application.data.secondChoiceArea;
+  const transferAvailable = application.evaluationChoice !== 2 && Boolean(second && second !== application.data.firstChoiceArea
+    && config.areas.some(area => area.id === second && area.enabled) && areas.some(area => area.area === second && !area.closed));
+  return { transferAvailable, rejectionLabel: transferAvailable ? `Pasar a ${second} · 2.ª opción` : 'No ingresa a UNICODE' };
+}

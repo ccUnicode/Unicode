@@ -281,11 +281,10 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
       </div>
       <details class="mt-10 rounded-2xl border border-zinc-800 bg-zinc-900/30 group" id="area-management">
         <summary class="min-h-16 cursor-pointer list-none px-5 py-5 flex items-center justify-between gap-4 focus-visible:outline-2 focus-visible:outline-unicode rounded-2xl">
-          <div><span class="text-white font-semibold">Gestión de convocatoria</span><p class="text-sm text-zinc-500 mt-1">Recepción de postulantes por segunda opción</p></div>
+          <div><span class="text-white font-semibold">Gestión de convocatoria</span><p class="text-sm text-zinc-500 mt-1">Pases de segunda opción</p></div>
           <svg class="w-5 h-5 text-zinc-500 group-open:rotate-180 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
         </summary>
         <div class="px-5 pb-5 border-t border-zinc-800/60 pt-5">
-          <p class="text-sm text-zinc-400 mb-5 max-w-2xl">Cerrar la recepción impide nuevos pases a esta área. Los postulantes que ya recibiste pueden terminar su evaluación.</p>
           <div id="area-evaluation-control" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"></div>
         </div>
       </details>
@@ -497,7 +496,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     document.getElementById("applicant-detail-title")!.textContent = applicantName(applicant);
     document.getElementById("applicant-detail-date")!.textContent = `Registrado el ${applicantDate(applicant.created_at, true)}`;
     document.getElementById("applicant-detail-content")!.innerHTML = applicantDetailMarkup(applicant);
-    renderAreaDecision(applicant);
+    void renderAreaDecision(applicant);
     detailDialog.showModal();
     detailDialog.scrollTop = 0;
     document.documentElement.style.overflow = "hidden";
@@ -613,7 +612,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     if (params.get("volver") === "gth" && managesCall) { location.replace("/admin/recruitment"); return; }
     if (params.has("sin_gth") || params.get("volver") === "gth") showNotice("El Panel GTH es solo para directores de GTH. Aquí puedes ver todas las áreas; solo puedes gestionar la tuya.");
     if (location.search) history.replaceState(null, "", "/admin");
-    if (session.role === "demo") showNotice("Demostración: todos los postulantes, videos, estadísticas y correos son ficticios. Configuración real en modo consulta.");
+    if (session.role === "demo") showNotice("Demo · Datos ficticios · Solo lectura");
     showView("summary");
     void loadAreaEvaluation();
   }
@@ -1061,14 +1060,13 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
         const status = document.createElement('p'); status.className = row.closed ? 'text-sm text-zinc-500 mt-2 mb-4' : 'text-sm text-unicode mt-2 mb-4'; status.textContent = row.closed ? 'Recepción cerrada' : 'Recibe nuevos postulantes';
         card.append(title, status);
         const button = document.createElement('button');
-        button.className = row.closed ? 'min-h-11 rounded-lg px-4 py-2 text-sm font-medium border border-unicode/40 text-unicode hover:bg-unicode/10 disabled:opacity-50' : 'min-h-11 rounded-lg px-4 py-2 text-sm font-medium border border-zinc-700 text-zinc-300 hover:border-rose-400/50 hover:text-rose-300 disabled:opacity-50';
+        button.className = row.closed ? 'min-h-11 rounded-lg px-4 py-2 text-sm font-semibold bg-unicode text-black hover:bg-unicode-light disabled:opacity-50' : 'min-h-11 rounded-lg px-4 py-2 text-sm font-semibold bg-rose-600 text-white hover:bg-rose-500 disabled:opacity-50';
         const readOnly = activeSession.role === 'demo' || (activeSession.role === 'director' && activeSession.area !== 'GTH' && row.area !== activeSession.area);
         button.disabled = readOnly;
-        if (readOnly) button.title = 'Puedes consultar el estado; solo el director de esta área o GTH puede gestionarlo.';
         button.textContent = row.closed ? 'Reabrir recepción' : 'Cerrar recepción';
         button.setAttribute('aria-label', `${button.textContent} de ${areaNames[row.area] || row.area}`);
         button.addEventListener('click', async () => {
-          if (!confirm(`${row.closed ? 'Reabrir' : 'Cerrar'} la evaluación de ${row.area} para nuevos pases de segunda opción. Quienes ya recibió pueden terminar su evaluación. ¿Continuar?`)) return;
+          if (!confirm(`${row.closed ? 'Reabrir' : 'Cerrar'} recepción en ${row.area}. ¿Confirmar?`)) return;
           button.disabled = true;
           try {
             const response = await fetch('/api/recruitment/admin/area-evaluation', { method: 'PUT', headers: { Authorization: `Bearer ${sessionToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ area: row.area, closed: !row.closed }) });
@@ -1083,7 +1081,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     } catch (error) { showNotice(error instanceof Error ? error.message : 'No se pudo cargar el cierre por área.'); }
   }
 
-  function renderAreaDecision(applicant: Applicant) {
+  async function renderAreaDecision(applicant: Applicant) {
     if (!activeSession) return;
     const responsible = applicant.evaluation_area || (applicant.evaluation_choice === 2 ? applicant.second_choice_area : applicant.first_choice_area);
     if ((activeSession.role === 'director' && activeSession.area !== 'GTH' && activeSession.area !== responsible)) return;
@@ -1091,18 +1089,29 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     box.className = 'mt-6 border-t border-zinc-800 pt-5 flex flex-wrap gap-3';
     const intro = document.createElement('p');
     intro.className = 'w-full text-sm text-zinc-400';
-    intro.textContent = `Evalúa ${responsible}, ${applicant.evaluation_choice === 2 ? 'segunda' : 'primera'} opción. Al rechazar en primera opción, pasará a la segunda si está abierta; de lo contrario se enviará el resultado final.`;
+    intro.textContent = `${responsible} · ${applicant.evaluation_choice === 2 ? '2.ª' : '1.ª'} opción`;
     box.append(intro);
     const statuses = ['submitted', 'profile_validated', 'test_sent', 'test_completed', 'awaiting_second_review', 'interview_eligible', 'interview_scheduled', 'interviewed', 'group_eligible', 'group_scheduled', 'group_completed', 'waitlisted'];
     if (!statuses.includes(applicant.status || '')) return;
+    document.getElementById('applicant-detail-content')!.append(box);
+    let preview: { rejectionLabel: string; transferAvailable: boolean };
+    try {
+      const response = await fetch(`/api/recruitment/admin/applications/${applicant.id}/decision`, { headers: { Authorization: `Bearer ${sessionToken}` }, cache: 'no-store' });
+      preview = await response.json();
+      if (!response.ok) throw new Error('No se pudo consultar el resultado.');
+    } catch { intro.textContent = 'No se pudo cargar la evaluación. Vuelve a abrir la ficha.'; return; }
+    if (!box.isConnected) return;
     const actions = applicant.status === 'submitted' ? [['profile_validated', 'Avanza de etapa'], ['selected', 'Seleccionar'], ['profile_rejected', 'No avanza en esta área']] : [['selected', 'Seleccionar'], ['not_selected', 'No ingresa en esta área']];
-    for (const [status, label] of actions) {
+    for (const [status] of actions) {
       const button = document.createElement('button');
-      button.textContent = label;
-      button.disabled = activeSession.role === 'demo';
-      button.className = 'min-h-11 rounded-xl border border-zinc-700 px-4 py-2 text-sm hover:border-unicode';
+      const negative = status === 'profile_rejected' || status === 'not_selected';
+      const actionLabel = negative ? preview.rejectionLabel : status === 'selected' ? 'Ingresa a UNICODE' : 'Avanza de etapa';
+      button.textContent = actionLabel;
+      button.disabled = activeSession?.role === 'demo';
+      const color = negative ? (preview.transferAvailable ? 'bg-amber-400 text-black hover:bg-amber-300' : 'bg-rose-600 text-white hover:bg-rose-500') : status === 'selected' ? 'bg-unicode text-black hover:bg-unicode-light' : 'bg-sky-600 text-white hover:bg-sky-500';
+      button.className = `min-h-11 rounded-xl px-4 py-2 text-sm font-semibold ${color}`;
       button.addEventListener('click', async () => {
-        const reason = prompt(`${label}: registra el motivo interno. El postulante recibirá un correo cálido con el resultado correspondiente; el motivo interno no se envía.`);
+        const reason = prompt(`${actionLabel} · Motivo interno`);
         if (!reason) return;
         if (reason.trim().length < 3) { alert('Escribe un motivo de al menos tres caracteres.'); return; }
         box.querySelectorAll('button').forEach(button => button.disabled = true);
@@ -1111,13 +1120,12 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
           const result = await response.json();
           if (!response.ok) throw new Error(result.error || 'No se pudo registrar el resultado.');
           closeDetail();
-          showNotice(result.transferred ? 'Pasó a evaluación de su segunda opción. Se encoló el correo correspondiente.' : 'Resultado guardado. Se encoló el correo correspondiente.');
+          showNotice(result.transferred ? 'Pasó a evaluación de su segunda opción. Correo enviado a la cola.' : ['profile_rejected', 'not_selected'].includes(result.application.status) ? 'No ingresa a UNICODE. Correo enviado a la cola.' : 'Resultado guardado. Correo enviado a la cola.');
           await loadApplicants();
         } catch (error) { alert(error instanceof Error ? error.message : 'No se pudo registrar.'); box.querySelectorAll('button').forEach(button => button.disabled = false); }
       });
       box.append(button);
     }
-    document.getElementById('applicant-detail-content')!.append(box);
   }
 
   function renderApplicants(applicants: Applicant[]) {

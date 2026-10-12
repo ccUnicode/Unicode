@@ -42,9 +42,9 @@ export function statusBadgeMarkup(status?: string): string {
   const map: Record<string, { label: string; cls: string }> = {
     submitted: { label: "Inscripción completa", cls: "border-sky-600/60 bg-sky-950/40 text-sky-300" },
     profile_validated: { label: "Avanza a 2.ª etapa", cls: "border-indigo-600/60 bg-indigo-950/40 text-indigo-300" },
-    profile_rejected: { label: "No avanza", cls: "border-rose-600/60 bg-rose-950/40 text-rose-300" },
+    profile_rejected: { label: "No ingresa a UNICODE", cls: "border-rose-600/60 bg-rose-950/40 text-rose-300" },
     selected: { label: "Ingresa a UNICODE", cls: "border-green-500/70 bg-green-950/60 text-green-300 font-semibold" },
-    not_selected: { label: "No ingresa", cls: "border-red-600/60 bg-red-950/40 text-red-300" },
+    not_selected: { label: "No ingresa a UNICODE", cls: "border-red-600/60 bg-red-950/40 text-red-300" },
     draft: { label: "Borrador", cls: "border-zinc-700 bg-zinc-800/40 text-zinc-400" },
     incomplete: { label: "Incompleto", cls: "border-amber-600/60 bg-amber-950/40 text-amber-300" },
     expired: { label: "Plazo vencido", cls: "border-red-800/60 bg-red-950/30 text-red-400" },

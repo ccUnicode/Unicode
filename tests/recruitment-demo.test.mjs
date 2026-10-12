@@ -23,6 +23,7 @@ test('demo never reads production applications, queue or directors and blocks al
   globalThis.fetch = async url => {
     const rpc = new URL(String(url)).pathname.split('/').at(-1);
     calls.push(rpc);
+    if (rpc === 'recruitment_area_evaluation') return Response.json({ areas: [{ area: 'RRPP', closed: false }] });
     assert.equal(rpc, 'recruitment_admin_config', 'No sensitive RPC is allowed');
     return Response.json({ config });
   };
@@ -32,10 +33,12 @@ test('demo never reads production applications, queue or directors and blocks al
   }
   const list = await (await request('applications')).json();
   assert.equal(list.applications.length, 56);
+  const outcome = await (await request(`applications/${list.applications[0].id}/decision`)).json();
+  assert.equal(outcome.rejectionLabel, 'Pasar a RRPP · 2.ª opción');
   assert.ok(list.applications.every(a => a.data.email.endsWith('@example.invalid')));
   assert.equal((await (await request('config')).json()).config.title, config.title);
   const realId = '11111111-1111-4111-8111-111111111111';
-  for (const suffix of [realId, `${realId}/video`]) assert.equal((await request(`applications/${suffix}`)).status, 404);
+  for (const suffix of [realId, `${realId}/video`, `${realId}/decision`]) assert.equal((await request(`applications/${suffix}`)).status, 404);
   for (const path of ['config', 'directors', 'process-emails', 'remind-all', 'purge-tests', 'preview-link', `applications/${realId}/transition`, `applications/${realId}/delete`]) assert.equal((await request(path, 'POST')).status, 403);
   await request('queue'); await request('directors');
   const req = new Request('https://www.ccunicode.org/api/admin-applicants', { headers: { Authorization: `Bearer ${token}` } });
@@ -123,4 +126,26 @@ test('directors view every area while lists include only first-choice or already
   const gthToken = await sessionStore.createToken({ role: 'director', area: 'GTH', email: 'gth@example.invalid' });
   const gthReq = new Request('https://www.ccunicode.org/api/admin-applicants', { headers: { Authorization: `Bearer ${gthToken}` } });
   assert.equal((await (await applicantsRoute.GET({ request: gthReq })).json()).total, 35);
+});
+
+
+test('decision button outcome follows second-choice availability and never offers a third handoff', async () => {
+  const { demoApplications } = await server.ssrLoadModule('/src/lib/recruitment/demo.ts');
+  const application = demoApplications(config).applications[0];
+  let closed = false; let enabled = true; let choice = 1;
+  globalThis.fetch = async (url) => {
+    const rpc = new URL(String(url)).pathname.split('/').at(-1);
+    if (rpc === 'recruitment_admin_config') return Response.json({ config: { ...config, areas: [{ id: 'RRPP', name: 'Relaciones Públicas', enabled, quota: null }] } });
+    if (rpc === 'recruitment_admin_applications') return Response.json({ application: { ...application, evaluationChoice: choice } });
+    if (rpc === 'recruitment_area_evaluation') return Response.json({ areas: [{ area: 'RRPP', closed }] });
+    throw new Error(`Unexpected read ${rpc}`);
+  };
+  const service = await server.ssrLoadModule('/src/lib/recruitment/service.ts');
+  assert.deepEqual(await service.decisionPreview(application.id), { transferAvailable: true, rejectionLabel: 'Pasar a RRPP · 2.ª opción' });
+  closed = true;
+  assert.deepEqual(await service.decisionPreview(application.id), { transferAvailable: false, rejectionLabel: 'No ingresa a UNICODE' });
+  closed = false; enabled = false;
+  assert.equal((await service.decisionPreview(application.id)).transferAvailable, false);
+  enabled = true; choice = 2;
+  assert.equal((await service.decisionPreview(application.id)).transferAvailable, false);
 });

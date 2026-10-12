@@ -150,15 +150,17 @@ async function handle(request: Request, rawPath: string | undefined): Promise<Re
         if (action === 'templates') return json(await recruitment.getTemplates());
         if (action === 'directors') return json({ directors: [] });
         if (action === 'queue') return json({ queue: [{ id: 'demo-email', applicationId: 'dddddddd-dddd-4ddd-8ddd-000000000001', templateKey: 'submitted', status: 'sent', attempts: 1, nextAttemptAt: null, lastError: null, createdAt: '2026-10-01T15:00:00Z', sentAt: '2026-10-01T15:00:00Z' }] });
-        if (action === 'applications') {
+        if (path[1] === 'applications') {
           const config = (await recruitment.adminConfig()).config;
           if (path.length === 2) return json(demoApplications(config));
           const id = recruitment.requireUuid(path[2]);
           if (path.length === 3) return json(demoApplications(config, id));
+          if (path.length === 4 && path[3] === 'decision') return json(await recruitment.decisionPreview(id, true));
           if (path.length === 4 && path[3] === 'video') return json(demoVideo(config, id));
         }
         throw new RecruitmentError('not_found', 'Ruta no disponible en demostración.', 404);
       }
+      if (path[1] === 'applications' && path[3] === 'decision' && path.length === 4 && method === 'GET') return json(await recruitment.decisionPreview(recruitment.requireUuid(path[2])));
       // Every director can play the videos shown in /admin; managing the call stays with GTH.
       if (path[1] === 'applications' && path[3] === 'video' && path.length === 4 && method === 'GET') return json(await recruitment.adminVideo(recruitment.requireUuid(path[2])));
       // Transitioning an application: directors can decide on applicants of their own area; GTH and admin decide on all.
