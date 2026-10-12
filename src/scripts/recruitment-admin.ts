@@ -8,7 +8,7 @@ import type {
   RecruitmentApplication,
   RecruitmentConfig,
 } from "../lib/recruitment/types";
-import { allowedApplicationTransitions } from "../lib/recruitment/types";
+import { evaluationArea, allowedApplicationTransitions } from "../lib/recruitment/types";
 
 let demoMode = false;
 const apiRoot = "/api/recruitment/admin";
@@ -16,7 +16,7 @@ const statusNames: Record<ApplicationStatus, string> = {
   draft: "Borrador",
   submitted: "Inscripción completa",
   profile_validated: "Avanza a la 2.ª etapa",
-  profile_rejected: "No avanza",
+  profile_rejected: "No ingresa a UNICODE",
   test_sent: "Prueba enviada",
   test_completed: "Prueba completada",
   awaiting_second_review: "Pendiente de segunda revisión",
@@ -30,7 +30,7 @@ const statusNames: Record<ApplicationStatus, string> = {
   selected: "Ingresa a UNICODE",
   conditional_selected: "Seleccionado con condición",
   waitlisted: "Lista de espera",
-  not_selected: "No ingresa",
+  not_selected: "No ingresa a UNICODE",
   onboarding_sent: "Inducción enviada",
   buddy_assigned: "Buddy asignado",
   integrated: "Integrado",
@@ -79,10 +79,10 @@ const activeStatuses: StatusMeta[] = [
   },
   {
     key: "profile_rejected",
-    shortLabel: "No avanza",
-    filterLabel: "No avanza · Descartado en 1.ª etapa",
+    shortLabel: "No ingresa a UNICODE",
+    filterLabel: "No ingresa · Evaluación finalizada",
     category: "evaluation",
-    description: "No superó la revisión de perfil en la primera etapa.",
+    description: "Evaluación finalizada.",
   },
   // 2.ª Etapa de evaluación
   {
@@ -193,7 +193,7 @@ let config: RecruitmentConfig | null = null;
 let applications: RecruitmentApplication[] = [];
 let templates: EmailTemplate[] = [];
 let selectedApplication: RecruitmentApplication | null = null;
-let allowedTemplateVariables = ["firstName", "lastName", "title", "status", "resumeUrl"];
+let allowedTemplateVariables = ["firstName", "lastName", "title", "status", "resumeUrl", "evaluationArea", "firstArea", "secondArea"];
 let loadingApplications = false;
 let detailRequest = 0;
 let lastDetailButton: HTMLButtonElement | null = null;
@@ -752,7 +752,7 @@ function renderApplications(): void {
   const matches = applications.filter((application) => {
     const data = application.data;
     return (!status || application.status === status)
-      && (!area || data.firstChoiceArea === area || data.secondChoiceArea === area)
+      && (!area || evaluationArea(application) === area)
       && (!search || `${data.firstName} ${data.lastName} ${data.email}`.toLocaleLowerCase("es").includes(search));
   }).sort((a, b) => compareApplicationOrder(
     { id: a.id, firstChoiceArea: a.data.firstChoiceArea, arrivedAt: a.submittedAt || a.createdAt },
@@ -772,6 +772,7 @@ function renderApplications(): void {
     info.append(node("h3", `${application.data.firstName} ${application.data.lastName}`.trim() || "Borrador sin nombre"));
     info.append(node("p", application.data.email || "Sin correo", "muted"));
     const meta = node("div", undefined, "app-meta");
+    if (application.evaluationChoice === 2) meta.append(node("span", `Evalúa 2.ª opción: ${areaName(evaluationArea(application))}`, "badge"));
     if (application.isTest) meta.append(node("span", "Prueba", "badge test"));
     meta.append(statusBadge(application.status));
     card.classList.add(`tone-${statusTone(application.status)}`);
@@ -831,7 +832,7 @@ function renderDetail(application: RecruitmentApplication): void {
     ["Teléfono", data.phone || "Pendiente"], ["Universidad", data.university || "Pendiente"],
     ["Facultad", data.faculty || "Pendiente"], ["Ingreso", data.admissionTerm || "Pendiente"],
     ["Carrera", data.career || "Pendiente"], ["Ciclo", data.semester === "0" ? "Egresado" : data.semester || "Pendiente"],
-    ["Primera opción", areaName(data.firstChoiceArea)], ["Segunda opción", data.secondChoiceArea ? areaName(data.secondChoiceArea) : "Sin segunda opción"],
+    ["Área que evalúa", areaName(evaluationArea(application))], ["Opción en evaluación", application.evaluationChoice === 2 ? "Segunda opción" : "Primera opción"], ["Primera opción", areaName(data.firstChoiceArea)], ["Segunda opción", data.secondChoiceArea ? areaName(data.secondChoiceArea) : "Sin segunda opción"],
     ["Disponibilidad semanal", data.availabilityHours === null ? "Pendiente" : `${data.availabilityHours} horas`],
     ["Consentimiento", data.consent ? "Aceptado" : "Pendiente"],
     ["Recordatorios", application.remindersOff ? "Los desactivó el postulante" : application.lastReminderAt ? `Activos · último: ${formattedDate(application.lastReminderAt)}` : "Activos"],
@@ -896,7 +897,7 @@ function renderDetail(application: RecruitmentApplication): void {
     : "Aún no hay un video verificado.";
   element("open-video").hidden = !video;
   element("video-access-message").hidden = true;
-  renderStageButtons(application);
+  void renderStageButtons(application);
   const history = element("detail-history");
   history.replaceChildren();
   if (!application.history?.length) history.append(node("li", "No hay cambios registrados.", "muted"));
@@ -912,16 +913,15 @@ function renderDetail(application: RecruitmentApplication): void {
 /** Each result is one button: it changes the status and sends that email to the applicant. Direct decisions (skipping 2nd stage) are allowed. */
 const stageActions: Partial<Record<ApplicationStatus, { title: string; buttons: [ApplicationStatus, string, string][] }>> = {
   submitted: {
-    title: "Evaluación y decisión (1.ª etapa o directa)",
+    title: "Evaluación",
     buttons: [
       ["profile_validated", "Avanza a la 2.ª etapa", "primary"],
       ["selected", "Ingresa directo a UNICODE", "primary"],
-      ["profile_rejected", "No avanza (1.ª etapa)", "secondary"],
-      ["not_selected", "No ingresa", "secondary"],
+      ["profile_rejected", "No avanza en esta área", "secondary"],
     ],
   },
   profile_validated: {
-    title: "Segunda etapa: resultado final",
+    title: "Resultado",
     buttons: [
       ["selected", "Ingresa a UNICODE", "primary"],
       ["not_selected", "No ingresa", "secondary"],
@@ -929,33 +929,37 @@ const stageActions: Partial<Record<ApplicationStatus, { title: string; buttons: 
   },
 };
 
-function renderStageButtons(application: RecruitmentApplication): void {
+async function renderStageButtons(application: RecruitmentApplication): Promise<void> {
   const box = element("stage-buttons");
   box.replaceChildren();
   const stage = stageActions[application.status] ?? (allowedApplicationTransitions[application.status].includes("selected") ? stageActions.profile_validated : undefined);
   element("stage-title").textContent = stage?.title ?? "Resultado";
-  element("stage-hint").textContent = stage
-    ? "Cada botón cambia el estado y le envía al postulante el correo de ese resultado. No se puede deshacer."
-    : ["draft", "incomplete"].includes(application.status)
-      ? "Aún no completa su inscripción. Le recordaremos terminarla si deja pasar el tiempo configurado sin avanzar."
-      : `Estado actual: ${statusNames[application.status] || application.status}. Ya no quedan resultados por enviar.`;
-  for (const [status, label, kind] of stage?.buttons ?? []) {
-    const button = node("button", label, kind);
+  element("stage-hint").textContent = stage ? "" : ["draft", "incomplete"].includes(application.status) ? "Inscripción pendiente" : "Evaluación finalizada";
+  let preview: { rejectionLabel: string; transferAvailable: boolean };
+  if (!stage) return;
+  try { preview = await request(`/applications/${application.id}/decision`); }
+  catch { element('stage-hint').textContent = 'No se pudo cargar la evaluación. Vuelve a abrir la ficha.'; return; }
+  if (selectedApplication?.id !== application.id) return;
+  for (const [status, label] of stage?.buttons ?? []) {
+    const negative = status === 'profile_rejected' || status === 'not_selected';
+    const actionLabel = negative ? preview.rejectionLabel : label;
+    const tone = negative ? (preview.transferAvailable ? 'decision-transfer' : 'decision-reject') : status === 'selected' ? 'primary' : 'decision-advance';
+    const button = node('button', actionLabel, tone);
     button.type = "button";
     button.disabled = demoMode;
-    button.addEventListener("click", () => void sendResult(application, status, label));
+    button.addEventListener("click", () => void sendResult(application, status, actionLabel));
     box.append(button);
   }
 }
 
 async function sendResult(application: RecruitmentApplication, status: ApplicationStatus, label: string): Promise<void> {
   const name = `${application.data.firstName} ${application.data.lastName}`.trim();
-  if (!confirm(`«${label}» para ${name}. Se le enviará el correo de este resultado a ${application.data.email}. ¿Continuar?`)) return;
+  if (!confirm(`«${label}» para ${name}. Se notificará a ${application.data.email}. ¿Confirmar?`)) return;
   const buttons = [...element("stage-buttons").querySelectorAll("button")];
   buttons.forEach((button) => { button.disabled = true; });
   try {
-    await request(`/applications/${encodeURIComponent(application.id)}/transition`, { method: "POST", body: JSON.stringify({ status, reason: `Resultado enviado: ${label}.` }) });
-    showMessage(`Listo: ${label}. El correo quedó en camino a ${application.data.email}.`);
+    const result = await request<{ application: RecruitmentApplication; transferred: boolean }>(`/applications/${encodeURIComponent(application.id)}/transition`, { method: "POST", body: JSON.stringify({ status, reason: `Resultado enviado: ${label}.`, expectedStatus: application.status, expectedChoice: application.evaluationChoice || 1 }) });
+    showMessage(result.transferred ? `Pasó a segunda opción: ${areaName(evaluationArea(result.application))}. Se encoló el correo para ${application.data.email}.` : `Listo: ${['profile_rejected', 'not_selected'].includes(result.application.status) ? 'No ingresa a UNICODE' : label}. Correo en cola.`);
     await loadApplications();
     await loadDetail(application.id);
   } catch (error) {
@@ -1010,9 +1014,11 @@ const templateInfo: Record<string, [string, string]> = {
   incomplete: ["Recordatorio: falta completar", "Si el borrador pasa las horas de inactividad configuradas sin avanzar."],
   submitted: ["Inscripción completa", "Automático, al confirmar el envío de la postulación."],
   profile_validated: ["Avanza a la 2.ª etapa", "Botón «Avanza a la 2.ª etapa» en el detalle del postulante."],
-  profile_rejected: ["No avanza", "Botón «No avanza» en el detalle del postulante."],
+  profile_rejected: ["No avanza (histórico)", "Solo correos pendientes del flujo anterior. Los nuevos rechazos usan el pase o el resultado final."],
+  second_option: ["Pase a segunda opción", "Cuando la primera área rechaza y la segunda está abierta. La postulación sigue en evaluación."],
+  second_profile_validated: ["Avanza en segunda opción", "Cuando la segunda área aprueba su perfil para continuar a la siguiente etapa."],
   selected: ["Ingresa a UNICODE", "Botón «Ingresa a UNICODE» en el detalle del postulante."],
-  not_selected: ["No ingresa", "Botón «No ingresa» en el detalle del postulante."],
+  not_selected: ["Resultado final sin selección", "Cuando no hay segunda opción disponible, o cuando la segunda área tampoco selecciona."],
 };
 const templateOrder = Object.keys(templateInfo);
 function templateName(key: string): string {
@@ -1236,7 +1242,7 @@ async function initialize(): Promise<void> {
     const { session } = await request<{ session: { role: string } }>("/session");
     demoMode = session.role === 'demo';
     if (demoMode) {
-      showMessage("Demostración: postulantes, historial, videos y correos ficticios. Configuración real en modo consulta; no se modifica ni se envía nada.");
+      showMessage("Demo · Datos ficticios · Solo lectura");
       document.querySelectorAll<HTMLButtonElement>('button').forEach(button => {
         if (['preview-create', 'preview-disable', 'purge-tests', 'delete-application', 'process-emails', 'remind-all'].includes(button.id)) button.disabled = true;
       });

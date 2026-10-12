@@ -115,7 +115,7 @@ export function validateTemplates(input: unknown): EmailTemplate[] {
     if (/[\r\n]/.test(result.subject)) throw new RecruitmentError('invalid_template', 'El asunto no debe contener saltos de línea.');
     for (const match of `${result.subject} ${result.body}`.matchAll(/{{\s*([^}]+)\s*}}/g)) {
       const name = match[1].trim();
-      if (!['firstName', 'lastName', 'title', 'status', 'resumeUrl'].includes(name)) throw new RecruitmentError('invalid_template', `Variable desconocida: ${name}.`);
+      if (!['firstName', 'lastName', 'title', 'status', 'resumeUrl', 'evaluationArea', 'firstArea', 'secondArea'].includes(name)) throw new RecruitmentError('invalid_template', `Variable desconocida: ${name}.`);
       if (name === 'resumeUrl' && !['resume', 'incomplete'].includes(result.key)) throw new RecruitmentError('invalid_template', 'El enlace personal solo está disponible en las plantillas de borrador.');
     }
     return result;

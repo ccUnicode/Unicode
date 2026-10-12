@@ -40,7 +40,8 @@ export async function GET({ request }: { request: Request }) {
       .map((application) => {
         const d = application.data;
         return {
-          id: application.id, status: application.status,
+          id: application.id, status: application.status, evaluation_choice: application.evaluationChoice || 1,
+          evaluation_area: application.evaluationArea || (application.evaluationChoice === 2 ? d.secondChoiceArea : d.firstChoiceArea),
           first_name: d.firstName, last_name: d.lastName, email: d.email, phone: d.phone,
           university: d.university, faculty: d.faculty, career: d.career, admission_term: d.admissionTerm,
           university_semester: d.semester, availability_hours: d.availabilityHours,
@@ -55,9 +56,8 @@ export async function GET({ request }: { request: Request }) {
       });
 
     if (area) {
-      data = data.filter((p) => option === 'first' ? p.first_choice_area === area
-        : option === 'second' ? p.second_choice_area === area
-        : p.first_choice_area === area || p.second_choice_area === area);
+      data = data.filter((p) => p.evaluation_area === area && (option === 'first' ? p.evaluation_choice === 1
+        : option === 'second' ? p.evaluation_choice === 2 : true));
     }
     data.sort((a, b) => compareApplicationOrder(
       { id: a.id, firstChoiceArea: a.first_choice_area, arrivedAt: a.created_at! },

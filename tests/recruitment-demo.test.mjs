@@ -23,6 +23,7 @@ test('demo never reads production applications, queue or directors and blocks al
   globalThis.fetch = async url => {
     const rpc = new URL(String(url)).pathname.split('/').at(-1);
     calls.push(rpc);
+    if (rpc === 'recruitment_area_evaluation') return Response.json({ areas: [{ area: 'RRPP', closed: false }] });
     assert.equal(rpc, 'recruitment_admin_config', 'No sensitive RPC is allowed');
     return Response.json({ config });
   };
@@ -32,15 +33,24 @@ test('demo never reads production applications, queue or directors and blocks al
   }
   const list = await (await request('applications')).json();
   assert.equal(list.applications.length, 56);
+  const outcome = await (await request(`applications/${list.applications[0].id}/decision`)).json();
+  assert.equal(outcome.rejectionLabel, 'Pasar a RRPP · 2.ª opción');
   assert.ok(list.applications.every(a => a.data.email.endsWith('@example.invalid')));
   assert.equal((await (await request('config')).json()).config.title, config.title);
   const realId = '11111111-1111-4111-8111-111111111111';
-  for (const suffix of [realId, `${realId}/video`]) assert.equal((await request(`applications/${suffix}`)).status, 404);
+  for (const suffix of [realId, `${realId}/video`, `${realId}/decision`]) assert.equal((await request(`applications/${suffix}`)).status, 404);
   for (const path of ['config', 'directors', 'process-emails', 'remind-all', 'purge-tests', 'preview-link', `applications/${realId}/transition`, `applications/${realId}/delete`]) assert.equal((await request(path, 'POST')).status, 403);
   await request('queue'); await request('directors');
   const req = new Request('https://www.ccunicode.org/api/admin-applicants', { headers: { Authorization: `Bearer ${token}` } });
   assert.equal((await (await applicantsRoute.GET({ request: req })).json()).total, 35);
-  assert.equal((await metricsRoute.GET({ request: req })).status, 200);
+  const metrics = await (await metricsRoute.GET({ request: req })).json();
+  assert.equal(metrics.areas.reduce((sum, area) => sum + area.first, 0), 28);
+  assert.equal(metrics.areas.reduce((sum, area) => sum + area.second, 0), 7);
+  const secondReq = new Request('https://www.ccunicode.org/api/admin-applicants?area=ID&option=second', { headers: { Authorization: `Bearer ${token}` } });
+  const second = await (await applicantsRoute.GET({ request: secondReq })).json();
+  assert.equal(second.total, 1);
+  assert.equal(second.data[0].evaluation_choice, 2);
+  assert.equal(second.data[0].evaluation_area, 'ID');
   assert.ok(calls.length > 0);
 });
 
@@ -52,4 +62,90 @@ test('rotating or disabling demo password revokes existing demo sessions', async
   delete process.env.ADMIN_DEMO_PASSWORD;
   assert.equal(await sessionStore.verify(token), null);
   process.env.ADMIN_DEMO_PASSWORD = 'test-demo-secret';
+});
+
+test('director area closures cannot target another area; decision scope and snapshot reach SQL', async () => {
+  const calls = [];
+  globalThis.fetch = async (url, init) => {
+    const rpc = new URL(String(url)).pathname.split('/').at(-1);
+    const args = JSON.parse(init.body);
+    calls.push({ rpc, args });
+    if (rpc === 'recruitment_transition') return Response.json({ application: {}, transferred: true });
+    assert.equal(rpc, 'recruitment_area_evaluation');
+    return Response.json({ areas: [{ area: 'ID', closed: true }] });
+  };
+  const token = await sessionStore.createToken({ role: 'director', area: 'ID', email: 'id@example.invalid' });
+  async function request(path, method, data) {
+    return route.ALL({ params: { path: `admin/${path}` }, request: new Request(`https://www.ccunicode.org/api/recruitment/admin/${path}`, { method, headers: { Authorization: `Bearer ${token}`, Origin: 'https://www.ccunicode.org', 'Content-Type': 'application/json' }, body: JSON.stringify(data) }) });
+  }
+  assert.equal((await request('area-evaluation', 'PUT', { area: 'GTH', closed: true })).status, 403);
+  assert.equal(calls.length, 0);
+  assert.equal((await request('area-evaluation', 'PUT', { area: 'ID', closed: true })).status, 200);
+  assert.equal(calls[0].args.p_actor, 'id@example.invalid');
+  assert.equal((await request('applications/11111111-1111-4111-8111-111111111111/transition', 'POST', { status: 'not_selected', reason: 'No encaja con el área.', expectedStatus: 'submitted', expectedChoice: 1 })).status, 200);
+  assert.equal(calls[1].args.p_scope_area, 'ID');
+  assert.equal(calls[1].args.p_expected_choice, 1);
+  assert.equal(calls[1].args.p_expected_status, 'submitted');
+  assert.equal((await request('applications/11111111-1111-4111-8111-111111111111/transition', 'POST', { status: 'not_selected', reason: 'Ficha sin versión.' })).status, 400);
+  assert.equal(calls.length, 2);
+});
+
+
+test('directors view every area while lists include only first-choice or already-transferred applicants', async () => {
+  const { demoApplications } = await server.ssrLoadModule('/src/lib/recruitment/demo.ts');
+  const applications = demoApplications(config).applications.map(a => ({ ...a, video: a.video ? { ...a.video, provider: 'drive' } : null }));
+  globalThis.fetch = async (url, init) => {
+    const rpc = new URL(String(url)).pathname.split('/').at(-1);
+    if (rpc === 'recruitment_admin_config') return Response.json({ config });
+    if (rpc === 'recruitment_admin_applications') {
+      const { p_id } = JSON.parse(init.body);
+      return Response.json(p_id ? { application: applications.find(a => a.id === p_id) } : { applications });
+    }
+    if (rpc === 'recruitment_area_evaluation') return Response.json({ areas: [{ area: 'ID', closed: false }, { area: 'GTH', closed: false }] });
+    throw new Error(`Unexpected RPC ${rpc}`);
+  };
+  const token = await sessionStore.createToken({ role: 'director', area: 'ID', email: 'id@example.invalid' });
+  const request = path => new Request(`https://www.ccunicode.org${path}`, { headers: { Authorization: `Bearer ${token}` } });
+  const list = await (await applicantsRoute.GET({ request: request('/api/admin-applicants') })).json();
+  assert.equal(list.total, 35);
+  const idList = await (await applicantsRoute.GET({ request: request('/api/admin-applicants?area=ID') })).json();
+  assert.equal(idList.total, 5); assert.ok(idList.data.every(a => a.evaluation_area === 'ID'));
+  assert.equal(idList.data.filter(a => a.evaluation_choice === 1).length, 4);
+  assert.equal(idList.data.filter(a => a.evaluation_choice === 2).length, 1);
+  assert.ok(idList.data.every(a => a.first_choice_area === 'ID' || a.evaluation_choice === 2));
+  const preferenceOnly = applications.find(a => a.submittedAt && a.data.secondChoiceArea === 'ID' && a.evaluationChoice === 1);
+  assert.ok(preferenceOnly); assert.ok(!idList.data.some(a => a.id === preferenceOnly.id));
+  assert.equal((await applicantsRoute.GET({ request: request('/api/admin-applicants?area=GTH') })).status, 200);
+  const metrics = await (await metricsRoute.GET({ request: request('/api/admin-metrics') })).json();
+  assert.equal(metrics.totals.submitted, 35); assert.equal(metrics.areas.length, 7);
+  const other = applications.find(a => a.evaluationArea === 'GTH' && a.video);
+  const response = await route.ALL({ params: { path: `admin/applications/${other.id}/video` }, request: request(`/api/recruitment/admin/applications/${other.id}/video`) });
+  assert.equal(response.status, 200);
+  const areas = await (await route.ALL({ params: { path: 'admin/area-evaluation' }, request: request('/api/recruitment/admin/area-evaluation') })).json();
+  assert.deepEqual(areas.areas.map(a => a.area), ['ID', 'GTH']);
+  const gthToken = await sessionStore.createToken({ role: 'director', area: 'GTH', email: 'gth@example.invalid' });
+  const gthReq = new Request('https://www.ccunicode.org/api/admin-applicants', { headers: { Authorization: `Bearer ${gthToken}` } });
+  assert.equal((await (await applicantsRoute.GET({ request: gthReq })).json()).total, 35);
+});
+
+
+test('decision button outcome follows second-choice availability and never offers a third handoff', async () => {
+  const { demoApplications } = await server.ssrLoadModule('/src/lib/recruitment/demo.ts');
+  const application = demoApplications(config).applications[0];
+  let closed = false; let enabled = true; let choice = 1;
+  globalThis.fetch = async (url) => {
+    const rpc = new URL(String(url)).pathname.split('/').at(-1);
+    if (rpc === 'recruitment_admin_config') return Response.json({ config: { ...config, areas: [{ id: 'RRPP', name: 'Relaciones Públicas', enabled, quota: null }] } });
+    if (rpc === 'recruitment_admin_applications') return Response.json({ application: { ...application, evaluationChoice: choice } });
+    if (rpc === 'recruitment_area_evaluation') return Response.json({ areas: [{ area: 'RRPP', closed }] });
+    throw new Error(`Unexpected read ${rpc}`);
+  };
+  const service = await server.ssrLoadModule('/src/lib/recruitment/service.ts');
+  assert.deepEqual(await service.decisionPreview(application.id), { transferAvailable: true, rejectionLabel: 'Pasar a RRPP · 2.ª opción' });
+  closed = true;
+  assert.deepEqual(await service.decisionPreview(application.id), { transferAvailable: false, rejectionLabel: 'No ingresa a UNICODE' });
+  closed = false; enabled = false;
+  assert.equal((await service.decisionPreview(application.id)).transferAvailable, false);
+  enabled = true; choice = 2;
+  assert.equal((await service.decisionPreview(application.id)).transferAvailable, false);
 });

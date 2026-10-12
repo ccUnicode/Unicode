@@ -2,6 +2,8 @@
 export interface Applicant {
   id: string;
   status?: string;
+  evaluation_choice?: number;
+  evaluation_area?: string;
   first_name: string;
   last_name: string;
   email: string;
@@ -40,9 +42,9 @@ export function statusBadgeMarkup(status?: string): string {
   const map: Record<string, { label: string; cls: string }> = {
     submitted: { label: "Inscripción completa", cls: "border-sky-600/60 bg-sky-950/40 text-sky-300" },
     profile_validated: { label: "Avanza a 2.ª etapa", cls: "border-indigo-600/60 bg-indigo-950/40 text-indigo-300" },
-    profile_rejected: { label: "No avanza", cls: "border-rose-600/60 bg-rose-950/40 text-rose-300" },
+    profile_rejected: { label: "No ingresa a UNICODE", cls: "border-rose-600/60 bg-rose-950/40 text-rose-300" },
     selected: { label: "Ingresa a UNICODE", cls: "border-green-500/70 bg-green-950/60 text-green-300 font-semibold" },
-    not_selected: { label: "No ingresa", cls: "border-red-600/60 bg-red-950/40 text-red-300" },
+    not_selected: { label: "No ingresa a UNICODE", cls: "border-red-600/60 bg-red-950/40 text-red-300" },
     draft: { label: "Borrador", cls: "border-zinc-700 bg-zinc-800/40 text-zinc-400" },
     incomplete: { label: "Incompleto", cls: "border-amber-600/60 bg-amber-950/40 text-amber-300" },
     expired: { label: "Plazo vencido", cls: "border-red-800/60 bg-red-950/30 text-red-400" },
@@ -80,7 +82,7 @@ export function applicantListMarkup(applicants: Applicant[], area: string): stri
         <div class="min-w-0">
           <div class="flex flex-wrap items-center gap-2">
             <h3 class="font-semibold text-base leading-6 text-white [overflow-wrap:anywhere]">${escape(applicantName(applicant))}</h3>
-            ${statusBadgeMarkup(applicant.status)}
+            ${statusBadgeMarkup(applicant.status)}${applicant.evaluation_choice === 2 ? `<span class="text-[12px] text-sky-300">En evaluación de 2da opción · ${escape(applicant.evaluation_area)}</span>` : ""}
           </div>
           <p class="text-zinc-400 text-[14px] leading-5 mt-1 [overflow-wrap:anywhere]">${escape(applicant.career) || "Carrera no indicada"}</p>
           <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-zinc-500 text-[12px] mt-1.5"><span class="text-zinc-400">${escape(semester(applicant))}</span><span class="text-zinc-700" aria-hidden="true">·</span><span><span class="sr-only">Registrado el </span>${escape(applicantDate(applicant.created_at))}</span></p>
@@ -127,7 +129,7 @@ export function applicantDetailMarkup(applicant: Applicant): string {
   return `<section aria-label="Preferencias y video" class="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 sm:p-5">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <dl class="flex flex-wrap gap-6 items-center">
-          ${applicant.status ? `<div class="min-w-0"><dt class="text-zinc-500 text-[12px] mb-1.5">Estado</dt><dd>${statusBadgeMarkup(applicant.status)}</dd></div>` : ""}
+          ${applicant.status ? `<div class="min-w-0"><dt class="text-zinc-500 text-[12px] mb-1.5">Estado</dt><dd>${statusBadgeMarkup(applicant.status)}${applicant.evaluation_choice === 2 ? `<span class="text-[12px] text-sky-300">En evaluación de 2da opción · ${escape(applicant.evaluation_area)}</span>` : ""}</dd></div>` : ""}
           ${information("Primera opción", applicant.first_choice_area)}
           ${information("Segunda opción", applicant.second_choice_area || "No seleccionada")}
         </dl>

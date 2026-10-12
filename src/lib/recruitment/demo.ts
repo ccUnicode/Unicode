@@ -10,6 +10,7 @@ export function demoApplications(config: RecruitmentConfig, id?: string) {
     const submittedAt = ['draft', 'incomplete', 'expired'].includes(status) ? null : createdAt;
     return {
       id: `dddddddd-dddd-4ddd-8ddd-${String(number).padStart(12, '0')}`, status,
+      evaluationChoice: index === 1 ? 2 : 1, evaluationArea: index === 1 ? AREA_IDS[(areaIndex + 1) % AREA_IDS.length] : area,
       data: { firstName: ['Lucía', 'Mateo', 'Valeria', 'Diego', 'Camila', 'Daniel', 'Sofía', 'Alex'][index], lastName: `Ejemplo ${number}`,
         email: `postulante-${number}@example.invalid`, phone: '', university: 'UNI', faculty: 'FIIS', career: 'Ingeniería de Sistemas',
         admissionTerm: '2024-1', semester: '6', firstChoiceArea: area, secondChoiceArea: AREA_IDS[(areaIndex + 1) % AREA_IDS.length],

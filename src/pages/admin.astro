@@ -119,6 +119,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 pt-7 sm:pt-10 pb-12">
       <p id="admin-notice" role="status" hidden class="mb-6 flex items-start justify-between gap-4 rounded-xl border border-zinc-700 bg-zinc-900/60 px-4 py-3 text-[14px] text-zinc-200"><span></span><button id="admin-notice-close" type="button" aria-label="Cerrar aviso" class="shrink-0 text-zinc-500 hover:text-white cursor-pointer">✕</button></p>
+
       <div class="flex flex-wrap items-start justify-between gap-4 mb-7">
         <div class="min-w-0 flex-1">
           <p class="text-zinc-500 text-[12px] font-medium tracking-widest uppercase mb-2">Convocatoria UNICODE</p>
@@ -278,6 +279,15 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
 
       <div id="applicants-list" class="hidden space-y-3" aria-busy="false"></div>
       </div>
+      <details class="mt-10 rounded-2xl border border-zinc-800 bg-zinc-900/30 group" id="area-management">
+        <summary class="min-h-16 cursor-pointer list-none px-5 py-5 flex items-center justify-between gap-4 focus-visible:outline-2 focus-visible:outline-unicode rounded-2xl">
+          <div><span class="text-white font-semibold">Gestión de convocatoria</span><p class="text-sm text-zinc-500 mt-1">Pases de segunda opción</p></div>
+          <svg class="w-5 h-5 text-zinc-500 group-open:rotate-180 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+        </summary>
+        <div class="px-5 pb-5 border-t border-zinc-800/60 pt-5">
+          <div id="area-evaluation-control" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"></div>
+        </div>
+      </details>
     </main>
 
     <dialog id="applicant-detail" aria-labelledby="applicant-detail-title" class="fixed inset-y-0 left-auto right-0 m-0 w-full sm:max-w-[680px] max-w-full h-dvh max-h-dvh overflow-y-auto overscroll-contain border-0 border-l border-zinc-800 bg-[#0c0c0e] text-white p-0 backdrop:bg-black/70 backdrop:backdrop-blur-sm scheme-dark">
@@ -298,6 +308,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
 </Layout>
 
 <style>
+  .area-tab[hidden] { display: none !important; }
   .area-tab[data-count]::after {
     content: attr(data-count);
     margin-left: 0.45rem;
@@ -485,6 +496,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     document.getElementById("applicant-detail-title")!.textContent = applicantName(applicant);
     document.getElementById("applicant-detail-date")!.textContent = `Registrado el ${applicantDate(applicant.created_at, true)}`;
     document.getElementById("applicant-detail-content")!.innerHTML = applicantDetailMarkup(applicant);
+    void renderAreaDecision(applicant);
     detailDialog.showModal();
     detailDialog.scrollTop = 0;
     document.documentElement.style.overflow = "hidden";
@@ -536,6 +548,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   const codeInput = document.getElementById("director-code") as HTMLInputElement;
   const loginInfo = document.getElementById("login-info")!;
   const loginIntro = document.getElementById("login-intro")!;
+  let activeSession: Session | null = null;
   type Session = { role: "admin" } | { role: "demo" } | { role: "director"; email: string; area: string; name?: string };
 
   const showError = (text: string) => { loginError.textContent = text; loginError.classList.remove("hidden"); loginInfo.classList.add("hidden"); };
@@ -556,13 +569,15 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   document.getElementById("toggle-password")!.addEventListener("click", () => { emailInput.value = ""; showStep("email"); });
   document.getElementById("change-email")!.addEventListener("click", () => { codeInput.value = ""; showStep("email"); });
 
-  /** Every director sees all areas, starting on their own; GTH and the super admin also reach the GTH panel. */
+  /** All directors can view every area; GTH and the super admin also reach the GTH panel. */
   function applySession(session: Session) {
     const managesCall = session.role === "admin" || session.role === "demo" || session.area === "GTH";
     document.getElementById("gth-panel-link")!.classList.toggle("hidden", !managesCall);
     const user = document.getElementById("session-user")!;
+    user.classList.toggle("hidden", session.role !== "demo");
     user.textContent = session.role === "director" ? session.email : session.role === "demo" ? "Demostración · datos ficticios" : "Super admin";
     if (session.role === "director" && areaNames[session.area]) currentArea = session.area;
+    document.querySelectorAll<HTMLElement>('.area-tab').forEach(tab => { delete tab.dataset.count; tab.hidden = false; });
     currentView = "summary";
     markActiveTab("summary");
     document.getElementById("area-label")!.textContent = areaNames[currentArea] || currentArea;
@@ -585,17 +600,32 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   }
   function startSession(token: string, session: Session) {
     sessionToken = token;
+    activeSession = session;
     storedToken.set(token);
     loginScreen.classList.add("hidden");
     dashboardScreen.classList.remove("hidden");
+    document.getElementById("admin-notice")!.hidden = true;
     applySession(session);
     // Coming back from the GTH panel's sign-in: return there if this session may manage the call.
     const params = new URLSearchParams(location.search);
     const managesCall = session.role === "admin" || session.role === "demo" || session.area === "GTH";
     if (params.get("volver") === "gth" && managesCall) { location.replace("/admin/recruitment"); return; }
-    if (params.has("sin_gth") || params.get("volver") === "gth") showNotice("El Panel GTH es solo para directores de GTH. Aquí puedes ver todas las postulaciones.");
+    if (params.has("sin_gth") || params.get("volver") === "gth") showNotice("El Panel GTH es solo para directores de GTH. Aquí puedes ver todas las áreas; solo puedes gestionar la tuya.");
     if (location.search) history.replaceState(null, "", "/admin");
+    if (session.role === "demo") showNotice("Demo · Datos ficticios · Solo lectura");
     showView("summary");
+    void loadAreaEvaluation();
+  }
+  function clearDisplayedData() {
+    activeSession = null;
+    summaryVersion++; loadVersion++;
+    applicantsCache = []; displayedApplicants = [];
+    document.getElementById('summary-content')!.replaceChildren();
+    document.getElementById('applicants-list')!.replaceChildren();
+    document.getElementById('applicant-detail-content')!.replaceChildren();
+    document.getElementById('area-evaluation-control')!.replaceChildren();
+    document.querySelectorAll<HTMLElement>('.area-tab').forEach(tab => delete tab.dataset.count);
+    if (detailDialog.open) closeDetail();
   }
   function showNotice(text: string) {
     const notice = document.getElementById("admin-notice")!;
@@ -683,6 +713,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   }
   function expireSession() {
     sessionToken = "";
+    clearDisplayedData();
     storedToken.clear();
     dashboardScreen.classList.add("hidden");
     loginScreen.classList.remove("hidden");
@@ -719,6 +750,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     }
 
     sessionToken = "";
+    clearDisplayedData();
     applicantsCache = [];
     displayedApplicants = [];
     await fadeOut(dashboardScreen);
@@ -839,7 +871,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
       content.classList.remove("hidden");
       for (const area of (data as Metrics).areas) {
         const tab = document.querySelector<HTMLElement>(`.area-tab[data-area="${area.id}"]`);
-        if (tab) tab.dataset.count = String(area.first);
+        if (tab) tab.dataset.count = String(area.first + area.second);
       }
     } catch (error) {
       if (version !== summaryVersion) return;
@@ -1011,6 +1043,91 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     } finally { button.disabled = false; }
   });
 
+  async function loadAreaEvaluation() {
+    const panel = document.getElementById('area-evaluation-control')!;
+    panel.replaceChildren();
+    if (!activeSession) return;
+    const requestToken = sessionToken;
+    try {
+      const response = await fetch('/api/recruitment/admin/area-evaluation', { headers: { Authorization: `Bearer ${sessionToken}` }, cache: 'no-store' });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'No se pudo consultar el cierre por área.');
+      if (requestToken !== sessionToken || !activeSession) return;
+      for (const row of result.areas as { area: string; closed: boolean }[]) {
+        const card = document.createElement('section');
+        card.className = 'rounded-xl border border-zinc-800 bg-zinc-950/50 p-4';
+        const title = document.createElement('h3'); title.className = 'font-medium text-white text-sm'; title.textContent = areaNames[row.area] || row.area;
+        const status = document.createElement('p'); status.className = row.closed ? 'text-sm text-zinc-500 mt-2 mb-4' : 'text-sm text-unicode mt-2 mb-4'; status.textContent = row.closed ? 'Recepción cerrada' : 'Recibe nuevos postulantes';
+        card.append(title, status);
+        const button = document.createElement('button');
+        button.className = row.closed ? 'min-h-11 rounded-lg px-4 py-2 text-sm font-semibold bg-unicode text-black hover:bg-unicode-light disabled:opacity-50' : 'min-h-11 rounded-lg px-4 py-2 text-sm font-semibold bg-rose-600 text-white hover:bg-rose-500 disabled:opacity-50';
+        const readOnly = activeSession.role === 'demo' || (activeSession.role === 'director' && activeSession.area !== 'GTH' && row.area !== activeSession.area);
+        button.disabled = readOnly;
+        button.textContent = row.closed ? 'Reabrir recepción' : 'Cerrar recepción';
+        button.setAttribute('aria-label', `${button.textContent} de ${areaNames[row.area] || row.area}`);
+        button.addEventListener('click', async () => {
+          if (!confirm(`${row.closed ? 'Reabrir' : 'Cerrar'} recepción en ${row.area}. ¿Confirmar?`)) return;
+          button.disabled = true;
+          try {
+            const response = await fetch('/api/recruitment/admin/area-evaluation', { method: 'PUT', headers: { Authorization: `Bearer ${sessionToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ area: row.area, closed: !row.closed }) });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'No se pudo cambiar el cierre del área.');
+            await loadAreaEvaluation();
+          } catch (error) { showNotice(error instanceof Error ? error.message : 'No se pudo guardar.'); button.disabled = false; }
+        });
+        card.append(button);
+        panel.append(card);
+      }
+    } catch (error) { showNotice(error instanceof Error ? error.message : 'No se pudo cargar el cierre por área.'); }
+  }
+
+  async function renderAreaDecision(applicant: Applicant) {
+    if (!activeSession) return;
+    const responsible = applicant.evaluation_area || (applicant.evaluation_choice === 2 ? applicant.second_choice_area : applicant.first_choice_area);
+    if ((activeSession.role === 'director' && activeSession.area !== 'GTH' && activeSession.area !== responsible)) return;
+    const box = document.createElement('section');
+    box.className = 'mt-6 border-t border-zinc-800 pt-5 flex flex-wrap gap-3';
+    const intro = document.createElement('p');
+    intro.className = 'w-full text-sm text-zinc-400';
+    intro.textContent = `${responsible} · ${applicant.evaluation_choice === 2 ? '2.ª' : '1.ª'} opción`;
+    box.append(intro);
+    const statuses = ['submitted', 'profile_validated', 'test_sent', 'test_completed', 'awaiting_second_review', 'interview_eligible', 'interview_scheduled', 'interviewed', 'group_eligible', 'group_scheduled', 'group_completed', 'waitlisted'];
+    if (!statuses.includes(applicant.status || '')) return;
+    document.getElementById('applicant-detail-content')!.append(box);
+    let preview: { rejectionLabel: string; transferAvailable: boolean };
+    try {
+      const response = await fetch(`/api/recruitment/admin/applications/${applicant.id}/decision`, { headers: { Authorization: `Bearer ${sessionToken}` }, cache: 'no-store' });
+      preview = await response.json();
+      if (!response.ok) throw new Error('No se pudo consultar el resultado.');
+    } catch { intro.textContent = 'No se pudo cargar la evaluación. Vuelve a abrir la ficha.'; return; }
+    if (!box.isConnected) return;
+    const actions = applicant.status === 'submitted' ? [['profile_validated', 'Avanza de etapa'], ['selected', 'Seleccionar'], ['profile_rejected', 'No avanza en esta área']] : [['selected', 'Seleccionar'], ['not_selected', 'No ingresa en esta área']];
+    for (const [status] of actions) {
+      const button = document.createElement('button');
+      const negative = status === 'profile_rejected' || status === 'not_selected';
+      const actionLabel = negative ? preview.rejectionLabel : status === 'selected' ? 'Ingresa a UNICODE' : 'Avanza de etapa';
+      button.textContent = actionLabel;
+      button.disabled = activeSession?.role === 'demo';
+      const color = negative ? (preview.transferAvailable ? 'bg-amber-400 text-black hover:bg-amber-300' : 'bg-rose-600 text-white hover:bg-rose-500') : status === 'selected' ? 'bg-unicode text-black hover:bg-unicode-light' : 'bg-sky-600 text-white hover:bg-sky-500';
+      button.className = `min-h-11 rounded-xl px-4 py-2 text-sm font-semibold ${color}`;
+      button.addEventListener('click', async () => {
+        const reason = prompt(`${actionLabel} · Motivo interno`);
+        if (!reason) return;
+        if (reason.trim().length < 3) { alert('Escribe un motivo de al menos tres caracteres.'); return; }
+        box.querySelectorAll('button').forEach(button => button.disabled = true);
+        try {
+          const response = await fetch(`/api/recruitment/admin/applications/${applicant.id}/transition`, { method: 'POST', headers: { Authorization: `Bearer ${sessionToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status, reason, expectedStatus: applicant.status, expectedChoice: applicant.evaluation_choice || 1 }) });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'No se pudo registrar el resultado.');
+          closeDetail();
+          showNotice(result.transferred ? 'Pasó a evaluación de su segunda opción. Correo enviado a la cola.' : ['profile_rejected', 'not_selected'].includes(result.application.status) ? 'No ingresa a UNICODE. Correo enviado a la cola.' : 'Resultado guardado. Correo enviado a la cola.');
+          await loadApplicants();
+        } catch (error) { alert(error instanceof Error ? error.message : 'No se pudo registrar.'); box.querySelectorAll('button').forEach(button => button.disabled = false); }
+      });
+      box.append(button);
+    }
+  }
+
   function renderApplicants(applicants: Applicant[]) {
     document.getElementById("applicants-list")!.innerHTML = applicantListMarkup(applicants, currentArea);
   }
@@ -1018,108 +1135,24 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     loadApplicants();
   });
 
-  // ===== EXPORT EXCEL (PRETTY) =====
-  document.getElementById("export-btn")?.addEventListener("click", () => {
-    if (displayedApplicants.length === 0) {
-      alert("No hay datos para exportar.");
-      return;
-    }
-
-    const headers = [
-      "Nombres",
-      "Apellidos",
-      "Correo",
-      "Teléfono",
-      "Universidad",
-      "Facultad",
-      "Carrera",
-      "Ingreso",
-      "Ciclo",
-      "Horas/semana",
-      "Opción 1",
-      "Opción 2",
-      "Motivo",
-      "Caso breve",
-      "Algo que hizo",
-      "Otras organizaciones",
-      "Se enteró por",
-      "Video",
-      "Fecha de Registro",
-    ];
-
-    // CSS for Excel (Specific styles that Excel recognizes better)
-    const style = `
-      <style>
-        .header-cell { background-color: #75d32d; color: black; font-weight: bold; border: 1.0pt solid black; text-align: center; vertical-align: middle; font-size: 12pt; }
-        .data-cell { border: 0.5pt solid #cccccc; vertical-align: middle; padding: 5px; }
-        td { vertical-align: middle; }
-        .row-alt { background-color: #f2f2f2; }
-        .opcion-1 { background-color: #dcfce7; vertical-align: middle; font-weight: bold; color: #166534; }
-        .title { font-size: 18pt; font-weight: bold; color: #75d32d; }
-      </style>
-    `;
-
-    const rowsHtml = displayedApplicants
-      .map((p, index) => {
-        const isFirst = p.first_choice_area === currentArea;
-        const rowClass = index % 2 === 0 ? "" : 'class="row-alt"';
-        return `
-        <tr ${rowClass}>
-          <td class="data-cell" style="vertical-align: middle;">${esc(p.first_name)}</td>
-          <td class="data-cell" style="vertical-align: middle;">${esc(p.last_name)}</td>
-          <td class="data-cell" style="vertical-align: middle;">${esc(p.email)}</td>
-          <td class="data-cell" style="vnd.ms-excel.numberformat:@; vertical-align: middle;">${esc(p.phone)}</td>
-          <td class="data-cell" style="vertical-align: middle;">${esc(p.university)}</td>
-          <td class="data-cell" style="vertical-align: middle;">${esc(p.faculty)}</td>
-          <td class="data-cell" style="vertical-align: middle;">${esc(p.career)}</td>
-          <td class="data-cell" style="vnd.ms-excel.numberformat:@; text-align: center; vertical-align: middle;">${esc(p.admission_term)}</td>
-          <td class="data-cell" style="text-align: center; vertical-align: middle;">${p.university_semester === 0 || p.university_semester === "0" ? "Egresado" : esc(p.university_semester)}</td>
-          <td class="data-cell" style="text-align: center; vertical-align: middle;">${p.availability_hours ?? ""}</td>
-          <td class="data-cell ${isFirst ? "opcion-1" : ""}" style="text-align: center; vertical-align: middle;">${esc(p.first_choice_area)}</td>
-          <td class="data-cell" style="text-align: center; vertical-align: middle;">${esc(p.second_choice_area)}</td>
-          <td class="data-cell" style="font-size: 9pt; width: 350px; vertical-align: middle;">${esc(p.application_reason).replace(/\n/g, "<br>")}</td>
-          <td class="data-cell" style="font-size: 9pt; width: 350px; vertical-align: middle;">${esc(p.short_case).replace(/\n/g, "<br>")}</td>
-          <td class="data-cell" style="font-size: 9pt; width: 350px; vertical-align: middle;">${esc(p.showcase).replace(/\n/g, "<br>")}</td>
-          <td class="data-cell" style="font-size: 9pt; width: 350px; vertical-align: middle;">${esc(p.organizations).replace(/\n/g, "<br>")}</td>
-          <td class="data-cell" style="vertical-align: middle;">${esc(p.referral_source)}</td>
-          <td class="data-cell" style="vertical-align: middle;">${p.video_url ? `<a href="${esc(p.video_url)}">Ver video</a>` : ""}</td>
-          <td class="data-cell" style="text-align: right; vertical-align: middle;">${new Date(p.created_at).toLocaleString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true })}</td>
-        </tr>
-      `;
-      })
-      .join("");
-
-    const htmlTemplate = `
-      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-      <head>
-        <meta charset="utf-8">
-        <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
-         <x:Name>Postulantes ${currentArea}</x:Name>
-         <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
-        </x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
-        ${style}
-      </head>
-      <body>
-        <table>
-          <tr><td colspan="${headers.length}" class="title">UNICODE - Reporte de Postulantes</td></tr>
-          <tr><td colspan="${headers.length}" style="color: #666; font-size: 11pt;">Área: ${currentArea} | Fecha de reporte: ${new Date().toLocaleDateString("es-PE")}</td></tr>
-          <tr><td></td></tr>
-          <thead>
-            <tr>${headers.map((h) => `<th class="header-cell">${h}</th>`).join("")}</tr>
-          </thead>
-          <tbody>
-            ${rowsHtml}
-          </tbody>
-        </table>
-      </body>
-      </html>
-    `;
-
-    const blob = new Blob([htmlTemplate], { type: "application/vnd.ms-excel" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `applicants_${currentArea}_${new Date().toISOString().slice(0, 10)}.xls`;
-    link.click();
-    URL.revokeObjectURL(link.href);
+  // Export the exact filtered list the director is allowed to see.
+  document.getElementById('export-btn')?.addEventListener('click', async () => {
+    if (!displayedApplicants.length) return;
+    const button = document.getElementById('export-btn') as HTMLButtonElement;
+    const records = [...displayedApplicants];
+    const area = currentArea;
+    button.disabled = true;
+    try {
+      const { exportApplicants } = await import('../scripts/admin-applicant-export');
+      const bytes = await exportApplicants(records, area);
+      const url = URL.createObjectURL(new Blob([bytes.buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+      const link = document.createElement('a');
+      link.href = url;
+      const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima' }).format(new Date());
+      link.download = `Postulantes_${area}_${day}.xlsx`;
+      document.body.append(link); link.click(); link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) { showNotice(error instanceof Error ? error.message : 'No se pudo exportar el Excel. Intenta nuevamente.'); }
+    finally { button.disabled = false; }
   });
 </script>

@@ -50,6 +50,7 @@ export interface ApplicationEvent {
   id: string; fromStatus: ApplicationStatus | null; toStatus: ApplicationStatus; actor: string; reason: string; createdAt: string;
 }
 export interface RecruitmentApplication {
+  evaluationChoice?: 1 | 2; evaluationArea?: AreaId; secondOptionAt?: string | null;
   id: string; data: ApplicationData; questions: RecruitmentQuestion[]; status: ApplicationStatus;
   video: ApplicationVideo | null; technicalFailureCount: number; alternateAllowed: boolean; recordingAttempts: number; isTest?: boolean; remindersOff?: boolean; lastReminderAt?: string | null;
   createdAt: string; updatedAt: string; submittedAt: string | null; history?: ApplicationEvent[];
@@ -65,3 +66,5 @@ export interface EmailQueueItem {
   payload: Record<string, string>; attempts: number; leaseToken: string;
 }
 export interface RpcResponse<T> { data: T | null; error: { message: string; code?: string } | null }
+
+export const evaluationArea = (a: RecruitmentApplication) => a.evaluationArea || (a.evaluationChoice === 2 ? a.data.secondChoiceArea : a.data.firstChoiceArea);
