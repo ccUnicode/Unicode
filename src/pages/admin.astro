@@ -1128,114 +1128,24 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     loadApplicants();
   });
 
-  // ===== EXPORT EXCEL (PRETTY) =====
-  document.getElementById("export-btn")?.addEventListener("click", () => {
-    if (displayedApplicants.length === 0) {
-      alert("No hay datos para exportar.");
-      return;
-    }
-
-    const headers = [
-      "Nombres",
-      "Apellidos",
-      "Correo",
-      "Teléfono",
-      "Universidad",
-      "Facultad",
-      "Carrera",
-      "Ingreso",
-      "Ciclo",
-      "Horas/semana",
-      "Opción 1",
-      "Opción 2",
-      "Área que evalúa",
-      "Opción en evaluación",
-      "Estado",
-      "Motivo",
-      "Caso breve",
-      "Algo que hizo",
-      "Otras organizaciones",
-      "Se enteró por",
-      "Video",
-      "Fecha de Registro",
-    ];
-
-    // CSS for Excel (Specific styles that Excel recognizes better)
-    const style = `
-      <style>
-        .header-cell { background-color: #75d32d; color: black; font-weight: bold; border: 1.0pt solid black; text-align: center; vertical-align: middle; font-size: 12pt; }
-        .data-cell { border: 0.5pt solid #cccccc; vertical-align: middle; padding: 5px; }
-        td { vertical-align: middle; }
-        .row-alt { background-color: #f2f2f2; }
-        .opcion-1 { background-color: #dcfce7; vertical-align: middle; font-weight: bold; color: #166534; }
-        .title { font-size: 18pt; font-weight: bold; color: #75d32d; }
-      </style>
-    `;
-
-    const rowsHtml = displayedApplicants
-      .map((p, index) => {
-        const isFirst = p.first_choice_area === currentArea;
-        const rowClass = index % 2 === 0 ? "" : 'class="row-alt"';
-        return `
-        <tr ${rowClass}>
-          <td class="data-cell" style="vertical-align: middle;">${esc(p.first_name)}</td>
-          <td class="data-cell" style="vertical-align: middle;">${esc(p.last_name)}</td>
-          <td class="data-cell" style="vertical-align: middle;">${esc(p.email)}</td>
-          <td class="data-cell" style="vnd.ms-excel.numberformat:@; vertical-align: middle;">${esc(p.phone)}</td>
-          <td class="data-cell" style="vertical-align: middle;">${esc(p.university)}</td>
-          <td class="data-cell" style="vertical-align: middle;">${esc(p.faculty)}</td>
-          <td class="data-cell" style="vertical-align: middle;">${esc(p.career)}</td>
-          <td class="data-cell" style="vnd.ms-excel.numberformat:@; text-align: center; vertical-align: middle;">${esc(p.admission_term)}</td>
-          <td class="data-cell" style="text-align: center; vertical-align: middle;">${p.university_semester === 0 || p.university_semester === "0" ? "Egresado" : esc(p.university_semester)}</td>
-          <td class="data-cell" style="text-align: center; vertical-align: middle;">${p.availability_hours ?? ""}</td>
-          <td class="data-cell ${isFirst ? "opcion-1" : ""}" style="text-align: center; vertical-align: middle;">${esc(p.first_choice_area)}</td>
-          <td class="data-cell" style="text-align: center; vertical-align: middle;">${esc(p.second_choice_area)}</td>
-          <td class="data-cell">${esc(p.evaluation_area)}</td>
-          <td class="data-cell">${p.evaluation_choice === 2 ? "Segunda" : "Primera"}</td>
-          <td class="data-cell">${esc(p.status)}</td>
-          <td class="data-cell" style="font-size: 9pt; width: 350px; vertical-align: middle;">${esc(p.application_reason).replace(/\n/g, "<br>")}</td>
-          <td class="data-cell" style="font-size: 9pt; width: 350px; vertical-align: middle;">${esc(p.short_case).replace(/\n/g, "<br>")}</td>
-          <td class="data-cell" style="font-size: 9pt; width: 350px; vertical-align: middle;">${esc(p.showcase).replace(/\n/g, "<br>")}</td>
-          <td class="data-cell" style="font-size: 9pt; width: 350px; vertical-align: middle;">${esc(p.organizations).replace(/\n/g, "<br>")}</td>
-          <td class="data-cell" style="vertical-align: middle;">${esc(p.referral_source)}</td>
-          <td class="data-cell" style="vertical-align: middle;">${p.video_url ? `<a href="${esc(p.video_url)}">Ver video</a>` : ""}</td>
-          <td class="data-cell" style="text-align: right; vertical-align: middle;">${new Date(p.created_at).toLocaleString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true })}</td>
-        </tr>
-      `;
-      })
-      .join("");
-
-    const htmlTemplate = `
-      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-      <head>
-        <meta charset="utf-8">
-        <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
-         <x:Name>Postulantes ${currentArea}</x:Name>
-         <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
-        </x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
-        ${style}
-      </head>
-      <body>
-        <table>
-          <tr><td colspan="${headers.length}" class="title">UNICODE - Reporte de Postulantes</td></tr>
-          <tr><td colspan="${headers.length}" style="color: #666; font-size: 11pt;">Área: ${currentArea} | Fecha de reporte: ${new Date().toLocaleDateString("es-PE")}</td></tr>
-          <tr><td></td></tr>
-          <thead>
-            <tr>${headers.map((h) => `<th class="header-cell">${h}</th>`).join("")}</tr>
-          </thead>
-          <tbody>
-            ${rowsHtml}
-          </tbody>
-        </table>
-      </body>
-      </html>
-    `;
-
-    const blob = new Blob([htmlTemplate], { type: "application/vnd.ms-excel" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `applicants_${currentArea}_${new Date().toISOString().slice(0, 10)}.xls`;
-    link.click();
-    URL.revokeObjectURL(link.href);
+  // Export the exact filtered list the director is allowed to see.
+  document.getElementById('export-btn')?.addEventListener('click', async () => {
+    if (!displayedApplicants.length) return;
+    const button = document.getElementById('export-btn') as HTMLButtonElement;
+    const records = [...displayedApplicants];
+    const area = currentArea;
+    button.disabled = true;
+    try {
+      const { exportApplicants } = await import('../scripts/admin-applicant-export');
+      const bytes = await exportApplicants(records, area);
+      const url = URL.createObjectURL(new Blob([bytes.buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+      const link = document.createElement('a');
+      link.href = url;
+      const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima' }).format(new Date());
+      link.download = `Postulantes_${area}_${day}.xlsx`;
+      document.body.append(link); link.click(); link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) { showNotice(error instanceof Error ? error.message : 'No se pudo exportar el Excel. Intenta nuevamente.'); }
+    finally { button.disabled = false; }
   });
 </script>
