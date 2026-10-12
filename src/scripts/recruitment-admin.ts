@@ -932,6 +932,7 @@ const stageActions: Partial<Record<ApplicationStatus, { title: string; buttons: 
 async function renderStageButtons(application: RecruitmentApplication): Promise<void> {
   const box = element("stage-buttons");
   box.replaceChildren();
+  if (demoMode) { element('stage-title').textContent = 'Evaluación'; element('stage-hint').textContent = ''; return; }
   const stage = stageActions[application.status] ?? (allowedApplicationTransitions[application.status].includes("selected") ? stageActions.profile_validated : undefined);
   element("stage-title").textContent = stage?.title ?? "Resultado";
   element("stage-hint").textContent = stage ? "" : ["draft", "incomplete"].includes(application.status) ? "Inscripción pendiente" : "Evaluación finalizada";
