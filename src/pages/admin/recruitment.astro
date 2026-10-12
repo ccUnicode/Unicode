@@ -1,5 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+Astro.response.headers.set('Cache-Control', 'no-store');
 ---
 
 <Layout title="Gestión de convocatoria">
@@ -237,6 +238,8 @@ import Layout from "../../layouts/Layout.astro";
 </Layout>
 
 <script>
+  import { refreshAdminOnce } from "../../scripts/admin-refresh";
+  refreshAdminOnce();
   import "../../scripts/recruitment-admin";
 </script>
 

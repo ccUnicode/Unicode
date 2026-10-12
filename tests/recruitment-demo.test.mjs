@@ -149,3 +149,28 @@ test('decision button outcome follows second-choice availability and never offer
   enabled = true; choice = 2;
   assert.equal((await service.decisionPreview(application.id)).transferAvailable, false);
 });
+
+test('metrics API applies the configured deadline and extension without changing submission totals', async () => {
+  const { demoApplications } = await server.ssrLoadModule('/src/lib/recruitment/demo.ts');
+  const applications = demoApplications(config).applications;
+  let extensionAt = null;
+  globalThis.fetch = async url => {
+    const rpc = new URL(String(url)).pathname.split('/').at(-1);
+    if (rpc === 'recruitment_admin_config') return Response.json({ config: { ...config, enabled: true, opensAt: '2026-10-01T05:00:00Z', closesAt: '2026-10-11T05:00:00Z', extensionAt } });
+    assert.equal(rpc, 'recruitment_admin_applications');
+    return Response.json({ applications });
+  };
+  const token = await sessionStore.createToken({ role: 'admin' });
+  const request = new Request('https://www.ccunicode.org/api/admin-metrics', { headers: { Authorization: `Bearer ${token}` } });
+  const response = await metricsRoute.GET({ request });
+  assert.equal(response.headers.get('Cache-Control'), 'no-store');
+  const metrics = await response.json();
+  assert.equal(metrics.enabled, true);
+  assert.equal(metrics.daily.at(-1).day, '2026-10-10');
+  assert.equal(metrics.totals.submitted, 35);
+  assert.equal(metrics.daily.reduce((sum, day) => sum + day.count, 0), 35);
+  extensionAt = '2026-10-12T05:00:00Z';
+  const extended = await (await metricsRoute.GET({ request })).json();
+  assert.equal(extended.closesAt, extensionAt);
+  assert.equal(extended.daily.at(-1).day, '2026-10-11');
+});

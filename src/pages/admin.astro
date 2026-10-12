@@ -9,6 +9,7 @@
  */
 import Layout from "../layouts/Layout.astro";
 import AdminSelect from "../components/admin/AdminSelect.astro";
+Astro.response.headers.set('Cache-Control', 'no-store');
 ---
 
 <Layout title="Postulaciones · Administración">
@@ -446,6 +447,9 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   import { mountAdminVideo } from "../scripts/admin-video-player";
   import { applicantListMarkup, applicantDetailMarkup, applicantName, applicantDate, type Applicant } from "../scripts/admin-applicant-view";
   import { setupAdminSelects } from "../scripts/admin-select";
+  import { registrationOpen, limaDay } from "../lib/recruitment/summary-period";
+  import { refreshAdminOnce } from "../scripts/admin-refresh";
+  refreshAdminOnce();
   const closeFilters = setupAdminSelects();
 
   let sessionToken = "";
@@ -618,6 +622,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   }
   function clearDisplayedData() {
     activeSession = null;
+    summaryMetrics = null;
     summaryVersion++; loadVersion++;
     applicantsCache = []; displayedApplicants = [];
     document.getElementById('summary-content')!.replaceChildren();
@@ -778,7 +783,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
 
   // ===== SUMMARY =====
   type Metrics = {
-    opensAt: string | null; closesAt: string | null;
+    enabled: boolean; opensAt: string | null; closesAt: string | null;
     totals: { submitted: number; inProgress: number; recordingStarted: number; expired: number };
     stages: { pendingReview: number; advanced: number; rejected: number; joined: number; notJoined: number };
     areas: { id: string; name: string; first: number; second: number }[];
@@ -786,6 +791,20 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     semesters: { label: string; count: number }[]; daily: { day: string; count: number }[]; averageHours: number | null;
   };
   let summaryVersion = 0;
+  let summaryMetrics: Metrics | null = null;
+  let lastRegistrationOpen = false;
+  window.setInterval(() => {
+    if (!activeSession || !summaryMetrics) return;
+    const open = registrationOpen(summaryMetrics);
+    if (open !== lastRegistrationOpen) {
+      lastRegistrationOpen = open;
+      document.getElementById("summary-content")!.innerHTML = summaryMarkup(summaryMetrics);
+      void loadSummary();
+    }
+  }, 1000);
+  // Pick up extensions and manual closure without requiring a refresh.
+  window.setInterval(() => { if (activeSession && !document.hidden) void loadSummary(); }, 60_000);
+  document.addEventListener("visibilitychange", () => { if (activeSession && !document.hidden) void loadSummary(); });
   let countdownInterval: number | undefined;
   function updateCountdown(targetIso: string | null) {
     if (countdownInterval) clearInterval(countdownInterval);
@@ -861,12 +880,15 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     document.getElementById("summary-loading")!.classList.toggle("hidden", !content.classList.contains("hidden"));
     document.getElementById("summary-error")!.classList.add("hidden");
     try {
-      const res = await fetch("/api/admin-metrics", { headers: { Authorization: `Bearer ${sessionToken}` } });
+      const res = await fetch("/api/admin-metrics", { headers: { Authorization: `Bearer ${sessionToken}` }, cache: "no-store" });
       if (version !== summaryVersion) return;
       if (res.status === 401) { expireSession(); return; }
       const data = await res.json();
+      if (version !== summaryVersion || !activeSession) return;
       if (!res.ok) throw new Error(data.error || "No se pudo cargar el resumen.");
-      content.innerHTML = summaryMarkup(data as Metrics);
+      summaryMetrics = data as Metrics;
+      lastRegistrationOpen = registrationOpen(summaryMetrics);
+      content.innerHTML = summaryMarkup(summaryMetrics);
       updateCountdown((data as Metrics).closesAt);
       content.classList.remove("hidden");
       for (const area of (data as Metrics).areas) {
@@ -898,6 +920,8 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     return card(`<p class="text-zinc-500 text-[13px]">${label}</p><p class="mt-2 text-3xl sm:text-4xl font-bold tracking-tight tabular-nums ${accent ? "text-unicode" : "text-white"}">${value}</p><p class="mt-2 text-zinc-500 text-[13px]">${detail}</p>`);
   }
   function summaryMarkup(m: Metrics) {
+    const open = registrationOpen(m);
+    const ended = !!m.closesAt && Date.now() >= Date.parse(m.closesAt);
     const closes = m.closesAt ? new Date(m.closesAt).toLocaleString("es-PE", { timeZone: "America/Lima", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "sin fecha";
     const maxArea = Math.max(...m.areas.map((area) => area.first + area.second), 1);
     const maxDay = Math.max(...m.daily.map((day) => day.count), 1);
@@ -906,9 +930,9 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     const totalDays = m.daily.length;
     const dailyHint = totalDays ? `${totalDays} ${totalDays === 1 ? "día" : "días"} · desde el inicio (${firstDay})` : "sin registros";
     return `
-      <div class="grid grid-cols-1 min-[520px]:grid-cols-2 xl:grid-cols-4 gap-4">
-        ${kpi("Inscripciones completas", m.totals.submitted, `La convocatoria cierra el ${esc(closes)}`, true)}
-        ${kpi("En proceso", m.totals.inProgress, `${m.totals.recordingStarted} ya empezaron su video`)}
+      <div class="grid grid-cols-1 min-[520px]:grid-cols-2 ${open ? 'xl:grid-cols-4' : 'xl:grid-cols-3'} gap-4">
+        ${kpi("Inscripciones completas", m.totals.submitted, m.closesAt ? `La convocatoria ${ended ? 'cerró' : 'cierra'} el ${esc(closes)}` : 'Sin fecha de cierre', true)}
+        ${open ? kpi("En proceso", m.totals.inProgress, `${m.totals.recordingStarted} ya empezaron su video`) : ''}
         ${kpi("Avanzan a la 2.ª etapa", m.stages.advanced, `${m.stages.pendingReview} por revisar · ${m.stages.rejected} no avanzan`)}
         ${kpi("Ingresan a UNICODE", m.stages.joined, `${m.stages.notJoined} no ingresan`, m.stages.joined > 0)}
       </div>
@@ -927,7 +951,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
           </div>
           <div class="flex justify-between text-[11px] text-zinc-500 mt-2">
             <span>Inicio: ${esc(firstDay)}</span>
-            <span>Hoy (${m.daily[m.daily.length - 1]?.count ?? 0})</span>
+            <span>${m.daily.at(-1)?.day === limaDay(Date.now()) ? 'Hoy' : m.daily.at(-1)?.day.slice(5).split('-').reverse().join('/') || 'Sin registros'} (${m.daily.at(-1)?.count ?? 0})</span>
           </div>
         `)}
       </div>
