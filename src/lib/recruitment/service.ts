@@ -233,8 +233,9 @@ export async function processEmails(limit = 10) {
  * Figures for the directors' summary. Only counts leave the server, never personal data.
  * Test applications are excluded.
  */
-export async function adminMetrics() {
-  const [{ applications = [] }, { config }] = await Promise.all([adminApplications(), adminConfig()]);
+export async function adminMetrics(demo = false) {
+  const { config } = await adminConfig();
+  const { applications = [] } = demo ? (await import('./demo')).demoApplications(config) : await adminApplications();
   const real = applications.filter((application) => !application.isTest);
   const submitted = real.filter((application) => application.submittedAt);
   const inProgress = real.filter((application) => ['draft', 'incomplete'].includes(application.status));

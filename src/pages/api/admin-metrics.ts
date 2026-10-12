@@ -12,9 +12,10 @@ const json = (value: unknown, status = 200) => new Response(JSON.stringify(value
 
 export async function GET({ request }: { request: Request }) {
   const token = (request.headers.get('Authorization') || '').replace('Bearer ', '');
-  if (!(await sessionStore.verify(token))) return json({ error: 'No autorizado. Inicia sesión nuevamente.' }, 401);
+  const session = await sessionStore.verify(token);
+  if (!session) return json({ error: 'No autorizado. Inicia sesión nuevamente.' }, 401);
   try {
-    return json(await adminMetrics());
+    return json(await adminMetrics(session.role === 'demo'));
   } catch {
     return json({ error: 'No se pudieron calcular las métricas.' }, 500);
   }

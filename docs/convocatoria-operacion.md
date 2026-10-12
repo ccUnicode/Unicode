@@ -155,3 +155,9 @@ Enviar desde una cuenta @gmail.com hace que el correo de la UNI frene los mensaj
 4. `npm run recruitment -- check tu.correo@uni.pe` (envía una prueba con Resend), luego `npm run recruitment -- vercel` y vuelve a desplegar.
 
 El plan gratis permite 100 correos al día. Si Resend responde que llegó a su límite, el mismo correo sale automáticamente por el Gmail del proyecto.
+
+## Acceso de demostración
+
+Define `ADMIN_DEMO_PASSWORD` con una contraseña distinta de `ADMIN_PASSWORD` en el servidor. En `/admin`, escribe `demo` en el campo de correo y después esa contraseña. El acceso usa datos completamente inventados para postulaciones, borradores, historial, videos, estadísticas y cola de correos; nunca consulta postulaciones reales. Configuración y plantillas se consultan desde la convocatoria real. Todas las escrituras y envíos quedan bloqueados en el servidor. La lista de accesos reales se oculta. El video es un clip técnico de ejemplo, sin personas.
+
+La sesión dura dos días. Cambiar o quitar `ADMIN_DEMO_PASSWORD` revoca las sesiones de demostración existentes. No compartas la contraseña de administración.
