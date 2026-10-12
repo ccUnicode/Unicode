@@ -5,7 +5,7 @@
 
 export const prerender = false;
 
-import { directorArea, sessionStore } from '../../lib/session-store';
+import { sessionStore } from '../../lib/session-store';
 import { adminMetrics } from '../../lib/recruitment/service';
 
 const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
@@ -15,7 +15,7 @@ export async function GET({ request }: { request: Request }) {
   const session = await sessionStore.verify(token);
   if (!session) return json({ error: 'No autorizado. Inicia sesión nuevamente.' }, 401);
   try {
-    return json(await adminMetrics(session.role === 'demo', directorArea(session)));
+    return json(await adminMetrics(session.role === 'demo'));
   } catch {
     return json({ error: 'No se pudieron calcular las métricas.' }, 500);
   }

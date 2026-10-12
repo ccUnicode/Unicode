@@ -6,7 +6,7 @@
 
 export const prerender = false;
 
-import { directorArea, sessionStore } from '../../lib/session-store';
+import { sessionStore } from '../../lib/session-store';
 import { demoApplications } from '../../lib/recruitment/demo';
 import { adminConfig } from '../../lib/recruitment/service';
 import { adminApplications } from '../../lib/recruitment/service';
@@ -29,10 +29,7 @@ export async function GET({ request }: { request: Request }) {
   if (!session) return json({ error: 'No autorizado. Inicia sesión nuevamente.' }, 401);
 
   const url = new URL(request.url);
-  const requestedArea = url.searchParams.get('area') || '';
-  const scope = directorArea(session);
-  if (scope && requestedArea && requestedArea !== scope) return json({ error: 'Solo puedes consultar postulantes de tu área.' }, 403);
-  const area = scope || requestedArea;
+  const area = url.searchParams.get('area') || '';
   const option = url.searchParams.get('option') || 'all'; // 'all', 'first', 'second'
   const order = url.searchParams.get('order') || 'arrival'; // First choice always leads.
 

@@ -570,7 +570,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   document.getElementById("toggle-password")!.addEventListener("click", () => { emailInput.value = ""; showStep("email"); });
   document.getElementById("change-email")!.addEventListener("click", () => { codeInput.value = ""; showStep("email"); });
 
-  /** Directors outside GTH see only their own area; GTH and the super admin also reach the GTH panel. */
+  /** All directors can view every area; GTH and the super admin also reach the GTH panel. */
   function applySession(session: Session) {
     const managesCall = session.role === "admin" || session.role === "demo" || session.area === "GTH";
     document.getElementById("gth-panel-link")!.classList.toggle("hidden", !managesCall);
@@ -578,8 +578,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     user.classList.toggle("hidden", session.role !== "demo");
     user.textContent = session.role === "director" ? session.email : session.role === "demo" ? "Demostración · datos ficticios" : "Super admin";
     if (session.role === "director" && areaNames[session.area]) currentArea = session.area;
-    const restricted = session.role === 'director' && session.area !== 'GTH';
-    document.querySelectorAll<HTMLElement>('.area-tab').forEach(tab => { delete tab.dataset.count; tab.hidden = restricted && tab.dataset.area !== 'summary' && tab.dataset.area !== session.area; });
+    document.querySelectorAll<HTMLElement>('.area-tab').forEach(tab => { delete tab.dataset.count; tab.hidden = false; });
     currentView = "summary";
     markActiveTab("summary");
     document.getElementById("area-label")!.textContent = areaNames[currentArea] || currentArea;
@@ -612,7 +611,7 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
     const params = new URLSearchParams(location.search);
     const managesCall = session.role === "admin" || session.role === "demo" || session.area === "GTH";
     if (params.get("volver") === "gth" && managesCall) { location.replace("/admin/recruitment"); return; }
-    if (params.has("sin_gth") || params.get("volver") === "gth") showNotice("El Panel GTH es solo para directores de GTH. Aquí puedes revisar las postulaciones que corresponden a tu área.");
+    if (params.has("sin_gth") || params.get("volver") === "gth") showNotice("El Panel GTH es solo para directores de GTH. Aquí puedes ver todas las áreas; solo puedes gestionar la tuya.");
     if (location.search) history.replaceState(null, "", "/admin");
     if (session.role === "demo") showNotice("Demostración: todos los postulantes, videos, estadísticas y correos son ficticios. Configuración real en modo consulta.");
     showView("summary");
@@ -766,7 +765,6 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
   });
 
   function openArea(area: string) {
-    if (activeSession?.role === 'director' && activeSession.area !== 'GTH' && area !== activeSession.area) return;
     currentArea = area;
     markActiveTab(area);
     document.getElementById("area-label")!.textContent = areaNames[currentArea] || currentArea;
@@ -1057,7 +1055,6 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
       if (!response.ok) throw new Error(result.error || 'No se pudo consultar el cierre por área.');
       if (requestToken !== sessionToken || !activeSession) return;
       for (const row of result.areas as { area: string; closed: boolean }[]) {
-        if (activeSession.role === 'director' && activeSession.area !== 'GTH' && row.area !== activeSession.area) continue;
         const card = document.createElement('section');
         card.className = 'rounded-xl border border-zinc-800 bg-zinc-950/50 p-4';
         const title = document.createElement('h3'); title.className = 'font-medium text-white text-sm'; title.textContent = areaNames[row.area] || row.area;
@@ -1065,7 +1062,9 @@ import AdminSelect from "../components/admin/AdminSelect.astro";
         card.append(title, status);
         const button = document.createElement('button');
         button.className = row.closed ? 'min-h-11 rounded-lg px-4 py-2 text-sm font-medium border border-unicode/40 text-unicode hover:bg-unicode/10 disabled:opacity-50' : 'min-h-11 rounded-lg px-4 py-2 text-sm font-medium border border-zinc-700 text-zinc-300 hover:border-rose-400/50 hover:text-rose-300 disabled:opacity-50';
-        button.disabled = activeSession.role === 'demo';
+        const readOnly = activeSession.role === 'demo' || (activeSession.role === 'director' && activeSession.area !== 'GTH' && row.area !== activeSession.area);
+        button.disabled = readOnly;
+        if (readOnly) button.title = 'Puedes consultar el estado; solo el director de esta área o GTH puede gestionarlo.';
         button.textContent = row.closed ? 'Reabrir recepción' : 'Cerrar recepción';
         button.setAttribute('aria-label', `${button.textContent} de ${areaNames[row.area] || row.area}`);
         button.addEventListener('click', async () => {

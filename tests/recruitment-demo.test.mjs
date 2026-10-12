@@ -88,7 +88,7 @@ test('director area closures cannot target another area; decision scope and snap
 });
 
 
-test('directors cannot read other areas through lists, metrics, videos or area management; GTH sees all', async () => {
+test('directors view every area while lists include only first-choice or already-transferred applicants', async () => {
   const { demoApplications } = await server.ssrLoadModule('/src/lib/recruitment/demo.ts');
   const applications = demoApplications(config).applications.map(a => ({ ...a, video: a.video ? { ...a.video, provider: 'drive' } : null }));
   globalThis.fetch = async (url, init) => {
@@ -104,15 +104,22 @@ test('directors cannot read other areas through lists, metrics, videos or area m
   const token = await sessionStore.createToken({ role: 'director', area: 'ID', email: 'id@example.invalid' });
   const request = path => new Request(`https://www.ccunicode.org${path}`, { headers: { Authorization: `Bearer ${token}` } });
   const list = await (await applicantsRoute.GET({ request: request('/api/admin-applicants') })).json();
-  assert.equal(list.total, 5); assert.ok(list.data.every(a => a.evaluation_area === 'ID'));
-  assert.equal((await applicantsRoute.GET({ request: request('/api/admin-applicants?area=GTH') })).status, 403);
+  assert.equal(list.total, 35);
+  const idList = await (await applicantsRoute.GET({ request: request('/api/admin-applicants?area=ID') })).json();
+  assert.equal(idList.total, 5); assert.ok(idList.data.every(a => a.evaluation_area === 'ID'));
+  assert.equal(idList.data.filter(a => a.evaluation_choice === 1).length, 4);
+  assert.equal(idList.data.filter(a => a.evaluation_choice === 2).length, 1);
+  assert.ok(idList.data.every(a => a.first_choice_area === 'ID' || a.evaluation_choice === 2));
+  const preferenceOnly = applications.find(a => a.submittedAt && a.data.secondChoiceArea === 'ID' && a.evaluationChoice === 1);
+  assert.ok(preferenceOnly); assert.ok(!idList.data.some(a => a.id === preferenceOnly.id));
+  assert.equal((await applicantsRoute.GET({ request: request('/api/admin-applicants?area=GTH') })).status, 200);
   const metrics = await (await metricsRoute.GET({ request: request('/api/admin-metrics') })).json();
-  assert.equal(metrics.totals.submitted, 5); assert.deepEqual(metrics.areas.map(a => a.id), ['ID']);
+  assert.equal(metrics.totals.submitted, 35); assert.equal(metrics.areas.length, 7);
   const other = applications.find(a => a.evaluationArea === 'GTH' && a.video);
   const response = await route.ALL({ params: { path: `admin/applications/${other.id}/video` }, request: request(`/api/recruitment/admin/applications/${other.id}/video`) });
-  assert.equal(response.status, 403);
+  assert.equal(response.status, 200);
   const areas = await (await route.ALL({ params: { path: 'admin/area-evaluation' }, request: request('/api/recruitment/admin/area-evaluation') })).json();
-  assert.deepEqual(areas.areas.map(a => a.area), ['ID']);
+  assert.deepEqual(areas.areas.map(a => a.area), ['ID', 'GTH']);
   const gthToken = await sessionStore.createToken({ role: 'director', area: 'GTH', email: 'gth@example.invalid' });
   const gthReq = new Request('https://www.ccunicode.org/api/admin-applicants', { headers: { Authorization: `Bearer ${gthToken}` } });
   assert.equal((await (await applicantsRoute.GET({ request: gthReq })).json()).total, 35);

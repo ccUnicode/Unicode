@@ -6,7 +6,7 @@ import { createVideoTicket } from '../video-ticket';
 import { unsubscribeUrl } from '../unsubscribe';
 import { databaseConfigured, localDevelopmentDatabase, recruitmentRpc } from './database';
 import { record, RecruitmentError, validateApplicationData, validateConfig, validateTemplates, withAllAreas } from './validation';
-import { evaluationArea, AREA_IDS, AREA_NAMES, allowedApplicationTransitions, type ApplicationStatus, type EmailQueueItem, type RecruitmentApplication, type RecruitmentConfig, type RecruitmentUpload } from './types';
+import { AREA_IDS, AREA_NAMES, allowedApplicationTransitions, type ApplicationStatus, type EmailQueueItem, type RecruitmentApplication, type RecruitmentConfig, type RecruitmentUpload } from './types';
 
 const env = (name: string): string | undefined => import.meta.env[name] || process.env[name];
 type ApplicationResponse = { application: RecruitmentApplication };
@@ -169,9 +169,8 @@ export async function transition(id: string, input: unknown, actor = 'administra
   if (recruitmentEmailConfigured()) await processEmails(2).catch(() => undefined);
   return result;
 }
-export async function adminVideo(id: string, scopeArea: string | null = null) {
+export async function adminVideo(id: string) {
   const response = await adminApplications(id);
-  if (scopeArea && (!response.application || evaluationArea(response.application) !== scopeArea)) throw new RecruitmentError('forbidden', 'Solo puedes consultar videos de tu área.', 403);
   const video = response.application?.video;
   if (!video) throw new RecruitmentError('not_found', 'Esta postulación todavía no tiene un video validado.', 404);
   // Drive only lets the owner account watch: play it through this site with a signed link instead.
@@ -236,10 +235,10 @@ export async function processEmails(limit = 10) {
  * Figures for the directors' summary. Only counts leave the server, never personal data.
  * Test applications are excluded.
  */
-export async function adminMetrics(demo = false, scopeArea: string | null = null) {
+export async function adminMetrics(demo = false) {
   const { config } = await adminConfig();
   const { applications = [] } = demo ? (await import('./demo')).demoApplications(config) : await adminApplications();
-  const real = applications.filter((application) => !application.isTest && (!scopeArea || evaluationArea(application) === scopeArea));
+  const real = applications.filter((application) => !application.isTest);
   const submitted = real.filter((application) => application.submittedAt);
   const inProgress = real.filter((application) => ['draft', 'incomplete'].includes(application.status));
   const tally = (values: string[], limit = 8) => {
@@ -293,7 +292,7 @@ export async function adminMetrics(demo = false, scopeArea: string | null = null
       pendingReview: status('submitted'), advanced: status('profile_validated') + status('selected') + status('not_selected'),
       rejected: status('profile_rejected'), joined: status('selected'), notJoined: status('not_selected'),
     },
-    areas: AREA_IDS.filter(id => !scopeArea || id === scopeArea).map((id) => ({ id, name: AREA_NAMES[id], first: submitted.filter((a) => a.evaluationChoice !== 2 && a.data.firstChoiceArea === id).length, second: submitted.filter((a) => a.evaluationChoice === 2 && a.data.secondChoiceArea === id).length })),
+    areas: AREA_IDS.map((id) => ({ id, name: AREA_NAMES[id], first: submitted.filter((a) => a.evaluationChoice !== 2 && a.data.firstChoiceArea === id).length, second: submitted.filter((a) => a.evaluationChoice === 2 && a.data.secondChoiceArea === id).length })),
     referral: tally(submitted.map((a) => (a.data.referralSource || '').startsWith('Otro') ? 'Otro' : a.data.referralSource || '')),
     universities: tally(submitted.map((a) => placeName(a.data.university || '')), 6),
     semesters: tally(submitted.map((a) => a.data.semester === '0' ? 'Egresado/a' : a.data.semester ? `${a.data.semester}.º ciclo` : ''), 11),
