@@ -793,11 +793,18 @@ Astro.response.headers.set('Cache-Control', 'no-store');
   });
 
   // ===== SUMMARY =====
+  function updateAreaCounts(counts: { id: string; count: number }[]) {
+    for (const area of counts) {
+      const tab = document.querySelector<HTMLElement>(`.area-tab[data-area="${area.id}"]`);
+      if (tab) tab.dataset.count = String(area.count);
+    }
+  }
   type Metrics = {
     enabled: boolean; opensAt: string | null; closesAt: string | null;
     totals: { submitted: number; inProgress: number; recordingStarted: number; expired: number };
     stages: { pendingReview: number; advanced: number; rejected: number; joined: number; notJoined: number };
     areas: { id: string; name: string; first: number; second: number }[];
+    evaluationCounts: { id: string; count: number }[];
     referral: { label: string; count: number }[]; universities: { label: string; count: number }[];
     semesters: { label: string; count: number }[]; daily: { day: string; count: number }[]; averageHours: number | null;
   };
@@ -898,6 +905,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
       if (version !== summaryVersion || !activeSession) return;
       if (!res.ok) throw new Error(data.error || "No se pudo cargar el resumen.");
       summaryMetrics = data as Metrics;
+      updateAreaCounts(summaryMetrics.evaluationCounts);
       lastRegistrationOpen = registrationOpen(summaryMetrics);
       content.innerHTML = summaryMarkup(summaryMetrics);
       updateCountdown((data as Metrics).closesAt);
@@ -1035,6 +1043,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 
       const result = await res.json();
       if (version !== loadVersion) return;
+      updateAreaCounts(result.evaluationCounts);
 
       applicantsCache = result.data || [];
       loaded = true;

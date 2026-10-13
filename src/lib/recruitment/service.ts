@@ -272,6 +272,7 @@ export async function adminMetrics(demo = false) {
     },
     // Original preferences describe recruitment demand, independently of evaluation handoffs.
     areas: AREA_IDS.map((id) => ({ id, name: AREA_NAMES[id], first: submitted.filter((a) => a.data.firstChoiceArea === id).length, second: submitted.filter((a) => a.data.secondChoiceArea === id).length })),
+    evaluationCounts: AREA_IDS.map((id) => ({ id, count: submitted.filter((a) => (a.evaluationChoice === 2 ? a.data.secondChoiceArea : a.data.firstChoiceArea) === id).length })),
     referral: tally(submitted.map((a) => (a.data.referralSource || '').startsWith('Otro') ? 'Otro' : a.data.referralSource || '')),
     universities: tally(submitted.map((a) => placeName(a.data.university || '')), 6),
     semesters: tally(submitted.map((a) => a.data.semester === '0' ? 'Egresado/a' : a.data.semester ? `${a.data.semester}.º ciclo` : ''), 11),

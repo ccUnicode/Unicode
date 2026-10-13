@@ -12,6 +12,7 @@ import { adminConfig } from '../../lib/recruitment/service';
 import { adminApplications } from '../../lib/recruitment/service';
 import { compareApplicationOrder } from '../../lib/recruitment-application-order';
 import { orderVideoQuestions } from '../../lib/recruitment-question-order';
+import { AREA_IDS } from '../../lib/recruitment/types';
 
 const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 
@@ -55,6 +56,7 @@ export async function GET({ request }: { request: Request }) {
         };
       });
 
+    const evaluationCounts = AREA_IDS.map(id => ({ id, count: data.filter(p => p.evaluation_area === id).length }));
     if (area) {
       data = data.filter((p) => p.evaluation_area === area && (option === 'first' ? p.evaluation_choice === 1
         : option === 'second' ? p.evaluation_choice === 2 : true));
@@ -64,7 +66,7 @@ export async function GET({ request }: { request: Request }) {
       { id: b.id, firstChoiceArea: b.first_choice_area, arrivedAt: b.created_at! },
       area, order === 'recent',
     ));
-    return json({ data, total: data.length });
+    return json({ data, total: data.length, evaluationCounts });
   } catch {
     return json({ error: 'No se pudieron obtener las postulaciones.' }, 500);
   }
