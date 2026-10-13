@@ -174,12 +174,15 @@ function node<K extends keyof HTMLElementTagNameMap>(tag: K, text?: string, clas
   return value;
 }
 
-function showMessage(message: string, error = false): void {
+let messageTimer: ReturnType<typeof setTimeout> | undefined;
+function showMessage(message: string, error = false, duration = 0): void {
+  clearTimeout(messageTimer);
   const box = element("admin-message");
   box.textContent = message;
   box.classList.toggle("error", error);
   box.hidden = false;
   box.setAttribute("role", error ? "alert" : "status");
+  if (duration > 0) messageTimer = setTimeout(() => { box.hidden = true; }, duration);
 }
 
 function messageOf(error: unknown): string {
@@ -960,7 +963,7 @@ async function sendResult(application: RecruitmentApplication, status: Applicati
   buttons.forEach((button) => { button.disabled = true; });
   try {
     const result = await request<{ application: RecruitmentApplication; transferred: boolean }>(`/applications/${encodeURIComponent(application.id)}/transition`, { method: "POST", body: JSON.stringify({ status, reason: `Resultado enviado: ${label}.`, expectedStatus: application.status, expectedChoice: application.evaluationChoice || 1 }) });
-    showMessage(result.transferred ? `Pasó a segunda opción: ${areaName(evaluationArea(result.application))}. Se encoló el correo para ${application.data.email}.` : `Listo: ${['profile_rejected', 'not_selected'].includes(result.application.status) ? 'No ingresa a UNICODE' : label}. Correo en cola.`);
+    showMessage(result.transferred ? `Pasó a segunda opción: ${areaName(evaluationArea(result.application))}. El correo se enviará automáticamente; puedes continuar.` : `Listo: ${['profile_rejected', 'not_selected'].includes(result.application.status) ? 'No ingresa a UNICODE' : label}. El correo se enviará automáticamente; puedes continuar.`, false, 5000);
     await loadApplications();
     await loadDetail(application.id);
   } catch (error) {

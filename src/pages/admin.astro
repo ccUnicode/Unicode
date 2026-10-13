@@ -640,10 +640,13 @@ Astro.response.headers.set('Cache-Control', 'no-store');
     document.querySelectorAll<HTMLElement>('.area-tab').forEach(tab => delete tab.dataset.count);
     if (detailDialog.open) closeDetail();
   }
-  function showNotice(text: string) {
+  let noticeTimer: ReturnType<typeof setTimeout> | undefined;
+  function showNotice(text: string, duration = 0) {
+    clearTimeout(noticeTimer);
     const notice = document.getElementById("admin-notice")!;
     notice.querySelector("span")!.textContent = text;
     notice.hidden = false;
+    if (duration > 0) noticeTimer = setTimeout(() => { notice.hidden = true; }, duration);
   }
 
   emailForm.addEventListener("submit", async (e) => {
@@ -1149,7 +1152,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
           const result = await response.json();
           if (!response.ok) throw new Error(result.error || 'No se pudo registrar el resultado.');
           closeDetail();
-          showNotice(result.transferred ? 'Pasó a evaluación de su segunda opción. Correo enviado a la cola.' : ['profile_rejected', 'not_selected'].includes(result.application.status) ? 'No ingresa a UNICODE. Correo enviado a la cola.' : 'Resultado guardado. Correo enviado a la cola.');
+          showNotice(result.transferred ? 'Pasó a evaluación de su segunda opción. El correo se enviará automáticamente; puedes continuar.' : ['profile_rejected', 'not_selected'].includes(result.application.status) ? 'No ingresa a UNICODE. El correo se enviará automáticamente; puedes continuar.' : 'Resultado guardado. El correo se enviará automáticamente; puedes continuar.', 5000);
           await loadApplicants();
         } catch (error) { alert(error instanceof Error ? error.message : 'No se pudo registrar.'); box.querySelectorAll('button').forEach(button => button.disabled = false); }
       });
