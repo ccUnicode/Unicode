@@ -902,10 +902,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
       content.innerHTML = summaryMarkup(summaryMetrics);
       updateCountdown((data as Metrics).closesAt);
       content.classList.remove("hidden");
-      for (const area of (data as Metrics).areas) {
-        const tab = document.querySelector<HTMLElement>(`.area-tab[data-area="${area.id}"]`);
-        if (tab) tab.dataset.count = String(area.first + area.second);
-      }
+
     } catch (error) {
       if (version !== summaryVersion) return;
       document.getElementById("summary-error-message")!.textContent = error instanceof Error ? error.message : "No se pudo cargar el resumen.";
@@ -948,7 +945,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
         ${kpi("Ingresan a UNICODE", m.stages.joined, `${m.stages.notJoined} no ingresan`, m.stages.joined > 0)}
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-4">
-        ${card(cardTitle("Postulantes por área", `<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-unicode"></span>1ra</span> <span class="inline-flex items-center gap-1.5 ml-3"><span class="w-2 h-2 rounded-full bg-zinc-500"></span>2da</span>`) + `<ul class="space-y-1">${m.areas.map((area) => `<li><button type="button" data-open-area="${esc(area.id)}" class="w-full text-left rounded-xl px-2 py-2.5 -mx-2 hover:bg-zinc-800/50 cursor-pointer focus-visible:outline-2 focus-visible:outline-unicode"><div class="flex justify-between gap-3 text-[14px] mb-1.5"><span class="text-zinc-200 truncate">${esc(area.name)}</span><span class="text-zinc-400 tabular-nums shrink-0">${area.first} <span class="text-zinc-600">+ ${area.second}</span></span></div><div class="flex h-2 rounded-full bg-zinc-800 overflow-hidden"><div class="h-full bg-unicode" style="width:${area.first / maxArea * 100}%"></div><div class="h-full bg-zinc-500" style="width:${area.second / maxArea * 100}%"></div></div></button></li>`).join("")}</ul><p class="text-zinc-500 text-[12px] mt-3">Toca un área para ver sus postulaciones.</p>`)}
+        ${card(cardTitle("Preferencias de postulación por área", `<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-unicode"></span>1ra</span> <span class="inline-flex items-center gap-1.5 ml-3"><span class="w-2 h-2 rounded-full bg-zinc-500"></span>2da</span>`) + `<ul class="space-y-1">${m.areas.map((area) => `<li><button type="button" data-open-area="${esc(area.id)}" class="w-full text-left rounded-xl px-2 py-2.5 -mx-2 hover:bg-zinc-800/50 cursor-pointer focus-visible:outline-2 focus-visible:outline-unicode"><div class="flex justify-between gap-3 text-[14px] mb-1.5"><span class="text-zinc-200 truncate">${esc(area.name)}</span><span class="text-zinc-400 tabular-nums shrink-0">${area.first} <span class="text-zinc-600">+ ${area.second}</span></span></div><div class="flex h-2 rounded-full bg-zinc-800 overflow-hidden"><div class="h-full bg-unicode" style="width:${area.first / maxArea * 100}%"></div><div class="h-full bg-zinc-500" style="width:${area.second / maxArea * 100}%"></div></div></button></li>`).join("")}</ul><p class="text-zinc-500 text-[12px] mt-3">Opciones elegidas al postular; no cambian con los resultados. Una persona puede figurar en dos áreas. Toca un área para ver su evaluación actual.</p>`)}
         ${card(cardTitle("Inscripciones por día", dailyHint) + `
           <div class="overflow-x-auto [scrollbar-width:thin] pb-1 -mx-1 px-1">
             <div class="flex items-end gap-1.5 h-40 min-w-full" style="min-width: ${Math.max(120, m.daily.length * 20)}px" role="img" aria-label="Inscripciones completas por día">
