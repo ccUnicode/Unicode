@@ -162,6 +162,19 @@ test('area preferences remain unchanged after rejection, selection or a second-c
   const token = await sessionStore.createToken({ role: 'admin' });
   const request = new Request('https://www.ccunicode.org/api/admin-metrics', { headers: { Authorization: `Bearer ${token}` } });
   const before = await (await metricsRoute.GET({ request })).json();
+  const original = applications.map(a => a.submittedAt ? { ...a, evaluationChoice: 1, evaluationArea: a.data.firstChoiceArea } : a);
+  applications = original;
+  const initial = await (await metricsRoute.GET({ request })).json();
+  const transferred = applications.find(a => a.submittedAt && a.data.firstChoiceArea !== a.data.secondChoiceArea);
+  applications = applications.map(a => a.id === transferred.id ? { ...a, evaluationChoice: 2, evaluationArea: a.data.secondChoiceArea } : a);
+  const moved = await (await metricsRoute.GET({ request })).json();
+  for (const area of initial.evaluationCounts) {
+    const delta = area.id === transferred.data.firstChoiceArea ? -1 : area.id === transferred.data.secondChoiceArea ? 1 : 0;
+    assert.equal(moved.evaluationCounts.find(row => row.id === area.id).count, area.count + delta);
+  }
+  assert.deepEqual(moved.areas, initial.areas);
+  const filtered = await (await applicantsRoute.GET({ request: new Request('https://www.ccunicode.org/api/admin-applicants?area=GTH&option=first', { headers: { Authorization: `Bearer ${token}` } }) })).json();
+  assert.deepEqual(filtered.evaluationCounts, moved.evaluationCounts);
   assert.equal(before.areas.reduce((sum, area) => sum + area.first, 0), before.totals.submitted);
   for (const status of ['profile_rejected', 'not_selected', 'selected', 'submitted']) {
     applications = applications.map(a => a.submittedAt ? { ...a, status, evaluationChoice: 2, evaluationArea: a.data.secondChoiceArea } : a);
