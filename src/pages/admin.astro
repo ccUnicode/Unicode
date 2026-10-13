@@ -1142,9 +1142,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
       const color = negative ? (preview.transferAvailable ? 'bg-amber-400 text-black hover:bg-amber-300' : 'bg-rose-600 text-white hover:bg-rose-500') : status === 'selected' ? 'bg-unicode text-black hover:bg-unicode-light' : 'bg-sky-600 text-white hover:bg-sky-500';
       button.className = `min-h-11 rounded-xl px-4 py-2 text-sm font-semibold ${color}`;
       button.addEventListener('click', async () => {
-        const reason = prompt(`${actionLabel} · Motivo interno`);
-        if (!reason) return;
-        if (reason.trim().length < 3) { alert('Escribe un motivo de al menos tres caracteres.'); return; }
+        const reason = `Resultado enviado: ${actionLabel}.`;
         box.querySelectorAll('button').forEach(button => button.disabled = true);
         try {
           const response = await fetch(`/api/recruitment/admin/applications/${applicant.id}/transition`, { method: 'POST', headers: { Authorization: `Bearer ${sessionToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status, reason, expectedStatus: applicant.status, expectedChoice: applicant.evaluation_choice || 1 }) });
