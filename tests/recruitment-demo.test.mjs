@@ -44,8 +44,8 @@ test('demo never reads production applications, queue or directors and blocks al
   const req = new Request('https://www.ccunicode.org/api/admin-applicants', { headers: { Authorization: `Bearer ${token}` } });
   assert.equal((await (await applicantsRoute.GET({ request: req })).json()).total, 35);
   const metrics = await (await metricsRoute.GET({ request: req })).json();
-  assert.equal(metrics.areas.reduce((sum, area) => sum + area.first, 0), 28);
-  assert.equal(metrics.areas.reduce((sum, area) => sum + area.second, 0), 7);
+  assert.equal(metrics.areas.reduce((sum, area) => sum + area.first, 0), 35);
+  assert.equal(metrics.areas.reduce((sum, area) => sum + area.second, 0), 35);
   const secondReq = new Request('https://www.ccunicode.org/api/admin-applicants?area=ID&option=second', { headers: { Authorization: `Bearer ${token}` } });
   const second = await (await applicantsRoute.GET({ request: secondReq })).json();
   assert.equal(second.total, 1);
@@ -148,6 +148,30 @@ test('decision button outcome follows second-choice availability and never offer
   assert.equal((await service.decisionPreview(application.id)).transferAvailable, false);
   enabled = true; choice = 2;
   assert.equal((await service.decisionPreview(application.id)).transferAvailable, false);
+});
+
+test('area preferences remain unchanged after rejection, selection or a second-choice transfer', async () => {
+  const { demoApplications } = await server.ssrLoadModule('/src/lib/recruitment/demo.ts');
+  let applications = demoApplications(config).applications;
+  globalThis.fetch = async url => {
+    const rpc = new URL(String(url)).pathname.split('/').at(-1);
+    if (rpc === 'recruitment_admin_config') return Response.json({ config });
+    assert.equal(rpc, 'recruitment_admin_applications');
+    return Response.json({ applications });
+  };
+  const token = await sessionStore.createToken({ role: 'admin' });
+  const request = new Request('https://www.ccunicode.org/api/admin-metrics', { headers: { Authorization: `Bearer ${token}` } });
+  const before = await (await metricsRoute.GET({ request })).json();
+  assert.equal(before.areas.reduce((sum, area) => sum + area.first, 0), before.totals.submitted);
+  for (const status of ['profile_rejected', 'not_selected', 'selected', 'submitted']) {
+    applications = applications.map(a => a.submittedAt ? { ...a, status, evaluationChoice: 2, evaluationArea: a.data.secondChoiceArea } : a);
+    const after = await (await metricsRoute.GET({ request })).json();
+    assert.deepEqual(after.areas, before.areas);
+    assert.deepEqual(after.referral, before.referral);
+    assert.deepEqual(after.universities, before.universities);
+    assert.deepEqual(after.daily, before.daily);
+    assert.equal(after.totals.submitted, before.totals.submitted);
+  }
 });
 
 test('metrics API applies the configured deadline and extension without changing submission totals', async () => {
