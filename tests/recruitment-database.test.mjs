@@ -9,6 +9,45 @@ const migrationFiles = (await readdir(migrationDirectory)).filter(name => name.e
 const migrations = await Promise.all(migrationFiles.map(name => readFile(new URL(name, migrationDirectory), 'utf8')));
 const legacyId = '11111111-1111-4111-8111-111111111111';
 
+test('director campaign groups by area, starts with pending only, notifies new transfers and expires retries', async t => {
+  const db = await database(t);
+  await db.exec(`update recruitment_director_campaign set ends_at=now()+interval '7 days';
+    insert into recruitment_directors(email,area,name) values
+    ('lenin@example.test','ID','Lenin Castro'),('gabriel@example.test','ID','Gabriel Chupa'),('lge@example.test','LGE','LGE');`);
+  const id = randomUUID();
+  await db.query(`insert into recruitment_applications(id,token_hash,data,questions,status,submitted_at)
+    values($1,'test',$2,'[{}, {}, {}, {}]','submitted',now())`, [id, JSON.stringify(applicant(id, { secondChoiceArea: 'LGE' }))]);
+  await rpc(db, 'recruitment_director_schedule');
+  await rpc(db, 'recruitment_director_schedule');
+  const initial = await rpc(db, 'recruitment_director_lease', 20, randomUUID());
+  assert.equal(initial.items.length, 1);
+  assert.equal(initial.items[0].kind, 'pending');
+  assert.equal(initial.items[0].counts.total, 1);
+  assert.deepEqual(initial.items[0].recipients.map(r => r.name).sort(), ['Gabriel Chupa','Lenin Castro']);
+  await db.query('update recruitment_applications set evaluation_choice=2,second_option_at=now() where id=$1', [id]);
+  // Advancing the received application must not suppress its arrival notice.
+  await db.query("update recruitment_applications set status='profile_validated' where id=$1", [id]);
+  const transferred = await rpc(db, 'recruitment_director_lease', 20, randomUUID());
+  assert.equal(transferred.items.length, 1);
+  assert.equal(transferred.items[0].area, 'LGE');
+  assert.equal(transferred.items[0].kind, 'transfer');
+  assert.equal(transferred.items[0].recipients.length, 1);
+  await rpc(db, 'recruitment_director_schedule');
+  const token = randomUUID();
+  const close = await rpc(db, 'recruitment_director_lease', 20, token);
+  assert.equal(close.items.filter(m => m.kind==='close').length, 1);
+  const notice = close.items.find(m => m.kind==='close');
+  assert.equal(notice.area, 'ID');
+  await rpc(db, 'recruitment_director_finish', notice.id, token, 'provider-confirmed');
+  await rpc(db, 'recruitment_director_schedule');
+  assert.equal((await db.query("select count(*)::int as n from recruitment_director_mail where kind='close'")).rows[0].n, 1);
+  await db.exec("update recruitment_director_mail set sent_at=now()-interval '49 hours' where kind='close'");
+  await rpc(db, 'recruitment_director_schedule');
+  assert.equal((await db.query("select count(*)::int as n from recruitment_director_mail where kind='close'")).rows[0].n, 2);
+  await db.exec("update recruitment_director_campaign set ends_at=now()-interval '1 second'");
+  assert.equal((await rpc(db, 'recruitment_director_lease', 20, randomUUID())).items.length, 0);
+});
+
 async function database(t) {
   const db = new PGlite();
   t.after(() => db.close());

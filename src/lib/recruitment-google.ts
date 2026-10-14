@@ -33,14 +33,16 @@ export async function googleAccessToken(): Promise<string> {
   return cached.value;
 }
 
-export async function googleRequest(url: string, init: RequestInit = {}): Promise<Response> {
+export async function googleRequest(url: string, init: RequestInit = {}, expiresAt?: number): Promise<Response> {
   const target = new URL(url);
   if (target.protocol !== 'https:' || !['www.googleapis.com', 'gmail.googleapis.com'].includes(target.hostname)) {
     throw new Error('Destino de Google no permitido.');
   }
+  const token = await googleAccessToken();
+  if (expiresAt !== undefined && Date.now() >= expiresAt) throw new Error('El plazo de envío terminó.');
   return fetch(url, {
     ...init,
-    headers: { ...Object.fromEntries(new Headers(init.headers)), Authorization: `Bearer ${await googleAccessToken()}` },
+    headers: { ...Object.fromEntries(new Headers(init.headers)), Authorization: `Bearer ${token}` },
     signal: init.signal || AbortSignal.timeout(20_000),
   });
 }

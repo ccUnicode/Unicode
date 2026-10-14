@@ -2,6 +2,7 @@ import { createVideoUpload, deleteVideo, inspectVideo, getVideoPlayback, videoSt
 import { sendRecruitmentEmail, recruitmentEmailConfigured } from '../recruitment-email';
 import { UNIVERSITIES } from './universities';
 import { limaDay, registrationDays } from './summary-period';
+import { processDirectorEmails, scheduleDirectorEmails } from './director-mail';
 import { renderRecruitmentEmailHtml } from '../recruitment-email-layout';
 import { createVideoTicket } from '../video-ticket';
 import { unsubscribeUrl } from '../unsubscribe';
@@ -201,6 +202,7 @@ export async function processEmails(limit = 10) {
   }
   await recruitmentRpc<number>('recruitment_expire_drafts');
   if (!recruitmentEmailConfigured()) return { sent: 0, failed: 0, processed: 0, remaining: null, skipped: true, reason: 'El proveedor de correo aún no está configurado.' };
+  const directorCampaignReady = await scheduleDirectorEmails();
   const leaseToken = crypto.randomUUID();
   const { items } = await recruitmentRpc<{ items: EmailQueueItem[] }>('recruitment_lease_emails', { p_limit: limit, p_lease_token: leaseToken });
   let sent = 0; let failed = 0;
@@ -229,7 +231,8 @@ export async function processEmails(limit = 10) {
     }
   }
   const queue = await recruitmentRpc<{ queue: { status: string }[] }>('recruitment_queue');
-  return { sent, failed, processed: items.length, remaining: queue.queue.filter((item) => ['pending', 'leased'].includes(item.status)).length };
+  const directors = directorCampaignReady ? await processDirectorEmails(limit) : { sent: 0, failed: 0, processed: 0 };
+  return { sent: sent + directors.sent, failed: failed + directors.failed, processed: items.length + directors.processed, remaining: queue.queue.filter((item) => ['pending', 'leased'].includes(item.status)).length + (directors.processed >= limit ? limit : 0) };
 }
 
 /**

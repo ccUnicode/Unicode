@@ -21,6 +21,46 @@ const applicationId = '11111111-1111-4111-8111-111111111111';
 const uploadId = '22222222-2222-4222-8222-222222222222';
 const identity = { provider: 'drive', fileId: 'private-test-file', applicationId, uploadId };
 const originalFetch = globalThis.fetch;
+
+test('director email has one visible To group and stops even provider retries at the deadline', async () => {
+  configure({ RECRUITMENT_EMAIL_PROVIDER: 'resend', RESEND_API_KEY: 'local-key', RECRUITMENT_EMAIL_FROM: 'test@example.invalid' });
+  const to = [{ email: 'lenin@example.test', name: 'Lenin Castro' }, { email: 'gabriel@example.test', name: 'Gabriel Chupa' }];
+  let sends = 0;
+  globalThis.fetch = async (_url, options) => {
+    sends++;
+    assert.deepEqual(JSON.parse(options.body).to, ['"Lenin Castro" <lenin@example.test>', '"Gabriel Chupa" <gabriel@example.test>']);
+    return Response.json({ id: 'group-message' });
+  };
+  try {
+    const message = { to, subject: 'ID: pendientes', html: '<p>Pendientes</p>', text: 'Pendientes', idempotencyKey: 'director-test' };
+    await email.sendRecruitmentEmail(message);
+    assert.equal(sends, 1);
+    await assert.rejects(email.sendRecruitmentEmail({ ...message, expiresAt: Date.now()-1 }), /plazo/);
+    assert.equal(sends, 1);
+    globalThis.fetch = async () => { sends++; return new Response('', { status: 429 }); };
+    await assert.rejects(email.sendRecruitmentEmail({ ...message, expiresAt: Date.now()+100 }), /plazo/);
+    assert.equal(sends, 2);
+  } finally { globalThis.fetch = originalFetch; }
+});
+test('Gmail deadline is checked after OAuth refresh before starting the send', async () => {
+  configure({ RECRUITMENT_EMAIL_PROVIDER: 'gmail', GOOGLE_CLIENT_ID: 'local-client', GOOGLE_CLIENT_SECRET: 'local-secret', GOOGLE_REFRESH_TOKEN: 'local-refresh' });
+  const originalNow = Date.now;
+  let time = originalNow();
+  const deadline = time + 1000;
+  const calls = [];
+  Date.now = () => time;
+  globalThis.fetch = async url => {
+    calls.push(String(url));
+    assert.equal(String(url), 'https://oauth2.googleapis.com/token');
+    time = deadline;
+    return Response.json({ access_token: 'local-access', expires_in: 1 });
+  };
+  try {
+    await assert.rejects(email.sendRecruitmentEmail({ to: 'test@example.invalid', subject: 'Prueba', text: 'hola', html: '<p>hola</p>', idempotencyKey: 'director-oauth-cutoff', expiresAt: deadline }), /plazo/);
+    assert.equal(calls.length, 1);
+  } finally { globalThis.fetch = originalFetch; Date.now = originalNow; }
+});
+
 test('admin video questions match the applicant order without changing the stored snapshot', () => {
   const questions = [
     { category: 'collaboration', text: 'Collaboration 1' },
@@ -212,11 +252,14 @@ test('mail processing waits without leasing messages until the configured releas
   configure({ PUBLIC_SUPABASE_URL: 'https://queue-test.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'test-only-service-key', RESEND_API_KEY: 'local-key', RECRUITMENT_EMAIL_FROM: 'test@example.invalid' });
   const service = await server.ssrLoadModule('/src/lib/recruitment/service.ts');
   let pauseUntil = new Date(Date.now() + 60_000).toISOString();
+  let campaignAvailable = true;
   const calls = [];
   globalThis.fetch = async (url) => {
     const name = new URL(String(url)).pathname.split('/').at(-1);
     calls.push(name);
     if (name === 'recruitment_expire_drafts') return Response.json(0);
+    if (name === 'recruitment_director_schedule') return campaignAvailable ? Response.json(null) : Response.json({ message: 'missing campaign function', code: 'PGRST202' }, { status: 404 });
+    if (name === 'recruitment_director_lease') return Response.json({ items: [] });
     if (name === 'recruitment_admin_config') return Response.json({ config: { areas: [], storageProvider: 'drive', emailPausedUntil: pauseUntil } });
     if (name === 'recruitment_lease_emails') return Response.json({ items: [] });
     if (name === 'recruitment_queue') return Response.json({ queue: [] });
@@ -227,9 +270,15 @@ test('mail processing waits without leasing messages until the configured releas
     assert.equal(paused.skipped, true); assert.equal(paused.resumeAt, pauseUntil);
     assert.equal(paused.processed, 0); assert.ok(!calls.includes('recruitment_lease_emails'));
     assert.ok(!calls.includes('recruitment_expire_drafts'));
+    assert.ok(!calls.includes('recruitment_director_schedule'));
     pauseUntil = new Date(Date.now() - 60_000).toISOString();
     const resumed = await service.processEmails();
     assert.equal(resumed.processed, 0); assert.ok(calls.includes('recruitment_lease_emails'));
+    campaignAvailable = false; calls.length = 0;
+    const withoutMigration = await service.processEmails();
+    assert.equal(withoutMigration.processed, 0);
+    assert.ok(calls.includes('recruitment_lease_emails'));
+    assert.ok(!calls.includes('recruitment_director_lease'));
   } finally { globalThis.fetch = originalFetch; }
 });
 
