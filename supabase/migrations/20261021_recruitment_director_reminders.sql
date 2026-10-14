@@ -72,7 +72,9 @@ begin
  now()>=(select ends_at from recruitment_director_campaign where singleton)
  or (kind='pending' and (split_part(dedupe,':',3)<>to_char(now() at time zone 'America/Lima','YYYY-MM-DD') or (recruitment_director_pending(area)->>'total')::integer=0))
  or (kind='close' and ((recruitment_director_pending(area)->>'total')::integer>0 or exists(select 1 from recruitment_area_evaluation a where a.area=recruitment_director_mail.area and a.closed)))
- or (kind='transfer' and not exists(select 1 from recruitment_applications a where a.id=application_id and a.evaluation_choice=2 and a.status='submitted' and a.data->>'secondChoiceArea'=area)));
+ or (kind='transfer' and not exists(select 1 from recruitment_applications a where a.id=application_id and a.evaluation_choice=2 and not a.is_test and a.submitted_at is not null
+   and a.status in ('submitted','profile_validated','test_sent','test_completed','awaiting_second_review','interview_eligible','interview_scheduled','interviewed','group_eligible','group_scheduled','group_completed','waitlisted')
+   and a.data->>'secondChoiceArea'=area)));
  update recruitment_director_mail set status='failed' where status='leased' and leased_until<now() and attempts>=5;
  for m in select * from recruitment_director_mail where (status='pending' or (status='leased' and leased_until<now()))
  and next_attempt_at<=now() and attempts<5 order by created_at for update skip locked limit least(greatest(p_limit,1),20) loop

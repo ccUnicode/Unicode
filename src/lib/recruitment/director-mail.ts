@@ -41,7 +41,7 @@ export async function processDirectorEmails(limit: number) {
       if (Date.now() >= DIRECTOR_MAIL_END) continue;
       const env = (name: string) => import.meta.env[name] || process.env[name];
       const allowed = (env('RECRUITMENT_LOCAL_EMAIL_TO') || '').toLowerCase().split(',').map((s: string) => s.trim());
-      if (localDevelopmentDatabase() && item.recipients.some(r => !allowed.includes(r.email.toLowerCase()))) continue;
+      if (localDevelopmentDatabase() && item.recipients.some(r => !allowed.includes(r.email.toLowerCase()))) { messageId = 'local-omitido'; continue; }
       const siteUrl = env('RECRUITMENT_BASE_URL') || 'https://www.ccunicode.org';
       const notice = directorNotice(item, siteUrl);
       const result = await sendRecruitmentEmail({ to: item.recipients, subject: notice.subject, text: notice.text,

@@ -25,6 +25,8 @@ test('director campaign groups by area, starts with pending only, notifies new t
   assert.equal(initial.items[0].counts.total, 1);
   assert.deepEqual(initial.items[0].recipients.map(r => r.name).sort(), ['Gabriel Chupa','Lenin Castro']);
   await db.query('update recruitment_applications set evaluation_choice=2,second_option_at=now() where id=$1', [id]);
+  // Advancing the received application must not suppress its arrival notice.
+  await db.query("update recruitment_applications set status='profile_validated' where id=$1", [id]);
   const transferred = await rpc(db, 'recruitment_director_lease', 20, randomUUID());
   assert.equal(transferred.items.length, 1);
   assert.equal(transferred.items[0].area, 'LGE');
