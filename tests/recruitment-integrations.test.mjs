@@ -42,6 +42,25 @@ test('director email has one visible To group and stops even provider retries at
     assert.equal(sends, 2);
   } finally { globalThis.fetch = originalFetch; }
 });
+test('Gmail deadline is checked after OAuth refresh before starting the send', async () => {
+  configure({ RECRUITMENT_EMAIL_PROVIDER: 'gmail', GOOGLE_CLIENT_ID: 'local-client', GOOGLE_CLIENT_SECRET: 'local-secret', GOOGLE_REFRESH_TOKEN: 'local-refresh' });
+  const originalNow = Date.now;
+  let time = originalNow();
+  const deadline = time + 1000;
+  const calls = [];
+  Date.now = () => time;
+  globalThis.fetch = async url => {
+    calls.push(String(url));
+    assert.equal(String(url), 'https://oauth2.googleapis.com/token');
+    time = deadline;
+    return Response.json({ access_token: 'local-access', expires_in: 1 });
+  };
+  try {
+    await assert.rejects(email.sendRecruitmentEmail({ to: 'test@example.invalid', subject: 'Prueba', text: 'hola', html: '<p>hola</p>', idempotencyKey: 'director-oauth-cutoff', expiresAt: deadline }), /plazo/);
+    assert.equal(calls.length, 1);
+  } finally { globalThis.fetch = originalFetch; Date.now = originalNow; }
+});
+
 test('admin video questions match the applicant order without changing the stored snapshot', () => {
   const questions = [
     { category: 'collaboration', text: 'Collaboration 1' },

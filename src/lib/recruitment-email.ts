@@ -63,7 +63,7 @@ async function sendWithGmail(email: Email): Promise<{ messageId: string }> {
   ].join('\r\n');
   const response = await googleRequest('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ raw: Buffer.from(mime).toString('base64url') }),
-  });
+  }, email.expiresAt);
   if (!response.ok) throw new Error('El proveedor de correo rechazó el envío.');
   const data = await response.json() as { id?: string };
   if (!data.id) throw new Error('El proveedor no confirmó el envío.');
