@@ -1,6 +1,9 @@
 /** Durable outbox transport. Missing credentials never count as a delivered message. */
 import { googleConfigured, googleRequest } from './recruitment-google';
-type Email = { to: string; subject: string; html: string; text: string; idempotencyKey: string; headers?: Record<string, string> };
+type Email = { to: string | { email: string; name: string }[]; subject: string; html: string; text: string; idempotencyKey: string; headers?: Record<string, string>; expiresAt?: number };
+function checkDeadline(email: Email) { if (email.expiresAt !== undefined && Date.now() >= email.expiresAt) throw new Error('El plazo de envío terminó.'); }
+const recipients = (email: Email) => typeof email.to === 'string' ? [{ email: email.to, name: '' }] : email.to;
+const address = (recipient: { email: string; name: string }) => recipient.name ? `=?UTF-8?B?${Buffer.from(recipient.name).toString('base64')}?= <${recipient.email}>` : recipient.email;
 const env = (key: string) => import.meta.env[key] || process.env[key];
 const resendConfigured = () => Boolean(env('RESEND_API_KEY') && env('RECRUITMENT_EMAIL_FROM'));
 /** Where applicants' replies go; the sending address on our domain has no mailbox. */
@@ -15,7 +18,7 @@ export function recruitmentEmailConfigured(): boolean {
  * day), the same message goes out through the project's Gmail instead, if it is configured.
  */
 export async function sendRecruitmentEmail(email: Email): Promise<{ messageId: string }> {
-  if (!/^[^\s@\r\n]+@[^\s@\r\n]+\.[^\s@\r\n]+$/.test(email.to) || /[\r\n]/.test(email.subject)) throw new Error('Destinatario o asunto inválido.');
+  if (!recipients(email).length || recipients(email).some(r => !/^[^\s@\r\n<>]+@[^\s@\r\n<>]+\.[^\s@\r\n<>]+$/.test(r.email) || /[\r\n]/.test(r.name)) || /[\r\n]/.test(email.subject)) throw new Error('Destinatario o asunto inválido.');
   if (env('RECRUITMENT_EMAIL_PROVIDER') === 'gmail') return sendWithGmail(email);
   const sent = await sendWithResend(email);
   if (sent !== 'limit') return sent;
@@ -27,11 +30,11 @@ async function sendWithResend(email: Email): Promise<{ messageId: string } | 'li
   const key = env('RESEND_API_KEY'); const from = env('RECRUITMENT_EMAIL_FROM');
   if (!key || !from) throw new Error('El servicio de correo está pendiente de configuración.');
   const reply = replyTo();
-  const send = () => fetch('https://api.resend.com/emails', {
+  const send = () => { checkDeadline(email); return fetch('https://api.resend.com/emails', {
     method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', 'Idempotency-Key': email.idempotencyKey },
-    body: JSON.stringify({ from, to: [email.to], subject: email.subject, html: email.html, text: email.text, ...(reply ? { reply_to: reply } : {}), ...(email.headers ? { headers: email.headers } : {}) }),
+    body: JSON.stringify({ from, to: recipients(email).map(r => r.name ? `"${r.name.replace(/["\\]/g, '\\$&')}" <${r.email}>` : r.email), subject: email.subject, html: email.html, text: email.text, ...(reply ? { reply_to: reply } : {}), ...(email.headers ? { headers: email.headers } : {}) }),
     signal: AbortSignal.timeout(20_000),
-  });
+  }); };
   let response = await send();
   // The free plan allows a couple of requests per second: wait once before treating it as the daily cap.
   if (response.status === 429) { await new Promise((resolve) => setTimeout(resolve, 1200)); response = await send(); }
@@ -43,6 +46,7 @@ async function sendWithResend(email: Email): Promise<{ messageId: string } | 'li
 }
 
 async function sendWithGmail(email: Email): Promise<{ messageId: string }> {
+  checkDeadline(email);
   // Gmail has no exactly-once idempotency API. The stable Message-ID identifies ambiguous retries.
   const encodedSubject = `=?UTF-8?B?${Buffer.from(email.subject).toString('base64')}?=`;
   const messageId = `${email.idempotencyKey.replace(/[^a-zA-Z0-9.-]/g, '-')}@ccunicode.org`;
@@ -52,7 +56,7 @@ async function sendWithGmail(email: Email): Promise<{ messageId: string }> {
     Buffer.from(content).toString('base64').match(/.{1,76}/g)?.join('\r\n') || '', ''];
   const reply = replyTo();
   const mime = [
-    `To: ${email.to}`, `Subject: ${encodedSubject}`, `Message-ID: <${messageId}>`, ...(reply && !/[\r\n]/.test(reply) ? [`Reply-To: ${reply}`] : []),
+    `To: ${recipients(email).map(address).join(', ')}`, `Subject: ${encodedSubject}`, `Message-ID: <${messageId}>`, ...(reply && !/[\r\n]/.test(reply) ? [`Reply-To: ${reply}`] : []),
     ...Object.entries(email.headers ?? {}).filter(([name, value]) => /^[A-Za-z-]+$/.test(name) && !/[\r\n]/.test(value)).map(([name, value]) => `${name}: ${value}`),
     'MIME-Version: 1.0', `Content-Type: multipart/alternative; boundary="${boundary}"`, '',
     ...part('text/plain', email.text), ...part('text/html', email.html), `--${boundary}--`, '',
