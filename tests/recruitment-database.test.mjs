@@ -9,6 +9,54 @@ const migrationFiles = (await readdir(migrationDirectory)).filter(name => name.e
 const migrations = await Promise.all(migrationFiles.map(name => readFile(new URL(name, migrationDirectory), 'utf8')));
 const legacyId = '11111111-1111-4111-8111-111111111111';
 
+test('completion notice waits for every area and choice, ignores reception closure and is sent only once to Lenin', async t => {
+  const db = await database(t);
+  await db.exec("update recruitment_director_campaign set ends_at=now()+interval '7 days'");
+  assert.deepEqual((await rpc(db, 'recruitment_completion_lease', randomUUID())).items, []);
+  const first = randomUUID(); const second = randomUUID();
+  for (const [id, choice, area] of [[first, 1, 'ID'], [second, 2, 'LGE']]) {
+    await db.query(`insert into recruitment_applications(id,token_hash,data,questions,status,submitted_at,evaluation_choice)
+      values($1,'test',$2,'[{}, {}, {}, {}]','submitted',now(),$3)`, [id, JSON.stringify(applicant(id, { secondChoiceArea: area })), choice]);
+  }
+  assert.equal((await rpc(db, 'recruitment_completion_lease', randomUUID())).items.length, 0);
+  await db.query("update recruitment_applications set status='selected' where id=$1", [first]);
+  assert.equal((await rpc(db, 'recruitment_completion_lease', randomUUID())).items.length, 0);
+  await db.query("update recruitment_applications set status='not_selected' where id=$1", [second]);
+  const token = randomUUID();
+  const ready = await rpc(db, 'recruitment_completion_lease', token);
+  assert.equal(ready.items.length, 1);
+  assert.deepEqual(ready.items[0].recipients, [{ name: 'Lenin Castro', email: 'lenin.castro.a@uni.pe' }]);
+  assert.ok(ready.items[0].areas.every(area => !area.closed));
+  assert.equal((await rpc(db, 'recruitment_completion_lease', randomUUID())).items.length, 0, 'An active reservation cannot be leased twice');
+  const noticeId = ready.items[0].id;
+  await rpc(db, 'recruitment_completion_finish', noticeId, token, null);
+  assert.equal((await rpc(db, 'recruitment_completion_lease', randomUUID())).items.length, 0, 'Failed delivery respects cooldown');
+  await db.exec("update recruitment_completion_mail set next_attempt_at=now()-interval '1 second'");
+  const retryToken = randomUUID();
+  assert.equal((await rpc(db, 'recruitment_completion_lease', retryToken)).items[0].id, noticeId);
+  await rpc(db, 'recruitment_completion_finish', noticeId, retryToken, 'confirmed-by-provider');
+  assert.equal((await rpc(db, 'recruitment_completion_lease', randomUUID())).items.length, 0);
+});
+
+test('completion notification respects the campaign deadline and excludes tests and unfinished drafts', async t => {
+  const db = await database(t);
+  await db.exec("update recruitment_director_campaign set ends_at=now()+interval '7 days'");
+  for (const [status, isTest] of [['submitted', true], ['draft', false]]) {
+    const id = randomUUID();
+    await db.query(`insert into recruitment_applications(id,token_hash,data,questions,status,submitted_at,is_test)
+      values($1,'test',$2,'[{}, {}, {}, {}]',$3,case when $3='submitted' then now() end,$4)`, [id, JSON.stringify(applicant(id)), status, isTest]);
+    if (isTest) await db.query('update recruitment_applications set is_test=true where id=$1', [id]);
+  }
+  assert.equal((await rpc(db, 'recruitment_completion_lease', randomUUID())).items.length, 0);
+  const id = randomUUID();
+  await db.query(`insert into recruitment_applications(id,token_hash,data,questions,status,submitted_at)
+    values($1,'test',$2,'[{}, {}, {}, {}]','selected',now())`, [id, JSON.stringify(applicant(id))]);
+  assert.equal((await rpc(db, 'recruitment_completion_lease', randomUUID())).items.length, 1);
+  await db.exec("update recruitment_director_campaign set ends_at=now()-interval '1 second'");
+  assert.equal((await rpc(db, 'recruitment_completion_lease', randomUUID())).items.length, 0);
+  assert.equal((await db.query('select status from recruitment_completion_mail')).rows[0].status, 'expired');
+});
+
 test('director campaign groups by area, starts with pending only, notifies new transfers and expires retries', async t => {
   const db = await database(t);
   await db.exec(`update recruitment_director_campaign set ends_at=now()+interval '7 days';
