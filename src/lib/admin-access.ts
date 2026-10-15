@@ -1,6 +1,7 @@
 /** Director sign-in with a one-time code sent by email, and the list of directors GTH manages. */
 import { recruitmentRpc, localDevelopmentDatabase } from './recruitment/database';
 import { sendRecruitmentEmail, recruitmentEmailConfigured } from './recruitment-email';
+import { directorDisplayName } from './director-display-name';
 import { renderRecruitmentEmailHtml } from './recruitment-email-layout';
 import { RecruitmentError, record } from './recruitment/validation';
 import { AREA_IDS, AREA_NAMES } from './recruitment/types';
@@ -33,7 +34,7 @@ export async function requestLoginCode(input: unknown): Promise<{ message: strin
   if (result.sent) {
     if (localDevelopmentDatabase()) console.info(`[admin] Código de acceso local para ${email}: ${code}`);
     else if (recruitmentEmailConfigured()) {
-      const greeting = result.name ? `Hola ${result.name.split(' ')[0]}, este` : 'Este';
+      const greeting = result.name ? `Hola ${directorDisplayName(result.name, email)}, este` : 'Este';
       const text = `${greeting} es tu código para entrar al panel de UNICODE:\n\n${code}\n\nVence en 10 minutos y solo funciona una vez. Si pides otro, este deja de servir. Si no lo pediste, ignora este correo.`;
       // A subject that starts with digits looks like phishing to some filters.
       const subject = 'Tu código de acceso a UNICODE';

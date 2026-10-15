@@ -3,6 +3,7 @@ import { sendRecruitmentEmail } from '../recruitment-email';
 import { renderRecruitmentEmailHtml } from '../recruitment-email-layout';
 import { AREA_NAMES, type AreaId } from './types';
 import { RecruitmentError } from './validation';
+import { directorDisplayName } from '../director-display-name';
 
 export const DIRECTOR_MAIL_END = Date.parse('2026-10-19T05:00:00Z');
 /** An unapplied campaign migration must not block existing applicant emails. */
@@ -21,7 +22,7 @@ export function directorNotice(item: Notice, siteUrl: string) {
   const area = AREA_NAMES[item.area];
   const subject = item.kind === 'pending' ? `${item.area}: ${item.counts.total} postulantes pendientes de evaluación`
     : item.kind === 'transfer' ? `${item.area}: nueva postulación de segunda opción` : `${item.area}: pueden cerrar la recepción de segundas opciones`;
-  const greeting = `Hola ${item.recipients.map(r => r.name || r.email).join(' y ')},`;
+  const greeting = `Hola ${item.recipients.map(r => directorDisplayName(r.name, r.email)).join(' y ')},`;
   const text = item.kind === 'pending'
     ? `${greeting}\n\nEn ${area} quedan ${item.counts.total} postulantes por evaluar: ${item.counts.first} de primera opción y ${item.counts.second} de segunda opción. Revisen el panel y registren las decisiones pendientes.`
     : item.kind === 'transfer'
@@ -44,7 +45,8 @@ export async function processDirectorEmails(limit: number) {
       if (localDevelopmentDatabase() && item.recipients.some(r => !allowed.includes(r.email.toLowerCase()))) { messageId = 'local-omitido'; continue; }
       const siteUrl = env('RECRUITMENT_BASE_URL') || 'https://www.ccunicode.org';
       const notice = directorNotice(item, siteUrl);
-      const result = await sendRecruitmentEmail({ to: item.recipients, subject: notice.subject, text: notice.text,
+      const recipients = item.recipients.map(r => ({ ...r, name: directorDisplayName(r.name, r.email) }));
+      const result = await sendRecruitmentEmail({ to: recipients, subject: notice.subject, text: notice.text,
         html: renderRecruitmentEmailHtml({ ...notice, siteUrl, actionLabel: 'Abrir panel de directores' }), idempotencyKey: `director-${item.id}`, expiresAt: DIRECTOR_MAIL_END });
       messageId = result.messageId; sent++;
     } catch { failed++; }
