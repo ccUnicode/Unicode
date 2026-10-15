@@ -188,7 +188,7 @@ export async function videoForPlayback(id: string) {
 export function getTemplates() { return recruitmentRpc('recruitment_templates'); }
 export function saveTemplates(input: unknown) { return recruitmentRpc('recruitment_templates', { p_templates: validateTemplates(input), p_actor: 'administracion-compartida' }); }
 export function getQueue() { return recruitmentRpc('recruitment_queue'); }
-function interpolate(template: string, payload: Record<string, string>): string { return template.replace(/{{\s*(firstName|lastName|title|status|resumeUrl)\s*}}/g, (_, name: string) => payload[name] || ''); }
+function interpolate(template: string, payload: Record<string, string>): string { return template.replace(/{{\s*(firstName|lastName|title|status|resumeUrl|evaluationArea|firstArea|secondArea)\s*}}/g, (_, name: string) => payload[name] || ''); }
 /** With the local database, mail only goes to the addresses listed in RECRUITMENT_LOCAL_EMAIL_TO. */
 function localRecipientAllowed(to: string): boolean {
   if (!localDevelopmentDatabase()) return true;

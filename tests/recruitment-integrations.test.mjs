@@ -300,3 +300,29 @@ test('private playback returns the verified duration without scanning the stored
     assert.equal(await tickets.verifyVideoTicket(applicationId, link.searchParams.get('t')), true);
   } finally { globalThis.fetch = originalFetch; }
 });
+
+test('queued outcome emails render area variables in the subject, plain text and HTML', async () => {
+  configure({ PUBLIC_SUPABASE_URL: 'https://queue-test.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'test-only-service-key', RECRUITMENT_EMAIL_PROVIDER: 'resend', RESEND_API_KEY: 'local-key', RECRUITMENT_EMAIL_FROM: 'test@example.invalid' });
+  const service = await server.ssrLoadModule('/src/lib/recruitment/service.ts');
+  let outgoing;
+  globalThis.fetch = async (url, options) => {
+    const name = new URL(String(url)).pathname.split('/').at(-1);
+    if (String(url) === 'https://api.resend.com/emails') { outgoing = JSON.parse(options.body); return Response.json({ id: 'corrected-message' }); }
+    if (name === 'recruitment_admin_config') return Response.json({ config: { areas: [], storageProvider: 'drive' } });
+    if (name === 'recruitment_expire_drafts') return Response.json(0);
+    if (name === 'recruitment_director_schedule') return Response.json({ message: 'not installed', code: 'PGRST202' }, { status: 404 });
+    if (name === 'recruitment_lease_emails') return Response.json({ items: [{ id: 'area-message', to: 'person@example.test', templateKey: 'selected', subject: 'Equipo de {{evaluationArea}}', body: 'Hola {{firstName}}: de {{ firstArea }} a {{secondArea}}, equipo {{evaluationArea}}.', payload: { firstName: 'Prueba', evaluationArea: 'Relaciones Públicas', firstArea: 'Investigación y Desarrollo', secondArea: 'Relaciones Públicas' } }] });
+    if (name === 'recruitment_finish_email') return Response.json(null);
+    if (name === 'recruitment_queue') return Response.json({ queue: [] });
+    throw new Error(`Unexpected request: ${name}`);
+  };
+  try {
+    const result = await service.processEmails();
+    assert.equal(result.sent, 1);
+    assert.equal(result.failed, 0);
+    assert.equal(outgoing.subject, 'Equipo de Relaciones Públicas');
+    assert.match(outgoing.text, /de Investigación y Desarrollo a Relaciones Públicas/);
+    assert.match(outgoing.html, /equipo Relaciones Públicas/);
+    assert.doesNotMatch(outgoing.subject + outgoing.text + outgoing.html, /{{|}}/);
+  } finally { globalThis.fetch = originalFetch; }
+});
