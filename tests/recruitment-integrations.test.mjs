@@ -260,6 +260,7 @@ test('mail processing waits without leasing messages until the configured releas
     if (name === 'recruitment_expire_drafts') return Response.json(0);
     if (name === 'recruitment_director_schedule') return campaignAvailable ? Response.json(null) : Response.json({ message: 'missing campaign function', code: 'PGRST202' }, { status: 404 });
     if (name === 'recruitment_director_lease') return Response.json({ items: [] });
+    if (name === 'recruitment_completion_lease') return Response.json({ items: [] });
     if (name === 'recruitment_admin_config') return Response.json({ config: { areas: [], storageProvider: 'drive', emailPausedUntil: pauseUntil } });
     if (name === 'recruitment_lease_emails') return Response.json({ items: [] });
     if (name === 'recruitment_queue') return Response.json({ queue: [] });

@@ -18,7 +18,16 @@ export async function scheduleDirectorEmails(): Promise<boolean> {
   }
 }
 type Notice = { id: string; area: AreaId; kind: 'pending' | 'transfer' | 'close'; recipients: { email: string; name: string }[]; counts: { first: number; second: number; total: number } };
-export function directorNotice(item: Notice, siteUrl: string) {
+type CompletionNotice = { id: string; kind: 'complete'; recipients: { email: string; name: string }[]; areas: { area: AreaId; closed: boolean }[] };
+export function directorNotice(item: Notice | CompletionNotice, siteUrl: string) {
+  if (item.kind === 'complete') {
+    const open = item.areas.filter(area => !area.closed).map(area => AREA_NAMES[area.area]);
+    const actionUrl = new URL('/admin', siteUrl).toString();
+    const summary = item.areas.map(area => `- ${AREA_NAMES[area.area]}: 0 pendientes.`).join('\n');
+    const reception = open.length ? `Aún mantienen abierta la recepción de segundas opciones: ${open.join(', ')}. Este aviso confirma que no hay evaluaciones pendientes en este momento; no cierra las áreas.` : 'Todas las áreas también han cerrado su recepción de segundas opciones.';
+    return { subject: 'UNICODE: todas las evaluaciones están terminadas',
+      text: `Hola Lenin Castro,\n\nTodas las áreas han terminado sus evaluaciones. No queda ningún postulante pendiente de decisión, ni de primera ni de segunda opción.\n\n${summary}\n\n${reception}\n\nPanel de directores: ${actionUrl}`, actionUrl };
+  }
   const area = AREA_NAMES[item.area];
   const subject = item.kind === 'pending' ? `${item.area}: ${item.counts.total} postulantes pendientes de evaluación`
     : item.kind === 'transfer' ? `${item.area}: nueva postulación de segunda opción` : `${item.area}: pueden cerrar la recepción de segundas opciones`;
@@ -34,8 +43,16 @@ export function directorNotice(item: Notice, siteUrl: string) {
 export async function processDirectorEmails(limit: number) {
   const leaseToken = crypto.randomUUID();
   const { items } = await recruitmentRpc<{ items: Notice[] }>('recruitment_director_lease', { p_limit: limit, p_lease_token: leaseToken });
+  let completion: CompletionNotice[] = [];
+  try {
+    completion = (await recruitmentRpc<{ items: CompletionNotice[] }>('recruitment_completion_lease', { p_lease_token: leaseToken })).items;
+  } catch (error) {
+    // Keep the existing director campaign operational before the additive migration is applied.
+    if (!(error instanceof RecruitmentError) || error.code !== 'database_error') throw error;
+    console.warn('Aviso final pendiente: verifica la migración de finalización y la conexión.');
+  }
   let sent = 0; let failed = 0;
-  for (const item of items) {
+  for (const item of [...items, ...completion]) {
     let messageId: string | null = null;
     try {
       // Check again at the transport boundary, even when a batch crosses midnight.
@@ -51,8 +68,8 @@ export async function processDirectorEmails(limit: number) {
       messageId = result.messageId; sent++;
     } catch { failed++; }
     finally {
-      await recruitmentRpc('recruitment_director_finish', { p_id: item.id, p_lease_token: leaseToken, p_message_id: messageId });
+      await recruitmentRpc(item.kind === 'complete' ? 'recruitment_completion_finish' : 'recruitment_director_finish', { p_id: item.id, p_lease_token: leaseToken, p_message_id: messageId });
     }
   }
-  return { sent, failed, processed: items.length };
+  return { sent, failed, processed: items.length + completion.length };
 }
