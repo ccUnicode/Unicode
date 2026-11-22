@@ -1,6 +1,18 @@
 # Documentación del Frontend
 
-Este documento describe la arquitectura, las guías de desarrollo, los contratos de datos y las especificaciones de diseño aplicados en el frontend de la plataforma oficial de UNICODE.
+Este documento describe la arquitectura, las guías de desarrollo, los contratos de datos, las especificaciones de diseño aplicados en el frontend de la plataforma oficial de UNICODE y la especificación de wireframes de alta fidelidad del panel CMS (**CMS-3**).
+
+### Índice Rápido
+1. [Explicación (Contexto y Arquitectura)](#1-explicación-contexto-y-arquitectura)
+2. [Guías Prácticas (Consumo de APIs y Modales)](#2-guías-prácticas-instrucciones-orientadas-a-tareas)
+3. [Referencia (Estructura, Rutas y Tokens)](#3-referencia-especificaciones-técnicas-y-contratos)
+4. [Tutorial (Añadir un Área de Conocimiento)](#4-tutorial-instrucciones-de-aprendizaje)
+5. [Especificación UI/UX del Panel Administrativo CMS (CMS-3)](#5-especificación-uiux-del-panel-administrativo-cms-cms-3)
+   - [5.1. Sistema de Diseño Visual y Paleta Oficial](#51-sistema-de-diseño-visual-y-paleta-oficial-tema-oscuro--verde-neón)
+   - [5.2. Wireframes de Alta Fidelidad (Login, Sidebar, Eventos, Convocatoria)](#52-wireframes-de-alta-fidelidad)
+   - [5.3. Matriz de Permisos y Flujos Editoriales: 1 Paso vs 2 Pasos](#53-matriz-de-permisos-y-flujos-editoriales-1-paso-vs-2-pasos)
+   - [5.4. Especificación Visual de Badges de Estado Editorial](#54-especificación-visual-de-badges-de-estado-editorial)
+   - [5.5. Catálogo de Componentes UI Reutilizables del CMS](#55-catálogo-de-componentes-ui-reutilizables-del-cms)
 
 ---
 
@@ -276,3 +288,313 @@ import AreaDirectorProfile from "../../components/components-areas/area-director
 
 ### Paso 4: Validar el despliegue local
 Abra el navegador en `http://localhost:4321/areas/information-technologies` y compruebe que la página renderice el tema oscuro con el color de acento correcto. Compruebe la apertura del modal y la presencia del nuevo campo de selección.
+
+---
+
+## 5. Especificación UI/UX del Panel Administrativo CMS (CMS-3)
+
+Esta sección define la arquitectura de interfaz de usuario, los wireframes de alta fidelidad, el sistema de permisos editoriales y el catálogo de componentes reutilizables para el nuevo Panel Administrativo CMS de UNICODE, dando cumplimiento a los criterios de aceptación de **CMS-3**.
+
+### 5.1. Sistema de Diseño Visual y Paleta Oficial (Tema Oscuro + Verde Neón)
+
+El CMS respeta de manera estricta la guía visual institucional de UNICODE:
+
+*   **Fondo General de la Aplicación:** `#050505` (`bg-[#050505]`).
+*   **Superficie de Tarjetas y Sidebar:** `#0F0F0F` / `#121212` (`bg-[#0F0F0F]`, `bg-[#121212]`).
+*   **Bordes y Separadores:** `#27272a` (`border-zinc-800`), con transiciones a `#3f3f46` (`hover:border-zinc-700`).
+*   **Color de Acento Primario (Verde Neón):** `#75D32D` (`text-unicode`, `bg-unicode`, `border-unicode`).
+*   **Brillo y Énfasis Glow:** `shadow-[0_0_20px_rgba(117,211,45,0.25)]` (`shadow-unicode`).
+*   **Texto Principal:** `#FFFFFF` (`text-white`) con tipografía sans-serif semibold / bold.
+*   **Texto Secundario:** `#A1A1AA` (`text-zinc-400`) y `#71717A` (`text-zinc-500`).
+
+---
+
+### 5.2. Wireframes de Alta Fidelidad
+
+#### 5.2.1. Login Administrativo (`/admin/login`)
+
+Diseño minimalista centrado en pantalla, con degradado radial sutil de verde neón en el fondo y tarjeta blindada con Supabase Auth.
+
+```text
++-----------------------------------------------------------------------+
+|                                                                       |
+|                          [ LOGO UNICODE ]                             |
+|                       PANEL ADMINISTRATIVO                            |
+|               Gestión de Contenido y Convocatorias                    |
+|                                                                       |
+|          +-------------------------------------------------+          |
+|          | Correo Institucional                            |          |
+|          | [ usuario@ccunicode.org                       ] |          |
+|          |                                                 |          |
+|          | Contraseña                                      |          |
+|          | [ ••••••••••••••••••••••••••••••••          [o] ] |          |
+|          |                                                 |          |
+|          | [x] Mantener sesión activa      ¿Olvidaste clave?|          |
+|          |                                                 |          |
+|          | [======== INICIAR SESIÓN EN EL CMS ============] |          |
+|          |  (bg-unicode text-black font-bold rounded-xl)   |          |
+|          +-------------------------------------------------+          |
+|                                                                       |
+|             Centro Cultural UNICODE © 2026 • FIIS - UNI               |
+|                                                                       |
++-----------------------------------------------------------------------+
+```
+
+*   **Comportamiento Interactivo:**
+    *   Al ingresar credenciales, el botón muestra spinner animado y se deshabilita para evitar peticiones duplicadas.
+    *   Si las credenciales fallan, se renderiza un alert con borde rojo (`border-red-500/40 bg-red-500/10 text-red-300`).
+    *   Al autenticar, el middleware lee la tabla `cms_user_permissions` y redirecciona al dashboard cargando en sesión el rol (`role`) y el área (`area_scope`).
+
+---
+
+#### 5.2.2. Layout Base y Sidebar Dinámico por Rol/Área
+
+El panel administrativo implementa una estructura fija de **Sidebar lateral + Header superior + Contenedor de contenido scrollable**. El sidebar adapta sus opciones de forma dinámica según el rol del usuario:
+
+```text
++---------------------------------------------------------------------------------------------------------+
+| [LOGO] UNICODE CMS  |  Área: [ I+D (ID) v ]       Buscar... [Ctrl+K]     |  (🔔 2)  [Foto] Lenin C. (Dir) v |
++---------------------+-----------------------------------------------------------------------------------+
+|  PANEL PRINCIPAL    |  EVENTOS > LISTADO GENERAL                                   [ + Crear Evento ]   |
+|  * Dashboard        |                                                                                   |
+|  * Eventos          |  [ Todos (14) ] [ Publicados (8) ] [ En Revisión (3) ] [ Borradores (2) ] [ Arch. (1) ] |
+|  * Convocatoria     |  -------------------------------------------------------------------------------  |
+|  * Proyectos        |  Buscar: [ Escribe título...      ]  Tipo: [ Todos v ]  Área: [ I+D v ]  Ordenar [v]  |
+|  * Alianzas         |                                                                                   |
+|                     |  +-----------------------------------------------------------------------------+  |
+|  SUPERVISIÓN (Dir)  |  | BANNER | TÍTULO Y TOPIC      | ÁREA | TIPO     | ESTADO      | ACCIONES       |  |
+|  * Pendientes [ 3 ] |  |--------+---------------------+------+----------+-------------+----------------|  |
+|  * Auditoría Logs   |  | [Img]  | IA Summit 2026      | ID   | Próximo  | [PUBLICADO] | [...] [Editar] |  |
+|                     |  | [Img]  | Taller Micro-SaaS   | ID   | Próximo  | [EN REVIS.] | [Aprobar][Ed.] |  |
+|  CONFIGURACIÓN      |  | [Img]  | Hackathon Web3      | ID   | Realiz.  | [BORRADOR]  | [...] [Editar] |  |
+|  * Mi Perfil        |  +-----------------------------------------------------------------------------+  |
+|  [-> Cerrar Sesión] |  Mostrando 1 - 3 de 14 resultados                         < Página [ 1 ] de 5 >   |
++---------------------+-----------------------------------------------------------------------------------+
+```
+
+##### Diferenciación del Menú por Rol:
+1.  **Directores y DCC (`role: 'approver' | 'admin'`, `can_publish_direct: true`):**
+    *   Visualizan el módulo de **"Supervisión"** con la bandeja **"Pendientes de Aprobación"** con badge numérico en tiempo real.
+    *   Pueden cambiar el selector superior de Área (`area_scope: 'ALL'` en DCC/Presidencia o selector de su área asignada).
+    *   Tienen acceso a la configuración de Convocatoria (`recruitment_config`) y auditoría.
+2.  **Delegados de Área (`role: 'editor' / 'area_delegate'`, `can_publish_direct: false`):**
+    *   Visualizan únicamente los módulos operativos asignados a su área (Eventos, Proyectos, Alianzas).
+    *   **No visualizan** la bandeja de aprobación ni botones de publicación directa.
+    *   El selector de área permanece bloqueado en su área asignada (ej. `Área: Académica (ACD)`).
+
+---
+
+#### 5.2.3. Módulo de Eventos: Formulario de Creación / Edición (`/admin/events/[id]`)
+
+Estructurado en un formulario de dos columnas en escritorio (campos principales a la izquierda, metadatos y acciones editoriales a la derecha):
+
+```text
++---------------------------------------------------------------------------------------------------------+
+| <- Volver a Eventos    |  Editando: "Frontiers of AI Summit 2026"                 Estado actual: [BORRADOR] |
++---------------------------------------------------------------------------------------------------------+
+| [ COLUMNA PRINCIPAL - 68% ]                              | [ BARRA LATERAL EDITORIAL - 32% ]             |
+|                                                          |                                               |
+|  1. INFORMACIÓN BÁSICA                                   |  PANEL DE PUBLICACIÓN                         |
+|  Título del Evento *                                     |  Área Propietaria: [ I+D (ID)               v]|
+|  [ Frontiers of AI Summit 2026                         ] |  Tipo de Evento:   (o) Próximo  ( ) Realizado |
+|                                                          |  Destacar en Home: [X] Mostrar en carrusel    |
+|  Slug (URL amigable):                                    |  Orden en Home:    [ 1                     ]  |
+|  [ ccunicode.org/events/frontiers-of-ai-summit-2026   ] |                                               |
+|                                                          |  ESTADO Y ACCIONES EDITORIALES                |
+|  Subtítulo o Topic:                                      |  +-----------------------------------------+  |
+|  [ Tendencias globales en Inteligencia Artificial Gener ]|  | CASO A: VISTA DIRECTOR / DCC            |  |
+|                                                          |  | [=========== PUBLICAR AHORA ===========] |  |
+|  Descripción General (Markdown / Enriquecida):          |  |  (bg-unicode text-black font-bold)      |  |
+|  +-----------------------------------------------------+ |  |                                         |  |
+|  | [B] [I] [H2] [Link] [Lista]                         | |  | [ Guardar Borrador ]  [ Vista Previa ]  |  |
+|  | Un espacio de debate académico con speakers...      | |  +-----------------------------------------+  |
+|  +-----------------------------------------------------+ |  | CASO B: VISTA DELEGADO DE ÁREA          |  |
+|                                                          |  | [========== ENVIAR A REVISIÓN =========] |  |
+|  2. FECHA, HORARIO Y LUGAR                               |  |  (bg-amber-400 text-black font-bold)    |  |
+|  Fecha del Evento: [ 2026-12-15 ]  Hora: [ 09:00 AM   ] |  |                                         |  |
+|  Lugar / Plataforma: [ Auditorio FIIS UNI / Híbrido   ] |  | [ Guardar Borrador ]  [ Vista Previa ]  |  |
+|                                                          |  +-----------------------------------------+  |
+|  3. PONENTES / SPEAKERS                                  |                                               |
+|  +-----------------------------------------------------+ |  BANNER PRINCIPAL                             |
+|  | [Foto] Dra. Jane Doe - AI Lead en DeepMind   [Trash]| |  +-----------------------------------------+  |
+|  | [Foto] Ing. Carlos Ruiz - Senior Dev en AWS  [Trash]| |  |                                         |  |
+|  | [ + Añadir Ponente ]                                | |  |         [ Drop imagen aquí ]            |  |
+|  +-----------------------------------------------------+ |  |    JPG, PNG, WebP (Máx. 2MB, 16:9)     |  |
+|                                                          |  +-----------------------------------------+  |
+|  4. ENLACE DE INSCRIPCIÓN / ENTRADAS                     |                                               |
+|  [ https://forms.gle/evento-ai-unicode                ] |  Auditoría: Creado por LC hace 2 horas       |
++---------------------------------------------------------------------------------------------------------+
+```
+
+---
+
+#### 5.2.4. Módulo de Convocatoria (`/admin/call`)
+
+Interfaz orientada a interruptores globales y control de fechas críticas sin necesidad de editar código:
+
+```text
++---------------------------------------------------------------------------------------------------------+
+| DASHBOARD CMS > PARÁMETROS PÚBLICOS DE CONVOCATORIA                                                     |
++---------------------------------------------------------------------------------------------------------+
+|                                                                                                         |
+|  ESTADO MAESTRO DE CONVOCATORIA                                                                         |
+|  +---------------------------------------------------------------------------------------------------+  |
+|  |  CONVOCATORIA PÚBLICA ACTIVA:  [ (ON) ACTIVA ]   Modo actual: [ INSCRIPCIONES ABIERTAS ]          |  |
+|  |  Al apagar el switch, la página pública /call muestra el banner de "Convocatoria Cerrada".         |  |
+|  +---------------------------------------------------------------------------------------------------+  |
+|                                                                                                         |
+|  FECHAS DEL CRONOGRAMA                                                                                  |
+|  Fecha de Apertura: [ 2026-11-01 00:00 ]   Fecha de Cierre Oficial: [ 2026-11-30 23:59 ]                |
+|  Fecha de Prórroga Extrema: [ 2026-12-05 23:59 ]   (Dejar vacío si no aplica prórroga)                  |
+|                                                                                                         |
+|  ETAPAS VISIBLES EN EL ROADMAP DE /call                                                                 |
+|  +---------------------------------------------------------------------------------------------------+  |
+|  | # | NOMBRE DE LA ETAPA       | FECHA INICIO | FECHA FIN  | ESTADO ACTUAL | ACCIONES               |  |
+|  |---+--------------------------+--------------+------------+---------------+------------------------|  |
+|  | 1 | Recepción de Postulantes | 01 Nov 2026  | 15 Nov 2026| [COMPLETADA]  | [Editar]               |  |
+|  | 2 | Entrevistas Individuales | 16 Nov 2026  | 25 Nov 2026| [EN CURSO]    | [Editar]               |  |
+|  | 3 | Publicación de Elegidos  | 26 Nov 2026  | 30 Nov 2026| [PENDIENTE]   | [Editar]               |  |
+|  +---------------------------------------------------------------------------------------------------+  |
+|  [ + Añadir Etapa al Cronograma ]                                                                       |
+|                                                                                                         |
+|  REQUISITOS Y PERFILES POR ÁREA (Acordeón de configuración rápida)                                      |
+|  > Área de Investigación y Desarrollo (ID)                 [ 12 Postulantes registrados ] [Configurar v]|
+|  > Área de Dirección de Creación y Contenido (DCC)         [ 18 Postulantes registrados ] [Configurar v]|
+|  > Área Académica (ACD)                                    [ 9 Postulantes registrados  ] [Configurar v]|
+|                                                                                                         |
+|  [============ GUARDAR CAMBIOS DE CONVOCATORIA (DCC / Dirección) ============]                          |
++---------------------------------------------------------------------------------------------------------+
+```
+
+---
+
+### 5.3. Matriz de Permisos y Flujos Editoriales: 1 Paso vs 2 Pasos
+
+Para garantizar calidad de contenido sin burocracia innecesaria, se formalizan las decisiones cerradas de la issue:
+
+```mermaid
+flowchart TD
+    subgraph Delegado ["Delegado de Área (area_delegate / editor)"]
+        D1["Crea o Edita Contenido"] --> D2["Guardar Borrador (draft)"]
+        D1 --> D3["Enviar a Revisión (pending_review)"]
+    end
+
+    subgraph Revision ["Bandeja de Pendientes (Directores / DCC)"]
+        D3 --> R1{"¿Cumple estándares de redacción, imagen y fechas?"}
+        R1 -- "No: Solicitar Correcciones" --> D2
+        R1 -- "Sí: Aprobar" --> P1["Publicado en ccunicode.org (published)"]
+    end
+
+    subgraph Directores ["Director de Área / DCC (approver / admin)"]
+        DIR1["Crea o Edita Contenido"] --> DIR2["Guardar Borrador (draft)"]
+        DIR1 -->|Flujo de 1 Paso| P1
+        P1 --> ARCH["Archivar cuando concluya (archived)"]
+    end
+```
+
+| Rol del Usuario | `can_publish_direct` | Acciones Permitidas en Formulario | Flujo Editorial |
+| :--- | :--- | :--- | :--- |
+| **Director de Área** | `true` | • `Guardar Borrador`<br>• `Publicar Directamente`<br>• `Archivar` | **1 Paso**: Publica de forma autónoma para su área. |
+| **DCC (Comunicación)** | `true` | • `Guardar Borrador`<br>• `Publicar Directamente`<br>• `Aprobar de Cualquier Área` | **1 Paso**: Control transversal institucional. |
+| **Delegado de Área** | `false` | • `Guardar Borrador`<br>• `Enviar a Revisión` | **2 Pasos**: Su contenido pasa a la bandeja de pendientes del Director. |
+
+---
+
+### 5.4. Especificación Visual de Badges de Estado Editorial
+
+Todos los listados y formularios utilizan los siguientes tokens visuales para identificar el ciclo de vida del contenido:
+
+```text
+[ BORRADOR ]        bg-zinc-800 text-zinc-300 border border-zinc-700
+[ EN REVISIÓN ]     bg-amber-500/10 text-amber-400 border border-amber-500/30 font-semibold animate-pulse
+[ PUBLICADO ]       bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-semibold shadow-sm
+[ ARCHIVADO ]       bg-zinc-900 text-zinc-500 border border-zinc-800/80
+```
+
+| Estado | Token Semántico | Clases Tailwind CSS | Icono / Detalle Visual |
+| :--- | :--- | :--- | :--- |
+| **Borrador (`draft`)** | Neutral / En progreso | `px-2.5 py-1 rounded-full text-xs font-medium bg-zinc-800 text-zinc-300 border border-zinc-700` | Punto gris (`●`) |
+| **En Revisión (`pending_review`)** | Advertencia / Pendiente | `px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center gap-1.5` | Reloj o punto ámbar parpadeante |
+| **Publicado (`published`)** | Éxito / Activo en Web | `px-2.5 py-1 rounded-full text-xs font-bold bg-[#75D32D]/10 text-[#75D32D] border border-[#75D32D]/30 flex items-center gap-1.5 shadow-[0_0_10px_rgba(117,211,45,0.15)]` | Check verde neón (`✓`) |
+| **Archivado (`archived`)** | Muted / Retirado | `px-2.5 py-1 rounded-full text-xs font-medium bg-zinc-900/80 text-zinc-500 border border-zinc-800` | Caja o archivo (`📁`) |
+
+---
+
+### 5.5. Catálogo de Componentes UI Reutilizables del CMS
+
+Para garantizar coherencia y velocidad durante la fase de maquetación en **CMS-11**, se estandariza el siguiente catálogo de componentes:
+
+#### 1. Botón Primario (Acción Principal / Publicar)
+Forma de píldora con verde neón corporativo, texto en contraste negro y sombra con resplandor neón:
+```html
+<button class="bg-unicode text-black font-bold px-6 py-2.5 rounded-full hover:bg-[#86ea35] transition-all duration-200 text-sm shadow-unicode hover:shadow-[0_0_20px_rgba(117,211,45,0.4)] flex items-center justify-center gap-2 cursor-pointer">
+  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+  Publicar Directamente
+</button>
+```
+
+#### 2. Botón Secundario / Outline (Guardar Borrador / Vista Previa)
+```html
+<button class="border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white font-semibold px-5 py-2.5 rounded-full transition-all duration-200 text-sm bg-zinc-900/50 flex items-center gap-2 cursor-pointer">
+  Guardar Borrador
+</button>
+```
+
+#### 3. Botón de Enviar a Revisión (Delegados de Área)
+```html
+<button class="bg-amber-400 text-black font-bold px-6 py-2.5 rounded-full hover:bg-amber-300 transition-all duration-200 text-sm shadow-md flex items-center gap-2 cursor-pointer">
+  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+  Enviar a Revisión
+</button>
+```
+
+#### 4. Campo de Texto (Input) y Área de Texto (Textarea)
+Superficie oscura, bordes suaves y foco reactivo al verde neón:
+```html
+<div class="flex flex-col gap-1.5 w-full">
+  <label for="event_title" class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Título del Evento *</label>
+  <input 
+    type="text" 
+    id="event_title" 
+    placeholder="Ej. Conferencia Anual de Ciberseguridad" 
+    class="w-full bg-[#111111] border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-unicode focus:ring-1 focus:ring-unicode transition-all"
+  />
+</div>
+```
+
+#### 5. Selector Desplegable (Select)
+```html
+<div class="flex flex-col gap-1.5 w-full">
+  <label for="event_area" class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Área Responsable *</label>
+  <select 
+    id="event_area" 
+    class="w-full bg-[#111111] border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-unicode focus:ring-1 focus:ring-unicode transition-all appearance-none cursor-pointer"
+  >
+    <option value="ID">Investigación y Desarrollo (ID)</option>
+    <option value="DCC">Dirección de Comunicación y Contenido (DCC)</option>
+    <option value="ACD">Académica (ACD)</option>
+    <option value="GTH">Gestión del Talento Humano (GTH)</option>
+    <option value="RRPP">Relaciones Públicas (RRPP)</option>
+  </select>
+</div>
+```
+
+#### 6. Contenedor de Tarjeta Administrativa (Dashboard Card)
+```html
+<div class="bg-[#0F0F0F] border border-zinc-800/80 hover:border-zinc-700/80 rounded-2xl p-6 transition-all duration-300">
+  <!-- Contenido interno -->
+</div>
+```
+
+#### 7. Modal Nativo de Diálogo de Confirmación (Despublicar / Rechazar / Eliminar)
+```html
+<dialog id="confirm_modal" class="bg-[#121212] border border-zinc-800 text-white rounded-2xl p-6 max-w-md w-full backdrop:bg-black/80 backdrop:backdrop-blur-sm shadow-2xl">
+  <h3 class="text-lg font-bold text-white mb-2">¿Confirmar publicación?</h3>
+  <p class="text-sm text-zinc-400 mb-6 leading-relaxed">Este evento será visible de inmediato en la cartelera pública de ccunicode.org.</p>
+  <div class="flex justify-end gap-3">
+    <button onclick="this.closest('dialog').close()" class="px-4 py-2 rounded-full border border-zinc-700 text-zinc-300 text-sm font-semibold hover:bg-zinc-800">Cancelar</button>
+    <button class="px-5 py-2 rounded-full bg-unicode text-black text-sm font-bold shadow-unicode hover:bg-[#86ea35]">Confirmar</button>
+  </div>
+</dialog>
+```
+
