@@ -970,3 +970,1088 @@ CREATE POLICY "Insercion de auditoria CMS para personal activo"
     );
 ```
 
+---
+
+# Módulo CMS Unicode — Entrega 2 (Prioridad 2: Proyectos, Novedades, Alianzas, Métricas y Directiva)
+
+> **Referencia de diseño:** Issue **CMS-5** (`[Doc & BD] Extensión del Modelo Entidad-Relación para Módulos Prioridad 2 (cms_projects, cms_news, cms_alliances, cms_metrics, cms_board_members)`).
+
+Esta entrega extiende el esquema base definido en la **Entrega 1 (Secciones 6 a 10)** reutilizando íntegramente el enumerado `public.cms_content_status`, la tabla de permisos `public.cms_user_permissions`, la función auxiliar RLS `public.cms_current_permission()`, los triggers `cms_set_updated_at()` y `cms_sync_published_at()`, y la tabla inmutable `public.cms_audit_logs` (donde `entity_type` admite también `'cms_projects'`, `'cms_news'`, `'cms_alliances'`, `'cms_metrics'` y `'cms_board_members'`).
+
+---
+
+## 11. Diagrama Entidad-Relación Extendido (Prioridad 1 + Prioridad 2)
+
+El diagrama siguiente incorpora las cinco tablas de Prioridad 2 (`cms_projects`, `cms_news`, `cms_alliances`, `cms_metrics`, `cms_board_members`) y muestra su articulación con `auth.users`, `cms_user_permissions`, `cms_events`, `cms_audit_logs` y la tabla existente `recruitment_directors`.
+
+```mermaid
+erDiagram
+    AUTH_USERS {
+        uuid id PK "Identificador en Supabase Auth"
+        text email UK "Correo de cuenta"
+    }
+
+    CMS_USER_PERMISSIONS {
+        uuid user_id PK,FK "Ref. auth.users(id)"
+        text email UK "Correo normalizado"
+        varchar role "admin | dcc | director | delegate"
+        varchar area_scope "ALL | ID | ACD | GTH | RRPP | DCC | LGE | FIN"
+        boolean is_active "Acceso habilitado"
+    }
+
+    RECRUITMENT_DIRECTORS {
+        text email PK "Correo habilitado por GTH"
+        text area "ID | RRPP | GTH | ACD | DCC | LGE | FIN"
+        text name "Nombre del director"
+        timestamptz created_at "Fecha de alta"
+    }
+
+    CMS_EVENTS {
+        uuid id PK "gen_random_uuid()"
+        varchar slug UK "Slug unico del evento"
+        varchar title "Titulo del evento"
+        varchar area_scope "ALL | area responsable"
+        cms_content_status status "draft | pending_review | published | archived"
+        uuid created_by FK "Ref. auth.users(id)"
+        uuid reviewed_by FK "Ref. auth.users(id)"
+    }
+
+    CMS_PROJECTS {
+        uuid id PK "gen_random_uuid()"
+        varchar slug UK "Identificador URL amigable"
+        varchar title "Nombre del proyecto"
+        text description "Resumen breve de tarjeta"
+        text long_description "Descripcion completa del modal"
+        varchar project_status "Active | Inactive"
+        varchar area_scope "ALL | ID | ACD | GTH | RRPP | DCC | LGE | FIN"
+        varchar faculty_badge "Etiqueta visible ej. ID, DCC, ACD"
+        varchar category "Etiqueta destacada ej. Destacado"
+        boolean is_featured "Mostrado en slider de destacados"
+        text thumbnail_url "Supabase Storage - miniatura WebP"
+        varchar image_position "center | top | bottom | left | right"
+        text_array screenshots "text[] - capturas del modal"
+        jsonb team "Arreglo de integrantes y LinkedIn"
+        text_array tech_stack "text[] - tecnologias utilizadas"
+        text external_url "Enlace publico del proyecto"
+        text repo_url "Repositorio opcional"
+        integer display_order "Orden en grilla y slider"
+        cms_content_status status "draft | pending_review | published | archived"
+        uuid created_by FK "Ref. auth.users(id)"
+        uuid reviewed_by FK "Ref. auth.users(id)"
+        timestamptz published_at "Primera publicacion"
+        timestamptz created_at "Creacion"
+        timestamptz updated_at "Actualizacion automatica"
+    }
+
+    CMS_NEWS {
+        uuid id PK "gen_random_uuid()"
+        varchar title "Titulo opcional si enlaza entidad"
+        text description "Extracto opcional si enlaza entidad"
+        text image_url "Imagen Storage opcional si enlaza entidad"
+        text cta_url "Enlace de detalle ej. /events"
+        varchar cta_label "Texto del boton CTA"
+        varchar source_type "custom | event | project"
+        uuid event_id FK "Ref. opcional cms_events(id)"
+        uuid project_id FK "Ref. opcional cms_projects(id)"
+        integer display_order "Posicion en carrusel de Home"
+        boolean is_active "Interruptor rapido de visibilidad"
+        cms_content_status status "draft | pending_review | published | archived"
+        uuid created_by FK "Ref. auth.users(id)"
+        uuid reviewed_by FK "Ref. auth.users(id)"
+        timestamptz published_at "Primera publicacion"
+        timestamptz created_at "Creacion"
+        timestamptz updated_at "Actualizacion automatica"
+    }
+
+    CMS_ALLIANCES {
+        uuid id PK "gen_random_uuid()"
+        varchar slug UK "Identificador URL amigable"
+        varchar name "Nombre oficial de la organizacion aliada"
+        text logo_url "Supabase Storage - logo WebP/PNG/SVG"
+        text website_url "Sitio web o red oficial opcional"
+        numeric logo_scale "Factor visual de escala en marquee"
+        integer logo_brightness "Porcentaje de brillo en marquee"
+        integer display_order "Orden en marquee"
+        boolean is_active "Aliado vigente"
+        cms_content_status status "draft | pending_review | published | archived"
+        uuid created_by FK "Ref. auth.users(id)"
+        uuid reviewed_by FK "Ref. auth.users(id)"
+        timestamptz published_at "Primera publicacion"
+        timestamptz created_at "Creacion"
+        timestamptz updated_at "Actualizacion automatica"
+    }
+
+    CMS_METRICS {
+        uuid id PK "gen_random_uuid()"
+        varchar metric_key UK "Clave unica ej. active_members"
+        varchar label "Etiqueta visible ej. Miembros Activos"
+        varchar value_text "Valor formateado ej. +70, 3, 4"
+        varchar icon_key "members | projects | events | years | alliances | awards"
+        integer display_order "Orden en grilla del Home"
+        boolean is_active "Metrica visible"
+        cms_content_status status "draft | pending_review | published | archived"
+        uuid updated_by FK "Ref. auth.users(id)"
+        timestamptz published_at "Primera publicacion"
+        timestamptz created_at "Creacion"
+        timestamptz updated_at "Actualizacion automatica"
+    }
+
+    CMS_BOARD_MEMBERS {
+        uuid id PK "gen_random_uuid()"
+        varchar full_name "Nombre completo visible"
+        varchar role_title "Cargo ej. Presidente, Director de ID"
+        varchar member_type "president | director | lead"
+        varchar area_scope "ALL | ID | ACD | GTH | RRPP | DCC | LGE | FIN"
+        text photo_url "Supabase Storage - retrato WebP"
+        text linkedin_url "URL completa del perfil LinkedIn"
+        text email "Correo normalizado - vinculo logico con recruitment_directors"
+        varchar term_period "Gestion ej. 2026"
+        integer display_order "Orden dentro de su seccion/area"
+        boolean is_active "Miembro vigente en directiva"
+        cms_content_status status "draft | pending_review | published | archived"
+        uuid created_by FK "Ref. auth.users(id)"
+        uuid reviewed_by FK "Ref. auth.users(id)"
+        timestamptz published_at "Primera publicacion"
+        timestamptz created_at "Creacion"
+        timestamptz updated_at "Actualizacion automatica"
+    }
+
+    CMS_AUDIT_LOGS {
+        uuid id PK "gen_random_uuid()"
+        varchar entity_type "cms_events | cms_projects | cms_news | cms_alliances | cms_metrics | cms_board_members"
+        uuid entity_id "ID de la entidad auditada"
+        varchar action "create | update | submit_review | approve_publish | reject_to_draft | archive"
+        uuid actor_id FK "Ref. auth.users(id)"
+        varchar area_scope "Area involucrada"
+        timestamptz created_at "Marca temporal"
+    }
+
+    AUTH_USERS ||--o| CMS_USER_PERMISSIONS : "autoriza perfil"
+    AUTH_USERS ||--o{ CMS_PROJECTS : "crea o revisa"
+    AUTH_USERS ||--o{ CMS_NEWS : "crea o revisa"
+    AUTH_USERS ||--o{ CMS_ALLIANCES : "crea o revisa"
+    AUTH_USERS ||--o{ CMS_METRICS : "actualiza"
+    AUTH_USERS ||--o{ CMS_BOARD_MEMBERS : "crea o revisa"
+    AUTH_USERS ||--o{ CMS_AUDIT_LOGS : "ejecuta accion"
+
+    CMS_EVENTS |o--o{ CMS_NEWS : "destaca evento (event_id)"
+    CMS_PROJECTS |o--o{ CMS_NEWS : "destaca proyecto (project_id)"
+    RECRUITMENT_DIRECTORS |o--o| CMS_BOARD_MEMBERS : "vinculo logico por email"
+
+    CMS_PROJECTS ||--o{ CMS_AUDIT_LOGS : "trazabilidad (entity_id)"
+    CMS_NEWS ||--o{ CMS_AUDIT_LOGS : "trazabilidad (entity_id)"
+    CMS_ALLIANCES ||--o{ CMS_AUDIT_LOGS : "trazabilidad (entity_id)"
+    CMS_METRICS ||--o{ CMS_AUDIT_LOGS : "trazabilidad (entity_id)"
+    CMS_BOARD_MEMBERS ||--o{ CMS_AUDIT_LOGS : "trazabilidad (entity_id)"
+```
+
+---
+
+## 12. Diccionario de Datos Detallado y Mapeo hacia Astro (`src/`)
+
+### 12.1 Matriz de Permisos Editoriales para Prioridad 2
+
+| Tabla | `admin` (`ALL`) | `dcc` (`ALL`) | `director` (`<AREA>`) | `delegate` (`<AREA>`) |
+| :--- | :--- | :--- | :--- | :--- |
+| **`cms_projects`** | 1 paso en todas las áreas | 1 paso en todas las áreas | 1 paso + aprobador en su `area_scope` | 2 pasos (`draft` ↔ `pending_review`) en su `area_scope` |
+| **`cms_news`** | 1 paso | 1 paso | Solo lectura pública | Solo lectura pública |
+| **`cms_alliances`** | 1 paso | 1 paso | 1 paso + aprobador solo si `area_scope = 'RRPP'` | 2 pasos (`draft` ↔ `pending_review`) solo si `area_scope = 'RRPP'` |
+| **`cms_metrics`** | 1 paso | 1 paso | Solo lectura pública | Solo lectura pública |
+| **`cms_board_members`** | 1 paso (`president`, `director`, `lead`) | 1 paso (`president`, `director`, `lead`) | 1 paso + aprobador en su `area_scope` solo para `member_type IN ('director', 'lead')` | Solo lectura pública |
+
+### 12.2 Tabla `public.cms_projects`
+
+Sustituye la fuente estática `src/data/projects.ts` manteniendo el 100% de compatibilidad con `src/pages/projects.astro`, `project-card.astro`, `project-modal.astro`, `project-filters.astro`, `featured-project-card.astro`, `area-project-card.astro` y `area-project-slider.astro`.
+
+| Columna | Tipo de dato | Restricciones (Constraints) | Descripción (Propósito y Consumo en Frontend) |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | `PRIMARY KEY DEFAULT gen_random_uuid()` | Identificador único del proyecto. |
+| `slug` | `varchar(160)` | `UNIQUE NOT NULL`, `CHECK (slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$')` | Identificador URL amigable (usado en rutas como `/projects/<slug>`). |
+| `title` | `varchar(200)` | `NOT NULL` | Título principal del proyecto. |
+| `description` | `text` | `NOT NULL` | Descripción resumida mostrada en `project-card.astro` y `area-project-card.astro` (`line-clamp-3`). |
+| `long_description` | `text` | `NULL` | Descripción extendida mostrada en el modal (`project-modal.astro` usa `longDescription \|\| description`). |
+| `project_status` | `varchar(20)` | `NOT NULL DEFAULT 'Active'`, `CHECK (project_status IN ('Active', 'Inactive'))` | Estado operativo del proyecto (badge verde `"Active"` o rojo `"Inactive"` en la esquina superior derecha de la tarjeta; independiente del `status` editorial del CMS). |
+| `area_scope` | `varchar(20)` | `NOT NULL`, `CHECK (area_scope IN ('ALL', 'ID', 'ACD', 'GTH', 'RRPP', 'DCC', 'LGE', 'FIN'))` | Área propietaria del proyecto para filtros (`data-area` en minúsculas en `projects.astro` y `/areas/*.astro`) y autorización RLS por área. |
+| `faculty_badge` | `varchar(40)` | `NOT NULL` | Etiqueta corta mostrada junto al icono en la parte inferior izquierda de `project-card.astro` (en `projects.ts` corresponde a `faculty`, ej. `'ID'`, `'DCC'`, `'ACD'`, que puede diferir de `area_scope`). |
+| `category` | `varchar(60)` | `NULL` | Etiqueta de categoría/píldora mostrada en `featured-project-card.astro` (ej. `'Destacado'`). |
+| `is_featured` | `boolean` | `NOT NULL DEFAULT false` | Indica si el proyecto aparece en el carrusel `FeaturedSection` de `/projects`. |
+| `thumbnail_url` | `text` | `NOT NULL` | URL pública en Supabase Storage (WebP) para `Project.image` en tarjetas y slider de destacados. |
+| `image_position` | `varchar(30)` | `NOT NULL DEFAULT 'center'`, `CHECK (image_position IN ('center', 'top', 'bottom', 'left', 'right'))` | Posicionamiento CSS (`object-${imagePosition}` / `bg-${imagePosition}`) en `project-card.astro` y `featured-project-card.astro`. |
+| `screenshots` | `text[]` | `NOT NULL DEFAULT '{}'::text[]` | Lista de URLs de capturas en Supabase Storage consumidas por el layout adaptable (0, 1 o 2+ columnas) en `project-modal.astro`. |
+| `team` | `jsonb` | `NOT NULL DEFAULT '[]'::jsonb`, `CHECK (jsonb_typeof(team) = 'array')` | Arreglo JSONB de integrantes del proyecto. Contrato de cada elemento: `{ "name": string, "linkedin": string, "image": string, "role"?: string }`. |
+| `tech_stack` | `text[]` | `NOT NULL DEFAULT '{}'::text[]` | Lista opcional de tecnologías utilizadas en el proyecto (ej. `{'Astro', 'TypeScript', 'Supabase'}`). |
+| `external_url` | `text` | `NULL` | Enlace principal del proyecto (botón `"Click aquí para conocer <title>"` en `project-modal.astro` y `href` en `news.astro`). |
+| `repo_url` | `text` | `NULL` | Enlace opcional al repositorio de código fuente (GitHub). |
+| `display_order` | `integer` | `NOT NULL DEFAULT 0` | Orden de presentación manual en destacados y grilla. |
+| `status` | `cms_content_status` | `NOT NULL DEFAULT 'draft'` | Estado del ciclo de vida editorial (`'draft'`, `'pending_review'`, `'published'`, `'archived'`). |
+| `created_by` | `uuid` | `NULL`, FK → `auth.users(id) ON DELETE SET NULL` | Usuario creador del registro. |
+| `reviewed_by` | `uuid` | `NULL`, FK → `auth.users(id) ON DELETE SET NULL` | Director, DCC o Admin que aprobó la publicación. |
+| `published_at` | `timestamptz` | `NULL` | Marca temporal de primera publicación (sellada por trigger). |
+| `created_at` | `timestamptz` | `NOT NULL DEFAULT now()` | Fecha y hora de creación. |
+| `updated_at` | `timestamptz` | `NOT NULL DEFAULT now()` | Fecha y hora de última modificación (actualizada vía trigger). |
+
+> **Nota sobre `team[].linkedin` en `project-modal.astro`:** El modal actual construye `https://linkedin.com/in/${member.linkedin}` concatenando un slug. Al migrar desde `src/data/projects.ts` o editar desde el CMS, conviene normalizar en frontend para aceptar tanto el slug (`"alexisgarayyovera"`) como la URL completa (`"https://www.linkedin.com/in/..."`).
+
+### 12.3 Tabla `public.cms_news`
+
+Permite a **Admin** y **DCC** curar manualmente las tarjetas del carrusel **Novedades** del Home (`src/components/components-home/news.astro`), ya sea enlazando un evento existente (`event_id`), un proyecto existente (`project_id`) o redactando una novedad personalizada (`source_type = 'custom'`).
+
+| Columna | Tipo de dato | Restricciones (Constraints) | Descripción (Propósito) |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | `PRIMARY KEY DEFAULT gen_random_uuid()` | Identificador único de la tarjeta de novedad. |
+| `title` | `varchar(200)` | `NULL` (obligatorio si `source_type = 'custom'`) | Título de la tarjeta (`NewsCard.title`). Si es `NULL` y enlaza `event_id`/`project_id`, la vista pública hereda el título de la entidad vinculada. |
+| `description` | `text` | `NULL` (obligatorio si `source_type = 'custom'`) | Texto descriptivo de la tarjeta (`NewsCard.description`). Hereda `summary`/`description` si enlaza entidad. |
+| `image_url` | `text` | `NULL` (obligatorio si `source_type = 'custom'`) | Miniatura en Supabase Storage (`NewsCard.image`). Hereda `thumbnail_url` si enlaza entidad. |
+| `cta_url` | `text` | `NULL` | URL de destino del botón (`NewsCard.href`). Hereda `external_url` o usa `'/events'` / `'/projects'` como respaldo. |
+| `cta_label` | `varchar(60)` | `NOT NULL DEFAULT 'Ver detalles'` | Etiqueta del botón en `news-card.astro`. |
+| `source_type` | `varchar(20)` | `NOT NULL DEFAULT 'custom'`, `CHECK (source_type IN ('custom', 'event', 'project'))` | Origen de la novedad. |
+| `event_id` | `uuid` | `NULL`, FK → `public.cms_events(id) ON DELETE SET NULL` | Referencia opcional al evento destacado. |
+| `project_id` | `uuid` | `NULL`, FK → `public.cms_projects(id) ON DELETE SET NULL` | Referencia opcional al proyecto destacado. |
+| `display_order` | `integer` | `NOT NULL DEFAULT 0` | Posición ascendente en el carrusel del Home. |
+| `is_active` | `boolean` | `NOT NULL DEFAULT true` | Habilita o pausa la aparición de la novedad sin archivarla. |
+| `status` | `cms_content_status` | `NOT NULL DEFAULT 'draft'` | Estado del ciclo de vida editorial. |
+| `created_by` | `uuid` | `NULL`, FK → `auth.users(id) ON DELETE SET NULL` | Usuario creador. |
+| `reviewed_by` | `uuid` | `NULL`, FK → `auth.users(id) ON DELETE SET NULL` | Revisor/aprobador. |
+| `published_at` | `timestamptz` | `NULL` | Marca temporal de publicación. |
+| `created_at` | `timestamptz` | `NOT NULL DEFAULT now()` | Fecha de creación. |
+| `updated_at` | `timestamptz` | `NOT NULL DEFAULT now()` | Última modificación. |
+
+- **Restricción de consistencia (`chk_cms_news_source_consistency`):**
+  - `source_type = 'custom'` → `event_id IS NULL AND project_id IS NULL` y exige `title`, `description` e `image_url` no vacíos.
+  - `source_type = 'event'` → `event_id IS NOT NULL AND project_id IS NULL`.
+  - `source_type = 'project'` → `project_id IS NOT NULL AND event_id IS NULL`.
+
+### 12.4 Tabla `public.cms_alliances`
+
+Sustituye la lectura estática por `import.meta.glob` en `src/components/components-home/alliances.astro` y almacena explícitamente las propiedades de normalización visual que antes dependían del nombre del archivo.
+
+| Columna | Tipo de dato | Restricciones (Constraints) | Descripción (Propósito) |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | `PRIMARY KEY DEFAULT gen_random_uuid()` | Identificador único de la alianza. |
+| `slug` | `varchar(160)` | `UNIQUE NOT NULL`, `CHECK (slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$')` | Identificador único legible (ej. `data-science-research-peru`). |
+| `name` | `varchar(150)` | `NOT NULL` | Nombre oficial mostrado en `alt`, `title` y tooltip flotante del marquee. |
+| `logo_url` | `text` | `NOT NULL` | Ruta pública del logotipo en Supabase Storage. |
+| `website_url` | `text` | `NULL` | Sitio web o red oficial de la organización aliada (opcional). |
+| `logo_scale` | `numeric(4,2)` | `NOT NULL DEFAULT 1.00`, `CHECK (logo_scale BETWEEN 0.50 AND 3.50)` | Factor de escala visual para equilibrar proporciones de logos en `alliances.astro` (ej. `0.85`, `1.80`, `2.80`). |
+| `logo_brightness` | `integer` | `NOT NULL DEFAULT 200`, `CHECK (logo_brightness BETWEEN 50 AND 300)` | Porcentaje de brillo CSS aplicado en estado inactivo del marquee (ej. `200`, `250`). |
+| `display_order` | `integer` | `NOT NULL DEFAULT 0` | Orden de aparición en las filas del marquee. |
+| `is_active` | `boolean` | `NOT NULL DEFAULT true` | Indica si el convenio/alianza se encuentra vigente. |
+| `status` | `cms_content_status` | `NOT NULL DEFAULT 'draft'` | Estado del ciclo de vida editorial (administrado por `admin`, `dcc` y `RRPP`). |
+| `created_by` | `uuid` | `NULL`, FK → `auth.users(id) ON DELETE SET NULL` | Usuario creador. |
+| `reviewed_by` | `uuid` | `NULL`, FK → `auth.users(id) ON DELETE SET NULL` | Director de RRPP, DCC o Admin aprobador. |
+| `published_at` | `timestamptz` | `NULL` | Fecha de primera publicación. |
+| `created_at` | `timestamptz` | `NOT NULL DEFAULT now()` | Fecha de creación. |
+| `updated_at` | `timestamptz` | `NOT NULL DEFAULT now()` | Última modificación. |
+
+### 12.5 Tabla `public.cms_metrics`
+
+Administra los indicadores de impacto mostrados en la sección **Cifras que nos definen** (`src/components/components-home/stats.astro`).
+
+| Columna | Tipo de dato | Restricciones (Constraints) | Descripción (Propósito) |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | `PRIMARY KEY DEFAULT gen_random_uuid()` | Identificador único del indicador. |
+| `metric_key` | `varchar(60)` | `UNIQUE NOT NULL`, `CHECK (metric_key ~ '^[a-z0-9]+(?:_[a-z0-9]+)*$')` | Clave semántica estable (ej. `active_members`, `completed_projects`, `events_held`, `years_experience`). |
+| `label` | `varchar(100)` | `NOT NULL` | Etiqueta descriptiva mostrada bajo la cifra (ej. `"Miembros Activos"`). |
+| `value_text` | `varchar(30)` | `NOT NULL` | Valor formateado para renderizado directo en `stats.astro` (ej. `"+70"`, `"3"`, `"4"`, `"1"`). |
+| `icon_key` | `varchar(40)` | `NOT NULL DEFAULT 'members'`, `CHECK (icon_key IN ('members', 'projects', 'events', 'years', 'alliances', 'awards'))` | Selector del icono SVG en `stats.astro` (`"members"`, `"projects"`, `"events"`, `"years"`, etc.). |
+| `display_order` | `integer` | `NOT NULL DEFAULT 0` | Orden de las tarjetas en la grilla del Home. |
+| `is_active` | `boolean` | `NOT NULL DEFAULT true` | Visibilidad pública del indicador. |
+| `status` | `cms_content_status` | `NOT NULL DEFAULT 'published'` | Estado editorial del indicador. |
+| `updated_by` | `uuid` | `NULL`, FK → `auth.users(id) ON DELETE SET NULL` | Último administrador o miembro DCC que actualizó la métrica. |
+| `published_at` | `timestamptz` | `NULL` | Fecha de primera publicación. |
+| `created_at` | `timestamptz` | `NOT NULL DEFAULT now()` | Fecha de creación. |
+| `updated_at` | `timestamptz` | `NOT NULL DEFAULT now()` | Última actualización. |
+
+### 12.6 Tabla `public.cms_board_members`
+
+Centraliza los perfiles mostrados en `src/components/components-home/presidents.astro` y en la sección de directores de cada página en `src/pages/areas/*.astro` (`area-director-profile.astro`).
+
+| Columna | Tipo de dato | Restricciones (Constraints) | Descripción (Propósito) |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | `PRIMARY KEY DEFAULT gen_random_uuid()` | Identificador único del miembro directivo. |
+| `full_name` | `varchar(150)` | `NOT NULL` | Nombre completo visible en la ficha (`presidents.astro` y `area-director-profile.astro`). |
+| `role_title` | `varchar(100)` | `NOT NULL` | Cargo descriptivo (ej. `"Presidente"`, `"Director de ID"`, `"Encargada de DCC"`). |
+| `member_type` | `varchar(20)` | `NOT NULL`, `CHECK (member_type IN ('president', 'director', 'lead'))` | Clasificación jerárquica para renderizar Home (`'president'`) o páginas de área (`'director'`, `'lead'`). |
+| `area_scope` | `varchar(20)` | `NOT NULL`, `CHECK (area_scope IN ('ALL', 'ID', 'ACD', 'GTH', 'RRPP', 'DCC', 'LGE', 'FIN'))` | Área asociada. Consistencia (`chk_cms_board_member_scope`): `'president'` requiere `area_scope = 'ALL'`; `'director'` y `'lead'` requieren un área específica (`area_scope <> 'ALL'`). |
+| `photo_url` | `text` | `NOT NULL` | URL pública de retrato WebP en Supabase Storage (`imageSrc` en `area-director-profile.astro`). |
+| `linkedin_url` | `text` | `NULL` | URL completa del perfil profesional en LinkedIn (`https://www.linkedin.com/in/...`). |
+| `email` | `text` | `NULL`, `CHECK (email IS NULL OR (email = lower(email) AND email ~ '^[^@\s]+@[^@\s]+\.[^@\s]+$'))` | Correo institucional/personal normalizado para **articulación lógica con `public.recruitment_directors(email)`**. Protegido mediante privilegios de columna para no exponerse a `anon`. |
+| `term_period` | `varchar(20)` | `NULL` | Periodo de gestión (ej. `"2026"`). |
+| `display_order` | `integer` | `NOT NULL DEFAULT 0` | Orden de visualización dentro de Presidencia o dentro del área. |
+| `is_active` | `boolean` | `NOT NULL DEFAULT true` | Indica si el miembro pertenece a la directiva vigente. |
+| `status` | `cms_content_status` | `NOT NULL DEFAULT 'draft'` | Estado del ciclo de vida editorial. |
+| `created_by` | `uuid` | `NULL`, FK → `auth.users(id) ON DELETE SET NULL` | Usuario creador. |
+| `reviewed_by` | `uuid` | `NULL`, FK → `auth.users(id) ON DELETE SET NULL` | Usuario aprobador. |
+| `published_at` | `timestamptz` | `NULL` | Fecha de primera publicación. |
+| `created_at` | `timestamptz` | `NOT NULL DEFAULT now()` | Fecha de creación. |
+| `updated_at` | `timestamptz` | `NOT NULL DEFAULT now()` | Última modificación. |
+
+#### Articulación Lógica con `public.recruitment_directors` (Por qué NO usar Foreign Key física)
+
+1. **Desacoplamiento operativo:** `public.recruitment_directors(email, area, name)` almacena exclusivamente las cuentas con permiso de acceso al flujo de evaluación de postulaciones (gestionadas por GTH mediante `recruitment_director_save` y `recruitment_director_remove` en `20261013_recruitment_director_individual.sql`). Los **Presidentes** (`member_type = 'president'`) o exdirectivos archivados no necesariamente participan en la tabla de reclutamiento.
+2. **Integridad sin bloqueos:** Si GTH revoca a un evaluador en `recruitment_directors` al finalizar una convocatoria, una clave foránea física impediría el `DELETE` (`RESTRICT`) o eliminaría el perfil público del sitio (`CASCADE`). El vínculo lógico por `LOWER(email)` + índice único parcial (`idx_cms_board_members_active_email`) permite sincronizar nombres, áreas y altas desde el panel administrativo sin acoplamiento destructivo.
+3. **Privacidad:** El correo operativo en `recruitment_directors` nunca es público. Por ello, la columna `cms_board_members.email` tiene revocado el permiso `SELECT` para el rol `anon` y es excluida de la vista pública `cms_public_board_members`.
+
+### 12.7 Mapeo Consolidado Base de Datos → Componentes Astro (`src/`)
+
+| Componente / Archivo Actual en `src/` | Propiedad Actual | Origen en Base de Datos (`cms_*` / Vista Pública) |
+| :--- | :--- | :--- |
+| `src/data/projects.ts` / `project-card.astro` | `title`, `description`, `status`, `faculty`, `image`, `imagePosition`, `area` | `cms_public_projects`: `title`, `description`, `project_status`, `faculty_badge`, `thumbnail_url`, `image_position`, `area` (`lower(area_scope)`) |
+| `featured-project-card.astro` | `title`, `category`, `image`, `imagePosition` | `cms_public_projects` (`WHERE is_featured = true`): `title`, `COALESCE(category, 'Destacado')`, `thumbnail_url`, `image_position` |
+| `project-modal.astro` | `title`, `longDescription`, `screenshots[]`, `team[]`, `link` | `cms_public_projects`: `title`, `long_description`, `screenshots`, `team`, `external_url` |
+| `src/components/components-home/news.astro` & `news-card.astro` | `title`, `description`, `image`, `href` | `cms_public_news` (`LIMIT 5`): `title`, `description`, `image_url`, `cta_url` |
+| `src/components/components-home/alliances.astro` | `name`, `logo`, `scale`, `brightness` | `cms_public_alliances`: `name`, `logo_url`, `logo_scale`, `logo_brightness` |
+| `src/components/components-home/stats.astro` | `icon`, `value`, `label` | `cms_public_metrics`: `icon_key`, `value_text`, `label` |
+| `src/components/components-home/presidents.astro` | Nombre, foto, LinkedIn | `cms_public_board_members` (`WHERE member_type = 'president'`): `full_name`, `photo_url`, `linkedin_url` |
+| `src/pages/areas/*.astro` & `area-director-profile.astro` | `directors[].name`, `linkedin`, `imageSrc` | `cms_public_board_members` (`WHERE member_type IN ('director', 'lead') AND area_scope = '<AREA>'`): `full_name`, `linkedin_url`, `photo_url` |
+
+---
+
+## 13. Vistas SQL de Lectura Pública (`security_invoker = true`)
+
+Para hidratar las páginas públicas de Astro en SSR/SSG con consultas mínimas (`LCP < 2.5s`) y garantizando que **nunca se filtren borradores (`draft`), revisiones pendientes (`pending_review`), archivados (`archived`) ni correos privados**, se definen seis vistas públicas en PostgreSQL 15+ con `WITH (security_invoker = true)`. Al activar `security_invoker = true`, cada vista evalúa las políticas RLS usando los permisos del rol invocante (`anon` o `authenticated`) y no los del propietario creador de la vista.
+
+| Vista Pública | Tabla(s) Fuente | Filtro Público Obligatorio | Ordenamiento Predeterminado | Notas de Diseño |
+| :--- | :--- | :--- | :--- | :--- |
+| `public.cms_public_events` | `cms_events` | `status = 'published'` | `is_featured DESC, event_date DESC` | Calcula `is_upcoming` en tiempo real comparando `COALESCE(end_date, event_date) >= now()`. |
+| `public.cms_public_projects` | `cms_projects` | `status = 'published'` | `is_featured DESC, display_order ASC, published_at DESC` | Expone `lower(area_scope) AS area` para mantener compatibilidad con `project-filters.astro` y `/areas/*.astro`. |
+| `public.cms_public_news` | `cms_news`, `cms_events`, `cms_projects` | `n.status = 'published' AND n.is_active = true` + entidad referenciada publicada | `n.display_order ASC, n.published_at DESC` | Resuelve dinámicamente título, descripción, imagen y enlace mediante `COALESCE` y oculta referencias si el evento/proyecto enlazado deja de estar `'published'`. |
+| `public.cms_public_alliances` | `cms_alliances` | `status = 'published' AND is_active = true` | `display_order ASC, name ASC` | Entrega factores de normalización (`logo_scale`, `logo_brightness`) junto a `logo_url`. |
+| `public.cms_public_metrics` | `cms_metrics` | `status = 'published' AND is_active = true` | `display_order ASC, metric_key ASC` | Entrega exactamente los campos consumidos por `stats.astro`. |
+| `public.cms_public_board_members` | `cms_board_members` | `status = 'published' AND is_active = true` | Jerarquía (`president` → `director` → `lead`), `area_scope`, `display_order ASC` | **Omite explícitamente la columna `email`** para evitar exposición pública de correos vinculados a `recruitment_directors`. |
+
+### Ejemplo de Consumo Tipado en Astro (SSR / Build)
+
+```typescript
+// Ejemplo de hidratación en src/pages/projects.astro o src/pages/index.astro
+const [
+  { data: projects },
+  { data: news },
+  { data: alliances },
+  { data: metrics },
+  { data: boardMembers },
+] = await Promise.all([
+  supabase.from('cms_public_projects').select('*'),
+  supabase.from('cms_public_news').select('*').limit(5),
+  supabase.from('cms_public_alliances').select('*'),
+  supabase.from('cms_public_metrics').select('*'),
+  supabase.from('cms_public_board_members').select('*'),
+]);
+```
+
+---
+
+## 14. Script SQL Preliminar DDL — Entrega 2 (PostgreSQL / Supabase)
+
+> **Prerrequisito:** Haber ejecutado previamente el script de la **Sección 10 (Entrega 1)**, que crea `public.cms_content_status`, `public.cms_user_permissions`, `public.cms_events`, `public.cms_audit_logs`, `public.cms_set_updated_at()`, `public.cms_sync_published_at()` y `public.cms_current_permission()`.
+
+```sql
+-- ============================================================================
+-- CMS UNICODE — ENTREGA 2 (Proyectos, Novedades, Alianzas, Métricas, Directiva)
+-- Script DDL preliminar idempotente para PostgreSQL 15+ / Supabase
+-- Nota: Mantiene intactas `applicants` y todas las tablas `recruitment_*`.
+-- ============================================================================
+
+-- 1. Tabla de Proyectos (`cms_projects`)
+CREATE TABLE IF NOT EXISTS public.cms_projects (
+    id               uuid                      PRIMARY KEY DEFAULT gen_random_uuid(),
+    slug             varchar(160)              NOT NULL UNIQUE
+                                               CHECK (slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'),
+    title            varchar(200)              NOT NULL,
+    description      text                      NOT NULL,
+    long_description text                      NULL,
+    project_status   varchar(20)               NOT NULL DEFAULT 'Active'
+                                               CHECK (project_status IN ('Active', 'Inactive')),
+    area_scope       varchar(20)               NOT NULL
+                                               CHECK (area_scope IN ('ALL', 'ID', 'ACD', 'GTH', 'RRPP', 'DCC', 'LGE', 'FIN')),
+    faculty_badge    varchar(40)               NOT NULL,
+    category         varchar(60)               NULL,
+    is_featured      boolean                   NOT NULL DEFAULT false,
+    thumbnail_url    text                      NOT NULL,
+    image_position   varchar(30)               NOT NULL DEFAULT 'center'
+                                               CHECK (image_position IN ('center', 'top', 'bottom', 'left', 'right')),
+    screenshots      text[]                    NOT NULL DEFAULT '{}'::text[],
+    team             jsonb                     NOT NULL DEFAULT '[]'::jsonb
+                                               CHECK (jsonb_typeof(team) = 'array'),
+    tech_stack       text[]                    NOT NULL DEFAULT '{}'::text[],
+    external_url     text                      NULL,
+    repo_url         text                      NULL,
+    display_order    integer                   NOT NULL DEFAULT 0,
+    status           public.cms_content_status NOT NULL DEFAULT 'draft',
+    created_by       uuid                      NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+    reviewed_by      uuid                      NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+    published_at     timestamptz               NULL,
+    created_at       timestamptz               NOT NULL DEFAULT now(),
+    updated_at       timestamptz               NOT NULL DEFAULT now()
+);
+
+-- 2. Tabla de Novedades del Home (`cms_news`)
+CREATE TABLE IF NOT EXISTS public.cms_news (
+    id            uuid                      PRIMARY KEY DEFAULT gen_random_uuid(),
+    title         varchar(200)              NULL,
+    description   text                      NULL,
+    image_url     text                      NULL,
+    cta_url       text                      NULL,
+    cta_label     varchar(60)               NOT NULL DEFAULT 'Ver detalles',
+    source_type   varchar(20)               NOT NULL DEFAULT 'custom'
+                                            CHECK (source_type IN ('custom', 'event', 'project')),
+    event_id      uuid                      NULL REFERENCES public.cms_events(id) ON DELETE SET NULL,
+    project_id    uuid                      NULL REFERENCES public.cms_projects(id) ON DELETE SET NULL,
+    display_order integer                   NOT NULL DEFAULT 0,
+    is_active     boolean                   NOT NULL DEFAULT true,
+    status        public.cms_content_status NOT NULL DEFAULT 'draft',
+    created_by    uuid                      NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+    reviewed_by   uuid                      NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+    published_at  timestamptz               NULL,
+    created_at    timestamptz               NOT NULL DEFAULT now(),
+    updated_at    timestamptz               NOT NULL DEFAULT now(),
+
+    CONSTRAINT chk_cms_news_source_consistency CHECK (
+        (
+            source_type = 'custom'
+            AND event_id IS NULL
+            AND project_id IS NULL
+            AND length(trim(coalesce(title, ''))) > 0
+            AND length(trim(coalesce(description, ''))) > 0
+            AND length(trim(coalesce(image_url, ''))) > 0
+        )
+        OR (source_type = 'event' AND event_id IS NOT NULL AND project_id IS NULL)
+        OR (source_type = 'project' AND project_id IS NOT NULL AND event_id IS NULL)
+    )
+);
+
+-- 3. Tabla de Alianzas (`cms_alliances`)
+CREATE TABLE IF NOT EXISTS public.cms_alliances (
+    id              uuid                      PRIMARY KEY DEFAULT gen_random_uuid(),
+    slug            varchar(160)              NOT NULL UNIQUE
+                                              CHECK (slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'),
+    name            varchar(150)              NOT NULL,
+    logo_url        text                      NOT NULL,
+    website_url     text                      NULL,
+    logo_scale      numeric(4,2)              NOT NULL DEFAULT 1.00
+                                              CHECK (logo_scale BETWEEN 0.50 AND 3.50),
+    logo_brightness integer                   NOT NULL DEFAULT 200
+                                              CHECK (logo_brightness BETWEEN 50 AND 300),
+    display_order   integer                   NOT NULL DEFAULT 0,
+    is_active       boolean                   NOT NULL DEFAULT true,
+    status          public.cms_content_status NOT NULL DEFAULT 'draft',
+    created_by      uuid                      NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+    reviewed_by     uuid                      NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+    published_at    timestamptz               NULL,
+    created_at      timestamptz               NOT NULL DEFAULT now(),
+    updated_at      timestamptz               NOT NULL DEFAULT now()
+);
+
+-- 4. Tabla de Métricas del Home (`cms_metrics`)
+CREATE TABLE IF NOT EXISTS public.cms_metrics (
+    id            uuid                      PRIMARY KEY DEFAULT gen_random_uuid(),
+    metric_key    varchar(60)               NOT NULL UNIQUE
+                                            CHECK (metric_key ~ '^[a-z0-9]+(?:_[a-z0-9]+)*$'),
+    label         varchar(100)              NOT NULL,
+    value_text    varchar(30)               NOT NULL,
+    icon_key      varchar(40)               NOT NULL DEFAULT 'members'
+                                            CHECK (icon_key IN ('members', 'projects', 'events', 'years', 'alliances', 'awards')),
+    display_order integer                   NOT NULL DEFAULT 0,
+    is_active     boolean                   NOT NULL DEFAULT true,
+    status        public.cms_content_status NOT NULL DEFAULT 'published',
+    updated_by    uuid                      NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+    published_at  timestamptz               NULL,
+    created_at    timestamptz               NOT NULL DEFAULT now(),
+    updated_at    timestamptz               NOT NULL DEFAULT now()
+);
+
+-- 5. Tabla de Presidentes y Directores/Encargados (`cms_board_members`)
+CREATE TABLE IF NOT EXISTS public.cms_board_members (
+    id            uuid                      PRIMARY KEY DEFAULT gen_random_uuid(),
+    full_name     varchar(150)              NOT NULL,
+    role_title    varchar(100)              NOT NULL,
+    member_type   varchar(20)               NOT NULL
+                                            CHECK (member_type IN ('president', 'director', 'lead')),
+    area_scope    varchar(20)               NOT NULL
+                                            CHECK (area_scope IN ('ALL', 'ID', 'ACD', 'GTH', 'RRPP', 'DCC', 'LGE', 'FIN')),
+    photo_url     text                      NOT NULL,
+    linkedin_url  text                      NULL,
+    email         text                      NULL
+                                            CHECK (email IS NULL OR (email = lower(email) AND email ~ '^[^@\s]+@[^@\s]+\.[^@\s]+$')),
+    term_period   varchar(20)               NULL,
+    display_order integer                   NOT NULL DEFAULT 0,
+    is_active     boolean                   NOT NULL DEFAULT true,
+    status        public.cms_content_status NOT NULL DEFAULT 'draft',
+    created_by    uuid                      NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+    reviewed_by   uuid                      NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+    published_at  timestamptz               NULL,
+    created_at    timestamptz               NOT NULL DEFAULT now(),
+    updated_at    timestamptz               NOT NULL DEFAULT now(),
+
+    CONSTRAINT chk_cms_board_member_scope CHECK (
+        (member_type = 'president' AND area_scope = 'ALL')
+        OR
+        (member_type IN ('director', 'lead') AND area_scope <> 'ALL')
+    )
+);
+
+-- 6. Índices optimizados para consultas públicas y flujos editoriales
+CREATE INDEX IF NOT EXISTS idx_cms_projects_public_listing
+    ON public.cms_projects (is_featured DESC, display_order ASC, published_at DESC)
+    WHERE status = 'published';
+
+CREATE INDEX IF NOT EXISTS idx_cms_projects_area_scope
+    ON public.cms_projects (area_scope, status);
+
+CREATE INDEX IF NOT EXISTS idx_cms_news_public_listing
+    ON public.cms_news (display_order ASC, published_at DESC)
+    WHERE status = 'published' AND is_active = true;
+
+CREATE INDEX IF NOT EXISTS idx_cms_news_event_id
+    ON public.cms_news (event_id)
+    WHERE event_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_cms_news_project_id
+    ON public.cms_news (project_id)
+    WHERE project_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_cms_alliances_public_listing
+    ON public.cms_alliances (display_order ASC, name ASC)
+    WHERE status = 'published' AND is_active = true;
+
+CREATE INDEX IF NOT EXISTS idx_cms_metrics_public_listing
+    ON public.cms_metrics (display_order ASC, metric_key ASC)
+    WHERE status = 'published' AND is_active = true;
+
+CREATE INDEX IF NOT EXISTS idx_cms_board_members_public_listing
+    ON public.cms_board_members (member_type, area_scope, display_order ASC)
+    WHERE status = 'published' AND is_active = true;
+
+-- Garantiza unicidad de correo activo para vinculación lógica con `recruitment_directors`
+CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_board_members_active_email
+    ON public.cms_board_members (email)
+    WHERE email IS NOT NULL AND is_active = true;
+
+-- 7. Triggers automáticos (`updated_at` y `published_at`)
+DROP TRIGGER IF EXISTS trg_cms_projects_updated_at ON public.cms_projects;
+CREATE TRIGGER trg_cms_projects_updated_at
+    BEFORE UPDATE ON public.cms_projects
+    FOR EACH ROW EXECUTE FUNCTION public.cms_set_updated_at();
+
+DROP TRIGGER IF EXISTS trg_cms_projects_published_at ON public.cms_projects;
+CREATE TRIGGER trg_cms_projects_published_at
+    BEFORE INSERT OR UPDATE ON public.cms_projects
+    FOR EACH ROW EXECUTE FUNCTION public.cms_sync_published_at();
+
+DROP TRIGGER IF EXISTS trg_cms_news_updated_at ON public.cms_news;
+CREATE TRIGGER trg_cms_news_updated_at
+    BEFORE UPDATE ON public.cms_news
+    FOR EACH ROW EXECUTE FUNCTION public.cms_set_updated_at();
+
+DROP TRIGGER IF EXISTS trg_cms_news_published_at ON public.cms_news;
+CREATE TRIGGER trg_cms_news_published_at
+    BEFORE INSERT OR UPDATE ON public.cms_news
+    FOR EACH ROW EXECUTE FUNCTION public.cms_sync_published_at();
+
+DROP TRIGGER IF EXISTS trg_cms_alliances_updated_at ON public.cms_alliances;
+CREATE TRIGGER trg_cms_alliances_updated_at
+    BEFORE UPDATE ON public.cms_alliances
+    FOR EACH ROW EXECUTE FUNCTION public.cms_set_updated_at();
+
+DROP TRIGGER IF EXISTS trg_cms_alliances_published_at ON public.cms_alliances;
+CREATE TRIGGER trg_cms_alliances_published_at
+    BEFORE INSERT OR UPDATE ON public.cms_alliances
+    FOR EACH ROW EXECUTE FUNCTION public.cms_sync_published_at();
+
+DROP TRIGGER IF EXISTS trg_cms_metrics_updated_at ON public.cms_metrics;
+CREATE TRIGGER trg_cms_metrics_updated_at
+    BEFORE UPDATE ON public.cms_metrics
+    FOR EACH ROW EXECUTE FUNCTION public.cms_set_updated_at();
+
+DROP TRIGGER IF EXISTS trg_cms_metrics_published_at ON public.cms_metrics;
+CREATE TRIGGER trg_cms_metrics_published_at
+    BEFORE INSERT OR UPDATE ON public.cms_metrics
+    FOR EACH ROW EXECUTE FUNCTION public.cms_sync_published_at();
+
+DROP TRIGGER IF EXISTS trg_cms_board_members_updated_at ON public.cms_board_members;
+CREATE TRIGGER trg_cms_board_members_updated_at
+    BEFORE UPDATE ON public.cms_board_members
+    FOR EACH ROW EXECUTE FUNCTION public.cms_set_updated_at();
+
+DROP TRIGGER IF EXISTS trg_cms_board_members_published_at ON public.cms_board_members;
+CREATE TRIGGER trg_cms_board_members_published_at
+    BEFORE INSERT OR UPDATE ON public.cms_board_members
+    FOR EACH ROW EXECUTE FUNCTION public.cms_sync_published_at();
+
+-- 8. Seguridad a Nivel de Fila (RLS obligatorio) y Privilegios por Columna
+ALTER TABLE public.cms_projects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.cms_news ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.cms_alliances ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.cms_metrics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.cms_board_members ENABLE ROW LEVEL SECURITY;
+
+-- Proteger la columna `email` de `cms_board_members` frente a consultas REST directas con anon key
+REVOKE ALL ON TABLE public.cms_board_members FROM public, anon;
+GRANT SELECT (
+    id,
+    full_name,
+    role_title,
+    member_type,
+    area_scope,
+    photo_url,
+    linkedin_url,
+    term_period,
+    display_order,
+    is_active,
+    status,
+    published_at,
+    created_at,
+    updated_at
+) ON public.cms_board_members TO anon;
+
+-- 8.1 Políticas para `cms_projects` (flujo editorial dual por área)
+DROP POLICY IF EXISTS "Lectura publica de proyectos publicados" ON public.cms_projects;
+CREATE POLICY "Lectura publica de proyectos publicados"
+    ON public.cms_projects
+    FOR SELECT
+    TO anon, authenticated
+    USING (status = 'published');
+
+DROP POLICY IF EXISTS "Lectura editorial de proyectos segun ambito" ON public.cms_projects;
+CREATE POLICY "Lectura editorial de proyectos segun ambito"
+    ON public.cms_projects
+    FOR SELECT
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.cms_current_permission() cp
+            WHERE cp.area_scope = 'ALL'
+               OR cp.area_scope = cms_projects.area_scope
+        )
+    );
+
+DROP POLICY IF EXISTS "Creacion de proyectos segun flujo dual y area" ON public.cms_projects;
+CREATE POLICY "Creacion de proyectos segun flujo dual y area"
+    ON public.cms_projects
+    FOR INSERT
+    TO authenticated
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.cms_current_permission() cp
+            WHERE (cp.role IN ('admin', 'dcc') AND cp.area_scope = 'ALL')
+               OR (cp.role = 'director' AND cp.area_scope = cms_projects.area_scope)
+               OR (
+                   cp.role = 'delegate'
+                   AND cp.area_scope = cms_projects.area_scope
+                   AND cms_projects.status IN ('draft', 'pending_review')
+               )
+        )
+    );
+
+DROP POLICY IF EXISTS "Actualizacion de proyectos segun flujo dual y area" ON public.cms_projects;
+CREATE POLICY "Actualizacion de proyectos segun flujo dual y area"
+    ON public.cms_projects
+    FOR UPDATE
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.cms_current_permission() cp
+            WHERE (cp.role IN ('admin', 'dcc') AND cp.area_scope = 'ALL')
+               OR (cp.role = 'director' AND cp.area_scope = cms_projects.area_scope)
+               OR (
+                   cp.role = 'delegate'
+                   AND cp.area_scope = cms_projects.area_scope
+                   AND cms_projects.status IN ('draft', 'pending_review')
+               )
+        )
+    )
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.cms_current_permission() cp
+            WHERE (cp.role IN ('admin', 'dcc') AND cp.area_scope = 'ALL')
+               OR (cp.role = 'director' AND cp.area_scope = cms_projects.area_scope)
+               OR (
+                   cp.role = 'delegate'
+                   AND cp.area_scope = cms_projects.area_scope
+                   AND cms_projects.status IN ('draft', 'pending_review')
+               )
+        )
+    );
+
+DROP POLICY IF EXISTS "Eliminacion de proyectos restringida a Admin global" ON public.cms_projects;
+CREATE POLICY "Eliminacion de proyectos restringida a Admin global"
+    ON public.cms_projects
+    FOR DELETE
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.cms_current_permission() cp
+            WHERE cp.role = 'admin' AND cp.area_scope = 'ALL'
+        )
+    );
+
+-- 8.2 Políticas para `cms_news` (Admin y DCC)
+DROP POLICY IF EXISTS "Lectura publica de novedades activas y publicadas" ON public.cms_news;
+CREATE POLICY "Lectura publica de novedades activas y publicadas"
+    ON public.cms_news
+    FOR SELECT
+    TO anon, authenticated
+    USING (status = 'published' AND is_active = true);
+
+DROP POLICY IF EXISTS "Gestion editorial de novedades para Admin y DCC" ON public.cms_news;
+CREATE POLICY "Gestion editorial de novedades para Admin y DCC"
+    ON public.cms_news
+    FOR ALL
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.cms_current_permission() cp
+            WHERE cp.role IN ('admin', 'dcc') AND cp.area_scope = 'ALL'
+        )
+    )
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.cms_current_permission() cp
+            WHERE cp.role IN ('admin', 'dcc') AND cp.area_scope = 'ALL'
+        )
+    );
+
+-- 8.3 Políticas para `cms_alliances` (Admin, DCC y área RRPP)
+DROP POLICY IF EXISTS "Lectura publica de alianzas activas y publicadas" ON public.cms_alliances;
+CREATE POLICY "Lectura publica de alianzas activas y publicadas"
+    ON public.cms_alliances
+    FOR SELECT
+    TO anon, authenticated
+    USING (status = 'published' AND is_active = true);
+
+DROP POLICY IF EXISTS "Lectura editorial de alianzas para Admin, DCC y RRPP" ON public.cms_alliances;
+CREATE POLICY "Lectura editorial de alianzas para Admin, DCC y RRPP"
+    ON public.cms_alliances
+    FOR SELECT
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.cms_current_permission() cp
+            WHERE (cp.role IN ('admin', 'dcc') AND cp.area_scope = 'ALL')
+               OR cp.area_scope = 'RRPP'
+        )
+    );
+
+DROP POLICY IF EXISTS "Creacion de alianzas para Admin, DCC y RRPP" ON public.cms_alliances;
+CREATE POLICY "Creacion de alianzas para Admin, DCC y RRPP"
+    ON public.cms_alliances
+    FOR INSERT
+    TO authenticated
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.cms_current_permission() cp
+            WHERE (cp.role IN ('admin', 'dcc') AND cp.area_scope = 'ALL')
+               OR (cp.role = 'director' AND cp.area_scope = 'RRPP')
+               OR (
+                   cp.role = 'delegate'
+                   AND cp.area_scope = 'RRPP'
+                   AND cms_alliances.status IN ('draft', 'pending_review')
+               )
+        )
+    );
+
+DROP POLICY IF EXISTS "Actualizacion de alianzas para Admin, DCC y RRPP" ON public.cms_alliances;
+CREATE POLICY "Actualizacion de alianzas para Admin, DCC y RRPP"
+    ON public.cms_alliances
+    FOR UPDATE
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.cms_current_permission() cp
+            WHERE (cp.role IN ('admin', 'dcc') AND cp.area_scope = 'ALL')
+               OR (cp.role = 'director' AND cp.area_scope = 'RRPP')
+               OR (
+                   cp.role = 'delegate'
+                   AND cp.area_scope = 'RRPP'
+                   AND cms_alliances.status IN ('draft', 'pending_review')
+               )
+        )
+    )
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.cms_current_permission() cp
+            WHERE (cp.role IN ('admin', 'dcc') AND cp.area_scope = 'ALL')
+               OR (cp.role = 'director' AND cp.area_scope = 'RRPP')
+               OR (
+                   cp.role = 'delegate'
+                   AND cp.area_scope = 'RRPP'
+                   AND cms_alliances.status IN ('draft', 'pending_review')
+               )
+        )
+    );
+
+DROP POLICY IF EXISTS "Eliminacion de alianzas restringida a Admin global" ON public.cms_alliances;
+CREATE POLICY "Eliminacion de alianzas restringida a Admin global"
+    ON public.cms_alliances
+    FOR DELETE
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.cms_current_permission() cp
+            WHERE cp.role = 'admin' AND cp.area_scope = 'ALL'
+        )
+    );
+
+-- 8.4 Políticas para `cms_metrics` (Admin y DCC)
+DROP POLICY IF EXISTS "Lectura publica de metricas activas y publicadas" ON public.cms_metrics;
+CREATE POLICY "Lectura publica de metricas activas y publicadas"
+    ON public.cms_metrics
+    FOR SELECT
+    TO anon, authenticated
+    USING (status = 'published' AND is_active = true);
+
+DROP POLICY IF EXISTS "Gestion editorial de metricas para Admin y DCC" ON public.cms_metrics;
+CREATE POLICY "Gestion editorial de metricas para Admin y DCC"
+    ON public.cms_metrics
+    FOR ALL
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.cms_current_permission() cp
+            WHERE cp.role IN ('admin', 'dcc') AND cp.area_scope = 'ALL'
+        )
+    )
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.cms_current_permission() cp
+            WHERE cp.role IN ('admin', 'dcc') AND cp.area_scope = 'ALL'
+        )
+    );
+
+-- 8.5 Políticas para `cms_board_members` (Admin, DCC y Directores de su área)
+DROP POLICY IF EXISTS "Lectura publica de directiva activa y publicada" ON public.cms_board_members;
+CREATE POLICY "Lectura publica de directiva activa y publicada"
+    ON public.cms_board_members
+    FOR SELECT
+    TO anon, authenticated
+    USING (status = 'published' AND is_active = true);
+
+DROP POLICY IF EXISTS "Lectura editorial de directiva segun ambito" ON public.cms_board_members;
+CREATE POLICY "Lectura editorial de directiva segun ambito"
+    ON public.cms_board_members
+    FOR SELECT
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.cms_current_permission() cp
+            WHERE (cp.role IN ('admin', 'dcc') AND cp.area_scope = 'ALL')
+               OR (cp.role = 'director' AND cp.area_scope = cms_board_members.area_scope)
+        )
+    );
+
+DROP POLICY IF EXISTS "Creacion de directiva para Admin, DCC y Directores" ON public.cms_board_members;
+CREATE POLICY "Creacion de directiva para Admin, DCC y Directores"
+    ON public.cms_board_members
+    FOR INSERT
+    TO authenticated
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.cms_current_permission() cp
+            WHERE (cp.role IN ('admin', 'dcc') AND cp.area_scope = 'ALL')
+               OR (
+                   cp.role = 'director'
+                   AND cp.area_scope = cms_board_members.area_scope
+                   AND cms_board_members.member_type IN ('director', 'lead')
+               )
+        )
+    );
+
+DROP POLICY IF EXISTS "Actualizacion de directiva para Admin, DCC y Directores" ON public.cms_board_members;
+CREATE POLICY "Actualizacion de directiva para Admin, DCC y Directores"
+    ON public.cms_board_members
+    FOR UPDATE
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.cms_current_permission() cp
+            WHERE (cp.role IN ('admin', 'dcc') AND cp.area_scope = 'ALL')
+               OR (
+                   cp.role = 'director'
+                   AND cp.area_scope = cms_board_members.area_scope
+                   AND cms_board_members.member_type IN ('director', 'lead')
+               )
+        )
+    )
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.cms_current_permission() cp
+            WHERE (cp.role IN ('admin', 'dcc') AND cp.area_scope = 'ALL')
+               OR (
+                   cp.role = 'director'
+                   AND cp.area_scope = cms_board_members.area_scope
+                   AND cms_board_members.member_type IN ('director', 'lead')
+               )
+        )
+    );
+
+DROP POLICY IF EXISTS "Eliminacion de directiva restringida a Admin global" ON public.cms_board_members;
+CREATE POLICY "Eliminacion de directiva restringida a Admin global"
+    ON public.cms_board_members
+    FOR DELETE
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.cms_current_permission() cp
+            WHERE cp.role = 'admin' AND cp.area_scope = 'ALL'
+        )
+    );
+
+-- 9. Vistas SQL de Lectura Pública (`security_invoker = true`)
+CREATE OR REPLACE VIEW public.cms_public_events
+WITH (security_invoker = true) AS
+SELECT
+    id,
+    slug,
+    title,
+    summary,
+    description,
+    event_date,
+    end_date,
+    display_date,
+    time_range,
+    location,
+    category,
+    area_scope,
+    speaker,
+    speaker_image_url,
+    thumbnail_url,
+    background_image_url,
+    external_url,
+    attendees_count,
+    highlights,
+    is_featured,
+    (COALESCE(end_date, event_date) >= now()) AS is_upcoming,
+    published_at
+FROM public.cms_events
+WHERE status = 'published'
+ORDER BY is_featured DESC, event_date DESC;
+
+CREATE OR REPLACE VIEW public.cms_public_projects
+WITH (security_invoker = true) AS
+SELECT
+    id,
+    slug,
+    title,
+    description,
+    long_description,
+    project_status,
+    area_scope,
+    lower(area_scope) AS area,
+    faculty_badge,
+    category,
+    is_featured,
+    thumbnail_url,
+    image_position,
+    screenshots,
+    team,
+    tech_stack,
+    external_url,
+    repo_url,
+    display_order,
+    published_at
+FROM public.cms_projects
+WHERE status = 'published'
+ORDER BY is_featured DESC, display_order ASC, published_at DESC NULLS LAST, created_at DESC;
+
+CREATE OR REPLACE VIEW public.cms_public_news
+WITH (security_invoker = true) AS
+SELECT
+    n.id,
+    COALESCE(NULLIF(trim(n.title), ''), e.title, p.title) AS title,
+    COALESCE(NULLIF(trim(n.description), ''), e.summary, e.description, p.description) AS description,
+    COALESCE(NULLIF(trim(n.image_url), ''), e.thumbnail_url, p.thumbnail_url) AS image_url,
+    COALESCE(
+        NULLIF(trim(n.cta_url), ''),
+        NULLIF(trim(e.external_url), ''),
+        NULLIF(trim(p.external_url), ''),
+        CASE WHEN n.source_type = 'project' THEN '/projects' ELSE '/events' END
+    ) AS cta_url,
+    n.cta_label,
+    n.source_type,
+    n.event_id,
+    n.project_id,
+    n.display_order,
+    n.published_at
+FROM public.cms_news n
+LEFT JOIN public.cms_events e
+    ON e.id = n.event_id AND e.status = 'published'
+LEFT JOIN public.cms_projects p
+    ON p.id = n.project_id AND p.status = 'published'
+WHERE n.status = 'published'
+  AND n.is_active = true
+  AND (
+      n.source_type = 'custom'
+      OR (n.source_type = 'event' AND e.id IS NOT NULL)
+      OR (n.source_type = 'project' AND p.id IS NOT NULL)
+  )
+ORDER BY n.display_order ASC, n.published_at DESC NULLS LAST, n.created_at DESC;
+
+CREATE OR REPLACE VIEW public.cms_public_alliances
+WITH (security_invoker = true) AS
+SELECT
+    id,
+    slug,
+    name,
+    logo_url,
+    website_url,
+    logo_scale,
+    logo_brightness,
+    display_order,
+    published_at
+FROM public.cms_alliances
+WHERE status = 'published'
+  AND is_active = true
+ORDER BY display_order ASC, name ASC;
+
+CREATE OR REPLACE VIEW public.cms_public_metrics
+WITH (security_invoker = true) AS
+SELECT
+    id,
+    metric_key,
+    label,
+    value_text,
+    icon_key,
+    display_order,
+    published_at
+FROM public.cms_metrics
+WHERE status = 'published'
+  AND is_active = true
+ORDER BY display_order ASC, metric_key ASC;
+
+CREATE OR REPLACE VIEW public.cms_public_board_members
+WITH (security_invoker = true) AS
+SELECT
+    id,
+    full_name,
+    role_title,
+    member_type,
+    area_scope,
+    photo_url,
+    linkedin_url,
+    term_period,
+    display_order,
+    published_at
+FROM public.cms_board_members
+WHERE status = 'published'
+  AND is_active = true
+ORDER BY
+    CASE member_type
+        WHEN 'president' THEN 1
+        WHEN 'director'  THEN 2
+        ELSE 3
+    END ASC,
+    area_scope ASC,
+    display_order ASC,
+    full_name ASC;
+
+GRANT SELECT ON
+    public.cms_public_events,
+    public.cms_public_projects,
+    public.cms_public_news,
+    public.cms_public_alliances,
+    public.cms_public_metrics,
+    public.cms_public_board_members
+TO anon, authenticated, service_role;
+```
+
+
