@@ -51,7 +51,7 @@ Para más detalles específicos sobre el proyecto, consulta los siguientes docum
 
 - 📖 **[Guía de Contribución](./CONTRIBUTING.md)**: Reglas estrictas de Git, ramas, y convenciones de commits. (Obligatorio para colaboradores).
 - 🏛️ **[Arquitectura del Sistema](./docs/arquitectura.md)**: Vista general del diseño del sistema, diagramas de flujo y riesgos técnicos.
-- 🎨 **[Frontend y UI/UX](./docs/frontend.md)**: Arquitectura detallada, estructura, componentes y guía de estilos.
+- 🎨 **[Frontend y UI/UX](./docs/frontend.md)**: Arquitectura detallada, estructura, componentes, guía de estilos y wireframes de alta fidelidad del panel CMS (CMS-3).
 - ⚙️ **[Backend y API](./docs/backend.md)**: Detalle del servidor, sesión criptográfica, rate limiting y seguridad.
 - 🔌 **[Especificación de Endpoints](./docs/endpoints.md)**: Referencia y contratos de los endpoints locales de la API.
 - 💾 **[Base de Datos](./docs/base-de-datos.md)**: Esquema de PostgreSQL, restricciones DDL, índices y configuración.
