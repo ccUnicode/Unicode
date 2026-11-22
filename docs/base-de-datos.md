@@ -93,6 +93,8 @@ En la fase actual del desarrollo, la definición de la estructura física de la 
 4. **Ejecución**: Presione el botón **Run** para crear la tabla `applicants` con sus respectivas restricciones de validación y los índices de rendimiento optimizados.
 5. **Configuración RLS**: Asegúrese de ir a la sección **Database > Policies** en Supabase para habilitar las políticas de seguridad a nivel de fila (*Row Level Security*), configurando permisos exclusivos de `INSERT` para roles públicos y restringiendo lecturas a la capa del servidor.
 
+> **Módulo CMS Unicode (`cms_*`):** El esquema DDL ejecutable del CMS (Entregas 1 y 2) se encuentra versionado en [20261122_cms_core.sql](../supabase/migrations/20261122_cms_core.sql) y sus datos semilla exclusivos para desarrollo en [seed_cms_dev.sql](../supabase/seed_cms_dev.sql), sin alterar `applicants` ni las tablas `recruitment_*`.
+
 ---
 
 # Módulo CMS Unicode — Entrega 1 (Eventos y Convocatoria)
@@ -2053,5 +2055,18 @@ GRANT SELECT ON
     public.cms_public_board_members
 TO anon, authenticated, service_role;
 ```
+
+### Ejecución en Supabase (SQL Editor) y Semilla de Desarrollo
+
+La migración consolidada ejecutable correspondiente a las Secciones 10 y 14 se encuentra versionada en el repositorio:
+
+- **Migración principal:** [20261122_cms_core.sql](../supabase/migrations/20261122_cms_core.sql)
+- **Datos semilla de desarrollo:** [seed_cms_dev.sql](../supabase/seed_cms_dev.sql) *(ubicado fuera de `supabase/migrations/` para no afectar producción)*
+
+#### Pasos para aplicar en Supabase:
+1. **Aplicar la migración base (`cms_*`):** Abrir **Supabase Dashboard → SQL Editor → New Query**, copiar el contenido íntegro de [20261122_cms_core.sql](../supabase/migrations/20261122_cms_core.sql) y presionar **Run**. El script es idempotente y no modifica `applicants` ni `recruitment_*`.
+2. **Verificar tablas, triggers y vistas:** Confirmar en **Table Editor** la creación de las 8 tablas `cms_*` y en **Database → Views** las 6 vistas `cms_public_*` con `security_invoker = true`.
+3. **Poblar datos semilla (solo Desarrollo/Staging):** Ejecutar [seed_cms_dev.sql](../supabase/seed_cms_dev.sql) en el **SQL Editor** para cargar 2 eventos de prueba (`published` y `draft`), 1 proyecto de prueba (`area_scope = 'ID'`) y las 4 métricas iniciales del Home.
+4. **Asignar permisos en `cms_user_permissions`:** Crear los usuarios de prueba (`admin`, `dcc`, `director`, `delegate`) en **Authentication → Users**, consultar sus UUID en `auth.users` y ejecutar el bloque `INSERT INTO public.cms_user_permissions ... ON CONFLICT (user_id) DO NOTHING;` incluido al final de [seed_cms_dev.sql](../supabase/seed_cms_dev.sql).
 
 
