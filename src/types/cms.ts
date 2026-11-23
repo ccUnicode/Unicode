@@ -201,6 +201,7 @@ export interface CmsCallPublicSettings {
 
 /** DTO para actualizar los parámetros públicos de convocatoria */
 export interface UpdateCmsCallPublicSettingsInput {
+  expectedRevision?: number;
   settings: Partial<CmsCallPublicSettings>;
   reason: string;
 }
