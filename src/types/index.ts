@@ -36,3 +36,6 @@ export interface Metric {
   events_held: number;
   years_experience: number;
 }
+
+export * from './cms';
+
