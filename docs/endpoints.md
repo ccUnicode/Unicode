@@ -210,6 +210,106 @@ Formato estándar de respuesta de error:
 
 ---
 
+### 6.0. Autenticación y Sesión del CMS (`/api/cms/auth/*`)
+
+Endpoints dedicados al inicio, cierre y consulta de la sesión administrativa mediante Supabase Auth y cookies HTTP-Only seguras (`sb-access-token` y `sb-refresh-token`).
+
+#### 6.0.1. `POST /api/cms/auth/login`
+Autentica a un usuario con credenciales oficiales en Supabase Auth y valida que posea permisos activos en `cms_user_permissions`.
+
+*   **Autenticación**: Pública (Acceso libre para inicio de sesión).
+*   **Cabeceras Requeridas**: `Content-Type: application/json`
+*   **Cuerpo de la Petición (JSON)**:
+    ```json
+    {
+      "email": "director.id@ccunicode.org",
+      "password": "Password123!"
+    }
+    ```
+*   **Cookies Establecidas**:
+    *   `sb-access-token`: JWT de acceso de Supabase (HTTP-Only, Secure en producción, SameSite=Lax, Max-Age=7 días).
+    *   `sb-refresh-token`: Token de refresco de sesión (HTTP-Only, Secure en producción, SameSite=Lax, Max-Age=7 días).
+*   **Respuesta 200 OK**:
+    ```json
+    {
+      "success": true,
+      "data": {
+        "user": {
+          "id": "e3b0c442-98fc-1c14-9afb-4c2dd84f3c95",
+          "email": "director.id@ccunicode.org",
+          "role": "approver",
+          "dbRole": "director",
+          "areaScope": "ID",
+          "canPublish": true
+        }
+      },
+      "meta": { "timestamp": "2026-11-23T12:00:00.000Z" }
+    }
+    ```
+*   **Respuesta 401 Unauthorized**:
+    ```json
+    {
+      "success": false,
+      "error": {
+        "code": "UNAUTHORIZED",
+        "message": "Credenciales inválidas o cuenta sin permisos activos en el CMS.",
+        "details": null
+      },
+      "meta": { "timestamp": "2026-11-23T12:00:00.000Z" }
+    }
+    ```
+
+#### 6.0.2. `POST /api/cms/auth/logout`
+Cierra la sesión activa en Supabase Auth e invalida y elimina las cookies HTTP-Only.
+
+*   **Autenticación**: Pública / Opcional.
+*   **Respuesta 200 OK**:
+    ```json
+    {
+      "success": true,
+      "data": {
+        "message": "Sesión finalizada correctamente."
+      },
+      "meta": { "timestamp": "2026-11-23T12:00:00.000Z" }
+    }
+    ```
+
+#### 6.0.3. `GET /api/cms/auth/me`
+Retorna los datos de identidad y permisos del usuario actualmente autenticado (derivado de `Astro.locals.user`).
+
+*   **Autenticación**: Obligatoria (Requiere cookie de sesión válida).
+*   **Respuesta 200 OK**:
+    ```json
+    {
+      "success": true,
+      "data": {
+        "user": {
+          "id": "e3b0c442-98fc-1c14-9afb-4c2dd84f3c95",
+          "email": "director.id@ccunicode.org",
+          "role": "approver",
+          "dbRole": "director",
+          "areaScope": "ID",
+          "canPublish": true
+        }
+      },
+      "meta": { "timestamp": "2026-11-23T12:00:00.000Z" }
+    }
+    ```
+*   **Respuesta 401 Unauthorized**:
+    ```json
+    {
+      "success": false,
+      "error": {
+        "code": "UNAUTHORIZED",
+        "message": "No hay ninguna sesión activa en el CMS.",
+        "details": null
+      },
+      "meta": { "timestamp": "2026-11-23T12:00:00.000Z" }
+    }
+    ```
+
+---
+
 ### 6.1. `GET /api/cms/events`
 Retorna el listado paginado de eventos del CMS con filtros administrativos y editoriales.
 

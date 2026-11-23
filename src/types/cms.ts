@@ -38,8 +38,11 @@ export type CmsAreaId = typeof CMS_AREA_IDS[number];
 /** Alcance de permisos: áreas específicas o acceso global (ALL) */
 export type CmsAreaScope = CmsAreaId | 'ALL';
 
-/** Roles del sistema CMS */
+/** Roles del sistema CMS (capa lógica de aplicación) */
 export type CmsRole = 'admin' | 'approver' | 'editor';
+
+/** Roles en la base de datos física (tabla cms_user_permissions) */
+export type CmsDbRole = 'admin' | 'dcc' | 'director' | 'delegate';
 
 /** Permisos del usuario CMS inyectados en la sesión */
 export interface CmsUserPermissions {
@@ -47,6 +50,7 @@ export interface CmsUserPermissions {
   email: string;
   name?: string | null;
   role: CmsRole;
+  dbRole?: CmsDbRole;
   areaScope: CmsAreaScope;
   canPublish: boolean;
   isActive: boolean;
@@ -59,6 +63,7 @@ export interface CmsSessionUser {
   id: string;
   email: string;
   role: CmsRole;
+  dbRole?: CmsDbRole;
   areaScope: CmsAreaScope;
   canPublish: boolean;
 }

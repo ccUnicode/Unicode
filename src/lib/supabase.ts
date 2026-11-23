@@ -1,8 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
-const supabaseServiceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl =
+  import.meta.env.PUBLIC_SUPABASE_URL ||
+  process.env.PUBLIC_SUPABASE_URL ||
+  'https://mock-project.supabase.co';
+const supabaseAnonKey =
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.PUBLIC_SUPABASE_ANON_KEY ||
+  'mock-anon-key';
+const supabaseServiceKey =
+  import.meta.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Standard client for frontend (using Anon Key)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
