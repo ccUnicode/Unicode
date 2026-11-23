@@ -227,7 +227,7 @@ GRANT EXECUTE ON FUNCTION public.can_publish_content(unicode_area_type) TO authe
 ```
 
 #### Aplicación de las Helpers en Tablas del CMS (Ejemplo conceptual RLS):
-* **`INSERT / UPDATE` en estado `draft` o `in_review`**: Permitido si `has_area_access(area)`.
+* **`INSERT / UPDATE` en estado `draft` o `pending_review`**: Permitido si `has_area_access(area)`.
 * **`UPDATE` pasando a `status = 'published'` o `DELETE`**: Permitido únicamente si `can_publish_content(area)`.
 
 ---
@@ -259,3 +259,204 @@ Los buckets están configurados con acceso de lectura pública (para ser consumi
    * Los archivos deben validar la lista blanca de MIME types (`image/webp`, `image/png`).
 3. **Modificación y Eliminación (`UPDATE`, `DELETE`)**:
    * Solo permitida para usuarios que tengan permisos de publicación (`can_publish_content(area)`) o rol de `admin`. Previene la eliminación accidental o no autorizada de activos multimedia en producción.
+
+---
+
+## 8. Políticas de Seguridad RLS en SQL para Flujos de Contenido (1 Paso y 2 Pasos)
+
+Esta sección define la especificación técnica declarativa de las políticas de **Row Level Security (RLS)** que gobiernan el ciclo de vida del contenido (`cms_events`, `cms_projects`, etc.) en Supabase, garantizando que el flujo de aprobación opere estrictamente a nivel de base de datos sin depender de validaciones en el cliente.
+
+### 8.1 Ciclo de Vida del Contenido y Estados
+
+El contenido gestionado por el CMS atraviesa una máquina de estados controlada mediante el tipo enumerado `cms_content_status_type`:
+
+```sql
+CREATE TYPE cms_content_status_type AS ENUM ('draft', 'pending_review', 'published', 'archived');
+```
+
+*   **`draft` (Borrador)**: Contenido en creación o edición preliminar. Solo visible por miembros autorizados del área.
+*   **`pending_review` (En Revisión)**: Contenido remitido por un Delegado de Área a la espera de validación y aprobación por su Director.
+*   **`published` (Publicado)**: Contenido aprobado, activo e indexable públicamente en la landing page y módulos del portal.
+*   **`archived` (Archivado)**: Contenido histórico retirado de la vista pública sin ser eliminado físicamente.
+
+---
+
+### 8.2 Matriz de Transiciones y Privilegios por Perfil
+
+| Estado Inicial | Acción Intentada | Estado Destino | Delegado de Área (`can_publish = false`) | Director de Área / DCC (`can_publish = true`) |
+| :--- | :--- | :--- | :---: | :---: |
+| *(Nuevo)* | Creación directa | `draft` | ✅ Permitido | ✅ Permitido |
+| *(Nuevo)* | Creación y envío a revisión | `pending_review` | ✅ Permitido | ✅ Permitido |
+| *(Nuevo)* | Publicación directa | `published` | ❌ **Denegado** (Flujo 2 pasos) | ✅ **Permitido** (Flujo 1 paso) |
+| `draft` | Edición de borrador | `draft` | ✅ Permitido | ✅ Permitido |
+| `draft` | Solicitar aprobación | `pending_review` | ✅ Permitido | ✅ Permitido |
+| `draft` | Publicar directo | `published` | ❌ **Denegado** | ✅ **Permitido** |
+| `pending_review` | Correcciones | `draft` / `pending_review` | ✅ Permitido | ✅ Permitido |
+| `pending_review` | Aprobación final | `published` | ❌ **Denegado** | ✅ **Permitido** |
+| `published` | Modificación de datos | `published` | ❌ **Denegado (Regla de Protección)** | ✅ **Permitido** |
+| `published` | Solicitar cambio/revisión | `pending_review` | ✅ **Permitido (Retorno a Revisión)** | ✅ **Permitido** |
+| Cualquiera | Eliminación física | *(Borrado)* | ❌ **Denegado** | ✅ **Permitido** |
+
+---
+
+### 8.3 Scripts DDL de Políticas RLS por Operación
+
+A continuación se presentan las políticas RLS parametrizadas aplicadas sobre una tabla de contenidos canónica (ej. `public.cms_events` o `public.cms_projects` con columnas `id`, `area unicode_area_type`, `status cms_content_status_type`, `created_by uuid`, etc.):
+
+```sql
+-- Habilitación mandataria de Row Level Security en la tabla de contenidos
+ALTER TABLE public.cms_events ENABLE ROW LEVEL SECURITY;
+
+-- ============================================================================
+-- 1. POLÍTICA DE LECTURA (SELECT)
+-- ============================================================================
+-- Regla:
+-- - Usuarios anónimos (landing pública): Solo leen contenido publicado ('published').
+-- - Usuarios autenticados con rol de CMS:
+--     * Admin General y Editor Global DCC ven todo ('ALL').
+--     * Directores y Delegados ven borradores ('draft') y revisiones ('pending_review')
+--       de su propia área, además de todo lo publicado ('published') institucionalmente.
+-- ============================================================================
+CREATE POLICY "cms_content_select_policy"
+ON public.cms_events
+FOR SELECT
+TO public
+USING (
+    status = 'published'
+    OR (
+        auth.uid() IS NOT NULL 
+        AND public.has_area_access(area)
+    )
+);
+
+-- ============================================================================
+-- 2. POLÍTICA DE CREACIÓN (INSERT)
+-- ============================================================================
+-- Regla:
+-- - Requiere pertenencia/acceso al área correspondiente: has_area_access(area).
+-- - Directores de Área, DCC y Admins (can_publish = true):
+--     Pueden insertar directamente en cualquier estado ('draft', 'pending_review', 'published').
+-- - Delegados de Área (can_publish = false):
+--     Solo pueden insertar registros en 'draft' o 'pending_review'. Se rechaza 'published'.
+-- ============================================================================
+CREATE POLICY "cms_content_insert_policy"
+ON public.cms_events
+FOR INSERT
+TO authenticated
+WITH CHECK (
+    public.has_area_access(area)
+    AND (
+        public.can_publish_content(area)
+        OR (status IN ('draft', 'pending_review'))
+    )
+);
+
+-- ============================================================================
+-- 3. POLÍTICA DE ACTUALIZACIÓN (UPDATE)
+-- ============================================================================
+-- Regla:
+-- - Requiere acceso al área correspondiente: has_area_access(area).
+-- - Directores de Área, DCC y Admins (can_publish = true):
+--     Pueden editar registros en cualquier estado y transicionar libremente hacia 'published'.
+-- - Delegados de Área (can_publish = false):
+--     * USING: Solo acceden a modificar registros si:
+--         a) El registro actual está en 'draft' o 'pending_review'.
+--         b) O el registro está en 'published', pero ÚNICAMENTE si la actualización
+--            lo regresa a revisión ('pending_review').
+--     * WITH CHECK: El estado final del registro NUNCA puede ser 'published';
+--       debe quedar exclusivamente en 'draft' o 'pending_review'.
+-- ============================================================================
+CREATE POLICY "cms_content_update_policy"
+ON public.cms_events
+FOR UPDATE
+TO authenticated
+USING (
+    public.has_area_access(area)
+    AND (
+        public.can_publish_content(area)
+        -- Si es Delegado, puede seleccionar para edición registros en borrador/revisión,
+        -- o registros publicados siempre y cuando la transacción los regrese a revisión.
+        OR status IN ('draft', 'pending_review', 'published')
+    )
+)
+WITH CHECK (
+    public.has_area_access(area)
+    AND (
+        -- Usuarios con permiso de publicación pueden guardar en cualquier estado
+        public.can_publish_content(area)
+        -- Delegados tienen estrictamente prohibido guardar como 'published'.
+        -- Si modifican un registro previamente 'published', están obligados a marcarlo
+        -- como 'pending_review' (o 'draft'), retirándolo de la vista pública hasta aprobación.
+        OR (status IN ('draft', 'pending_review'))
+    )
+);
+
+-- ============================================================================
+-- 4. POLÍTICA DE ELIMINACIÓN (DELETE)
+-- ============================================================================
+-- Regla:
+-- - La eliminación de registros es una operación restringida de alto impacto.
+-- - Se reserva exclusivamente a usuarios con facultad de publicación (can_publish = true)
+--   en su área (Directores) o globalmente (Admin / Editor Global DCC).
+-- - Los Delegados de Área NO tienen privilegios de DELETE; cualquier descarte debe
+--   ser ejecutado o autorizado por el Director del área.
+-- ============================================================================
+CREATE POLICY "cms_content_delete_policy"
+ON public.cms_events
+FOR DELETE
+TO authenticated
+USING (
+    public.can_publish_content(area)
+);
+```
+
+---
+
+### 8.4 Regla de Protección contra Modificación Directa de Contenido Publicado
+
+Para cumplir con el requerimiento de negocio y salvaguardar la integridad de la landing pública frente a ediciones no supervisadas:
+
+1. **Garantía mediante RLS (`WITH CHECK`)**:
+   * Cuando un Delegado de Área ejecuta una sentencia `UPDATE` sobre un registro que se encuentra en `status = 'published'`, la cláusula `WITH CHECK` evalúa si el nuevo estado cumple `status IN ('draft', 'pending_review')`.
+   * Si el Delegado intenta modificar el título, fecha, descripción o imágenes de un registro manteniendo `status = 'published'`, la política de seguridad RLS bloquea inmediatamente la transacción (`new row violates row-level security policy`).
+   * Para que la mutación sea aprobada por PostgreSQL, el Delegado debe explícitamente enviar `status: 'pending_review'`. Al hacerlo:
+     * El contenido publicado deja de ser visible al público general (`SELECT` público filtra exclusivamente `status = 'published'`).
+     * El cambio queda en cola de espera de revisión para que el Director de Área o DCC audite las modificaciones y ejecute la publicación final.
+
+2. **Trigger Opcional de Auditoría de Transiciones (`enforce_cms_status_transition`)**:
+   Como capa adicional de defensa en profundidad (*defense-in-depth*), se define un trigger que valida y registra la transición de estados antes de cualquier mutación:
+
+```sql
+CREATE OR REPLACE FUNCTION public.check_cms_content_transition()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    is_publisher BOOLEAN;
+BEGIN
+    -- Validar si el usuario en sesión es publicador para el área de la fila
+    is_publisher := public.can_publish_content(OLD.area);
+
+    -- Si no es publicador e intenta alterar una fila publicada manteniéndola en 'published'
+    IF NOT is_publisher AND OLD.status = 'published' AND NEW.status = 'published' THEN
+        RAISE EXCEPTION 'Operación denegada: Un Delegado no puede modificar directamente contenido publicado sin regresarlo a estado pending_review.';
+    END IF;
+
+    -- Si no es publicador e intenta elevar el estado a 'published'
+    IF NOT is_publisher AND NEW.status = 'published' THEN
+        RAISE EXCEPTION 'Operación denegada: No cuentas con permisos de publicación para el área %.', OLD.area;
+    END IF;
+
+    -- Actualizar timestamp de auditoría
+    NEW.updated_at := now();
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_check_cms_content_transition
+BEFORE UPDATE ON public.cms_events
+FOR EACH ROW
+EXECUTE FUNCTION public.check_cms_content_transition();
+```
