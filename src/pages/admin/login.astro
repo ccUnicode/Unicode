@@ -1,0 +1,187 @@
+---
+export const prerender = false;
+
+import Layout from '../../layouts/Layout.astro';
+
+// Si el usuario ya está autenticado a través del middleware, redirigir
+if (Astro.locals.user) {
+  return Astro.redirect(Astro.url.searchParams.get('redirect') || '/admin');
+}
+---
+
+<Layout title="Acceso al CMS" description="Panel de gestión de contenidos de UNICODE">
+  <main class="min-h-screen bg-black flex items-center justify-center px-4 py-12 relative overflow-hidden">
+    <!-- Luz ambiental de fondo verde sutil -->
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-unicode/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="w-full max-w-md relative z-10">
+      <!-- Tarjeta principal del login -->
+      <div class="bg-zinc-900/90 border border-zinc-800 backdrop-blur-md rounded-3xl p-6 sm:p-10 shadow-2xl">
+        <!-- Encabezado de la marca -->
+        <div class="text-center mb-8">
+          <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-zinc-800 border border-zinc-700/60 mb-4 shadow-inner">
+            <svg class="w-7 h-7 text-unicode" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h1 class="text-white text-3xl font-extrabold tracking-tight">
+            ACCESO <span class="text-unicode">CMS</span>
+          </h1>
+          <p class="text-zinc-400 text-sm mt-2">
+            Inicia sesión con tu cuenta oficial para gestionar el contenido institucional.
+          </p>
+        </div>
+
+        <!-- Mensaje de alerta de error dinámico -->
+        <div id="error-alert" class="hidden mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-3">
+          <svg class="w-5 h-5 shrink-0 mt-0.5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <span id="error-message">Error de credenciales</span>
+        </div>
+
+        <!-- Formulario de inicio de sesión -->
+        <form id="cms-login-form" class="space-y-5" novalidate>
+          <div>
+            <label for="email" class="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">
+              Correo Institucional
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              autocomplete="email"
+              placeholder="tu.nombre@ccunicode.org"
+              class="w-full bg-black/60 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-xl px-4 py-3 text-white placeholder-zinc-600 outline-none transition-all text-sm"
+            />
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label for="password" class="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                Contraseña
+              </label>
+            </div>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              autocomplete="current-password"
+              placeholder="••••••••••••"
+              class="w-full bg-black/60 border border-zinc-700 focus:border-unicode focus:ring-1 focus:ring-unicode rounded-xl px-4 py-3 text-white placeholder-zinc-600 outline-none transition-all text-sm"
+            />
+          </div>
+
+          <button
+            type="submit"
+            id="submit-btn"
+            class="w-full bg-unicode hover:bg-unicode-light text-black font-bold py-3.5 px-6 rounded-full transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-unicode/20 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span id="btn-text">Iniciar Sesión</span>
+            <svg id="btn-spinner" class="w-5 h-5 animate-spin hidden text-black" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+          </button>
+        </form>
+
+        <div class="mt-8 pt-6 border-t border-zinc-800/80 text-center text-xs text-zinc-500 space-y-3">
+          <p>¿No tienes credenciales? Consulta con la <span class="text-zinc-400">Presidencia</span> o el <span class="text-zinc-400">Director de tu Área</span>.</p>
+          <div class="flex items-center justify-center gap-4 text-zinc-500 pt-1">
+            <a href="/" class="hover:text-unicode transition-colors flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Ir a ccunicode.org
+            </a>
+            <span>•</span>
+            <a href="/admin" class="hover:text-zinc-300 transition-colors">
+              Panel de Postulaciones
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const form = document.getElementById('cms-login-form') as HTMLFormElement | null;
+    const errorAlert = document.getElementById('error-alert');
+    const errorMessage = document.getElementById('error-message');
+    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement | null;
+    const btnText = document.getElementById('btn-text');
+    const btnSpinner = document.getElementById('btn-spinner');
+
+    function showError(message: string) {
+      if (errorAlert && errorMessage) {
+        errorMessage.textContent = message;
+        errorAlert.classList.remove('hidden');
+      }
+    }
+
+    function hideError() {
+      if (errorAlert) {
+        errorAlert.classList.add('hidden');
+      }
+    }
+
+    function setLoading(isLoading: boolean) {
+      if (!submitBtn || !btnText || !btnSpinner) return;
+      submitBtn.disabled = isLoading;
+      if (isLoading) {
+        btnText.textContent = 'Verificando...';
+        btnSpinner.classList.remove('hidden');
+      } else {
+        btnText.textContent = 'Iniciar Sesión';
+        btnSpinner.classList.add('hidden');
+      }
+    }
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError();
+
+      const emailInput = document.getElementById('email') as HTMLInputElement | null;
+      const passwordInput = document.getElementById('password') as HTMLInputElement | null;
+
+      const email = emailInput?.value.trim() ?? '';
+      const password = passwordInput?.value ?? '';
+
+      if (!email || !password) {
+        showError('Por favor ingresa tu correo y contraseña.');
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const response = await fetch('/api/cms/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          const message = data.error?.message || 'Error al autenticar. Verifica tus credenciales.';
+          showError(message);
+          setLoading(false);
+          return;
+        }
+
+        // Redirigir al panel o al parámetro de retorno
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectUrl = urlParams.get('redirect') || '/admin';
+        window.location.href = redirectUrl;
+      } catch (err) {
+        showError('Error de conexión con el servidor. Intenta nuevamente.');
+        setLoading(false);
+      }
+    });
+  </script>
+</Layout>
