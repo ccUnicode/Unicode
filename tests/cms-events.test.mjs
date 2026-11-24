@@ -71,6 +71,12 @@ function translatePgError(err, fallbackMessage) {
   if (message.startsWith('not_found:')) {
     return new CmsError('not_found', message.slice('not_found:'.length).trim(), 404);
   }
+  if (message.startsWith('forbidden:')) {
+    return new CmsError('forbidden', message.slice('forbidden:'.length).trim(), 403);
+  }
+  if (message.startsWith('invalid_transition:')) {
+    return new CmsError('invalid_transition', message.slice('invalid_transition:'.length).trim(), 400);
+  }
   if (message.startsWith('status_conflict:')) {
     return new CmsError('status_conflict', message.slice('status_conflict:'.length).trim(), 409);
   }
@@ -78,6 +84,9 @@ function translatePgError(err, fallbackMessage) {
     return new CmsError('duplicate_slug', 'Ya existe un evento registrado con ese slug.', 409, {
       slug: 'El slug ya está en uso.',
     });
+  }
+  if (err?.code === '23514' || err?.code === '22P02' || err?.code === '22003') {
+    return new CmsError('validation_error', fallbackMessage || message, 400);
   }
   return new CmsError('database_error', fallbackMessage || message, 500);
 }
@@ -782,4 +791,165 @@ test('API routes enforce 401 without token, 400 on invalid input and 403 on unau
     locals: { cmsActor: ACTORS.dcc },
   });
   assert.equal(resBadStatus.status, 400);
+});
+
+test('SQL triggers enforce transition matrix, audit direct deletes and block direct cms_events audit inserts', async (t) => {
+  const { db, repository } = await createPgliteCmsHarness(t);
+
+  // 1. Direct UPDATE by director cannot transition published -> pending_review or archived -> pending_review
+  const publishedEvent = await service.createCmsEvent(
+    ACTORS.directorId,
+    validEventPayload({ title: 'Evento Publicado BD', status: 'published' }),
+    repository,
+  );
+  await db.exec(
+    `SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub', '${ACTORS.directorId.userId}', false);`,
+  );
+  await assert.rejects(
+    () => db.query("UPDATE public.cms_events SET status = 'pending_review' WHERE id = $1", [publishedEvent.id]),
+    /invalid_transition/,
+  );
+  await db.query("UPDATE public.cms_events SET status = 'archived' WHERE id = $1", [publishedEvent.id]);
+  await assert.rejects(
+    () => db.query("UPDATE public.cms_events SET status = 'pending_review' WHERE id = $1", [publishedEvent.id]),
+    /invalid_transition/,
+  );
+  await db.exec('RESET ROLE');
+
+  // Draft -> pending_review remains available to delegates via direct write
+  await db.exec(
+    `SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub', '${ACTORS.delegateId.userId}', false);`,
+  );
+  const delegateInsert = await db.query(
+    `INSERT INTO public.cms_events
+      (slug, title, description, event_date, location, category, area_scope, thumbnail_url, status)
+     VALUES ('delegado-directo-2', 'Evento Delegado 2', 'Desc', now(), 'UNI', 'Workshop', 'ID', '/img.webp', 'draft')
+     RETURNING id`,
+  );
+  const delegateEventId = delegateInsert.rows[0].id;
+  await db.query("UPDATE public.cms_events SET status = 'pending_review' WHERE id = $1", [delegateEventId]);
+
+  // Delegado cannot insert direct cms_audit_logs for entity_type='cms_events' even with own identity & submit_review
+  await assert.rejects(
+    () =>
+      db.query(
+        `INSERT INTO public.cms_audit_logs
+          (entity_type, entity_id, action, from_status, to_status, actor_id, actor_email, area_scope, metadata)
+         VALUES ('cms_events', $1, 'submit_review', 'draft', 'pending_review', $2, $3, 'ID', '{}'::jsonb)`,
+        [delegateEventId, ACTORS.delegateId.userId, ACTORS.delegateId.email],
+      ),
+    /row-level security/,
+  );
+  await db.exec('RESET ROLE');
+
+  // 2. Direct DELETE by global admin writes one hard_delete audit record
+  await db.exec(
+    `SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub', '${ACTORS.admin.userId}', false);`,
+  );
+  await db.query('DELETE FROM public.cms_events WHERE id = $1', [delegateEventId]);
+  await db.exec("RESET ROLE; SELECT set_config('request.jwt.claim.sub', '', false);");
+
+  const directDeleteLogs = await db.query(
+    "SELECT action, from_status, to_status, actor_id, actor_email, metadata FROM public.cms_audit_logs WHERE entity_id = $1 AND metadata->>'operation' = 'hard_delete'",
+    [delegateEventId],
+  );
+  assert.equal(directDeleteLogs.rows.length, 1);
+  assert.equal(directDeleteLogs.rows[0].action, 'archive');
+  assert.equal(directDeleteLogs.rows[0].from_status, 'pending_review');
+  assert.equal(directDeleteLogs.rows[0].to_status, null);
+  assert.equal(directDeleteLogs.rows[0].actor_id, ACTORS.admin.userId);
+  assert.equal(directDeleteLogs.rows[0].actor_email, ACTORS.admin.email);
+  assert.equal(directDeleteLogs.rows[0].metadata.source, 'direct_table_write');
+});
+
+test('validator rejects attendees_count above PostgreSQL int32 max and RPCs enforce current area_scope and is_active', async (t) => {
+  const { db, repository } = await createPgliteCmsHarness(t);
+
+  // 1. attendees_count > 2147483647 returns 400 validation_error with field detail on create & update
+  await assert.rejects(
+    () =>
+      service.createCmsEvent(
+        ACTORS.dcc,
+        validEventPayload({ attendees_count: 2147483648 }),
+        repository,
+      ),
+    (err) => err instanceof CmsError && err.code === 'validation_error' && err.status === 400 && Boolean(err.details?.attendees_count),
+  );
+
+  const draft = await service.createCmsEvent(
+    ACTORS.dcc,
+    validEventPayload({ title: 'Evento Concurrencia Area', area_scope: 'ID', status: 'draft' }),
+    repository,
+  );
+
+  await assert.rejects(
+    () =>
+      service.updateCmsEvent(
+        ACTORS.dcc,
+        draft.id,
+        { attendees_count: 2147483648 },
+        repository,
+      ),
+    (err) => err instanceof CmsError && err.code === 'validation_error' && err.status === 400 && Boolean(err.details?.attendees_count),
+  );
+
+  // 2. Concurrent area reassignment: if DCC moves ID -> ACD after delegateId read, delegate writes fail with 403
+  const wrappedRepo = {
+    ...repository,
+    async getById(id) {
+      return await repository.getById(id);
+    },
+    async update(id, expectedStatus, patch, audit) {
+      if (audit.actorId === ACTORS.delegateId.userId) {
+        await service.updateCmsEvent(ACTORS.dcc, id, { area_scope: 'ACD' }, repository);
+      }
+      return await repository.update(id, expectedStatus, patch, audit);
+    },
+    async transitionStatus(id, expectedStatus, nextStatus, action, audit) {
+      if (audit.actorId === ACTORS.delegateId.userId) {
+        await service.updateCmsEvent(ACTORS.dcc, id, { area_scope: 'ID' }, repository);
+      }
+      return await repository.transitionStatus(id, expectedStatus, nextStatus, action, audit);
+    },
+  };
+
+  await assert.rejects(
+    () => service.updateCmsEvent(ACTORS.delegateId, draft.id, { title: 'Edit ID tras mover a ACD' }, wrappedRepo),
+    (err) => err instanceof CmsError && err.code === 'forbidden' && err.status === 403,
+  );
+  assert.equal((await repository.getById(draft.id)).area_scope, 'ACD');
+
+  // DCC can still reassign ACD -> ID
+  await service.updateCmsEvent(ACTORS.dcc, draft.id, { area_scope: 'ID' }, repository);
+  assert.equal((await repository.getById(draft.id)).area_scope, 'ID');
+
+  // If moved back to ACD right before transitionStatus RPC executes, delegate transition fails with 403
+  const raceTransitionRepo = {
+    ...repository,
+    async transitionStatus(id, expectedStatus, nextStatus, action, audit) {
+      await service.updateCmsEvent(ACTORS.dcc, id, { area_scope: 'ACD' }, repository);
+      return await repository.transitionStatus(id, expectedStatus, nextStatus, action, audit);
+    },
+  };
+  await assert.rejects(
+    () => service.transitionCmsEventStatus(ACTORS.delegateId, draft.id, 'pending_review', undefined, raceTransitionRepo),
+    (err) => err instanceof CmsError && err.code === 'forbidden' && err.status === 403,
+  );
+
+  // 3. Concurrent deactivation: if actor's is_active flips false before transitionStatus acquires lock, RPC rejects 403
+  const raceDeactivateRepo = {
+    ...repository,
+    async transitionStatus(id, expectedStatus, nextStatus, action, audit) {
+      await db.query(
+        'UPDATE public.cms_user_permissions SET is_active = false WHERE user_id = $1',
+        [ACTORS.dcc.userId],
+      );
+      return await repository.transitionStatus(id, expectedStatus, nextStatus, action, audit);
+    },
+  };
+  await assert.rejects(
+    () => service.transitionCmsEventStatus(ACTORS.dcc, draft.id, 'published', 'Aprobar', raceDeactivateRepo),
+    (err) => err instanceof CmsError && err.code === 'forbidden' && err.status === 403,
+  );
+  assert.equal((await repository.getById(draft.id)).status, 'draft');
 });

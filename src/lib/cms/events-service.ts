@@ -108,6 +108,20 @@ function mapDbWriteError(error: { code?: string; message?: string }, fallbackMes
   if (message.startsWith('not_found:')) {
     return new CmsError('not_found', message.slice('not_found:'.length).trim() || 'Evento no encontrado.', 404);
   }
+  if (message.startsWith('forbidden:')) {
+    return new CmsError(
+      'forbidden',
+      message.slice('forbidden:'.length).trim() || 'No tienes permisos para realizar esta operación.',
+      403,
+    );
+  }
+  if (message.startsWith('invalid_transition:')) {
+    return new CmsError(
+      'invalid_transition',
+      message.slice('invalid_transition:'.length).trim() || 'Transición editorial no permitida.',
+      400,
+    );
+  }
   if (message.startsWith('status_conflict:')) {
     return new CmsError(
       'status_conflict',
@@ -123,7 +137,7 @@ function mapDbWriteError(error: { code?: string; message?: string }, fallbackMes
       { slug: 'El slug ya está en uso.' },
     );
   }
-  if (error.code === '23514' || error.code === '22P02') {
+  if (error.code === '23514' || error.code === '22P02' || error.code === '22003') {
     return new CmsError(
       'validation_error',
       'Los datos enviados incumplen una restricción de integridad de la base de datos.',

@@ -355,14 +355,16 @@ function validateContentStatus(value: unknown): CmsContentStatus {
   return value.trim() as CmsContentStatus;
 }
 
+const MAX_PG_INT32 = 2_147_483_647;
+
 function validateAttendeesCount(value: unknown): number {
   if (value === undefined || value === null) return 0;
-  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > MAX_PG_INT32) {
     throw new CmsError(
       'validation_error',
-      'El campo attendees_count debe ser un número entero mayor o igual a 0.',
+      `El campo attendees_count debe ser un número entero entre 0 y ${MAX_PG_INT32}.`,
       400,
-      { attendees_count: 'Debe ser entero >= 0.' },
+      { attendees_count: `Debe ser entero entre 0 y ${MAX_PG_INT32}.` },
     );
   }
   return value;

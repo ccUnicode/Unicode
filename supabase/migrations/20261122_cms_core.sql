@@ -468,8 +468,35 @@ $$;
 REVOKE ALL ON FUNCTION public.cms_current_actor() FROM public;
 GRANT EXECUTE ON FUNCTION public.cms_current_actor() TO authenticated, service_role;
 
+-- 12.0 Validación de matriz de transiciones editoriales en BD (protege también escrituras directas)
+CREATE OR REPLACE FUNCTION public.cms_events_enforce_status_transition()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF OLD.status IS NOT DISTINCT FROM NEW.status THEN
+        RETURN NEW;
+    END IF;
+
+    IF (OLD.status = 'draft' AND NEW.status IN ('pending_review', 'published', 'archived'))
+       OR (OLD.status = 'pending_review' AND NEW.status IN ('draft', 'published', 'archived'))
+       OR (OLD.status = 'published' AND NEW.status IN ('draft', 'archived'))
+       OR (OLD.status = 'archived' AND NEW.status IN ('draft', 'published')) THEN
+        RETURN NEW;
+    END IF;
+
+    RAISE EXCEPTION 'invalid_transition: Transición editorial no permitida de % a %.', OLD.status, NEW.status
+        USING ERRCODE = 'check_violation';
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_cms_events_enforce_status_transition ON public.cms_events;
+CREATE TRIGGER trg_cms_events_enforce_status_transition
+    BEFORE UPDATE ON public.cms_events
+    FOR EACH ROW EXECUTE FUNCTION public.cms_events_enforce_status_transition();
+
 -- 12.1 Trigger de auditoría automática en escrituras directas sobre `cms_events`
---      Evita que actualizaciones directas de `authenticated` vía REST omitan `cms_audit_logs`.
+--      Evita que inserciones, transiciones o eliminaciones directas vía REST omitan `cms_audit_logs`.
 CREATE OR REPLACE FUNCTION public.cms_events_audit_direct_write()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -482,9 +509,15 @@ DECLARE
     v_actor_role  text;
     v_action      text;
     v_from_status public.cms_content_status;
+    v_to_status   public.cms_content_status;
+    v_entity_id   uuid;
+    v_area_scope  varchar(10);
+    v_slug        varchar(160);
+    v_title       varchar(200);
+    v_operation   text;
 BEGIN
     IF auth.uid() IS NULL AND current_setting('app.cms_audit_handled', true) = 'true' THEN
-        RETURN NEW;
+        RETURN COALESCE(NEW, OLD);
     END IF;
 
     IF TG_OP = 'UPDATE' AND OLD.status IS NOT DISTINCT FROM NEW.status THEN
@@ -514,8 +547,29 @@ BEGIN
     IF TG_OP = 'INSERT' THEN
         v_action := 'create';
         v_from_status := NULL;
+        v_to_status := NEW.status;
+        v_entity_id := NEW.id;
+        v_area_scope := NEW.area_scope;
+        v_slug := NEW.slug;
+        v_title := NEW.title;
+        v_operation := NULL;
+    ELSIF TG_OP = 'DELETE' THEN
+        v_action := 'archive';
+        v_from_status := OLD.status;
+        v_to_status := NULL;
+        v_entity_id := OLD.id;
+        v_area_scope := OLD.area_scope;
+        v_slug := OLD.slug;
+        v_title := OLD.title;
+        v_operation := 'hard_delete';
     ELSE
         v_from_status := OLD.status;
+        v_to_status := NEW.status;
+        v_entity_id := NEW.id;
+        v_area_scope := NEW.area_scope;
+        v_slug := NEW.slug;
+        v_title := NEW.title;
+        v_operation := NULL;
         IF NEW.status = 'pending_review' THEN
             v_action := 'submit_review';
         ELSIF NEW.status = 'published' THEN
@@ -542,28 +596,29 @@ BEGIN
     )
     VALUES (
         'cms_events',
-        NEW.id,
+        v_entity_id,
         v_action,
         v_from_status,
-        NEW.status,
+        v_to_status,
         v_actor_id,
         v_actor_email,
-        NEW.area_scope,
+        v_area_scope,
         jsonb_strip_nulls(jsonb_build_object(
-            'slug', NEW.slug,
-            'title', NEW.title,
+            'slug', v_slug,
+            'title', v_title,
             'role', v_actor_role,
+            'operation', v_operation,
             'source', 'direct_table_write'
         ))
     );
 
-    RETURN NEW;
+    RETURN COALESCE(NEW, OLD);
 END;
 $$;
 
 DROP TRIGGER IF EXISTS trg_cms_events_audit_direct ON public.cms_events;
 CREATE TRIGGER trg_cms_events_audit_direct
-    AFTER INSERT OR UPDATE ON public.cms_events
+    AFTER INSERT OR UPDATE OR DELETE ON public.cms_events
     FOR EACH ROW EXECUTE FUNCTION public.cms_events_audit_direct_write();
 
 -- 12.2 Funciones RPC atómicas para `cms_events` (mutación + auditoría en una sola transacción)
@@ -580,8 +635,29 @@ SET search_path = public
 SET app.cms_audit_handled = 'true'
 AS $$
 DECLARE
+    v_actor   public.cms_user_permissions;
     v_created public.cms_events;
+    v_target_area text := p_payload->>'area_scope';
+    v_target_status public.cms_content_status := COALESCE((p_payload->>'status')::public.cms_content_status, 'draft');
 BEGIN
+    SELECT * INTO v_actor
+    FROM public.cms_user_permissions
+    WHERE user_id = p_actor_id
+    FOR SHARE;
+
+    IF NOT FOUND OR NOT v_actor.is_active THEN
+        RAISE EXCEPTION 'forbidden: Tu cuenta no tiene acceso activo al CMS.';
+    END IF;
+
+    IF v_actor.area_scope <> 'ALL' AND v_actor.area_scope IS DISTINCT FROM v_target_area THEN
+        RAISE EXCEPTION 'forbidden: Tu cuenta (%) no tiene permisos sobre eventos del área %.',
+            v_actor.area_scope, v_target_area;
+    END IF;
+
+    IF v_actor.role = 'delegate' AND v_target_status NOT IN ('draft', 'pending_review') THEN
+        RAISE EXCEPTION 'forbidden: Un delegado solo puede crear eventos en estado draft o pending_review.';
+    END IF;
+
     INSERT INTO public.cms_events (
         slug,
         title,
@@ -618,7 +694,7 @@ BEGIN
         p_payload->>'time_range',
         p_payload->>'location',
         p_payload->>'category',
-        p_payload->>'area_scope',
+        v_target_area,
         p_payload->>'speaker',
         p_payload->>'speaker_image_url',
         p_payload->>'thumbnail_url',
@@ -627,7 +703,7 @@ BEGIN
         COALESCE((p_payload->>'attendees_count')::integer, 0),
         ARRAY(SELECT jsonb_array_elements_text(COALESCE(p_payload->'highlights', '[]'::jsonb))),
         COALESCE((p_payload->>'is_featured')::boolean, false),
-        COALESCE((p_payload->>'status')::public.cms_content_status, 'draft'),
+        v_target_status,
         p_actor_id,
         NULLIF(p_payload->>'reviewed_by', '')::uuid,
         NULLIF(p_payload->>'published_at', '')::timestamptz
@@ -679,9 +755,19 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
+    v_actor   public.cms_user_permissions;
     v_current public.cms_events;
     v_updated public.cms_events;
 BEGIN
+    SELECT * INTO v_actor
+    FROM public.cms_user_permissions
+    WHERE user_id = p_actor_id
+    FOR SHARE;
+
+    IF NOT FOUND OR NOT v_actor.is_active THEN
+        RAISE EXCEPTION 'forbidden: Tu cuenta no tiene acceso activo al CMS.';
+    END IF;
+
     SELECT * INTO v_current
     FROM public.cms_events
     WHERE id = p_id
@@ -689,6 +775,22 @@ BEGIN
 
     IF NOT FOUND THEN
         RAISE EXCEPTION 'not_found: No se encontró el evento a actualizar.';
+    END IF;
+
+    IF v_actor.area_scope <> 'ALL' AND v_current.area_scope IS DISTINCT FROM v_actor.area_scope THEN
+        RAISE EXCEPTION 'forbidden: Tu cuenta (%) no tiene permisos sobre eventos del área %.',
+            v_actor.area_scope, v_current.area_scope;
+    END IF;
+
+    IF p_patch ? 'area_scope'
+       AND v_actor.area_scope <> 'ALL'
+       AND (p_patch->>'area_scope') IS DISTINCT FROM v_actor.area_scope THEN
+        RAISE EXCEPTION 'forbidden: Tu cuenta (%) no tiene permisos para mover eventos al área %.',
+            v_actor.area_scope, p_patch->>'area_scope';
+    END IF;
+
+    IF v_actor.role = 'delegate' AND v_current.status NOT IN ('draft', 'pending_review') THEN
+        RAISE EXCEPTION 'forbidden: Un delegado no puede editar un evento que ya está publicado o archivado.';
     END IF;
 
     IF v_current.status IS DISTINCT FROM p_expected_status THEN
@@ -767,9 +869,19 @@ SET search_path = public
 SET app.cms_audit_handled = 'true'
 AS $$
 DECLARE
+    v_actor   public.cms_user_permissions;
     v_current public.cms_events;
     v_updated public.cms_events;
 BEGIN
+    SELECT * INTO v_actor
+    FROM public.cms_user_permissions
+    WHERE user_id = p_actor_id
+    FOR SHARE;
+
+    IF NOT FOUND OR NOT v_actor.is_active THEN
+        RAISE EXCEPTION 'forbidden: Tu cuenta no tiene acceso activo al CMS.';
+    END IF;
+
     SELECT * INTO v_current
     FROM public.cms_events
     WHERE id = p_id
@@ -777,6 +889,17 @@ BEGIN
 
     IF NOT FOUND THEN
         RAISE EXCEPTION 'not_found: No se encontró el evento para cambiar de estado.';
+    END IF;
+
+    IF v_actor.area_scope <> 'ALL' AND v_current.area_scope IS DISTINCT FROM v_actor.area_scope THEN
+        RAISE EXCEPTION 'forbidden: Tu cuenta (%) no tiene permisos sobre eventos del área %.',
+            v_actor.area_scope, v_current.area_scope;
+    END IF;
+
+    IF v_actor.role = 'delegate'
+       AND (v_current.status NOT IN ('draft', 'pending_review')
+            OR p_next_status NOT IN ('draft', 'pending_review')) THEN
+        RAISE EXCEPTION 'forbidden: Un delegado no tiene permisos para realizar esta transición editorial.';
     END IF;
 
     IF v_current.status IS DISTINCT FROM p_expected_status THEN
@@ -839,10 +962,21 @@ RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
+SET app.cms_audit_handled = 'true'
 AS $$
 DECLARE
+    v_actor   public.cms_user_permissions;
     v_current public.cms_events;
 BEGIN
+    SELECT * INTO v_actor
+    FROM public.cms_user_permissions
+    WHERE user_id = p_actor_id
+    FOR SHARE;
+
+    IF NOT FOUND OR NOT v_actor.is_active OR v_actor.role <> 'admin' OR v_actor.area_scope <> 'ALL' THEN
+        RAISE EXCEPTION 'forbidden: Solo un administrador global activo (admin) puede eliminar eventos definitivamente.';
+    END IF;
+
     SELECT * INTO v_current
     FROM public.cms_events
     WHERE id = p_id
@@ -1108,7 +1242,8 @@ CREATE POLICY "Insercion de auditoria CMS para personal activo"
     FOR INSERT
     TO authenticated
     WITH CHECK (
-        EXISTS (
+        cms_audit_logs.entity_type <> 'cms_events'
+        AND EXISTS (
             SELECT 1 FROM public.cms_current_actor() ca
             WHERE cms_audit_logs.actor_id = ca.user_id
               AND lower(cms_audit_logs.actor_email) = ca.email
