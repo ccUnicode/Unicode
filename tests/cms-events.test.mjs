@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { after, test } from 'node:test';
 import { PGlite } from '@electric-sql/pglite';
+import { createClient } from '@supabase/supabase-js';
 import { createServer } from 'vite';
 
 const server = await createServer({
@@ -89,6 +90,7 @@ async function createPgliteCmsHarness(t) {
     CREATE ROLE anon;
     CREATE ROLE authenticated;
     CREATE ROLE service_role BYPASSRLS;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO authenticated;
   `);
   await db.exec(cmsMigrationSql);
 
@@ -296,44 +298,55 @@ test('validates required fields, slug generation, categories, date range, highli
   }
 });
 
-test('production repository preserves search punctuation and quotes PostgREST ILIKE filters safely', async () => {
-  assert.equal(service.escapePostgrestIlikeTerm('Workshop (ID)'), 'Workshop (ID)');
-  assert.equal(service.escapePostgrestIlikeTerm('()'), '()');
-  assert.equal(service.escapePostgrestIlikeTerm('100%_a,b"c'), '100\\%\\_a,b\\"c');
+test('production repository searches for literal punctuation and pattern metacharacters', async (t) => {
+  const { db, repository } = await createPgliteCmsHarness(t);
+  const cases = [
+    ['Workshop (ID)', 'Workshop (ID)', 'Workshop ID'],
+    ['()', 'Workshop ()', 'Workshop'],
+    ['100%_a,b"c\\d', 'Workshop 100%_a,b"c\\d', 'Workshop 100XXa,b"cd'],
+    ['C* [advanced]', 'Workshop C* [advanced]', 'Workshop C [advanced]'],
+  ];
+  const titles = cases.flatMap(([, match, decoy]) => [match, decoy]);
+  for (const [index, title] of titles.entries()) {
+    await service.createCmsEvent(
+      ACTORS.dcc, validEventPayload({ title, slug: `search-fixture-${index}` }), repository,
+    );
+  }
 
-  const capturedOrCalls = [];
-  const mockSupabaseClient = {
-    from(table) {
-      assert.equal(table, 'cms_events');
-      const chain = {
-        select() { return chain; },
-        order() { return chain; },
-        range() { return chain; },
-        eq() { return chain; },
-        or(expr) {
-          capturedOrCalls.push(expr);
-          return chain;
-        },
-        then(resolve) {
-          return Promise.resolve({ data: [], count: 0, error: null }).then(resolve);
-        },
-      };
-      return chain;
+  // Run the repository's actual HTTP filter against PostgreSQL. This adapter
+  // supports the quoted scalar filters used here, without emulating other REST routes.
+  const client = createClient('http://localhost:54321', 'test-key', {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      fetch: async (input) => {
+        const url = new URL(input);
+        assert.equal(url.pathname, '/rest/v1/cms_events');
+        const filter = url.searchParams.get('or');
+        assert.ok(filter);
+        const clauses = [...filter.matchAll(/(title|slug|speaker)\.(ilike|imatch)\."((?:[^"\\]|\\.)*)"/g)];
+        assert.equal(filter, `(${clauses.map(([clause]) => clause).join(',')})`);
+        assert.equal(clauses.length, 3);
+
+        const parameters = [];
+        const predicates = clauses.map(([, field, operator, value]) => {
+          const pattern = value.replace(/\\(.)/g, '$1');
+          parameters.push(operator === 'ilike' ? pattern.replace(/\*/g, '%') : pattern);
+          return `${field} ${operator === 'ilike' ? 'ILIKE' : '~*'} $${parameters.length}`;
+        });
+        const { rows } = await db.query(
+          `SELECT * FROM public.cms_events WHERE ${predicates.join(' OR ')}`,
+          parameters,
+        );
+        return Response.json(rows, { headers: { 'Content-Range': `*/${rows.length}` } });
+      },
     },
-  };
-
-  const prodRepo = service.createSupabaseCmsEventsRepository(mockSupabaseClient);
-  await service.listCmsEvents(ACTORS.dcc, { search: 'Workshop (ID)', page: 1, pageSize: 20 }, prodRepo);
-  assert.equal(
-    capturedOrCalls[0],
-    'title.ilike."*Workshop (ID)*",slug.ilike."*Workshop (ID)*",speaker.ilike."*Workshop (ID)*"',
-  );
-
-  await service.listCmsEvents(ACTORS.dcc, { search: '()', page: 1, pageSize: 20 }, prodRepo);
-  assert.equal(
-    capturedOrCalls[1],
-    'title.ilike."*()*",slug.ilike."*()*",speaker.ilike."*()*"',
-  );
+  });
+  const prodRepo = service.createSupabaseCmsEventsRepository(client);
+  for (const [search, expected] of cases) {
+    const result = await service.listCmsEvents(ACTORS.dcc, { search }, prodRepo);
+    assert.deepEqual(result.data.map(({ title }) => title), [expected]);
+    assert.equal(result.pagination.total, 1);
+  }
 });
 
 test('editorial transition matrix rejects published/archived -> pending_review even for directors and DCC', () => {
@@ -548,6 +561,12 @@ test('mutations and audit logs commit atomically (rollback if audit insert fails
   assert.equal((await repository.getById(existing.id)).title, 'Evento Atómico');
 
   await assert.rejects(
+    () => service.transitionCmsEventStatus(ACTORS.dcc, existing.id, 'published', undefined, repository),
+    { code: 'database_error', status: 500 },
+  );
+  assert.equal((await repository.getById(existing.id)).status, 'draft');
+
+  await assert.rejects(
     () => service.deleteCmsEvent(ACTORS.admin, existing.id, repository),
     { code: 'database_error', status: 500 },
   );
@@ -628,6 +647,29 @@ test('SQL security & integrity: linked cms_news cascades on event delete, direct
       ['submit_review', 'draft', 'pending_review', ACTORS.delegateId.email],
     ],
   );
+});
+
+test('an RPC does not suppress later direct status audits in the same transaction', async (t) => {
+  const { db, repository } = await createPgliteCmsHarness(t);
+  const event = await service.createCmsEvent(ACTORS.directorId, validEventPayload(), repository);
+
+  await db.transaction(async (tx) => {
+    await tx.exec('SET LOCAL ROLE service_role');
+    await tx.query(
+      "SELECT public.cms_event_transition_status($1, 'draft', 'published', 'approve_publish', $2, $3, 'director')",
+      [event.id, ACTORS.directorId.userId, ACTORS.directorId.email],
+    );
+    await tx.query("UPDATE public.cms_events SET status = 'archived' WHERE id = $1", [event.id]);
+  });
+
+  const { rows } = await db.query(
+    "SELECT from_status, to_status, actor_id, actor_email FROM public.cms_audit_logs WHERE entity_id = $1 AND action IN ('approve_publish', 'archive') ORDER BY action",
+    [event.id],
+  );
+  assert.deepEqual(rows, [
+    { from_status: 'draft', to_status: 'published', actor_id: ACTORS.directorId.userId, actor_email: ACTORS.directorId.email },
+    { from_status: 'published', to_status: 'archived', actor_id: null, actor_email: 'sistema@ccunicode.org' },
+  ]);
 });
 
 test('listCmsEvents supports filtering by status, category, area_scope, is_featured, search and pagination', async (t) => {

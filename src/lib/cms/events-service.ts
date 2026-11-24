@@ -88,19 +88,19 @@ const EVENT_COLUMNS = [
   'updated_at',
 ].join(', ');
 
-/**
- * Escapa caracteres especiales de SQL `ILIKE` y de la sintaxis de filtros PostgREST
- * sin eliminar ningún carácter del término de búsqueda (ej. `(`, `)`, `,`).
- */
-export function escapePostgrestIlikeTerm(term: string): string {
-  return term.trim().replace(/[\\_%*"]/g, (char) => `\\${char}`);
-}
+function buildEventsSearchOrFilter(term: string): string {
+  const search = term.trim();
+  if (!search) return '';
 
-export function buildEventsSearchOrFilter(term: string): string {
-  const escaped = escapePostgrestIlikeTerm(term);
-  if (!escaped) return '';
-  const pattern = `"*${escaped}*"`;
-  return `title.ilike.${pattern},slug.ilike.${pattern},speaker.ilike.${pattern}`;
+  // PostgREST traduce todos los asteriscos en ILIKE, incluso si están escapados.
+  // Para esos términos, IMATCH busca una subcadena literal con los metacaracteres escapados.
+  const useRegex = search.includes('*');
+  const sqlPattern = useRegex
+    ? search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    : `%${search.replace(/[\\_%]/g, '\\$&')}%`;
+  const pattern = `"${sqlPattern.replace(/[\\"]/g, '\\$&')}"`;
+  const operator = useRegex ? 'imatch' : 'ilike';
+  return `title.${operator}.${pattern},slug.${operator}.${pattern},speaker.${operator}.${pattern}`;
 }
 
 function mapDbWriteError(error: { code?: string; message?: string }, fallbackMessage: string): CmsError {

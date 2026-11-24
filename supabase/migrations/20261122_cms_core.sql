@@ -499,7 +499,7 @@ BEGIN
         LIMIT 1;
     END IF;
 
-    v_actor_id := COALESCE(v_actor_id, auth.uid(), NEW.reviewed_by, NEW.created_by);
+    v_actor_id := COALESCE(v_actor_id, auth.uid());
 
     IF v_actor_email IS NULL AND v_actor_id IS NOT NULL THEN
         SELECT p.email, p.role
@@ -577,12 +577,11 @@ RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
+SET app.cms_audit_handled = 'true'
 AS $$
 DECLARE
     v_created public.cms_events;
 BEGIN
-    PERFORM set_config('app.cms_audit_handled', 'true', true);
-
     INSERT INTO public.cms_events (
         slug,
         title,
@@ -683,8 +682,6 @@ DECLARE
     v_current public.cms_events;
     v_updated public.cms_events;
 BEGIN
-    PERFORM set_config('app.cms_audit_handled', 'true', true);
-
     SELECT * INTO v_current
     FROM public.cms_events
     WHERE id = p_id
@@ -767,13 +764,12 @@ RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
+SET app.cms_audit_handled = 'true'
 AS $$
 DECLARE
     v_current public.cms_events;
     v_updated public.cms_events;
 BEGIN
-    PERFORM set_config('app.cms_audit_handled', 'true', true);
-
     SELECT * INTO v_current
     FROM public.cms_events
     WHERE id = p_id
@@ -847,8 +843,6 @@ AS $$
 DECLARE
     v_current public.cms_events;
 BEGIN
-    PERFORM set_config('app.cms_audit_handled', 'true', true);
-
     SELECT * INTO v_current
     FROM public.cms_events
     WHERE id = p_id
@@ -934,6 +928,10 @@ GRANT SELECT ON TABLE
     public.cms_alliances,
     public.cms_metrics
 TO anon;
+
+-- Supabase puede otorgar privilegios por defecto al crear la tabla.
+REVOKE SELECT ON TABLE public.cms_board_members FROM authenticated;
+REVOKE SELECT (email) ON TABLE public.cms_board_members FROM public, anon, authenticated;
 
 -- Proteger la columna `email` de `cms_board_members` frente a consultas REST directas de `anon` y `authenticated`
 GRANT SELECT (
