@@ -1,11 +1,13 @@
 /**
  * Capa de servicios CRUD, filtrado por área/estado, control de flujo editorial dual
- * y auditoría automática en `cms_audit_logs` para `cms_events`.
+ * con precondición de estado (anti-TOCTOU) y mutaciones atómicas vía RPC con auditoría
+ * en `cms_audit_logs` para `cms_events`.
  */
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   CmsActor,
   CmsAreaScope,
-  CmsAuditLogInsert,
+  CmsAuditAction,
   CmsContentStatus,
   CmsEventCreateInput,
   CmsEventFilters,
@@ -30,19 +32,31 @@ export interface CmsEventDbCreatePayload extends CmsEventCreateInput {
   published_at: string | null;
 }
 
-export interface CmsEventDbUpdatePayload extends CmsEventUpdateInput {
-  status?: CmsContentStatus;
-  reviewed_by?: string | null;
-  published_at?: string | null;
+export interface CmsEventAuditContext {
+  actorId: string;
+  actorEmail: string;
+  actorRole: CmsActor['role'];
+  reviewComment?: string;
 }
 
 export interface CmsEventsRepository {
   list(filters: CmsEventFilters): Promise<{ rows: CmsEventRow[]; total: number }>;
   getById(id: string): Promise<CmsEventRow | null>;
-  create(payload: CmsEventDbCreatePayload): Promise<CmsEventRow>;
-  update(id: string, payload: CmsEventDbUpdatePayload): Promise<CmsEventRow | null>;
-  delete(id: string): Promise<boolean>;
-  insertAuditLog(entry: CmsAuditLogInsert): Promise<void>;
+  create(payload: CmsEventDbCreatePayload, audit: CmsEventAuditContext): Promise<CmsEventRow>;
+  update(
+    id: string,
+    expectedStatus: CmsContentStatus,
+    patch: CmsEventUpdateInput,
+    audit: CmsEventAuditContext,
+  ): Promise<CmsEventRow>;
+  transitionStatus(
+    id: string,
+    expectedStatus: CmsContentStatus,
+    nextStatus: CmsContentStatus,
+    action: CmsAuditAction,
+    audit: CmsEventAuditContext,
+  ): Promise<CmsEventRow>;
+  delete(id: string, audit: CmsEventAuditContext): Promise<{ deleted: true; id: string }>;
 }
 
 const EVENT_COLUMNS = [
@@ -74,12 +88,34 @@ const EVENT_COLUMNS = [
   'updated_at',
 ].join(', ');
 
-function escapePostgrestIlikeTerm(term: string): string {
-  return term.replace(/[,%()*\\]/g, (char) => (char === '\\' ? '\\\\' : '')).trim();
+/**
+ * Escapa caracteres especiales de SQL `ILIKE` y de la sintaxis de filtros PostgREST
+ * sin eliminar ningún carácter del término de búsqueda (ej. `(`, `)`, `,`).
+ */
+export function escapePostgrestIlikeTerm(term: string): string {
+  return term.trim().replace(/[\\_%*"]/g, (char) => `\\${char}`);
+}
+
+export function buildEventsSearchOrFilter(term: string): string {
+  const escaped = escapePostgrestIlikeTerm(term);
+  if (!escaped) return '';
+  const pattern = `"*${escaped}*"`;
+  return `title.ilike.${pattern},slug.ilike.${pattern},speaker.ilike.${pattern}`;
 }
 
 function mapDbWriteError(error: { code?: string; message?: string }, fallbackMessage: string): CmsError {
-  if (error.code === '23505') {
+  const message = error.message || '';
+  if (message.startsWith('not_found:')) {
+    return new CmsError('not_found', message.slice('not_found:'.length).trim() || 'Evento no encontrado.', 404);
+  }
+  if (message.startsWith('status_conflict:')) {
+    return new CmsError(
+      'status_conflict',
+      message.slice('status_conflict:'.length).trim() || 'El estado del evento cambió concurrentemente.',
+      409,
+    );
+  }
+  if (error.code === '23505' || /duplicate key/i.test(message)) {
     return new CmsError(
       'duplicate_slug',
       'Ya existe un evento registrado con ese slug. Elige un slug diferente.',
@@ -97,10 +133,14 @@ function mapDbWriteError(error: { code?: string; message?: string }, fallbackMes
   return new CmsError('database_error', fallbackMessage, 500);
 }
 
-export function createSupabaseCmsEventsRepository(): CmsEventsRepository {
+export function createSupabaseCmsEventsRepository(
+  clientOverride?: SupabaseClient,
+): CmsEventsRepository {
+  const resolveClient = () => clientOverride ?? getCmsServiceClient();
+
   return {
     async list(filters) {
-      const client = getCmsServiceClient();
+      const client = resolveClient();
       const from = (filters.page - 1) * filters.pageSize;
       const to = from + filters.pageSize - 1;
 
@@ -116,11 +156,9 @@ export function createSupabaseCmsEventsRepository(): CmsEventsRepository {
       if (filters.area_scope) query = query.eq('area_scope', filters.area_scope);
       if (filters.is_featured !== undefined) query = query.eq('is_featured', filters.is_featured);
       if (filters.search) {
-        const cleanSearch = escapePostgrestIlikeTerm(filters.search);
-        if (cleanSearch) {
-          query = query.or(
-            `title.ilike.%${cleanSearch}%,slug.ilike.%${cleanSearch}%,speaker.ilike.%${cleanSearch}%`,
-          );
+        const orFilter = buildEventsSearchOrFilter(filters.search);
+        if (orFilter) {
+          query = query.or(orFilter);
         }
       }
 
@@ -136,7 +174,7 @@ export function createSupabaseCmsEventsRepository(): CmsEventsRepository {
     },
 
     async getById(id) {
-      const client = getCmsServiceClient();
+      const client = resolveClient();
       const { data, error } = await client
         .from('cms_events')
         .select(EVENT_COLUMNS)
@@ -149,60 +187,69 @@ export function createSupabaseCmsEventsRepository(): CmsEventsRepository {
       return (data as unknown as CmsEventRow | null) ?? null;
     },
 
-    async create(payload) {
-      const client = getCmsServiceClient();
-      const { data, error } = await client
-        .from('cms_events')
-        .insert(payload)
-        .select(EVENT_COLUMNS)
-        .single();
+    async create(payload, audit) {
+      const client = resolveClient();
+      const { data, error } = await client.rpc('cms_event_create', {
+        p_payload: payload,
+        p_actor_id: audit.actorId,
+        p_actor_email: audit.actorEmail,
+        p_actor_role: audit.actorRole,
+      });
 
       if (error || !data) {
         throw mapDbWriteError(error ?? {}, 'No se pudo crear el evento en la base de datos.');
       }
-      return data as unknown as CmsEventRow;
+      return data as CmsEventRow;
     },
 
-    async update(id, payload) {
-      const client = getCmsServiceClient();
-      const { data, error } = await client
-        .from('cms_events')
-        .update(payload)
-        .eq('id', id)
-        .select(EVENT_COLUMNS)
-        .maybeSingle();
+    async update(id, expectedStatus, patch, audit) {
+      const client = resolveClient();
+      const { data, error } = await client.rpc('cms_event_update', {
+        p_id: id,
+        p_expected_status: expectedStatus,
+        p_patch: patch,
+        p_actor_id: audit.actorId,
+        p_actor_email: audit.actorEmail,
+        p_changed_fields: Object.keys(patch),
+      });
 
-      if (error) {
-        throw mapDbWriteError(error, 'No se pudo actualizar el evento en la base de datos.');
+      if (error || !data) {
+        throw mapDbWriteError(error ?? {}, 'No se pudo actualizar el evento en la base de datos.');
       }
-      return (data as unknown as CmsEventRow | null) ?? null;
+      return data as CmsEventRow;
     },
 
-    async delete(id) {
-      const client = getCmsServiceClient();
-      const { data, error } = await client
-        .from('cms_events')
-        .delete()
-        .eq('id', id)
-        .select('id')
-        .maybeSingle();
+    async transitionStatus(id, expectedStatus, nextStatus, action, audit) {
+      const client = resolveClient();
+      const { data, error } = await client.rpc('cms_event_transition_status', {
+        p_id: id,
+        p_expected_status: expectedStatus,
+        p_next_status: nextStatus,
+        p_action: action,
+        p_actor_id: audit.actorId,
+        p_actor_email: audit.actorEmail,
+        p_actor_role: audit.actorRole,
+        p_review_comment: audit.reviewComment ?? null,
+      });
 
-      if (error) {
-        throw new CmsError('database_error', 'No se pudo eliminar el evento.', 500);
+      if (error || !data) {
+        throw mapDbWriteError(error ?? {}, 'No se pudo cambiar el estado del evento.');
       }
-      return Boolean(data);
+      return data as CmsEventRow;
     },
 
-    async insertAuditLog(entry) {
-      const client = getCmsServiceClient();
-      const { error } = await client.from('cms_audit_logs').insert(entry);
-      if (error) {
-        throw new CmsError(
-          'audit_error',
-          'No se pudo registrar la auditoría de la operación en cms_audit_logs.',
-          500,
-        );
+    async delete(id, audit) {
+      const client = resolveClient();
+      const { data, error } = await client.rpc('cms_event_delete', {
+        p_id: id,
+        p_actor_id: audit.actorId,
+        p_actor_email: audit.actorEmail,
+      });
+
+      if (error || !data) {
+        throw mapDbWriteError(error ?? {}, 'No se pudo eliminar el evento.');
       }
+      return data as { deleted: true; id: string };
     },
   };
 }
@@ -220,6 +267,20 @@ function assertCanAccessArea(actor: CmsActor, targetArea: CmsAreaScope): void {
     throw new CmsError(
       'forbidden',
       `Tu cuenta (${actor.area_scope}) no tiene permisos sobre eventos del área ${targetArea}.`,
+      403,
+    );
+  }
+}
+
+function assertDelegateCanEditEvent(actor: CmsActor, event: Pick<CmsEventRow, 'status'>): void {
+  if (
+    actor.role === 'delegate' &&
+    event.status !== 'draft' &&
+    event.status !== 'pending_review'
+  ) {
+    throw new CmsError(
+      'forbidden',
+      'Un delegado no puede editar un evento que ya está publicado o archivado.',
       403,
     );
   }
@@ -299,30 +360,19 @@ export async function createCmsEvent(
   }
 
   const isDirectPublish = validated.status === 'published';
-  const created = await repository.create({
-    ...validated,
-    created_by: actor.userId,
-    reviewed_by: isDirectPublish ? actor.userId : null,
-    published_at: isDirectPublish ? new Date().toISOString() : null,
-  });
-
-  await repository.insertAuditLog({
-    entity_type: 'cms_events',
-    entity_id: created.id,
-    action: 'create',
-    from_status: null,
-    to_status: created.status,
-    actor_id: actor.userId,
-    actor_email: actor.email,
-    area_scope: created.area_scope,
-    metadata: {
-      slug: created.slug,
-      title: created.title,
-      role: actor.role,
+  return await repository.create(
+    {
+      ...validated,
+      created_by: actor.userId,
+      reviewed_by: isDirectPublish ? actor.userId : null,
+      published_at: isDirectPublish ? new Date().toISOString() : null,
     },
-  });
-
-  return created;
+    {
+      actorId: actor.userId,
+      actorEmail: actor.email,
+      actorRole: actor.role,
+    },
+  );
 }
 
 export async function updateCmsEvent(
@@ -332,46 +382,35 @@ export async function updateCmsEvent(
   repository: CmsEventsRepository = createSupabaseCmsEventsRepository(),
 ): Promise<CmsEventRow> {
   const existing = await getCmsEventById(actor, id, repository);
-
-  if (
-    actor.role === 'delegate' &&
-    existing.status !== 'draft' &&
-    existing.status !== 'pending_review'
-  ) {
-    throw new CmsError(
-      'forbidden',
-      'Un delegado no puede editar un evento que ya está publicado o archivado.',
-      403,
-    );
-  }
+  assertDelegateCanEditEvent(actor, existing);
 
   const patch = validateUpdateEventInput(input, existing);
   if (patch.area_scope !== undefined) {
     assertCanAccessArea(actor, patch.area_scope);
   }
 
-  const updated = await repository.update(existing.id, patch);
-  if (!updated) {
-    throw new CmsError('not_found', 'No se encontró el evento a actualizar.', 404);
+  try {
+    return await repository.update(existing.id, existing.status, patch, {
+      actorId: actor.userId,
+      actorEmail: actor.email,
+      actorRole: actor.role,
+    });
+  } catch (error) {
+    if (error instanceof CmsError && error.code === 'status_conflict') {
+      const latest = await repository.getById(existing.id);
+      if (!latest) {
+        throw new CmsError('not_found', 'No se encontró el evento a actualizar.', 404);
+      }
+      assertCanAccessArea(actor, latest.area_scope);
+      assertDelegateCanEditEvent(actor, latest);
+      throw new CmsError(
+        'status_conflict',
+        'El estado del evento cambió mientras intentabas actualizarlo. Recarga e intenta nuevamente.',
+        409,
+      );
+    }
+    throw error;
   }
-
-  await repository.insertAuditLog({
-    entity_type: 'cms_events',
-    entity_id: updated.id,
-    action: 'update',
-    from_status: existing.status,
-    to_status: updated.status,
-    actor_id: actor.userId,
-    actor_email: actor.email,
-    area_scope: updated.area_scope,
-    metadata: {
-      slug: updated.slug,
-      title: updated.title,
-      changed_fields: Object.keys(patch),
-    },
-  });
-
-  return updated;
 }
 
 export async function transitionCmsEventStatus(
@@ -389,39 +428,35 @@ export async function transitionCmsEventStatus(
 
   const action = resolveEditorialTransition(actor, existing.status, status);
 
-  const patch: CmsEventDbUpdatePayload = { status };
-  if (status === 'published') {
-    patch.reviewed_by = actor.userId;
-    if (!existing.published_at) {
-      patch.published_at = new Date().toISOString();
+  try {
+    return await repository.transitionStatus(
+      existing.id,
+      existing.status,
+      status,
+      action,
+      {
+        actorId: actor.userId,
+        actorEmail: actor.email,
+        actorRole: actor.role,
+        reviewComment: review_comment,
+      },
+    );
+  } catch (error) {
+    if (error instanceof CmsError && error.code === 'status_conflict') {
+      const latest = await repository.getById(existing.id);
+      if (!latest) {
+        throw new CmsError('not_found', 'No se encontró el evento para cambiar de estado.', 404);
+      }
+      assertCanAccessArea(actor, latest.area_scope);
+      resolveEditorialTransition(actor, latest.status, status);
+      throw new CmsError(
+        'status_conflict',
+        'El estado del evento cambió mientras realizabas la transición. Recarga e intenta nuevamente.',
+        409,
+      );
     }
-  } else if (existing.status === 'pending_review' && status === 'draft') {
-    patch.reviewed_by = actor.userId;
+    throw error;
   }
-
-  const updated = await repository.update(existing.id, patch);
-  if (!updated) {
-    throw new CmsError('not_found', 'No se encontró el evento para cambiar de estado.', 404);
-  }
-
-  await repository.insertAuditLog({
-    entity_type: 'cms_events',
-    entity_id: updated.id,
-    action,
-    from_status: existing.status,
-    to_status: updated.status,
-    actor_id: actor.userId,
-    actor_email: actor.email,
-    area_scope: updated.area_scope,
-    metadata: {
-      slug: updated.slug,
-      title: updated.title,
-      role: actor.role,
-      ...(review_comment ? { review_comment } : {}),
-    },
-  });
-
-  return updated;
 }
 
 export async function deleteCmsEvent(
@@ -439,26 +474,9 @@ export async function deleteCmsEvent(
   }
 
   const existing = await getCmsEventById(actor, id, repository);
-  const deleted = await repository.delete(existing.id);
-  if (!deleted) {
-    throw new CmsError('not_found', 'El evento ya fue eliminado o no existe.', 404);
-  }
-
-  await repository.insertAuditLog({
-    entity_type: 'cms_events',
-    entity_id: existing.id,
-    action: 'archive',
-    from_status: existing.status,
-    to_status: null,
-    actor_id: actor.userId,
-    actor_email: actor.email,
-    area_scope: existing.area_scope,
-    metadata: {
-      slug: existing.slug,
-      title: existing.title,
-      operation: 'hard_delete',
-    },
+  return await repository.delete(existing.id, {
+    actorId: actor.userId,
+    actorEmail: actor.email,
+    actorRole: actor.role,
   });
-
-  return { deleted: true, id: existing.id };
 }

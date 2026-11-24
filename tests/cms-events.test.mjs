@@ -12,6 +12,7 @@ after(() => server.close());
 
 const validation = await server.ssrLoadModule('/src/lib/cms/events-validation.ts');
 const service = await server.ssrLoadModule('/src/lib/cms/events-service.ts');
+const { CmsError } = await server.ssrLoadModule('/src/lib/cms/errors.ts');
 const indexRoute = await server.ssrLoadModule('/src/pages/api/cms/events/index.ts');
 const detailRoute = await server.ssrLoadModule('/src/pages/api/cms/events/[id].ts');
 const statusRoute = await server.ssrLoadModule('/src/pages/api/cms/events/[id]/status.ts');
@@ -50,6 +51,10 @@ const ACTORS = {
     area_scope: 'ID',
     is_active: true,
   },
+  plainUser: {
+    userId: '10000000-0000-4000-8000-000000000099',
+    email: 'sin.permisos@ccunicode.org',
+  },
 };
 
 function normalizePgRow(row) {
@@ -58,6 +63,22 @@ function normalizePgRow(row) {
     if (out[key] instanceof Date) out[key] = out[key].toISOString();
   }
   return out;
+}
+
+function translatePgError(err, fallbackMessage) {
+  const message = err?.message || '';
+  if (message.startsWith('not_found:')) {
+    return new CmsError('not_found', message.slice('not_found:'.length).trim(), 404);
+  }
+  if (message.startsWith('status_conflict:')) {
+    return new CmsError('status_conflict', message.slice('status_conflict:'.length).trim(), 409);
+  }
+  if (err?.code === '23505') {
+    return new CmsError('duplicate_slug', 'Ya existe un evento registrado con ese slug.', 409, {
+      slug: 'El slug ya está en uso.',
+    });
+  }
+  return new CmsError('database_error', fallbackMessage || message, 500);
 }
 
 async function createPgliteCmsHarness(t) {
@@ -71,15 +92,17 @@ async function createPgliteCmsHarness(t) {
   `);
   await db.exec(cmsMigrationSql);
 
-  for (const actor of Object.values(ACTORS)) {
+  for (const [key, actor] of Object.entries(ACTORS)) {
     await db.query('INSERT INTO auth.users (id, email) VALUES ($1, $2)', [
       actor.userId,
       actor.email,
     ]);
-    await db.query(
-      'INSERT INTO public.cms_user_permissions (user_id, email, role, area_scope, is_active) VALUES ($1, $2, $3, $4, $5)',
-      [actor.userId, actor.email, actor.role, actor.area_scope, actor.is_active],
-    );
+    if (key !== 'plainUser') {
+      await db.query(
+        'INSERT INTO public.cms_user_permissions (user_id, email, role, area_scope, is_active) VALUES ($1, $2, $3, $4, $5)',
+        [actor.userId, actor.email, actor.role, actor.area_scope, actor.is_active],
+      );
+    }
   }
 
   const repository = {
@@ -138,84 +161,69 @@ async function createPgliteCmsHarness(t) {
       return res.rows[0] ? normalizePgRow(res.rows[0]) : null;
     },
 
-    async create(payload) {
-      const columns = Object.keys(payload);
-      const placeholders = columns.map((_, idx) => `$${idx + 1}`).join(', ');
-      const values = columns.map((col) => payload[col]);
+    async create(payload, audit) {
       try {
         const res = await db.query(
-          `INSERT INTO public.cms_events (${columns.join(', ')})
-           VALUES (${placeholders})
-           RETURNING *`,
-          values,
+          'SELECT public.cms_event_create($1::jsonb, $2::uuid, $3::text, $4::text) AS data',
+          [JSON.stringify(payload), audit.actorId, audit.actorEmail, audit.actorRole],
         );
-        return normalizePgRow(res.rows[0]);
+        return res.rows[0].data;
       } catch (err) {
-        if (err && err.code === '23505') {
-          throw new server.ssrLoadModule('/src/lib/cms/errors.ts').then(() => null).catch(() => null);
-        }
-        throw err;
+        throw translatePgError(err, 'No se pudo crear el evento.');
       }
     },
 
-    async update(id, payload) {
-      const columns = Object.keys(payload);
-      const sets = columns.map((col, idx) => `${col} = $${idx + 1}`).join(', ');
-      const values = [...columns.map((col) => payload[col]), id];
-      const res = await db.query(
-        `UPDATE public.cms_events SET ${sets} WHERE id = $${columns.length + 1} RETURNING *`,
-        values,
-      );
-      return res.rows[0] ? normalizePgRow(res.rows[0]) : null;
-    },
-
-    async delete(id) {
-      const res = await db.query('DELETE FROM public.cms_events WHERE id = $1 RETURNING id', [id]);
-      return res.rows.length > 0;
-    },
-
-    async insertAuditLog(entry) {
-      await db.query(
-        `INSERT INTO public.cms_audit_logs
-          (entity_type, entity_id, action, from_status, to_status, actor_id, actor_email, area_scope, metadata)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)`,
-        [
-          entry.entity_type,
-          entry.entity_id,
-          entry.action,
-          entry.from_status,
-          entry.to_status,
-          entry.actor_id,
-          entry.actor_email,
-          entry.area_scope,
-          JSON.stringify(entry.metadata),
-        ],
-      );
-    },
-  };
-
-  // Sobrescribe create/update para traducir código 23505 con CmsError real
-  const { CmsError } = await server.ssrLoadModule('/src/lib/cms/errors.ts');
-  repository.create = async (payload) => {
-    const columns = Object.keys(payload);
-    const placeholders = columns.map((_, idx) => `$${idx + 1}`).join(', ');
-    const values = columns.map((col) => payload[col]);
-    try {
-      const res = await db.query(
-        `INSERT INTO public.cms_events (${columns.join(', ')})
-         VALUES (${placeholders})
-         RETURNING *`,
-        values,
-      );
-      return normalizePgRow(res.rows[0]);
-    } catch (err) {
-      if (err && err.code === '23505') {
-        throw new CmsError('duplicate_slug', 'Ya existe un evento registrado con ese slug.', 409, {
-          slug: 'El slug ya está en uso.',
-        });
+    async update(id, expectedStatus, patch, audit) {
+      try {
+        const res = await db.query(
+          'SELECT public.cms_event_update($1::uuid, $2::public.cms_content_status, $3::jsonb, $4::uuid, $5::text, $6::text[]) AS data',
+          [
+            id,
+            expectedStatus,
+            JSON.stringify(patch),
+            audit.actorId,
+            audit.actorEmail,
+            Object.keys(patch),
+          ],
+        );
+        return res.rows[0].data;
+      } catch (err) {
+        throw translatePgError(err, 'No se pudo actualizar el evento.');
       }
-      throw err;
-    }
+    },
+
+    async transitionStatus(id, expectedStatus, nextStatus, action, audit) {
+      try {
+        const res = await db.query(
+          'SELECT public.cms_event_transition_status($1::uuid, $2::public.cms_content_status, $3::public.cms_content_status, $4::text, $5::uuid, $6::text, $7::text, $8::text) AS data',
+          [
+            id,
+            expectedStatus,
+            nextStatus,
+            action,
+            audit.actorId,
+            audit.actorEmail,
+            audit.actorRole,
+            audit.reviewComment ?? null,
+          ],
+        );
+        return res.rows[0].data;
+      } catch (err) {
+        throw translatePgError(err, 'No se pudo cambiar el estado del evento.');
+      }
+    },
+
+    async delete(id, audit) {
+      try {
+        const res = await db.query(
+          'SELECT public.cms_event_delete($1::uuid, $2::uuid, $3::text) AS data',
+          [id, audit.actorId, audit.actorEmail],
+        );
+        return res.rows[0].data;
+      } catch (err) {
+        throw translatePgError(err, 'No se pudo eliminar el evento.');
+      }
+    },
   };
 
   return { db, repository };
@@ -252,25 +260,18 @@ test('validates required fields, slug generation, categories, date range, highli
   assert.deepEqual(parsed.highlights, ['Astro', 'Supabase', 'PostgreSQL']);
   assert.equal(parsed.status, 'draft');
 
-  // Campos obligatorios faltantes
   assert.throws(
     () => validation.validateCreateEventInput({ title: 'Sin campos' }),
     (err) => err.status === 400 && err.code === 'validation_error',
   );
-
-  // Categoría inválida
   assert.throws(
     () => validation.validateCreateEventInput(validEventPayload({ category: 'WebinarInventado' })),
     (err) => err.status === 400 && err.code === 'validation_error',
   );
-
-  // area_scope inválido
   assert.throws(
     () => validation.validateCreateEventInput(validEventPayload({ area_scope: 'MKT' })),
     (err) => err.status === 400 && err.code === 'validation_error',
   );
-
-  // end_date anterior a event_date
   assert.throws(
     () =>
       validation.validateCreateEventInput(
@@ -281,14 +282,11 @@ test('validates required fields, slug generation, categories, date range, highli
       ),
     (err) => err.status === 400 && err.code === 'validation_error',
   );
-
-  // attendees_count negativo
   assert.throws(
     () => validation.validateCreateEventInput(validEventPayload({ attendees_count: -5 })),
     (err) => err.status === 400 && err.code === 'validation_error',
   );
 
-  // URLs inseguras rechazadas
   for (const badUrl of ['javascript:alert(1)', 'data:text/html,<script>', '//evil.example/x']) {
     assert.throws(
       () => validation.validateCreateEventInput(validEventPayload({ external_url: badUrl })),
@@ -298,10 +296,65 @@ test('validates required fields, slug generation, categories, date range, highli
   }
 });
 
-test('dual editorial workflow enforces permissions by role/area and logs every mutation in cms_audit_logs', async (t) => {
+test('production repository preserves search punctuation and quotes PostgREST ILIKE filters safely', async () => {
+  assert.equal(service.escapePostgrestIlikeTerm('Workshop (ID)'), 'Workshop (ID)');
+  assert.equal(service.escapePostgrestIlikeTerm('()'), '()');
+  assert.equal(service.escapePostgrestIlikeTerm('100%_a,b"c'), '100\\%\\_a,b\\"c');
+
+  const capturedOrCalls = [];
+  const mockSupabaseClient = {
+    from(table) {
+      assert.equal(table, 'cms_events');
+      const chain = {
+        select() { return chain; },
+        order() { return chain; },
+        range() { return chain; },
+        eq() { return chain; },
+        or(expr) {
+          capturedOrCalls.push(expr);
+          return chain;
+        },
+        then(resolve) {
+          return Promise.resolve({ data: [], count: 0, error: null }).then(resolve);
+        },
+      };
+      return chain;
+    },
+  };
+
+  const prodRepo = service.createSupabaseCmsEventsRepository(mockSupabaseClient);
+  await service.listCmsEvents(ACTORS.dcc, { search: 'Workshop (ID)', page: 1, pageSize: 20 }, prodRepo);
+  assert.equal(
+    capturedOrCalls[0],
+    'title.ilike."*Workshop (ID)*",slug.ilike."*Workshop (ID)*",speaker.ilike."*Workshop (ID)*"',
+  );
+
+  await service.listCmsEvents(ACTORS.dcc, { search: '()', page: 1, pageSize: 20 }, prodRepo);
+  assert.equal(
+    capturedOrCalls[1],
+    'title.ilike."*()*",slug.ilike."*()*",speaker.ilike."*()*"',
+  );
+});
+
+test('editorial transition matrix rejects published/archived -> pending_review even for directors and DCC', () => {
+  for (const actor of [ACTORS.directorId, ACTORS.dcc, ACTORS.admin]) {
+    assert.throws(
+      () => validation.resolveEditorialTransition(actor, 'published', 'pending_review'),
+      (err) => err.status === 400 && err.code === 'invalid_transition',
+    );
+    assert.throws(
+      () => validation.resolveEditorialTransition(actor, 'archived', 'pending_review'),
+      (err) => err.status === 400 && err.code === 'invalid_transition',
+    );
+  }
+  assert.equal(validation.resolveEditorialTransition(ACTORS.delegateId, 'draft', 'pending_review'), 'submit_review');
+  assert.equal(validation.resolveEditorialTransition(ACTORS.directorId, 'archived', 'draft'), 'restore');
+  assert.equal(validation.resolveEditorialTransition(ACTORS.directorId, 'archived', 'published'), 'approve_publish');
+});
+
+test('dual editorial workflow enforces permissions by role/area, handles TOCTOU status conflicts and logs atomically', async (t) => {
   const { db, repository } = await createPgliteCmsHarness(t);
 
-  // 1. Delegado de ID intenta publicar directamente o crear en otra área -> 403
   await assert.rejects(
     () =>
       service.createCmsEvent(
@@ -321,7 +374,6 @@ test('dual editorial workflow enforces permissions by role/area and logs every m
     (err) => err.status === 403 && err.code === 'forbidden',
   );
 
-  // 2. Delegado de ID crea borrador y lo envía a revisión (flujo 2 pasos)
   const draft = await service.createCmsEvent(ACTORS.delegateId, validEventPayload(), repository);
   assert.equal(draft.status, 'draft');
   assert.equal(draft.created_by, ACTORS.delegateId.userId);
@@ -336,14 +388,12 @@ test('dual editorial workflow enforces permissions by role/area and logs every m
   );
   assert.equal(pending.status, 'pending_review');
 
-  // Delegado NO puede auto-aprobar ni archivar
   await assert.rejects(
     () =>
       service.transitionCmsEventStatus(ACTORS.delegateId, draft.id, 'published', undefined, repository),
     (err) => err.status === 403 && err.code === 'forbidden',
   );
 
-  // 3. Director de ID aprueba y publica
   const published = await service.transitionCmsEventStatus(
     ACTORS.directorId,
     draft.id,
@@ -355,7 +405,6 @@ test('dual editorial workflow enforces permissions by role/area and logs every m
   assert.equal(published.reviewed_by, ACTORS.directorId.userId);
   assert.ok(published.published_at);
 
-  // Delegado ya no puede editar ni cambiar estado de un evento publicado
   await assert.rejects(
     () =>
       service.updateCmsEvent(
@@ -367,7 +416,43 @@ test('dual editorial workflow enforces permissions by role/area and logs every m
     (err) => err.status === 403 && err.code === 'forbidden',
   );
 
-  // 4. DCC (scope ALL) puede crear y publicar directamente en cualquier área (ej. ACD)
+  // TOCTOU race condition: evento se publica justo antes de que el delegado lo edite -> 403 sin sobrescribir
+  const raceDraft = await service.createCmsEvent(
+    ACTORS.delegateId,
+    validEventPayload({ title: 'Evento en carrera TOCTOU' }),
+    repository,
+  );
+  const racingRepo = {
+    ...repository,
+    async getById(id) {
+      return await repository.getById(id);
+    },
+    async update(id, expectedStatus, patch, audit) {
+      await service.transitionCmsEventStatus(
+        ACTORS.directorId,
+        id,
+        'published',
+        'Publicado concurrentemente',
+        repository,
+      );
+      return await repository.update(id, expectedStatus, patch, audit);
+    },
+  };
+  await assert.rejects(
+    () =>
+      service.updateCmsEvent(
+        ACTORS.delegateId,
+        raceDraft.id,
+        { title: 'Edición tardía del delegado' },
+        racingRepo,
+      ),
+    (err) => err.status === 403 && err.code === 'forbidden',
+  );
+  const raceAfter = await repository.getById(raceDraft.id);
+  assert.equal(raceAfter.title, 'Evento en carrera TOCTOU');
+  assert.equal(raceAfter.status, 'published');
+
+  // DCC (ALL) crea y publica en ACD; Director de ID recibe 403; solo Admin puede eliminar
   const acdEvent = await service.createCmsEvent(
     ACTORS.dcc,
     validEventPayload({
@@ -379,15 +464,11 @@ test('dual editorial workflow enforces permissions by role/area and logs every m
     repository,
   );
   assert.equal(acdEvent.status, 'published');
-  assert.equal(acdEvent.area_scope, 'ACD');
 
-  // Director de ID no puede ver ni archivar el evento de ACD
   await assert.rejects(
     () => service.getCmsEventById(ACTORS.directorId, acdEvent.id, repository),
     (err) => err.status === 403 && err.code === 'forbidden',
   );
-
-  // 5. Slug duplicado devuelve 409 Conflict
   await assert.rejects(
     () =>
       service.createCmsEvent(
@@ -397,16 +478,14 @@ test('dual editorial workflow enforces permissions by role/area and logs every m
       ),
     (err) => err.status === 409 && err.code === 'duplicate_slug',
   );
-
-  // 6. Solo admin puede eliminar definitivamente; DCC recibe 403
   await assert.rejects(
     () => service.deleteCmsEvent(ACTORS.dcc, acdEvent.id, repository),
     (err) => err.status === 403 && err.code === 'forbidden',
   );
+
   const deleted = await service.deleteCmsEvent(ACTORS.admin, acdEvent.id, repository);
   assert.deepEqual(deleted, { deleted: true, id: acdEvent.id });
 
-  // 7. Verificar trazabilidad en cms_audit_logs
   const logsRes = await db.query(
     'SELECT entity_id, action, from_status, to_status, actor_email, metadata FROM public.cms_audit_logs ORDER BY created_at ASC',
   );
@@ -423,13 +502,141 @@ test('dual editorial workflow enforces permissions by role/area and logs every m
   assert.equal(draftLogs[2].actor_email, ACTORS.directorId.email);
 });
 
+test('mutations and audit logs commit atomically (rollback if audit insert fails)', async (t) => {
+  const { db, repository } = await createPgliteCmsHarness(t);
+
+  const existing = await service.createCmsEvent(
+    ACTORS.dcc,
+    validEventPayload({ title: 'Evento Atómico', status: 'draft' }),
+    repository,
+  );
+
+  await db.exec(`
+    CREATE FUNCTION test_abort_audit() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN
+      RAISE EXCEPTION 'test_audit_failure';
+    END $$;
+    CREATE TRIGGER test_abort_audit
+      BEFORE INSERT ON public.cms_audit_logs
+      FOR EACH ROW EXECUTE FUNCTION test_abort_audit();
+  `);
+
+  await assert.rejects(
+    () =>
+      service.createCmsEvent(
+        ACTORS.dcc,
+        validEventPayload({ title: 'Evento Fallido', slug: 'evento-fallido-atomico' }),
+        repository,
+      ),
+    { code: 'database_error', status: 500 },
+  );
+  const afterFailedCreate = await db.query(
+    "SELECT count(*)::int AS n FROM public.cms_events WHERE slug = 'evento-fallido-atomico'",
+  );
+  assert.equal(afterFailedCreate.rows[0].n, 0, 'CREATE rolled back when audit failed');
+
+  await assert.rejects(
+    () =>
+      service.updateCmsEvent(
+        ACTORS.dcc,
+        existing.id,
+        { title: 'Título Revertido' },
+        repository,
+      ),
+    { code: 'database_error', status: 500 },
+  );
+  assert.equal((await repository.getById(existing.id)).title, 'Evento Atómico');
+
+  await assert.rejects(
+    () => service.deleteCmsEvent(ACTORS.admin, existing.id, repository),
+    { code: 'database_error', status: 500 },
+  );
+  assert.ok(await repository.getById(existing.id), 'DELETE rolled back when audit failed');
+});
+
+test('SQL security & integrity: linked cms_news cascades on event delete, direct writes audit, board email is protected and audit impersonation is blocked', async (t) => {
+  const { db, repository } = await createPgliteCmsHarness(t);
+
+  // 1. ON DELETE CASCADE en cms_news al eliminar un evento enlazado
+  const linkedEvent = await service.createCmsEvent(
+    ACTORS.admin,
+    validEventPayload({ title: 'Evento Enlazado', status: 'published' }),
+    repository,
+  );
+  await db.query(
+    "INSERT INTO public.cms_news (source_type, event_id, status, is_active) VALUES ('event', $1, 'published', true)",
+    [linkedEvent.id],
+  );
+  await service.deleteCmsEvent(ACTORS.admin, linkedEvent.id, repository);
+  const newsAfterDelete = await db.query(
+    'SELECT count(*)::int AS n FROM public.cms_news WHERE event_id = $1',
+    [linkedEvent.id],
+  );
+  assert.equal(newsAfterDelete.rows[0].n, 0);
+
+  // 2. Privacidad de email en cms_board_members para usuarios authenticated sin permisos CMS
+  await db.query(
+    `INSERT INTO public.cms_board_members
+      (full_name, role_title, member_type, area_scope, photo_url, email, status, is_active)
+     VALUES ('Director Privado', 'Director ID', 'director', 'ID', '/photo.webp', 'secreto@uni.pe', 'published', true)`,
+  );
+  await db.exec(
+    `SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub', '${ACTORS.plainUser.userId}', false);`,
+  );
+  await assert.rejects(
+    () => db.query('SELECT email FROM public.cms_board_members'),
+    /permission denied/,
+  );
+  const publicViewRows = await db.query('SELECT full_name FROM public.cms_public_board_members');
+  assert.equal(publicViewRows.rows.length, 1);
+  await db.exec('RESET ROLE');
+
+  // 3. Escritura directa en cms_events como authenticated genera fila en cms_audit_logs con actor real
+  await db.exec(
+    `SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub', '${ACTORS.delegateId.userId}', false);`,
+  );
+  const directInsert = await db.query(
+    `INSERT INTO public.cms_events
+      (slug, title, description, event_date, location, category, area_scope, thumbnail_url, status)
+     VALUES ('directo-delegado', 'Evento Directo', 'Desc', now(), 'UNI', 'Workshop', 'ID', '/img.webp', 'draft')
+     RETURNING id`,
+  );
+  const directId = directInsert.rows[0].id;
+  await db.query("UPDATE public.cms_events SET status = 'pending_review' WHERE id = $1", [directId]);
+
+  // 4. Delegado NO puede suplantar a otro actor ni insertar acción approve_publish en cms_audit_logs
+  await assert.rejects(
+    () =>
+      db.query(
+        `INSERT INTO public.cms_audit_logs
+          (entity_type, entity_id, action, from_status, to_status, actor_id, actor_email, area_scope, metadata)
+         VALUES ('cms_events', $1, 'approve_publish', 'pending_review', 'published', $2, $3, 'ID', '{}'::jsonb)`,
+        [directId, ACTORS.admin.userId, ACTORS.admin.email],
+      ),
+    /row-level security/,
+  );
+  await db.exec('RESET ROLE');
+
+  const directLogs = await db.query(
+    'SELECT action, from_status, to_status, actor_id, actor_email FROM public.cms_audit_logs WHERE entity_id = $1 ORDER BY created_at ASC',
+    [directId],
+  );
+  assert.deepEqual(
+    directLogs.rows.map((r) => [r.action, r.from_status, r.to_status, r.actor_email]),
+    [
+      ['create', null, 'draft', ACTORS.delegateId.email],
+      ['submit_review', 'draft', 'pending_review', ACTORS.delegateId.email],
+    ],
+  );
+});
+
 test('listCmsEvents supports filtering by status, category, area_scope, is_featured, search and pagination', async (t) => {
   const { repository } = await createPgliteCmsHarness(t);
 
   await service.createCmsEvent(
     ACTORS.dcc,
     validEventPayload({
-      title: 'Summit IA UNI',
+      title: 'Summit IA (UNI)',
       area_scope: 'ID',
       category: 'Summit',
       is_featured: true,
@@ -460,25 +667,22 @@ test('listCmsEvents supports filtering by status, category, area_scope, is_featu
     repository,
   );
 
-  // DCC lista todo con filtros
   const publishedId = await service.listCmsEvents(
     ACTORS.dcc,
     { status: 'published', area_scope: 'ID', is_featured: true, page: 1, pageSize: 10 },
     repository,
   );
   assert.equal(publishedId.data.length, 1);
-  assert.equal(publishedId.data[0].title, 'Summit IA UNI');
+  assert.equal(publishedId.data[0].title, 'Summit IA (UNI)');
 
-  // Búsqueda por texto y paginación
   const searched = await service.listCmsEvents(
     ACTORS.admin,
-    { search: 'git', page: 1, pageSize: 5 },
+    { search: '(UNI)', page: 1, pageSize: 5 },
     repository,
   );
   assert.equal(searched.data.length, 1);
   assert.equal(searched.pagination.total, 1);
 
-  // Director de ID restringido automáticamente a su área y bloqueado si pide GTH
   const directorList = await service.listCmsEvents(ACTORS.directorId, {}, repository);
   assert.equal(directorList.data.length, 2);
   assert.ok(directorList.data.every((ev) => ev.area_scope === 'ID'));
@@ -504,7 +708,6 @@ test('API routes enforce 401 without token, 400 on invalid input and 403 on unau
   });
   assert.equal(resPostUnauth.status, 401);
 
-  // Validación 400 con actor inyectado en locals antes de tocar Supabase
   const resBadPost = await indexRoute.POST({
     request: new Request('http://localhost:4321/api/cms/events', {
       method: 'POST',
@@ -515,7 +718,6 @@ test('API routes enforce 401 without token, 400 on invalid input and 403 on unau
   });
   assert.equal(resBadPost.status, 400);
 
-  // 403 para DCC intentando DELETE
   const resForbiddenDelete = await detailRoute.DELETE({
     request: new Request('http://localhost:4321/api/cms/events/11111111-1111-4111-8111-111111111111', {
       method: 'DELETE',
@@ -525,7 +727,6 @@ test('API routes enforce 401 without token, 400 on invalid input and 403 on unau
   });
   assert.equal(resForbiddenDelete.status, 403);
 
-  // 400 en /status con estado inválido
   const resBadStatus = await statusRoute.PATCH({
     request: new Request(
       'http://localhost:4321/api/cms/events/11111111-1111-4111-8111-111111111111/status',

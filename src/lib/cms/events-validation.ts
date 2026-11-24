@@ -722,6 +722,13 @@ export function validateStatusTransitionInput(input: unknown): CmsEventStatusTra
   };
 }
 
+const ALLOWED_STATUS_TRANSITIONS: Record<CmsContentStatus, readonly CmsContentStatus[]> = {
+  draft: ['pending_review', 'published', 'archived'],
+  pending_review: ['draft', 'published', 'archived'],
+  published: ['draft', 'archived'],
+  archived: ['draft', 'published'],
+};
+
 export function resolveEditorialTransition(
   actor: CmsActor,
   fromStatus: CmsContentStatus,
@@ -750,6 +757,14 @@ export function resolveEditorialTransition(
         403,
       );
     }
+  }
+
+  if (!ALLOWED_STATUS_TRANSITIONS[fromStatus].includes(toStatus)) {
+    throw new CmsError(
+      'invalid_transition',
+      `Transición editorial no permitida de '${fromStatus}' a '${toStatus}'.`,
+      400,
+    );
   }
 
   if (toStatus === 'pending_review') return 'submit_review';

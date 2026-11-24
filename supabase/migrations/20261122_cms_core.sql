@@ -193,8 +193,8 @@ CREATE TABLE IF NOT EXISTS public.cms_news (
     cta_label     varchar(60)               NOT NULL DEFAULT 'Ver detalles',
     source_type   varchar(20)               NOT NULL DEFAULT 'custom'
                                             CHECK (source_type IN ('custom', 'event', 'project')),
-    event_id      uuid                      NULL REFERENCES public.cms_events(id) ON DELETE SET NULL,
-    project_id    uuid                      NULL REFERENCES public.cms_projects(id) ON DELETE SET NULL,
+    event_id      uuid                      NULL REFERENCES public.cms_events(id) ON DELETE CASCADE,
+    project_id    uuid                      NULL REFERENCES public.cms_projects(id) ON DELETE CASCADE,
     display_order integer                   NOT NULL DEFAULT 0,
     is_active     boolean                   NOT NULL DEFAULT true,
     status        public.cms_content_status NOT NULL DEFAULT 'draft',
@@ -451,6 +451,460 @@ $$;
 REVOKE ALL ON FUNCTION public.cms_current_permission() FROM public;
 GRANT EXECUTE ON FUNCTION public.cms_current_permission() TO authenticated, service_role;
 
+CREATE OR REPLACE FUNCTION public.cms_current_actor()
+RETURNS TABLE (user_id uuid, email text, role varchar, area_scope varchar)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+    SELECT p.user_id, p.email, p.role, p.area_scope
+    FROM public.cms_user_permissions p
+    WHERE p.user_id = auth.uid()
+      AND p.is_active = true
+    LIMIT 1;
+$$;
+
+REVOKE ALL ON FUNCTION public.cms_current_actor() FROM public;
+GRANT EXECUTE ON FUNCTION public.cms_current_actor() TO authenticated, service_role;
+
+-- 12.1 Trigger de auditoría automática en escrituras directas sobre `cms_events`
+--      Evita que actualizaciones directas de `authenticated` vía REST omitan `cms_audit_logs`.
+CREATE OR REPLACE FUNCTION public.cms_events_audit_direct_write()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    v_actor_id    uuid;
+    v_actor_email text;
+    v_actor_role  text;
+    v_action      text;
+    v_from_status public.cms_content_status;
+BEGIN
+    IF auth.uid() IS NULL AND current_setting('app.cms_audit_handled', true) = 'true' THEN
+        RETURN NEW;
+    END IF;
+
+    IF TG_OP = 'UPDATE' AND OLD.status IS NOT DISTINCT FROM NEW.status THEN
+        RETURN NEW;
+    END IF;
+
+    IF auth.uid() IS NOT NULL THEN
+        SELECT p.user_id, p.email, p.role
+        INTO v_actor_id, v_actor_email, v_actor_role
+        FROM public.cms_user_permissions p
+        WHERE p.user_id = auth.uid()
+        LIMIT 1;
+    END IF;
+
+    v_actor_id := COALESCE(v_actor_id, auth.uid(), NEW.reviewed_by, NEW.created_by);
+
+    IF v_actor_email IS NULL AND v_actor_id IS NOT NULL THEN
+        SELECT p.email, p.role
+        INTO v_actor_email, v_actor_role
+        FROM public.cms_user_permissions p
+        WHERE p.user_id = v_actor_id
+        LIMIT 1;
+    END IF;
+
+    v_actor_email := COALESCE(v_actor_email, 'sistema@ccunicode.org');
+
+    IF TG_OP = 'INSERT' THEN
+        v_action := 'create';
+        v_from_status := NULL;
+    ELSE
+        v_from_status := OLD.status;
+        IF NEW.status = 'pending_review' THEN
+            v_action := 'submit_review';
+        ELSIF NEW.status = 'published' THEN
+            v_action := 'approve_publish';
+        ELSIF NEW.status = 'archived' THEN
+            v_action := 'archive';
+        ELSIF OLD.status = 'archived' AND NEW.status = 'draft' THEN
+            v_action := 'restore';
+        ELSE
+            v_action := 'reject_to_draft';
+        END IF;
+    END IF;
+
+    INSERT INTO public.cms_audit_logs (
+        entity_type,
+        entity_id,
+        action,
+        from_status,
+        to_status,
+        actor_id,
+        actor_email,
+        area_scope,
+        metadata
+    )
+    VALUES (
+        'cms_events',
+        NEW.id,
+        v_action,
+        v_from_status,
+        NEW.status,
+        v_actor_id,
+        v_actor_email,
+        NEW.area_scope,
+        jsonb_strip_nulls(jsonb_build_object(
+            'slug', NEW.slug,
+            'title', NEW.title,
+            'role', v_actor_role,
+            'source', 'direct_table_write'
+        ))
+    );
+
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_cms_events_audit_direct ON public.cms_events;
+CREATE TRIGGER trg_cms_events_audit_direct
+    AFTER INSERT OR UPDATE ON public.cms_events
+    FOR EACH ROW EXECUTE FUNCTION public.cms_events_audit_direct_write();
+
+-- 12.2 Funciones RPC atómicas para `cms_events` (mutación + auditoría en una sola transacción)
+CREATE OR REPLACE FUNCTION public.cms_event_create(
+    p_payload     jsonb,
+    p_actor_id    uuid,
+    p_actor_email text,
+    p_actor_role  text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    v_created public.cms_events;
+BEGIN
+    PERFORM set_config('app.cms_audit_handled', 'true', true);
+
+    INSERT INTO public.cms_events (
+        slug,
+        title,
+        summary,
+        description,
+        event_date,
+        end_date,
+        display_date,
+        time_range,
+        location,
+        category,
+        area_scope,
+        speaker,
+        speaker_image_url,
+        thumbnail_url,
+        background_image_url,
+        external_url,
+        attendees_count,
+        highlights,
+        is_featured,
+        status,
+        created_by,
+        reviewed_by,
+        published_at
+    )
+    VALUES (
+        p_payload->>'slug',
+        p_payload->>'title',
+        p_payload->>'summary',
+        p_payload->>'description',
+        (p_payload->>'event_date')::timestamptz,
+        NULLIF(p_payload->>'end_date', '')::timestamptz,
+        p_payload->>'display_date',
+        p_payload->>'time_range',
+        p_payload->>'location',
+        p_payload->>'category',
+        p_payload->>'area_scope',
+        p_payload->>'speaker',
+        p_payload->>'speaker_image_url',
+        p_payload->>'thumbnail_url',
+        p_payload->>'background_image_url',
+        p_payload->>'external_url',
+        COALESCE((p_payload->>'attendees_count')::integer, 0),
+        ARRAY(SELECT jsonb_array_elements_text(COALESCE(p_payload->'highlights', '[]'::jsonb))),
+        COALESCE((p_payload->>'is_featured')::boolean, false),
+        COALESCE((p_payload->>'status')::public.cms_content_status, 'draft'),
+        p_actor_id,
+        NULLIF(p_payload->>'reviewed_by', '')::uuid,
+        NULLIF(p_payload->>'published_at', '')::timestamptz
+    )
+    RETURNING * INTO v_created;
+
+    INSERT INTO public.cms_audit_logs (
+        entity_type,
+        entity_id,
+        action,
+        from_status,
+        to_status,
+        actor_id,
+        actor_email,
+        area_scope,
+        metadata
+    )
+    VALUES (
+        'cms_events',
+        v_created.id,
+        'create',
+        NULL,
+        v_created.status,
+        p_actor_id,
+        p_actor_email,
+        v_created.area_scope,
+        jsonb_build_object(
+            'slug', v_created.slug,
+            'title', v_created.title,
+            'role', p_actor_role
+        )
+    );
+
+    RETURN to_jsonb(v_created);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.cms_event_update(
+    p_id              uuid,
+    p_expected_status public.cms_content_status,
+    p_patch           jsonb,
+    p_actor_id        uuid,
+    p_actor_email     text,
+    p_changed_fields  text[]
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    v_current public.cms_events;
+    v_updated public.cms_events;
+BEGIN
+    PERFORM set_config('app.cms_audit_handled', 'true', true);
+
+    SELECT * INTO v_current
+    FROM public.cms_events
+    WHERE id = p_id
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'not_found: No se encontró el evento a actualizar.';
+    END IF;
+
+    IF v_current.status IS DISTINCT FROM p_expected_status THEN
+        RAISE EXCEPTION 'status_conflict: El estado del evento cambió concurrentemente.';
+    END IF;
+
+    UPDATE public.cms_events
+    SET
+        slug                 = CASE WHEN p_patch ? 'slug' THEN p_patch->>'slug' ELSE slug END,
+        title                = CASE WHEN p_patch ? 'title' THEN p_patch->>'title' ELSE title END,
+        summary              = CASE WHEN p_patch ? 'summary' THEN p_patch->>'summary' ELSE summary END,
+        description          = CASE WHEN p_patch ? 'description' THEN p_patch->>'description' ELSE description END,
+        event_date           = CASE WHEN p_patch ? 'event_date' THEN (p_patch->>'event_date')::timestamptz ELSE event_date END,
+        end_date             = CASE WHEN p_patch ? 'end_date' THEN NULLIF(p_patch->>'end_date', '')::timestamptz ELSE end_date END,
+        display_date         = CASE WHEN p_patch ? 'display_date' THEN p_patch->>'display_date' ELSE display_date END,
+        time_range           = CASE WHEN p_patch ? 'time_range' THEN p_patch->>'time_range' ELSE time_range END,
+        location             = CASE WHEN p_patch ? 'location' THEN p_patch->>'location' ELSE location END,
+        category             = CASE WHEN p_patch ? 'category' THEN p_patch->>'category' ELSE category END,
+        area_scope           = CASE WHEN p_patch ? 'area_scope' THEN p_patch->>'area_scope' ELSE area_scope END,
+        speaker              = CASE WHEN p_patch ? 'speaker' THEN p_patch->>'speaker' ELSE speaker END,
+        speaker_image_url    = CASE WHEN p_patch ? 'speaker_image_url' THEN p_patch->>'speaker_image_url' ELSE speaker_image_url END,
+        thumbnail_url        = CASE WHEN p_patch ? 'thumbnail_url' THEN p_patch->>'thumbnail_url' ELSE thumbnail_url END,
+        background_image_url = CASE WHEN p_patch ? 'background_image_url' THEN p_patch->>'background_image_url' ELSE background_image_url END,
+        external_url         = CASE WHEN p_patch ? 'external_url' THEN p_patch->>'external_url' ELSE external_url END,
+        attendees_count      = CASE WHEN p_patch ? 'attendees_count' THEN (p_patch->>'attendees_count')::integer ELSE attendees_count END,
+        highlights           = CASE WHEN p_patch ? 'highlights' THEN ARRAY(SELECT jsonb_array_elements_text(COALESCE(p_patch->'highlights', '[]'::jsonb))) ELSE highlights END,
+        is_featured          = CASE WHEN p_patch ? 'is_featured' THEN (p_patch->>'is_featured')::boolean ELSE is_featured END
+    WHERE id = p_id
+    RETURNING * INTO v_updated;
+
+    INSERT INTO public.cms_audit_logs (
+        entity_type,
+        entity_id,
+        action,
+        from_status,
+        to_status,
+        actor_id,
+        actor_email,
+        area_scope,
+        metadata
+    )
+    VALUES (
+        'cms_events',
+        v_updated.id,
+        'update',
+        v_current.status,
+        v_updated.status,
+        p_actor_id,
+        p_actor_email,
+        v_updated.area_scope,
+        jsonb_build_object(
+            'slug', v_updated.slug,
+            'title', v_updated.title,
+            'changed_fields', to_jsonb(COALESCE(p_changed_fields, '{}'::text[]))
+        )
+    );
+
+    RETURN to_jsonb(v_updated);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.cms_event_transition_status(
+    p_id              uuid,
+    p_expected_status public.cms_content_status,
+    p_next_status     public.cms_content_status,
+    p_action          text,
+    p_actor_id        uuid,
+    p_actor_email     text,
+    p_actor_role      text,
+    p_review_comment  text DEFAULT NULL
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    v_current public.cms_events;
+    v_updated public.cms_events;
+BEGIN
+    PERFORM set_config('app.cms_audit_handled', 'true', true);
+
+    SELECT * INTO v_current
+    FROM public.cms_events
+    WHERE id = p_id
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'not_found: No se encontró el evento para cambiar de estado.';
+    END IF;
+
+    IF v_current.status IS DISTINCT FROM p_expected_status THEN
+        RAISE EXCEPTION 'status_conflict: El estado del evento cambió concurrentemente.';
+    END IF;
+
+    UPDATE public.cms_events
+    SET
+        status = p_next_status,
+        reviewed_by = CASE
+            WHEN p_next_status = 'published' THEN p_actor_id
+            WHEN v_current.status = 'pending_review' AND p_next_status = 'draft' THEN p_actor_id
+            ELSE reviewed_by
+        END,
+        published_at = CASE
+            WHEN p_next_status = 'published' AND published_at IS NULL THEN now()
+            ELSE published_at
+        END
+    WHERE id = p_id
+    RETURNING * INTO v_updated;
+
+    INSERT INTO public.cms_audit_logs (
+        entity_type,
+        entity_id,
+        action,
+        from_status,
+        to_status,
+        actor_id,
+        actor_email,
+        area_scope,
+        metadata
+    )
+    VALUES (
+        'cms_events',
+        v_updated.id,
+        p_action,
+        v_current.status,
+        v_updated.status,
+        p_actor_id,
+        p_actor_email,
+        v_updated.area_scope,
+        jsonb_strip_nulls(jsonb_build_object(
+            'slug', v_updated.slug,
+            'title', v_updated.title,
+            'role', p_actor_role,
+            'review_comment', p_review_comment
+        ))
+    );
+
+    RETURN to_jsonb(v_updated);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.cms_event_delete(
+    p_id          uuid,
+    p_actor_id    uuid,
+    p_actor_email text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    v_current public.cms_events;
+BEGIN
+    PERFORM set_config('app.cms_audit_handled', 'true', true);
+
+    SELECT * INTO v_current
+    FROM public.cms_events
+    WHERE id = p_id
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'not_found: El evento ya fue eliminado o no existe.';
+    END IF;
+
+    DELETE FROM public.cms_events WHERE id = p_id;
+
+    INSERT INTO public.cms_audit_logs (
+        entity_type,
+        entity_id,
+        action,
+        from_status,
+        to_status,
+        actor_id,
+        actor_email,
+        area_scope,
+        metadata
+    )
+    VALUES (
+        'cms_events',
+        v_current.id,
+        'archive',
+        v_current.status,
+        NULL,
+        p_actor_id,
+        p_actor_email,
+        v_current.area_scope,
+        jsonb_build_object(
+            'slug', v_current.slug,
+            'title', v_current.title,
+            'operation', 'hard_delete'
+        )
+    );
+
+    RETURN jsonb_build_object('deleted', true, 'id', v_current.id);
+END;
+$$;
+
+REVOKE ALL ON FUNCTION
+    public.cms_event_create(jsonb, uuid, text, text),
+    public.cms_event_update(uuid, public.cms_content_status, jsonb, uuid, text, text[]),
+    public.cms_event_transition_status(uuid, public.cms_content_status, public.cms_content_status, text, uuid, text, text, text),
+    public.cms_event_delete(uuid, uuid, text)
+FROM public, anon, authenticated;
+
+GRANT EXECUTE ON FUNCTION
+    public.cms_event_create(jsonb, uuid, text, text),
+    public.cms_event_update(uuid, public.cms_content_status, jsonb, uuid, text, text[]),
+    public.cms_event_transition_status(uuid, public.cms_content_status, public.cms_content_status, text, uuid, text, text, text),
+    public.cms_event_delete(uuid, uuid, text)
+TO service_role;
+
 -- 13. Seguridad a Nivel de Fila (RLS) y Privilegios Explícitos
 ALTER TABLE public.cms_user_permissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cms_events           ENABLE ROW LEVEL SECURITY;
@@ -481,7 +935,7 @@ GRANT SELECT ON TABLE
     public.cms_metrics
 TO anon;
 
--- Proteger la columna `email` de `cms_board_members` frente a consultas REST directas con anon key
+-- Proteger la columna `email` de `cms_board_members` frente a consultas REST directas de `anon` y `authenticated`
 GRANT SELECT (
     id,
     full_name,
@@ -497,7 +951,7 @@ GRANT SELECT (
     published_at,
     created_at,
     updated_at
-) ON TABLE public.cms_board_members TO anon;
+) ON TABLE public.cms_board_members TO anon, authenticated;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
     public.cms_user_permissions,
@@ -505,9 +959,10 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
     public.cms_projects,
     public.cms_news,
     public.cms_alliances,
-    public.cms_metrics,
-    public.cms_board_members
+    public.cms_metrics
 TO authenticated;
+
+GRANT INSERT, UPDATE, DELETE ON TABLE public.cms_board_members TO authenticated;
 
 GRANT SELECT, INSERT ON TABLE public.cms_audit_logs TO authenticated;
 
@@ -656,9 +1111,14 @@ CREATE POLICY "Insercion de auditoria CMS para personal activo"
     TO authenticated
     WITH CHECK (
         EXISTS (
-            SELECT 1 FROM public.cms_current_permission() cp
-            WHERE cp.area_scope = 'ALL'
-               OR cp.area_scope = cms_audit_logs.area_scope
+            SELECT 1 FROM public.cms_current_actor() ca
+            WHERE cms_audit_logs.actor_id = ca.user_id
+              AND lower(cms_audit_logs.actor_email) = ca.email
+              AND (ca.area_scope = 'ALL' OR ca.area_scope = cms_audit_logs.area_scope)
+              AND (
+                  ca.role <> 'delegate'
+                  OR cms_audit_logs.action IN ('create', 'update', 'submit_review', 'reject_to_draft')
+              )
         )
     );
 
@@ -1110,3 +1570,31 @@ GRANT SELECT ON
     public.cms_public_metrics,
     public.cms_public_board_members
 TO anon, authenticated, service_role;
+
+-- 15. Lectura administrativa de `cms_board_members` (incluye `email` solo para Admin, DCC y Directores)
+CREATE OR REPLACE FUNCTION public.cms_admin_board_members()
+RETURNS SETOF public.cms_board_members
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    v_actor record;
+BEGIN
+    SELECT * INTO v_actor FROM public.cms_current_actor();
+    IF NOT FOUND OR v_actor.role NOT IN ('admin', 'dcc', 'director') THEN
+        RAISE EXCEPTION 'forbidden: Tu cuenta no tiene permiso para consultar correos de directiva.';
+    END IF;
+
+    RETURN QUERY
+    SELECT m.*
+    FROM public.cms_board_members m
+    WHERE (v_actor.role IN ('admin', 'dcc') AND v_actor.area_scope = 'ALL')
+       OR (v_actor.role = 'director' AND m.area_scope = v_actor.area_scope)
+    ORDER BY m.member_type ASC, m.area_scope ASC, m.display_order ASC, m.full_name ASC;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.cms_admin_board_members() FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.cms_admin_board_members() TO authenticated, service_role;

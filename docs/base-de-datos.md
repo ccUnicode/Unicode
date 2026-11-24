@@ -1207,8 +1207,8 @@ Permite a **Admin** y **DCC** curar manualmente las tarjetas del carrusel **Nove
 | `cta_url` | `text` | `NULL` | URL de destino del botón (`NewsCard.href`). Hereda `external_url` o usa `'/events'` / `'/projects'` como respaldo. |
 | `cta_label` | `varchar(60)` | `NOT NULL DEFAULT 'Ver detalles'` | Etiqueta del botón en `news-card.astro`. |
 | `source_type` | `varchar(20)` | `NOT NULL DEFAULT 'custom'`, `CHECK (source_type IN ('custom', 'event', 'project'))` | Origen de la novedad. |
-| `event_id` | `uuid` | `NULL`, FK → `public.cms_events(id) ON DELETE SET NULL` | Referencia opcional al evento destacado. |
-| `project_id` | `uuid` | `NULL`, FK → `public.cms_projects(id) ON DELETE SET NULL` | Referencia opcional al proyecto destacado. |
+| `event_id` | `uuid` | `NULL`, FK → `public.cms_events(id) ON DELETE CASCADE` | Referencia opcional al evento destacado. |
+| `project_id` | `uuid` | `NULL`, FK → `public.cms_projects(id) ON DELETE CASCADE` | Referencia opcional al proyecto destacado. |
 | `display_order` | `integer` | `NOT NULL DEFAULT 0` | Posición ascendente en el carrusel del Home. |
 | `is_active` | `boolean` | `NOT NULL DEFAULT true` | Habilita o pausa la aparición de la novedad sin archivarla. |
 | `status` | `cms_content_status` | `NOT NULL DEFAULT 'draft'` | Estado del ciclo de vida editorial. |
@@ -1397,8 +1397,8 @@ CREATE TABLE IF NOT EXISTS public.cms_news (
     cta_label     varchar(60)               NOT NULL DEFAULT 'Ver detalles',
     source_type   varchar(20)               NOT NULL DEFAULT 'custom'
                                             CHECK (source_type IN ('custom', 'event', 'project')),
-    event_id      uuid                      NULL REFERENCES public.cms_events(id) ON DELETE SET NULL,
-    project_id    uuid                      NULL REFERENCES public.cms_projects(id) ON DELETE SET NULL,
+    event_id      uuid                      NULL REFERENCES public.cms_events(id) ON DELETE CASCADE,
+    project_id    uuid                      NULL REFERENCES public.cms_projects(id) ON DELETE CASCADE,
     display_order integer                   NOT NULL DEFAULT 0,
     is_active     boolean                   NOT NULL DEFAULT true,
     status        public.cms_content_status NOT NULL DEFAULT 'draft',
@@ -1587,8 +1587,8 @@ ALTER TABLE public.cms_alliances ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cms_metrics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cms_board_members ENABLE ROW LEVEL SECURITY;
 
--- Proteger la columna `email` de `cms_board_members` frente a consultas REST directas con anon key
-REVOKE ALL ON TABLE public.cms_board_members FROM public, anon;
+-- Proteger la columna `email` de `cms_board_members` frente a consultas REST directas con anon y authenticated
+REVOKE ALL ON TABLE public.cms_board_members FROM public, anon, authenticated;
 GRANT SELECT (
     id,
     full_name,
@@ -1604,7 +1604,8 @@ GRANT SELECT (
     published_at,
     created_at,
     updated_at
-) ON public.cms_board_members TO anon;
+) ON public.cms_board_members TO anon, authenticated;
+GRANT INSERT, UPDATE, DELETE ON TABLE public.cms_board_members TO authenticated;
 
 -- 8.1 Políticas para `cms_projects` (flujo editorial dual por área)
 DROP POLICY IF EXISTS "Lectura publica de proyectos publicados" ON public.cms_projects;
